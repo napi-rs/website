@@ -1,0 +1,61 @@
+import { NodeJS, Rust } from './lang'
+
+<p><span style={{ fontSize: '24px', fontWeight: 'bold' }}>NAPI-RS</span> is a minimal
+library for building pre-compiled <NodeJS /> addons in <Rust /></p>.
+
+```rust title=lib.rs lineNumbers=true
+#[js_function(1)]
+fn fibonacci(ctx: CallContext) -> Result<JsNumber> {
+  let n = ctx.get::<JsNumber>(0)?.try_into()?;
+  ctx.env.create_int64(fibonacci_native(n))
+}
+```
+
+```js title=index.js lineNumbers=true
+function hello() {
+  let result = fibonacci(10000)
+  console.log(result)
+  return result
+}
+```
+
+## Features
+
+🚀 Bring native performance for `NodeJS`
+
+👷‍♂️ Memory safe, guaranteed by `Rust` compiler
+
+⚡️ Zero copy data between `Rust` & `NodeJS`
+
+⚙️ Parallelism in few lines
+
+### Well tested
+
+![Lint](https://github.com/napi-rs/napi-rs/workflows/Lint/badge.svg)
+![Linux N-API@3](https://github.com/napi-rs/napi-rs/workflows/Linux%20N-API@3/badge.svg)
+![Linux musl](https://github.com/napi-rs/napi-rs/workflows/Linux%20musl/badge.svg)
+![macOS/Windows/Linux x64](https://github.com/napi-rs/napi-rs/workflows/macOS/Windows/Linux%20x64/badge.svg)
+![Linux-aarch64](https://github.com/napi-rs/napi-rs/workflows/Linux-aarch64/badge.svg)
+![Windows i686](https://github.com/napi-rs/napi-rs/workflows/Windows%20i686/badge.svg)
+[![FreeBSD](https://api.cirrus-ci.com/github/napi-rs/napi-rs.svg)](https://cirrus-ci.com/github/napi-rs/napi-rs?branch=main)
+
+## Support matrix
+
+### NodeJS
+
+| Node10 | Node 12 | Node14 | Node15 |
+| ------ | ------- | ------ | ------ |
+| ✓      | ✓       | ✓      | ✓      |
+
+### Platform support
+
+> ✅ _Means official tested in napi-rs repo._
+
+|            | i686 | x64 | aarch64 | arm |
+| ---------- | ---- | --- | ------- | --- |
+| Windows    | ✅   | ✅  | -       | -   |
+| macOS      | -    | ✅  | ✅      | -   |
+| Linux      | -    | ✅  | ✅      | ✅  |
+| Linux musl | -    | ✅  | -       | -   |
+| FreeBSD    | -    | ✅  | -       | -   |
+| Android    | -    | -   | ✅      | -   |

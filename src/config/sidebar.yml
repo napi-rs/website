@@ -1,0 +1,57 @@
+# Sidebar navigation
+
+- label: 'Introduction'
+  link: '/'
+  items:
+    - label: 'N-API'
+      link: '/introduction/napi'
+    - label: 'The history of NodeJS addons'
+      link: '/introduction/history'
+    - label: 'Getting started'
+      link: '/getting-started'
+- label: Concepts
+  items:
+    - label: 'Env'
+      link: '/concepts/env'
+    - label: 'JS Values'
+      link: '/concepts/js-values'
+    - label: 'Task'
+      link: '/concepts/task'
+    - label: 'Thread safe function'
+      link: '/concepts/thread-safe-function'
+    - label: 'External Object'
+      link: '/concepts/external'
+    - label: 'Wrap native value to Object'
+      link: '/concepts/wrap'
+    - label: 'Using with Tokio'
+      link: '/concepts/tokio'
+- label: Recipes
+  items:
+    - label: 'Creating project'
+      link: '/recipes/creating-project'
+    - label: 'Registering module'
+      link: '/recipes/registering-module'
+    - label: 'Exporting values'
+      link: '/recipes/exporting-values'
+    - label: 'CallContext'
+      link: '/recipes/call-context'
+    - label: 'Define class'
+      link: '/recipes/define-class'
+    - label: 'Type Casting'
+      link: '/recipes/type-casting'
+    - label: 'Throwing errors'
+      link: '/recipes/throwing-errors'
+    - label: 'Writing tests'
+      link: '/recipes/writing-tests'
+    - label: 'Publish package'
+      link: '/recipes/publish-package'
+- label: More
+  items:
+    - label: FAQ
+      link: /faq
+    - label: Changelog
+      link: /changelog
+- label: Community
+  items:
+    - label: 'Github'
+      link: https://github.com/napi-rs/napi-rs
