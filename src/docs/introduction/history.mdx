@@ -5,16 +5,6 @@ description: The history of writing NodeJS native addons.
 
 > Some contents are borrowed from https://xcoder.in/2017/07/01/nodejs-addon-history/
 
-## The dark era: `node-waf`
-
-Before NodeJS 0.8, developers used the `node-waf` to build their library. Of course the `node-waf` is not the node-waf in npm registry, the original `node-waf` has been fallen to disrepair for years.
-
-This thing was configured with a file named `wscript`. From NodeJS 0.8, it had `node-gyp` builtin, so people didn't need wscript anymore.
-
-But because this temporary shortage, many libraries using C++ to build NodeJS addon contains both `binding.gyp` and `wscript` in that time.
-
-You can see files back to that age in this library [node-mysql-libmysqlclient](https://github.com/Sannis/node-mysql-libmysqlclient/tree/9545ea7485fcc8b07b7c56c5ec3575938bfd4e5f). For node-gyp support it had `binding.gyp` and still preserved the `wscript` file.
-
 ## The Feudal era: Using `v8 C++` headers directly
 
 In very early ages, developers were using `v8/NodeJS C++` headers directly to build NodeJS native addon.
@@ -119,6 +109,7 @@ The benefit of writing codes in this way is because the codes could auto upgrade
 > Even a good thing like the NAN has a mission, and anything outside of that mission will be gradually stripped away. Versions such as 0.10.x and 0.12.x, for example, should be retired, and the NAN will gradually drop compatibility and support for them.
 
 ## Age of Empires: ABI-compliant N-API
+
 Since the release of Node.js v8.0.0, Node.js has introduced a brand new interface for developing C++ native modules, **N-API**.
 
 > According to the official documentation, it is pronounced with a single N, plus API, which means that the four English letters are pronounced separately.
@@ -142,11 +133,13 @@ In order to achieve the hidden goal above, the posture of using N-API looks like
 For more details about functions of N-API, visit its [documentation](https://nodejs.org/api/n-api.html), but for now, let's take a look at something a little less abstract to give you an impression of N-API.
 
 ### Module initialization
-In the ***Feudal*** and NAN eras, module initialization was left to the macros supplied by Node.js.
+
+In the **_Feudal_** and NAN eras, module initialization was left to the macros supplied by Node.js.
 
 ```cpp
 NODE_MODULE(addon, Init)
 ```
+
 In the current N-API, it becomes a macro of N-API.
 
 ```cpp

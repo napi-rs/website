@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 
 import LogoWithText from './logo-with-text.png'
 

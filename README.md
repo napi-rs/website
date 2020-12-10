@@ -31,7 +31,7 @@
 
 3. Launch
 
-    Website is now running at `http://localhost:8000`
+   Website is now running at `http://localhost:8000`
 
 ## 📄 Docs
 

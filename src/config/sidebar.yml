@@ -3,9 +3,9 @@
 - label: 'Introduction'
   link: '/'
   items:
-    - label: 'N-API'
-      link: '/introduction/napi'
-    - label: 'The history of NodeJS addons'
+    - label: 'The native module'
+      link: '/introduction/native-module'
+    - label: 'The API for building native module'
       link: '/introduction/history'
     - label: 'Getting started'
       link: '/getting-started'

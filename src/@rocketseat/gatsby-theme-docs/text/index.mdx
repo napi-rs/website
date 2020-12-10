@@ -1,7 +1,10 @@
 import { NodeJS, Rust } from './lang'
 
-<p><span style={{ fontSize: '24px', fontWeight: 'bold' }}>NAPI-RS</span> is a minimal
-library for building pre-compiled <NodeJS /> addons in <Rust /></p>.
+<p>
+  <span style={{ fontSize: '24px', fontWeight: 'bold' }}>NAPI-RS</span> is a
+  minimal library for building pre-compiled <NodeJS /> addons in <Rust />
+</p>
+.
 
 ```rust title=lib.rs lineNumbers=true
 #[js_function(1)]
@@ -25,7 +28,7 @@ function hello() {
 
 👷‍♂️ Memory safe, guaranteed by `Rust` compiler
 
-⚡️ Zero copy data between `Rust` & `NodeJS`
+⚡️ Zero copy data interactive between `Rust` & `NodeJS`
 
 ⚙️ Parallelism in few lines
 
