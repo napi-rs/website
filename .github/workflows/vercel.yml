@@ -1,0 +1,31 @@
+name: Deploy to vercel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+
+      - name: Cache NPM dependencies
+        uses: actions/cache@v1
+        with:
+          path: node_modules
+          key: npm-cache-${{ hashFiles('yarn.lock') }}
+
+      - name: 'Install dependencies'
+        run: |
+          yarn install --frozen-lockfile --registry https://registry.npmjs.org
+
+      - name: 'Deploy'
+        run: npx vercel --confirm --prod -t $NOW_TOKEN
+        env:
+          NOW_TOKEN: ${{ secrets.NOW_TOKEN }}
