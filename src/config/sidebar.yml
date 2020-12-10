@@ -8,7 +8,7 @@
     - label: 'The API for building native module'
       link: '/introduction/history'
     - label: 'Getting started'
-      link: '/getting-started'
+      link: '/introduction/getting-started'
 - label: Concepts
   items:
     - label: 'Env'
@@ -31,8 +31,6 @@
       link: '/recipes/creating-project'
     - label: 'Registering module'
       link: '/recipes/registering-module'
-    - label: 'Exporting values'
-      link: '/recipes/exporting-values'
     - label: 'CallContext'
       link: '/recipes/call-context'
     - label: 'Define class'
