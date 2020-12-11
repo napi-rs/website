@@ -36,7 +36,7 @@
     "vercel": "^21.0.1"
   },
   "scripts": {
-    "build": "gatsby build",
+    "build": "rm -rf .cache && gatsby build",
     "start": "gatsby develop",
     "serve": "gatsby serve",
     "clean": "gatsby clean",
