@@ -14,7 +14,7 @@ import {
   LivePreview,
   LiveError,
   StyledEditor,
-} from '@rocketseat/gatsby-theme-docs/src/components/Code/styles'
+} from './styles'
 
 const calculateLinesToHighlight = (meta) => {
   const RE = /{([\d,-]+)}/

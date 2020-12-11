@@ -1,4 +1,4 @@
-import React, { memo } from 'react'
+import React, { memo, useContext, useCallback } from 'react'
 import { useStaticQuery, graphql, Link } from 'gatsby'
 import { useSidebar } from '@rocketseat/gatsby-theme-docs-core'
 
@@ -15,6 +15,7 @@ import {
   Item,
   SubItem,
 } from './styles'
+import { SideBarState } from './sidebar-context'
 
 function ListWithSubItems({ children, text }) {
   return (
@@ -26,6 +27,7 @@ function ListWithSubItems({ children, text }) {
 }
 
 const Sidebar = memo(function SidebarComponent() {
+  const { sideBarState, setSideBarState } = useContext(SideBarState)
   const {
     site: {
       siteMetadata: { basePath },
@@ -40,11 +42,15 @@ const Sidebar = memo(function SidebarComponent() {
     }
   `)
 
+  const onClickCloseMenu = useCallback(() => {
+    setSideBarState(false)
+  }, [setSideBarState])
+
   const data = useSidebar()
 
   return (
-    <NavContainer isMenuOpen={false}>
-      <LogoContainer>
+    <NavContainer isMenuOpen={sideBarState}>
+      <LogoContainer onClick={onClickCloseMenu}>
         <Link to={basePath} aria-label="Go to home page">
           <Logo aria-hidden="true" />
         </Link>
@@ -55,7 +61,7 @@ const Sidebar = memo(function SidebarComponent() {
             if (Array.isArray(items)) {
               const subitems = items.map((item) => {
                 return (
-                  <Item key={item.link}>
+                  <Item key={item.link} onClick={onClickCloseMenu}>
                     {isExternalUrl(item.link) ? (
                       <ExternalLink link={item.link} label={item.label} />
                     ) : (
@@ -73,7 +79,7 @@ const Sidebar = memo(function SidebarComponent() {
             }
 
             return (
-              <Item key={id}>
+              <Item key={id} onClick={onClickCloseMenu}>
                 {isExternalUrl(link) ? (
                   <ExternalLink link={link} label={label} />
                 ) : (

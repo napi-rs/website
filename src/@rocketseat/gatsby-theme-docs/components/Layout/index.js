@@ -1,5 +1,5 @@
 /* @jsx jsx */
-import { useState, useRef, Fragment } from 'react'
+import { useRef, Fragment, useContext, useCallback } from 'react'
 import { jsx, css } from '@emotion/core'
 import styled from '@emotion/styled'
 
@@ -10,8 +10,9 @@ import {
   Main,
   Children,
 } from '@rocketseat/gatsby-theme-docs/src/components/Layout/styles'
-
 import Prism from 'prism-react-renderer/prism'
+
+import { SideBarState } from '../Sidebar/sidebar-context'
 ;(typeof global !== 'undefined' ? global : window).Prism = Prism
 
 require('prismjs/components/prism-rust')
@@ -40,17 +41,17 @@ export default function Layout({
   headings,
 }) {
   const contentRef = useRef(null)
-  const [isMenuOpen, setMenuOpen] = useState(false)
+  const { sideBarState, setSideBarState } = useContext(SideBarState)
   const disableTOC =
     disableTableOfContents === true || !headings || headings.length === 0
 
-  function handleMenuOpen() {
-    setMenuOpen(!isMenuOpen)
-  }
+  const handleMenuOpen = useCallback(() => {
+    setSideBarState(!sideBarState)
+  }, [setSideBarState, sideBarState])
 
   return (
     <Fragment>
-      <Overlay isMenuOpen={isMenuOpen} onClick={handleMenuOpen} />
+      <Overlay isMenuOpen={sideBarState} onClick={handleMenuOpen} />
       <Container>
         <Main>
           <Header handleMenuOpen={handleMenuOpen} />

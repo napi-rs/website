@@ -1,10 +1,11 @@
 import { css, Global } from '@emotion/core'
 import styled from '@emotion/styled'
 import { useTheme } from 'emotion-theming'
-import React from 'react'
+import React, { useState } from 'react'
 import { ThemeProvider } from 'emotion-theming'
 
 import Sidebar from '../@rocketseat/gatsby-theme-docs/components/Sidebar'
+import { SideBarState } from '../@rocketseat/gatsby-theme-docs/components/Sidebar/sidebar-context'
 
 const theme = {
   colors: {
@@ -196,14 +197,8 @@ const globalStyles = (theme) => css`
     z-index: 0;
     margin: 0 0 16px 0;
     overflow: auto;
-
-    .token {
-      font-style: normal !important;
-    }
-  }
-
-  pre[class*='language-'] code {
-    font-family: inherit;
+    font-size: 14px !important;
+    -webkit-text-size-adjust: none;
   }
 
   pre[class*='language-']::before {
@@ -211,7 +206,6 @@ const globalStyles = (theme) => css`
     border-radius: 0 0 4px 4px;
     color: #232129;
     font-size: 12px;
-    font-family: inherit;
     letter-spacing: 0.075em;
     line-height: 1;
     padding: 0.25rem 0.5rem;
@@ -331,8 +325,10 @@ function GlobalStyle() {
   return (
     <Global
       styles={css(globalStyles(theme), {
-        [`.prism-code.language-cpp::before`]: {
-          content: '"c++"',
+        [`.prism-code.language-cpp`]: {
+          '&::before': {
+            content: '"c++"',
+          },
         },
         [`.prism-code.language-rust::before`]: {
           content: '"rust"',
@@ -355,6 +351,19 @@ function GlobalStyle() {
   )
 }
 
+function Root({ children }) {
+  const [sideBarState, setSideBarState] = useState(false)
+
+  return (
+    <Wrapper>
+      <SideBarState.Provider value={{ sideBarState, setSideBarState }}>
+        <Sidebar />
+        {children}
+      </SideBarState.Provider>
+    </Wrapper>
+  )
+}
+
 export function wrapRootElement({ element }) {
   // destructor the root.js element param from `@rocketseat/gatsby-theme-docs`
   const [, rawElement] = element.props.children.props.children.props.children
@@ -362,10 +371,7 @@ export function wrapRootElement({ element }) {
     <ThemeProvider theme={theme}>
       <>
         <GlobalStyle />
-        <Wrapper>
-          <Sidebar />
-          {rawElement}
-        </Wrapper>
+        <Root>{rawElement}</Root>
       </>
     </ThemeProvider>
   )

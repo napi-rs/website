@@ -6,7 +6,7 @@ import { NodeJS, Rust } from './lang'
 </p>
 .
 
-```rust title=lib.rs lineNumbers=true
+```rust title=lib.rs
 #[js_function(1)]
 fn fibonacci(ctx: CallContext) -> Result<JsNumber> {
   let n = ctx.get::<JsNumber>(0)?.try_into()?;
@@ -14,7 +14,7 @@ fn fibonacci(ctx: CallContext) -> Result<JsNumber> {
 }
 ```
 
-```js title=index.js lineNumbers=true
+```js title=index.js
 function hello() {
   let result = fibonacci(10000)
   console.log(result)
@@ -46,13 +46,13 @@ function hello() {
 
 ### NodeJS
 
-| Node10 | Node 12 | Node14 | Node15 |
-| ------ | ------- | ------ | ------ |
-| ✓      | ✓       | ✓      | ✓      |
+| Node10 | Node12 | Node14 | Node15 |
+| ------ | ------ | ------ | ------ |
+| ✓      | ✓      | ✓      | ✓      |
 
 ### Platform support
 
-> ✅ Means official tested in napi-rs repo. <br/> > `-` Means no official NodeJS release.
+> ✅ Means official tested in napi-rs repo. <br/> `-` Means no official NodeJS release.
 
 |            | i686 | x64 | aarch64 | arm |
 | ---------- | ---- | --- | ------- | --- |
