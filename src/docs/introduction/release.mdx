@@ -1,0 +1,93 @@
+---
+title: 'Release native packages'
+description: The history of how to release native packages.
+---
+
+<!-- 从前面部分的介绍可以窥见，目前社区上主流的分发方式是直接分发 `C/C++` 源码。但这种方式对于使用 Rust 编写 NodeJS native addon 的开发者来说，并不是一种可以接受的分发方案，因为 Rust 工具链的复杂性和编译耗时等问题，分直接发源码对使用这些 native addon 的开发者来说会是一种巨大的折磨。 -->
+
+As you can see from the previous section, the dominant distribution method on the community is **_distribute `C/C++` source code directly_**. However, this approach is not an acceptable distribution solution for developers using `Rust` to write NodeJS native addons, because the complexity and compilation time of the Rust toolchain makes distributing the source code directly a huge ordeal for developers using these native addons.
+
+<!-- 下面我将介绍包括***分发源码***在内的 native addon 的几种分发方式，在介绍完之后相信你能找到最适合 `Rust` 的 native addon 分发方式。 -->
+
+Next I will describe several ways of distributing native addon including **_distribute source code directly_**. After this introduction, I believe you can find the most suitable native addon distribution for `Rust`.
+
+## 1. Distribute source code
+
+Using this approach requires the user to install build tools such as `node-gyp`, `cmake`, `g++`, etc. This is not a problem during the development phase, but with the popularity of `Docker`, installing a bunch of build toolchains in a given `Docker` environment is a nightmare for many teams. And if this problem is not handled well, it will increase the size of the `Docker image` for no reason (actually this problem can be solved by building the Docker image in a special Builder image before compiling it, but I have talked to various companies and few teams will do this).
+
+## 2. Distribute only JavaScript code, download the corresponding product in `postinstall` phase
+
+Some native addon build dependencies are so complex that it's not practical for the average Node developer to install a full set of build tools during the development phase. Another scenario is that the native addon itself is so complex that it can take a lot of time to compile, and the library author wouldn't want people to spend hours just installing it when using his library.
+
+So another popular way is to use the `CI` tools to **_precompile_** the native addon in the `CI` task for each platform (win32/darwin/linux/...) and distribute only the corresponding JavaScript code, while the **_precompiled_** addon file is downloaded from the **CDN/Github release** via the `postinstall` script. For example, there is a popular tool in the community that does this: [node-pre-gyp](https://github.com/mapbox/node-pre-gyp). This tool automatically uploads the native addon compiled in `CI` to a specific location based on the user's configuration, and then downloads it from the upload location during installation.
+
+This distribution method seems flawless, but there are several problems that can't be circumvented:
+
+- Tools such as `node-pre-gyp` will add a lot of **runtime irrelevant** dependencies to a project.
+- No matter which `CDN` you upload to, it's hard to accommodate users from all over the world. Do you recall the painful memories of being stuck in `postinstall` for hours to download files from some Github release and then failing? It's true that building a binary mirror in the nearest region can partially alleviate this problem, but mirror is not synchronized/missing from time to time.
+- Not friendly to private networks. Many companies may not be able to access the extranet on their CI/CD machines (they will have a private NPM to go along with it, but if they don't there is no point in discussing it), let alone downloading native addon from some CDN.
+
+## 3. The native addon for different platforms is distributed through different npm packages
+
+The new generation build tool [esbuild](https://github.com/evanw/esbuild), which is very popular on the front-end, uses this approach. Each native addon corresponds to an npm package, and then the `postinstall` script installs the native addon package for the current system.
+
+Another way is to expose the packages to be installed by the user, use all native packages as `optionalDependencies`, and then use the `os` and `cpu` fields in `package.json` to have `npm/yarn/pnpm` automatically select them during _automatically choose which native package to install (which actually fails if it doesn't match the system requirements)_ when installing, e.g.:
+
+```json
+{
+  "name": "@node-rs/bcrypt",
+  "version": "0.5.0",
+  "os": ["linux", "win32", "darwin"],
+  "cpu": ["x64"],
+  "optionalDependencies": {
+    "@node-rs/bcrypt-darwin": "^0.5.0",
+    "@node-rs/bcrypt-linux": "^0.5.0",
+    "@node-rs/bcrypt-win32": "^0.5.0"
+  }
+}
+```
+
+```json
+{
+  "name": "@node-rs/bcrypt-darwin",
+  "version": "0.5.0",
+  "os": ["darwin"],
+  "cpu": ["x64"]
+}
+```
+
+```json
+{
+  "name": "@node-rs/bcrypt-linux",
+  "version": "0.5.0",
+  "os": ["linux"],
+  "cpu": ["x64"]
+}
+```
+
+```json
+{
+  "name": "@node-rs/bcrypt-win32",
+  "version": "0.5.0",
+  "os": ["win32"],
+  "cpu": ["x64"]
+}
+```
+
+This approach is the least intrusive distribution for users using native addon, and is used by [@ffmpeg-installer/ffmpeg](https://github.com/kribblo/node-ffmpeg-installer#readme).
+
+However, this approach imposes an additional workload on the native addon authors, including the need to write tools to manage the release binary and a bunch of packages, which are generally very difficult to debug (and typically span several systems and CPU architectures).
+
+These tools need to manage the entire addon flow through the development -> local release version -> CI -> artifacts -> deploy phase. On top of that, there are a lot of CI/CD configurations to write/debug, which is time consuming and tedious.
+
+## Conclusion
+
+The native addon with the 3rd distribution method (**distribution of native addons for different platforms via different npm packages**) is the easiest to use and the least mentally taxing for the developers who use it, but this distribution method imposes additional maintenance costs on the native addon authors.
+
+Later we will describe how `napi-rs` can help native addon developers solve the problem of high CI/CD maintenance costs with this distribution.
+
+You can go to [recipes/publish-package](/recipes/publish-package) chapter for more details.
+
+<!-- 采用第 3 种分发方式(**不同平台的 native addon 通过不同的 npm package 分发**)的 native addon 是最易用的，对于使用这个 native addon 的开发者来说他们的心智负担最小，但这种分发方式会给 native addon 的作者带来额外的维护成本。
+
+后面的内容我们会介绍 `napi-rs` 如何在这种分发方式下帮 native addon 的开发者们解决 CI/CD 维护成本比较高的问题。 -->

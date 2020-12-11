@@ -314,7 +314,7 @@ const globalStyles = (theme) => css`
   }
 
   #gatsby-focus-wrapper {
-    @media (max-width: 780px) {
+    @media (max-width: 840px) {
       width: 100%;
     }
     width: calc(100% - 320px);

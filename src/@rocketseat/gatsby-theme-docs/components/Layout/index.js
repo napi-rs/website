@@ -27,7 +27,7 @@ const Container = styled.div`
   grid-auto-flow: row;
   grid-gap: 40px;
 
-  @media (max-width: 780px) {
+  @media (max-width: 840px) {
     padding: 24px;
     grid-template-columns: 100%;
   }
