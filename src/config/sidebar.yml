@@ -29,8 +29,6 @@
       link: '/concepts/tokio'
 - label: Recipes
   items:
-    - label: 'Creating project'
-      link: '/recipes/creating-project'
     - label: 'Registering module'
       link: '/recipes/registering-module'
     - label: 'CallContext'
@@ -45,6 +43,24 @@
       link: '/recipes/writing-tests'
     - label: 'Publish package'
       link: '/recipes/publish-package'
+
+- label: Ecosystem
+  items:
+    - label: swc
+      link: /ecosystem/swc
+    - label: '@node-rs/bcrypt'
+      link: /ecosystem/@node-rs/bcrypt
+    - label: '@node-rs/crc32'
+      link: /ecosystem/@node-rs/crc32
+    - label: '@node-rs/jieba'
+      link: /ecosystem/@node-rs/jieba
+    - label: '@node-rs/deno-lint'
+      link: /ecosystem/@node-rs/deno-lint
+    - label: '@napi-rs/pinyin'
+      link: /ecosystem/@napi-rs/pinyin
+    - label: '@napi-rs/skia'
+      link: /ecosystem/@napi-rs/skia
+
 - label: More
   items:
     - label: FAQ
