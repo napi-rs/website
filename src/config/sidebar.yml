@@ -17,6 +17,8 @@
       link: '/concepts/env'
     - label: 'JS Values'
       link: '/concepts/js-values'
+    - label: 'Reference'
+      link: '/concepts/ref'
     - label: 'Task'
       link: '/concepts/task'
     - label: 'Thread safe function'
@@ -27,6 +29,7 @@
       link: '/concepts/wrap'
     - label: 'Using with Tokio'
       link: '/concepts/tokio'
+
 - label: Recipes
   items:
     - label: 'Registering module'
@@ -39,6 +42,8 @@
       link: '/recipes/type-casting'
     - label: 'Throwing errors'
       link: '/recipes/throwing-errors'
+    - label: 'Performance'
+      link: '/recipes/performance'
     - label: 'Writing tests'
       link: '/recipes/writing-tests'
     - label: 'Publish package'
@@ -61,12 +66,17 @@
     - label: '@napi-rs/skia'
       link: /ecosystem/@napi-rs/skia
 
+- label: Changelog
+  items:
+    - label: '1.0.0'
+      link: /changelog/1.0.0
+
 - label: More
   items:
     - label: FAQ
       link: /faq
-    - label: Changelog
-      link: /changelog
+    - label: Compare with neon
+      link: /neon
 - label: Community
   items:
     - label: 'Github'

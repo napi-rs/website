@@ -200,6 +200,10 @@ const globalStyles = (theme) => css`
     overflow: auto;
     font-size: 14px !important;
     -webkit-text-size-adjust: none;
+
+    .token {
+      font-style: normal !important;
+    }
   }
 
   pre[class*='language-']::before {

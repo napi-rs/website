@@ -35,7 +35,7 @@ Platforms you want support to.
 
 Generate github actions config for you.
 
-#### Deep dive
+### Deep dive
 
 Here it is recommended to distribute your package under [npm scope](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) because `@napi-rs/cli` by default appends the different platform suffixes to the npm package name as the package name for the different platform binary distribution. Using npm scope will reduce the case of package name was taken.
 
@@ -84,13 +84,13 @@ module.exports = loadBinding(__dirname, '@cool/core', 'core')
 
 The `loadBinding` function from `@node-rs/helper` will help you to load the **_right_** binary file wherever you are. And actually the `loadBinding` function handle two cases:
 
-##### Package installed in users `node_modules`
+#### Package installed in users `node_modules`
 
 <!-- 为了加载正确二进制文件，`loadBinding` 函数会尝试加载该平台下所有可能的包(在给定系统和 CPU 架构下可能存在多种可能的二进制包)，比如在 `Linux x64` 平台，`loadBinding` 会尝试加载 `@cool/core-linux-x64-gnu` 和 `@cool/core-linux-x64-musl`。 如果用户使用的是 `Ubuntu` `Debian` 等预装 `gnu libc` 的操作系统，则 `@cool/core-linux-x64-gnu` 这个包会被加载进来。而如果用户使用的是 `Alpine` 这种预装 `musl libc` 的操作系统，则 `@cool/core-linux-x64-musl` 会被加载进来。 -->
 
 To load the correct binary, the `loadBinding` function tries to load all possible packages for that platform (there may be multiple possible binary packages for a given system and CPU architecture), for example, on the `Linux x64` platform, `loadBinding` tries to load `@cool/core-linux-x64-gnu` and `@cool/core-linux-x64-musl`. The package `@cool/core-linux-x64-gnu` will be loaded if the user is using an operating system like `Ubuntu` `Debian` with `gnu libc` pre-installed. And if the user is using an operating system like `Alpine` with `musl libc` pre-installed, then `@cool/core-linux-x64-musl` will be loaded.
 
-##### Local development
+#### Local development
 
 <!-- `@napi-rs/cli` new 命令生成的项目中，package.json 中的 `build` 命令会将 `Rust` 代码编译出来的二进制动态链接库生成到当前目录下，以方便调试。`loadBinding` 在这种情况下也会尝试从给定目录中(在上面例子的 `index.js` 中是 `__dirname`)加载相应的二进制文件。还是以 `Linux x64` 为例，`loadBinding` 函数会依次尝试加载 `core.linux-x64-gnu.node` 和 `core.linux-x64-musl.node` 文件。 -->
 
