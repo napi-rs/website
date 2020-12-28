@@ -14,6 +14,7 @@ const theme = {
     shape: `#222831`,
     title: `#eedad1`,
     text: `#f8f1f1`,
+    link: `#69a8ee`,
   },
 }
 
@@ -95,7 +96,7 @@ const globalStyles = (theme) => css`
   }
 
   a {
-    color: ${theme.colors.text};
+    color: ${theme.colors.link};
     font-weight: bold;
     text-decoration: none;
     word-break: break-word;
