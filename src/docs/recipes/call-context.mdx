@@ -3,4 +3,81 @@ title: CallContext
 description: Call context in JsFunction.
 ---
 
-> WIP
+`CallContext` contains all information in a JavaScript function call.
+
+## Arguments
+
+You can get JavaScript argument via `CallContext::get(usize)` method:
+
+```rust
+#[js_function(1)]
+fn hey(ctx: CallContext) -> Result<JsUndefined> {
+  let arg1: JsString = ctx.get(0)?;
+  ctx.env.get_undefined()
+}
+```
+
+The argument sequence starts from `0`, and couldn't be lager than the number passed in the `js_function` macro. If you passed a position lager than it could be, an JavaScript Error will be thrown.
+
+The type of result must be equal to the actually type of argument, or type error will be thrown.
+
+```rust
+struct Native {
+  value: i32,
+}
+
+#[js_function(1)]
+fn attach_native_object(ctx: CallContext) -> Result<JsUndefined> {
+  let count: i32 = ctx.get::<JsNumber>(0)?.try_into()?;
+  let mut this: JsObject = ctx.this_unchecked();
+  ctx
+    .env
+    .wrap(&mut this, Native { value: count + 100 })?;
+  ctx.env.get_undefined()
+}
+
+#[js_function(1)]
+fn get_native_object(ctx: CallContext) -> Result<JsNumber> {
+  let count: i32 = ctx.get::<JsNumber>(0)?.try_into()?;
+  let mut this: JsObject = ctx.this_unchecked();
+  let native: Native = ctx
+    .env
+    .unrwap(&mut this)?;
+  ctx.env.create_int32(native.value + 1)
+}
+```
+
+```js
+const obj = {
+  attach: attachNativeObject,
+  get: getNativeObject,
+}
+
+obj.attach(100)
+obj.get() // 101
+```
+
+## Argument length
+
+The number which was passed to `js_function` is the capability of the arguments Array, the actually arguments length could be retrieved by `CallContext::length`.
+
+```rust
+#[js_function(100)]
+fn hey(ctx: CallContext) -> Result<JsUndefined> {
+  println!("{}", ctx.length);
+  ctx.env.get_undefined()
+}
+```
+
+```js
+hey() // 0
+hey({}) // 1
+```
+
+## This
+
+You can get this object via `CallContext::this` or `CallContext::this_unchecked`. The only different between the two method is `CallContext::this` will perform a type check, if provided type of return type is not matched with the actually `this`, `InvalidArg` error will be thrown.
+
+## new target
+
+If function was called by `new` operator, you can use `CallContext::get_new_target` to get the new target of this constructor function.

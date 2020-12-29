@@ -23,11 +23,9 @@
       link: '/concepts/task'
     - label: 'Thread safe function'
       link: '/concepts/thread-safe-function'
-    - label: 'External Object'
-      link: '/concepts/external'
     - label: 'Wrap native value to Object'
       link: '/concepts/wrap'
-    - label: 'Using with Tokio'
+    - label: 'Tokio'
       link: '/concepts/tokio'
 
 - label: Recipes

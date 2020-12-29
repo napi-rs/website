@@ -111,20 +111,53 @@ setBuffer(Buffer.from([0, 1])) // <Buffer 01 02>
 
 ## `JsSymbol`
 
-> WIP
+Represent `Symbol` value in JavaScript. You can create `JsSymbol` from `&str` or `JsString`
+
+```rust
+// create from &str
+#[js_function(1)]
+fn create_symbol(ctx: CallContext) -> Result<JsSymbol> {
+  let desc = ctx.get::<JsString>(0)?.into_utf8()?;
+  ctx.env.create_symbol(Some(desc.as_str()?))
+}
+```
+
+```rust
+// create from JsString
+#[js_function(1)]
+fn create_symbol(ctx: CallContext) -> Result<JsSymbol> {
+  let desc = ctx.get::<JsString>(0)?;
+  ctx.env.create_symbol_from_js_string(desc)
+}
+```
 
 ## `JsObject`
 
-> WIP
+Represent `Object` value in JavaScript. There are many object related api in `JsObject`. See [document](https://docs.rs/napi/latest/napi/struct.JsObject.html).
+
+```rust
+#[js_function(1)]
+fn set_bar(ctx: CallContext) -> Result<JsUndefined> {
+  let mut obj = ctx.get::<JsObject>(0)?;
+  let bar: JsString = obj.get_named_property("bar")?;
+  let bar_str = bar.into_utf8()?;
+  obj.set_named_property("bar", ctx.env.create_string_from_std(format!("{} bar", bar_str.as_str()?)))?;
+  ctx.env.get_undefined()
+}
+```
+
+```js
+setBar({ bar: 'bar' }) // { bar: "bar bar" }
+```
 
 ## `JsDate`
 
-> WIP
+Represent `Date` object in JavaScript. JavaScript `Date` objects are described in [Section 20.3](https://tc39.es/ecma262/#sec-date-objects) of the ECMAScript Language Specification.
 
 ## `JsBigint`
 
-> WIP
+Represent `Bigint` value in JavaScript.
 
 ## `JsExternal`
 
-> WIP
+This API allocates a JavaScript value with external data attached to it. This is used to pass external data through JavaScript code, so it can be retrieved later by native code using [`Env::get_value_external`](https://docs.rs/napi/latest/napi/struct.Env.html#method.get_value_external).
