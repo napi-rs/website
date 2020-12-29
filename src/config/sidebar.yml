@@ -36,16 +36,6 @@
       link: '/recipes/call-context'
     - label: 'Define class'
       link: '/recipes/define-class'
-    - label: 'Type Casting'
-      link: '/recipes/type-casting'
-    - label: 'Throwing errors'
-      link: '/recipes/throwing-errors'
-    - label: 'Performance'
-      link: '/recipes/performance'
-    - label: 'Writing tests'
-      link: '/recipes/writing-tests'
-    - label: 'Publish package'
-      link: '/recipes/publish-package'
 
 - label: Ecosystem
   items:

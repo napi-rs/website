@@ -3,4 +3,61 @@ title: 1.0.0
 description: napi-rs 1.0.0 changelog.
 ---
 
-> WIP
+## Breaking changes
+
+### Module register
+
+The old way:
+
+```rust
+register_module!(test_module, init);
+
+fn init(module: &mut Module) -> Result<()> {
+  // ....
+  Ok(())
+}
+```
+
+The new way:
+
+```rust
+#[module_exports]
+fn init(mut exports: JsObject) -> Result<()> {
+  // ...
+  Ok(())
+}
+```
+
+or
+
+```rust
+#[module_exports]
+fn init(mut exports: JsObject, env: Env) -> Result<()> {
+  // ...
+  Ok(())
+}
+```
+
+## Task
+
+```diff
+- pub trait Task: Send {
++ pub trait Task: Send + Sized {
+    type Output: Send + Sized + 'static;
+    type JsValue: NapiValue;
+
+
+-   fn compute(&self) -> Result<Self::Output>;
++   fn compute(&mut self) -> Result<Self::Output>;
+
+
+-   fn resolve(&self, env: &mut Env, output: Self::Output) -> Result<Self::JsValue>;
++   fn resolve(self, env: Env, output: Self::Output) -> Result<Self::JsValue>;
+
+
++   fn reject(self, _env: Env, err: Error) -> Result<Self::JsValue> {
++     Err(err)
++   }
+}
+
+```

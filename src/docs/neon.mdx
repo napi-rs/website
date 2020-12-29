@@ -3,4 +3,19 @@ title: Compare with neon
 description: What's the difference between napi-rs and neon.
 ---
 
-> WIP
+[neon](https://neon-bindings.com/) is the other rust crate which provide great development experience and high performance.
+
+<!-- Neon 有一个成熟的基于 v8 API 的实现和一个未完成的 N-API 实现，只看 N-API 这一层面的实现，napi-rs 与 neon 也有许多不同的地方 -->
+
+`neon` has a v8 backend and an incomplete napi backend. Looking only at the N-API backend, there are also many differences between `napi-rs` and `neon`.
+
+## Abstract level
+
+`neon` has 2 backends and it try to abstract over the 2 different api.
+`napi-rs` is lighter and the API is closer in concept to the original N-API.
+
+## Tools
+
+`neon` has a simple cli tool which could help you to build/create packages in local.
+
+`@napi-rs/cli` do more things like mange your binary cross local environment and CI, help you publish packages in **Github actions** without pain.
