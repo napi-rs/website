@@ -7,7 +7,7 @@ description: Running tokio task with build-in tokio runtime.
 
 You can also run `Tokio` futures in NodeJS. With the `tokio_rt` feature, `napi-rs` will create tokio runtime so that you can use `Env::execute_tokio_future` to execute a future and return a JavaScript `Promise`.
 
-> `tokio_rt` needs `ThreadSafeFunction` under the hood, so you must enable `napi4` feature or higher.
+> `tokio_rt` needs `ThreadSafeFunction` under the hood, so enable `tokio_rt` feature will enable `napi4` by default.
 
 ```rust
 #[js_function(1)]
