@@ -58,6 +58,8 @@
   items:
     - label: '1.0.0'
       link: /changelog/1.0.0
+    - label: '1.0.1'
+      link: /changelog/1.0.1
 
 - label: More
   items:
