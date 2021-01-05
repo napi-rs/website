@@ -1,17 +1,18 @@
 ---
-title: Define class
-description: Define JavaScript class in Rust.
+title: Defining class
+description: Defining a JavaScript class in Rust.
 ---
 
 [Real world example](https://github.com/Brooooooklyn/skia-rs/blob/main/src/ctx.rs#L30)
+
+This example creates a class named `TestClass` which has a js property called `count` and wraps a rust struct `NativeClass` on the instance of the object which has a property `value`. The methods can access both the object's properites and the wrapped struct.
 
 ```rust title=lib.rs
 #[macro_use]
 extern crate napi_derive;
 
 use std::convert::TryInto;
-
-use napi::{CallContext, JsFunction, JsNumber, JsObject, JsUndefined, Property, Result};
+use napi::{CallContext, JsNumber, JsObject, JsUndefined, Property, Result, Env};
 
 struct NativeClass {
   value: i32,
@@ -29,12 +30,12 @@ fn test_class_constructor(ctx: CallContext) -> Result<JsUndefined> {
 }
 
 #[js_function(1)]
-fn add_count(ctx: CallContext) -> Result<JsUndefined> {
+fn add_count(ctx: CallContext) -> Result<JsNumber> {
   let add: i32 = ctx.get::<JsNumber>(0)?.try_into()?;
   let mut this: JsObject = ctx.this_unchecked();
   let count: i32 = this.get_named_property::<JsNumber>("count")?.try_into()?;
   this.set_named_property("count", ctx.env.create_int32(count + add)?)?;
-  ctx.env.get_undefined()
+  this.get_named_property("count")
 }
 
 #[js_function(1)]
@@ -47,14 +48,12 @@ fn add_native_count(ctx: CallContext) -> Result<JsNumber> {
 }
 
 #[module_exports]
-pub fn init(mut exports: JsObject) -> Result<()> {
-  let test_class = ctx
-    .env
+pub fn init(mut exports: JsObject, env: Env) -> Result<()> {
+  let test_class = env
     .define_class("TestClass", test_class_constructor, &[
-      Property::new(&ctx.env, "addCount")?.with_method(add_count), add_native_count,
-      Property::new(&ctx.env, "addNativeCount")?.with_method(add_native_count),
+      Property::new(&env, "addCount")?.with_method(add_count),
+      Property::new(&env, "addNativeCount")?.with_method(add_native_count),
     ])?;
-
   exports.set_named_property("TestClass", test_class)?;
 
   Ok(())
