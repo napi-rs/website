@@ -26,7 +26,7 @@ fn get_native_object(ctx: CallContext) -> Result<JsNumber> {
   let mut this: JsObject = ctx.this_unchecked();
   let native: Native = ctx
     .env
-    .unrwap(&mut this)?;
+    .unwrap(&mut this)?;
   ctx.env.create_int32(native.value + 1)
 }
 ```
