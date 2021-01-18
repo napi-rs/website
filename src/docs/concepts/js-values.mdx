@@ -48,13 +48,13 @@ fn fibonacci_native(n: i64) -> i64 {
 
 `JsBoolean` represent boolean value in JavaScript.
 
-Use `JsBoolean::get_value()` to convert `JsBoolean` into Rust `bool`. And `Env::get_boolean_value()` to convert Rust `bool` into `JsBoolean`.
+Use `JsBoolean::get_value()` to convert `JsBoolean` into Rust `bool`. And `Env::get_boolean()` to convert Rust `bool` into `JsBoolean`.
 
 ```rust
 #[js_function(1)]
 fn not(ctx: CallContext) -> Result<JsBoolean> {
   let condition: JsBoolean = ctx.get(0)?;
-  ctx.env.get_boolean_value(!condition.get_value()?)
+  ctx.env.get_boolean(!condition.get_value()?)
 }
 ```
 
