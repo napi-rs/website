@@ -98,7 +98,7 @@ The string implement in V8 is far more complicated than `ArrayBuffer`, which the
 ```rust
 #[js_function(1)]
 fn set_buffer(ctx: CallContext) -> Result<JsUndefined> {
-  let buf = &mut ctx.get::<JsNumber>(0)?.into_value()?; // &mut [u8]
+  let buf = &mut ctx.get::<JsBuffer>(0)?.into_value()?; // &mut [u8]
   buf[0] = 1;
   buf[1] = 2;
   ctx.env.get_undefined()
