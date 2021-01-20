@@ -91,14 +91,14 @@ world('hello') // hello world!
 
 <!-- 使用 JsBuffer 在 JavaScript 与 Rust 之间传递数据是开销最小的一种方式。 -->
 
-Represent `Buffer` value in NodeJS. Using `JsBuffer` to pass data between JavaScript and Rust is one of the least overhead ways to do this.
-In some case, convert string into Buffer and pass it to Rust, then do some compute stuff to the `&[u8]` under the `JsBuffer` is faster than pass String directly to Rust.
-The string implement in V8 is far more complicated than `ArrayBuffer`, which the Buffer is implemented by.
+Represents a `Buffer` value in NodeJS. Passing data between JavaScript and Rust using `JsBuffer` has a small overhead so you might prefer it over other types.
+
+For example, in some cases, converting a JavaScript `string` into a `Buffer`, pass it to Rust as a `JsBuffer` and cast it as a `&[u8]` is faster than passing the string directly to Rust. The string implementation in V8 is far more complicated than the `ArrayBuffer` one, which is what `Buffer` is implemented by.
 
 ```rust
 #[js_function(1)]
 fn set_buffer(ctx: CallContext) -> Result<JsUndefined> {
-  let buf = &mut ctx.get::<JsNumber>(0)?.into_value()?; // &mut [u8]
+  let buf = &mut ctx.get::<JsBuffer>(0)?.into_value()?; // &mut [u8]
   buf[0] = 1;
   buf[1] = 2;
   ctx.env.get_undefined()
