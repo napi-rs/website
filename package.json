@@ -56,9 +56,5 @@
     "hooks": {
       "pre-commit": "lint-staged"
     }
-  },
-  "resolutions": {
-    "gatsby-plugin-manifest/sharp": "^0.26.3",
-    "@rocketseat/**/sharp": "^0.26.3"
   }
 }
