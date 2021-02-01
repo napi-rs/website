@@ -21,6 +21,12 @@ export function Badges() {
           src="https://img.shields.io/npm/dm/@napi-rs/cli"
         />
       </a>
+      <a href="https://crates.io/crates/napi" target="_blank" rel="noreferrer">
+        <img
+          alt="crate Downloads"
+          src="https://img.shields.io/crates/d/napi.svg?label=crates.io%20download"
+        />
+      </a>
       <a
         href="https://github.com/napi-rs/napi-rs"
         target="_blank"
