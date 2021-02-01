@@ -17,6 +17,7 @@ import { SideBarState } from '../Sidebar/sidebar-context'
 
 require('prismjs/components/prism-rust')
 require('prismjs/components/prism-cpp')
+require('prismjs/components/prism-toml')
 
 const Container = styled.div`
   width: 100%;

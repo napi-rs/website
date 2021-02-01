@@ -287,6 +287,11 @@ const globalStyles = (theme) => css`
     background: #ffa8df;
   }
 
+  pre[class~='language-toml']::before {
+    content: 'toml';
+    background: white;
+  }
+
   pre[class~='language-markdown']::before {
     content: 'md';
   }
