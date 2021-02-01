@@ -68,6 +68,8 @@
       link: /changelog/napi-cli-1.0.1
     - label: 'napi@1.1.2'
       link: /changelog/napi-1.1.2
+    - label: 'napi@1.1.3'
+      link: /changelog/napi-1.1.3
 
 - label: More
   items:
