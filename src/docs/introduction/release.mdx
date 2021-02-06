@@ -3,9 +3,9 @@ title: 'Release native packages'
 description: The history of how to release native packages.
 ---
 
-<!-- 从前面部分的介绍可以窥见，目前社区上主流的分发方式是直接分发 `C/C++` 源码。但这种方式对于使用 Rust 编写 NodeJS native addon 的开发者来说，并不是一种可以接受的分发方案，因为 Rust 工具链的复杂性和编译耗时等问题，分直接发源码对使用这些 native addon 的开发者来说会是一种巨大的折磨。 -->
+<!-- 从前面部分的介绍可以窥见，目前社区上主流的分发方式是直接分发 `C/C++` 源码。但这种方式对于使用 Rust 编写 Node.js native addon 的开发者来说，并不是一种可以接受的分发方案，因为 Rust 工具链的复杂性和编译耗时等问题，分直接发源码对使用这些 native addon 的开发者来说会是一种巨大的折磨。 -->
 
-As you can see from the previous section, the dominant distribution method on the community is **_distribute `C/C++` source code directly_**. However, this approach is not an acceptable distribution solution for developers using `Rust` to write NodeJS native addons, because the complexity and compilation time of the Rust toolchain makes distributing the source code directly a huge ordeal for developers using these native addons.
+As you can see from the previous section, the dominant distribution method on the community is **_distribute `C/C++` source code directly_**. However, this approach is not an acceptable distribution solution for developers using `Rust` to write Node.js native addons, because the complexity and compilation time of the Rust toolchain makes distributing the source code directly a huge ordeal for developers using these native addons.
 
 <!-- 下面我将介绍包括***分发源码***在内的 native addon 的几种分发方式，在介绍完之后相信你能找到最适合 `Rust` 的 native addon 分发方式。 -->
 

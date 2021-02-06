@@ -1,6 +1,6 @@
 ---
-title: 'NodeJS native module'
-description: NodeJS native module.
+title: 'Node.js native module'
+description: Node.js native module.
 ---
 
 > Some contents are borrowed from https://xcoder.in/2017/07/01/nodejs-addon-history/
@@ -76,17 +76,17 @@ The flow down is similar to this flowchart:
 
 ### `node-waf`
 
-Before NodeJS 0.8, developers used the `node-waf` to build their library. Of course the `node-waf` is not the node-waf in npm registry, the original `node-waf` has been fallen to disrepair for years.
+Before Node.js 0.8, developers used the `node-waf` to build their library. Of course the `node-waf` is not the node-waf in npm registry, the original `node-waf` has been fallen to disrepair for years.
 
-This thing was configured with a file named `wscript`. From NodeJS 0.8, it had `node-gyp` builtin, so people didn't need wscript anymore.
+This thing was configured with a file named `wscript`. From Node.js 0.8, it had `node-gyp` builtin, so people didn't need wscript anymore.
 
-But because this temporary shortage, many libraries using C++ to build NodeJS addon contains both `binding.gyp` and `wscript` in that time.
+But because this temporary shortage, many libraries using C++ to build Node.js addon contains both `binding.gyp` and `wscript` in that time.
 
 You can see files back to that age in this library [node-mysql-libmysqlclient](https://github.com/Sannis/node-mysql-libmysqlclient/tree/9545ea7485fcc8b07b7c56c5ec3575938bfd4e5f). For node-gyp support it had `binding.gyp` and still preserved the `wscript` file.
 
 ### `node-gyp`
 
-This stuff It has been with Node.js since NodeJS v0.8, before that its default compilation helper package was `node-waf`(see below), which should be familiar to old Noder.
+This stuff It has been with Node.js since Node.js v0.8, before that its default compilation helper package was `node-waf`(see below), which should be familiar to old Noder.
 
 #### `GYP`
 
@@ -176,4 +176,4 @@ node-gyp is a command line program that can be run directly from `$ node-gyp` af
 
 ## Conclusion
 
-In this chapter, we introduced what the NodeJS native addon is and how to compile it. in the next chapter, we will review the history of API changes related to the native addon in NodeJS and formally introduce our protagonist: the N-API.
+In this chapter, we introduced what the Node.js native addon is and how to compile it. in the next chapter, we will review the history of API changes related to the native addon in Node.js and formally introduce our protagonist: the N-API.

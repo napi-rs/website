@@ -3,7 +3,7 @@ module.exports = {
     siteTitle: `napi-rs Docs`,
     defaultTitle: `napi-rs Docs`,
     siteTitleShort: `napi-rs Docs`,
-    siteDescription: `A minimal library for building compiled NodeJS add-ons in Rust `,
+    siteDescription: `A minimal library for building compiled Node.js add-ons in Rust `,
     siteUrl: `https://napi.rs`,
     siteAuthor: `lynweklm@gmail.com`,
     siteImage: `/banner.png`,

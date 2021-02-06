@@ -1,13 +1,13 @@
 ---
 title: 'History'
-description: The history of writing NodeJS native addons.
+description: The history of writing Node.js native addons.
 ---
 
 > Some contents are borrowed from https://xcoder.in/2017/07/01/nodejs-addon-history/
 
 ## The Feudal era: Using `v8 C++` headers directly
 
-In very early ages, developers were using `v8/NodeJS C++` headers directly to build NodeJS native addon.
+In very early ages, developers were using `v8/Node C++` headers directly to build Node.js native addon.
 
 ```cpp
 Handle<Value> Echo(const Arguments& args)
@@ -32,7 +32,7 @@ void Init(Handle<Object> exports)
 }
 ```
 
-This code snippets defined a simple NodeJS function: `echo`. It always return the first argument passed in. And it equals to this simple `NodeJS` codes:
+This code snippets defined a simple Node.js function: `echo`. It always return the first argument passed in. And it equals to this simple `Node.js` codes:
 
 ```js
 exports.echo = function () {
@@ -43,24 +43,24 @@ exports.echo = function () {
 
 If you publish these codes as a `npm` package, it can only work with `node 0.10.x`.
 
-But why? The short answer is **_v8 and NodeJS api changes fast._** For example in `NodeJS 6.x`, the way of define `JsFunction` changed:
+But why? The short answer is **_v8 and Node.js api changes fast._** For example in `Node.js 6.x`, the way of define `JsFunction` changed:
 
 ```cpp
 Handle<Value> Echo(const Arguments& args);    // 0.10.x
 void Echo(FunctionCallbackInfo<Value>& args); // 6.x
 ```
 
-So native packages developed in this way can only support only few versions of NodeJS, when the API of `v8` or `NodeJS` changed, these packages couldn't be compiled any more. And if maintainers updated the API to latest NodeJS and `v8`, the package couldn't be compiled under the older NodeJS, again.
+So native packages developed in this way can only support only few versions of Node.js, when the API of `v8` or `Node.js` changed, these packages couldn't be compiled any more. And if maintainers updated the API to latest Node.js and `v8`, the package couldn't be compiled under the older Node.js, again.
 
 ## The Castle era: Native Abstractions for Node.js
 
-Back to 2013, with the fast iteration of the `NodeJS` and `v8`, packages used the old way to build native addon grow with pains. And [`NAN`](https://github.com/nodejs/nan) came out. It's shorten for **Native Abstractions for Node.js**.
+Back to 2013, with the fast iteration of the `Node.js` and `v8`, packages used the old way to build native addon grow with pains. And [`NAN`](https://github.com/nodejs/nan) came out. It's shorten for **Native Abstractions for Node.js**.
 
-> NAN was built by [Rod Vagg](https://github.com/rvagg) and then [Benjamin Byholm](https://github.com/kkoopa). NAN was belong to Rod Vaggs' GitHub account from the beginning, and transferred to `io.js` organization in the dark age of `NodeJS` split to `io.js` and `NodeJS`；After they got back together，NAN finally transferred into `NodeJS` organization.
+> NAN was built by [Rod Vagg](https://github.com/rvagg) and then [Benjamin Byholm](https://github.com/kkoopa). NAN was belong to Rod Vaggs' GitHub account from the beginning, and transferred to `io.js` organization in the dark age of `Node.js` split to `io.js` and `Node.js`；After they got back together，NAN finally transferred into `Node.js` organization.
 
 After NAN came out, the develop experience in native addon packages came to **_the Castle age_**, and last to nowadays.
 
-It's still a litter abstract for the full description of NAN: **_Native abstractions for NodeJS_**. To be specifically, it's a bunch of **_C macros_**. You can define a JavaScript function like this for example:
+It's still a litter abstract for the full description of NAN: **_Native abstractions for Node.js_**. To be specifically, it's a bunch of **_C macros_**. You can define a JavaScript function like this for example:
 
 ```cpp
 NAN_METHOD(Echo)
@@ -68,7 +68,7 @@ NAN_METHOD(Echo)
 }
 ```
 
-The macro of NAN will be expanded to different CPP codes in during compiling according different NodeJS version:
+The macro of NAN will be expanded to different CPP codes in during compiling according different Node.js version:
 
 ```cpp
 Handle<Value> Echo(const Arguments& args);    // 0.10.x
@@ -104,7 +104,7 @@ NAN_MODULE_INIT(InitAll)
 }
 ```
 
-The benefit of writing codes in this way is because the codes could auto upgrade with the NAN upgraded, the codes could be compatible with every versions of NodeJS.
+The benefit of writing codes in this way is because the codes could auto upgrade with the NAN upgraded, the codes could be compatible with every versions of Node.js.
 
 > Even a good thing like the NAN has a mission, and anything outside of that mission will be gradually stripped away. Versions such as 0.10.x and 0.12.x, for example, should be retired, and the NAN will gradually drop compatibility and support for them.
 
@@ -247,4 +247,4 @@ This session explains the change in approach to native C++ module development in
 - From node-waf to node-gyp, it's a change in build tools, maybe GN or something else in the future.
 - From code-breaking to the advent of NAN, the Node.js community has seen its fair share of loves and hates, all the way to the new kid on the block, N-API, which has brought new blood into the development of native C++ modules.
 
-I hope this helps you understand the sour history of NodeJS native module development, and the reasons and background for the emergence of N-API.
+I hope this helps you understand the sour history of Node.js native module development, and the reasons and background for the emergence of N-API.

@@ -1,7 +1,7 @@
 import React from 'react'
 
 export function NodeJS() {
-  return <span style={{ color: 'green', fontWeight: 'bold' }}>NodeJS</span>
+  return <span style={{ color: 'green', fontWeight: 'bold' }}>Node.js</span>
 }
 
 export function Rust() {
