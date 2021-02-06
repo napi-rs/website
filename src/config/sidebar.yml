@@ -79,5 +79,5 @@
       link: /neon
 - label: Community
   items:
-    - label: 'Github'
+    - label: 'GitHub'
       link: https://github.com/napi-rs/napi-rs

@@ -33,7 +33,7 @@ export function Badges() {
         rel="noreferrer"
       >
         <img
-          alt="Github stars"
+          alt="GitHub stars"
           src="https://img.shields.io/github/stars/napi-rs/napi-rs?style=social"
         />
       </a>
