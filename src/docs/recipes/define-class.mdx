@@ -43,7 +43,7 @@ fn add_native_count(ctx: CallContext) -> Result<JsNumber> {
   let add: i32 = ctx.get::<JsNumber>(0)?.try_into()?;
   let this: JsObject = ctx.this_unchecked();
   let native_class: &mut NativeClass = ctx.env.unwrap(&this)?;
-  native_class.value = native_class.value + add;
+  native_class.value += add;
   ctx.env.create_int32(native_class.value)
 }
 
