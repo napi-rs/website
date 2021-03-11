@@ -1,5 +1,6 @@
-import { css } from '@emotion/core'
-import React from 'react'
+/**@jsx jsx */
+
+import { css, jsx } from '@emotion/react'
 
 import GuideVideoURL from './napi-rs-guide.mp4'
 

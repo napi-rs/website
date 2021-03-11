@@ -17,7 +17,7 @@ module.exports = {
       options: {
         configPath: `src/config`,
         docsPath: `src/docs`,
-        githubUrl: `https://github.com/napi-rs/website`,
+        repositoryUrl: `https://github.com/napi-rs/website`,
         branch: `main`,
         withMdx: false,
       },

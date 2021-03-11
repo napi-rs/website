@@ -1,6 +1,7 @@
 /* @jsx jsx */
+
 import { useRef, Fragment, useContext, useCallback } from 'react'
-import { jsx, css } from '@emotion/core'
+import { css, jsx } from '@emotion/react'
 import styled from '@emotion/styled'
 
 import TableOfContents from '@rocketseat/gatsby-theme-docs/src/components/Docs/TOC'

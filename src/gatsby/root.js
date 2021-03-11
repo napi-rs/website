@@ -1,8 +1,8 @@
-import { css, Global } from '@emotion/core'
+/**@jsx jsx */
+import React from 'react'
+import { jsx, css, Global, ThemeProvider, useTheme } from '@emotion/react'
 import styled from '@emotion/styled'
-import { useTheme } from 'emotion-theming'
-import React, { useState } from 'react'
-import { ThemeProvider } from 'emotion-theming'
+import { useState } from 'react'
 
 import Sidebar from '../@rocketseat/gatsby-theme-docs/components/Sidebar'
 import { SideBarState } from '../@rocketseat/gatsby-theme-docs/components/Sidebar/sidebar-context'
