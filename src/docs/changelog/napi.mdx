@@ -1,0 +1,117 @@
+---
+title: napi
+description: Changelog for napi crate https://crates.io/crates/napi
+---
+
+## [napi@1.3.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.3.0)
+
+### Feature
+
+- Add a way to opt out of error handling for `ThreadsafeFunction` [#500](https://github.com/napi-rs/napi-rs/pull/500)
+
+## [napi@1.2.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.2.0)
+
+### Feature
+
+- feat(napi): unwrap &'static value from Ref object [e622d96](https://github.com/napi-rs/napi-rs/commit/e622d9693a1e7f230eb74bc50c00355ef7feb7b3)
+- feat(napi): add back clone trait to ThreadsafeFunction [071dcff](https://github.com/napi-rs/napi-rs/commit/071dcff9ebe0e631e60d1915a93ea9fd2583348e)
+
+### Chore
+
+- chore(napi): relax the tokio version from `1.1` to `1`. [c39b364](https://github.com/napi-rs/napi-rs/commit/c39b364319add276f04391228fd8a97463006efb)
+
+## [napi@1.1.3](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.1.3)
+
+### Chore
+
+- chore(napi): upgrade tokio to 1.1 [2775b47](https://github.com/napi-rs/napi-rs/commit/2775b47e33e5c67b4cb89dff985f15f8bd729388)
+
+## [napi@1.1.2](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.1.2)
+
+### Bugfix
+
+- fix(napi): throw JavaScript error in tsfn rather than rust thread panic [f46aa1f](https://github.com/napi-rs/napi-rs/commit/f46aa1f67ac078dd67a1ef894aa4866724472697)
+
+## [napi@1.1.1](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.1.1)
+
+### Feature
+
+- Implement `Copy` and `Clone` trait for JavaScript Primitive types. [c121537](https://github.com/napi-rs/napi-rs/commit/c1215379f2deda197c23879d0b40ea177955017c)
+
+### Bugfix
+
+- Remove unexpected `into_*_ref` from `JsString`. [e24738a](https://github.com/napi-rs/napi-rs/commit/e24738a4d86ebe8c6778ce1ddb1bb29c95b91132)
+
+## [napi@1.1.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.1.0)
+
+### Feature
+
+- Implement `Env::create_arraybuffer_with_borrowed_data` for `ffi` scenario. [911a0c1](https://github.com/napi-rs/napi-rs/pull/409/commits/911a0c139d6862b2042b80439e958e2d0a9257fc)
+
+## [napi@1.0.1](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.0.1)
+
+### Bugfix
+
+- enable `napi4` feature when `tokio_rt` enabled.
+- Remove unexpected `napi_acquire_threadsafe_function` in `Env::execute_tokio_future` which would prevent Node.js process to exit: [#397](https://github.com/napi-rs/napi-rs/issues/397)
+
+## [napi@1.0.0](https://github.com/napi-rs/napi-rs/releases/tag/1.0.0)
+
+### Breaking changes
+
+#### Module register
+
+The old way:
+
+```rust
+register_module!(test_module, init);
+
+fn init(module: &mut Module) -> Result<()> {
+  // ....
+  Ok(())
+}
+```
+
+The new way:
+
+```rust
+#[module_exports]
+fn init(mut exports: JsObject) -> Result<()> {
+  // ...
+  Ok(())
+}
+```
+
+or
+
+```rust
+#[module_exports]
+fn init(mut exports: JsObject, env: Env) -> Result<()> {
+  // ...
+  Ok(())
+}
+```
+
+#### Task
+
+```diff
+- pub trait Task: Send {
++ pub trait Task: Send + Sized {
+    type Output: Send + Sized + 'static;
+    type JsValue: NapiValue;
+
+
+-   fn compute(&self) -> Result<Self::Output>;
++   fn compute(&mut self) -> Result<Self::Output>;
+
+
+-   fn resolve(&self, env: &mut Env, output: Self::Output) -> Result<Self::JsValue>;
++   fn resolve(self, env: Env, output: Self::Output) -> Result<Self::JsValue>;
+
+
++   fn reject(self, _env: Env, err: Error) -> Result<Self::JsValue> {
++     Err(err)
++   }
+}
+
+```
