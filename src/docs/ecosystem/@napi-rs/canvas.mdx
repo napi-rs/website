@@ -1,18 +1,18 @@
 ---
-title: '@napi-rs/skia'
-description: rust-pinyin binding to Node.js.
+title: '@napi-rs/canvas'
+description: Skia binding to Node.js.
 ---
 
 > WIP. <br/>
-> See [roadmap](https://github.com/Brooooooklyn/skia-rs/issues/113)
+> See [roadmap](https://github.com/Brooooooklyn/canvas/issues/113)
 
-<a href="https://www.npmjs.com/package/@napi-rs/skia" target="_blank">
-  <img alt="npm Downloads" src="https://img.shields.io/npm/dm/@napi-rs/skia" />
+<a href="https://www.npmjs.com/package/@napi-rs/canvas" target="_blank">
+  <img alt="npm Downloads" src="https://img.shields.io/npm/dm/@napi-rs/canvas" />
 </a>
-<a href="https://github.com/Brooooooklyn/skia-rs" target="_blank">
+<a href="https://github.com/Brooooooklyn/canvas" target="_blank">
   <img
     alt="GitHub stars"
-    src="https://img.shields.io/github/stars/Brooooooklyn/skia-rs?style=social"
+    src="https://img.shields.io/github/stars/Brooooooklyn/canvas?style=social"
   />
 </a>
 
@@ -27,7 +27,7 @@ description: rust-pinyin binding to Node.js.
 const { promises } = require('fs')
 const { join } = require('path')
 
-const { createCanvas } = require('@napi-rs/skia')
+const { createCanvas } = require('@napi-rs/canvas')
 
 const canvas = createCanvas(1024, 768)
 
@@ -122,7 +122,7 @@ export class Path2D {
 }
 ```
 
-### [Example](./example/tiger.js)
+### [Example](https://github.com/Brooooooklyn/canvas/blob/main/example/tiger.js)
 
 > The tiger.json was serialized from [gojs/samples/tiger](https://github.com/NorthwoodsSoftware/GoJS/blob/master/samples/tiger.html)
 

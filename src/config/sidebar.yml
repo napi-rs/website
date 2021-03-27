@@ -51,8 +51,8 @@
       link: /ecosystem/@node-rs/deno-lint
     - label: '@napi-rs/pinyin'
       link: /ecosystem/@napi-rs/pinyin
-    - label: '@napi-rs/skia'
-      link: /ecosystem/@napi-rs/skia
+    - label: '@napi-rs/canvas'
+      link: /ecosystem/@napi-rs/canvas
 
 - label: Changelog
   items:
