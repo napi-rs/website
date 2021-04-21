@@ -3,6 +3,32 @@ title: napi
 description: Changelog for napi crate https://crates.io/crates/napi
 ---
 
+## [napi@1.6.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.6.0)
+
+### Feature
+
+- Support N-API **_version 8_** features:
+
+  - [Object freeze](https://nodejs.org/api/n-api.html#n_api_napi_object_freeze)
+  - [Object seal](https://nodejs.org/api/n-api.html#n_api_napi_object_seal)
+  - [Async cleanup hook](https://nodejs.org/api/n-api.html#n_api_napi_add_async_cleanup_hook)
+
+`napi8` feature added into `napi` crate.
+
+### Chore
+
+- `Node.js@10` and `Node.js@15` removed from `CI`.
+
+## [napi@1.5.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.5.0)
+
+### Feature
+
+- feat(napi): expose create_string_from_c_char for C ffi scenario [d1bcecc](https://github.com/napi-rs/napi-rs/commit/d1bceccbe63ef8b799f21b89f09de8e5c4121829)
+
+### Fix
+
+- fix(napi): memory ordering issues in tsfn [5a21bbe](https://github.com/napi-rs/napi-rs/commit/5a21bbeb8e1d844b6176a680e7eaecd5b0adb939)
+
 ## [napi@1.4.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.4.0)
 
 ### Feature
