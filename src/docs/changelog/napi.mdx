@@ -3,6 +3,28 @@ title: napi
 description: Changelog for napi crate https://crates.io/crates/napi
 ---
 
+## [napi@1.7.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.7.0)
+
+### Feature
+
+- feat(napi): impl more types `AsRef` and `AsMut` for `TypedArray` [#578](https://github.com/napi-rs/napi-rs/pull/578)
+
+### Refactor
+
+- refactor(napi): change more generic constraint from `NapiValue` => `NapiRaw` [#565](https://github.com/napi-rs/napi-rs/pull/565)
+
+## [napi-sys@1.1.1](https://github.com/napi-rs/napi-rs/releases/tag/napi-sys%401.1.1)
+
+### Fix
+
+- fix(sys): `napi_bigint64_array` and `napi_biguint64_array` should be behind the `napi6` feature flag
+
+## [napi@1.6.1](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.6.1)
+
+### Chore
+
+- chore(napi): upgrade `once_cell`
+
 ## [napi@1.6.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.6.0)
 
 ### Feature
