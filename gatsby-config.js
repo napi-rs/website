@@ -19,7 +19,7 @@ module.exports = {
         docsPath: `src/docs`,
         repositoryUrl: `https://github.com/napi-rs/website`,
         branch: `main`,
-        withMdx: false,
+        withMdx: true,
       },
     },
     {
@@ -45,28 +45,6 @@ module.exports = {
       resolve: `gatsby-plugin-canonical-urls`,
       options: {
         siteUrl: `https://napi.rs`,
-      },
-    },
-    {
-      resolve: `gatsby-plugin-mdx`,
-      options: {
-        extensions: [`.mdx`, `.md`],
-        remarkPlugins: [],
-        gatsbyRemarkPlugins: [
-          `gatsby-remark-autolink-headers`,
-          `gatsby-remark-embedder`,
-          {
-            resolve: `gatsby-remark-images`,
-            options: {
-              maxWidth: 960,
-              withWebp: true,
-              linkImagesToOriginal: false,
-            },
-          },
-          `gatsby-remark-responsive-iframe`,
-          `gatsby-remark-copy-linked-files`,
-        ],
-        plugins: [`gatsby-remark-autolink-headers`, `gatsby-remark-images`],
       },
     },
     `gatsby-plugin-offline`,

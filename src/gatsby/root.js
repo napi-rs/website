@@ -376,9 +376,9 @@ function Root({ children }) {
 
 export function wrapRootElement({ element }) {
   // destructor the root.js element param from `@rocketseat/gatsby-theme-docs`
-  const [, rawElement] = element.props.children.props.children.props.children
+  const [, rawElement] = element.props.children.props.children
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={{ ...element.props.theme, ...theme }}>
       <>
         <GlobalStyle />
         <Root>{rawElement}</Root>
