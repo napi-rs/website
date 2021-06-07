@@ -6,7 +6,7 @@ module.exports = {
     siteDescription: `A minimal library for building compiled Node.js add-ons in Rust `,
     siteUrl: `https://napi.rs`,
     siteAuthor: `lynweklm@gmail.com`,
-    siteImage: `/banner.png`,
+    siteImage: `/favicon.png`,
     siteLanguage: `en`,
     themeColor: `#8257E6`,
     basePath: `/`,
