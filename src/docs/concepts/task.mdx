@@ -5,7 +5,7 @@ description: Running background task with N-API.
 
 Addon modules often need to leverage async helpers from libuv as part of their implementation. This allows them to schedule work to be executed asynchronously so that their methods can return in advance of the work being completed. This allows them to avoid blocking overall execution of the Node.js application.
 
-You can use `Env::spawn` to spawn a defined `Task` into libuv thead pool. See example in [Reference](./ref).
+You can use `Env::spawn` to spawn a defined `Task` into libuv thread pool. See example in [Reference](./ref).
 
 Expect `compute` and `resolve`, you can also provide `reject` method to do some clean up when `Task` ran into error, like `unref` some object:
 
