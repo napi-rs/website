@@ -51,7 +51,7 @@
       link: /ecosystem/@node-rs/deno-lint
     - label: '@napi-rs/pinyin'
       link: /ecosystem/@napi-rs/pinyin
-    - label: '@napi-rs/canvas'
+    - label: 'skr-canvas'
       link: /ecosystem/@napi-rs/canvas
 
 - label: Changelog

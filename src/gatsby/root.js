@@ -335,6 +335,9 @@ function GlobalStyle() {
   return (
     <Global
       styles={css(globalStyles(theme), {
+        '.gatsby-highlight': {
+          maxWidth: '960px',
+        },
         [`.prism-code.language-cpp`]: {
           '&::before': {
             content: '"c++"',
