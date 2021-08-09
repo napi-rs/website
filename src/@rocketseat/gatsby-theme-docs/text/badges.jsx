@@ -76,6 +76,12 @@ export function Badges() {
         </svg>
         <span>Sponsor</span>
       </a>
+      <a href="https://discord.gg/SpWzYHsKHs">
+        <img
+          src="https://img.shields.io/discord/874290842444111882.svg?logo=discord&style=flat-square"
+          alt="chat"
+        />
+      </a>
     </div>
   )
 }
