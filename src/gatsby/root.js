@@ -338,6 +338,9 @@ function GlobalStyle() {
         '.gatsby-highlight': {
           maxWidth: '960px',
         },
+        '.gatsby-resp-image-background-image': {
+          backgroundImage: 'none',
+        },
         [`.prism-code.language-cpp`]: {
           '&::before': {
             content: '"c++"',

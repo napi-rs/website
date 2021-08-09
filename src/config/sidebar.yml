@@ -41,6 +41,8 @@
   items:
     - label: swc
       link: /ecosystem/swc
+    - label: snappy
+      link: /ecosystem/snappy
     - label: '@node-rs/bcrypt'
       link: /ecosystem/@node-rs/bcrypt
     - label: '@node-rs/crc32'
