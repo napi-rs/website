@@ -1,0 +1,62 @@
+---
+title: '@node-rs/crc32'
+description: Fastest crc32 implementation in Node.js.
+---
+
+<a href="https://www.npmjs.com/package/@node-rs/crc32" target="_blank">
+  <img alt="npm Downloads" src="https://img.shields.io/npm/dm/@node-rs/crc32" />
+</a>
+<a href="https://github.com/napi-rs/node-rs" target="_blank">
+  <img
+    alt="Github stars"
+    src="https://img.shields.io/github/stars/napi-rs/node-rs?style=social"
+  />
+</a>
+
+<br />
+<br />
+
+> Fastest crc32 implementation in Node.js.
+
+## Performance
+
+**Hardware info**:
+
+```
+Model Name: MacBook Pro
+Model Identifier: MacBookPro15,1
+Processor Name: 6-Core Intel Core i7
+Processor Speed: 2.6 GHz
+Number of Processors: 1
+Total Number of Cores: 6
+L2 Cache (per Core): 256 KB
+L3 Cache: 12 MB
+Hyper-Threading Technology: Enabled
+Memory: 16 GB
+```
+
+```text highlight={14}
+@node-rs/crc32 for inputs 1024B x 5,108,123 ops/sec ±1.86% (89 runs sampled)
+@node-rs/crc32 for inputs 16931844B, avg 2066B x 271 ops/sec ±1.15% (85 runs sampled)
+sse4_crc32c_hw for inputs 1024B x 3,543,443 ops/sec ±1.39% (93 runs sampled)
+sse4_crc32c_hw for inputs 16931844B, avg 2066B x 209 ops/sec ±0.78% (76 runs sampled)
+sse4_crc32c_sw for inputs 1024B x 1,460,284 ops/sec ±2.35% (90 runs sampled)
+sse4_crc32c_sw for inputs 16931844B, avg 2066B x 93.50 ops/sec ±2.43% (69 runs sampled)
+js_crc32c for inputs 1024B x 464,681 ops/sec ±0.46% (91 runs sampled)
+js_crc32c for inputs 16931844B, avg 2066B x 28.25 ops/sec ±1.64% (51 runs sampled)
+js_crc32 for inputs 1024B x 442,272 ops/sec ±2.66% (93 runs sampled)
+js_crc32 for inputs 16931844B, avg 2066B x 22.12 ops/sec ±5.20% (40 runs sampled)
++---------------------+-------------------+----------------------+
+|                     │ 1024B             │ 16931844B, avg 2066B |
++---------------------+-------------------+----------------------+
+| @node-rs/crc32      │ 5,108,123 ops/sec │ 271 ops/sec          |
++---------------------+-------------------+----------------------+
+| sse4_crc32c_hw      │ 3,543,443 ops/sec │ 209 ops/sec          |
++---------------------+-------------------+----------------------+
+| sse4_crc32c_sw      │ 1,460,284 ops/sec │ 93.50 ops/sec        |
++---------------------+-------------------+----------------------+
+| js_crc32c           │ 464,681 ops/sec   │ 28.25 ops/sec        |
++---------------------+-------------------+----------------------+
+| js_crc32            │ 442,272 ops/sec   │ 22.12 ops/sec        |
++---------------------+-------------------+----------------------+
+```

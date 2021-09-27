@@ -1,3 +1,7 @@
 .cache
 node_modules
 public
+.docusaurus
+build
+.vercel
+docs/concepts/function.md
