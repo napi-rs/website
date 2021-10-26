@@ -92,7 +92,7 @@ This stuff It has been with Node.js since Node.js v0.8, before that its default 
 
 `node-gyp` is based on `GYP`[^3]. It recognizes the `binding.gyp`[^4] file in a package or project, and then generates compilable projects for each system based on that configuration file, such as **Visual Studio project files (\*.sln, etc.)** for Windows and Makefiles for Unix. `node-gyp` can also invoke system compilation tools (such as GCC) to compile the project to a final DLL \*.node file.
 
-> As you can see from the above description, compiling C++ native modules on Windows relies on Visual Studio, which is why you will need to have Vusual Studio pre-installed to install some Node.js packages. <br/>
+> As you can see from the above description, compiling C++ native modules on Windows relies on Visual Studio, which is why you will need to have Visual Studio pre-installed to install some Node.js packages. <br/>
 > In fact, for users who don't need Visual Studio, it's not necessary, since node-gyp only relies on its compiler, not the IDE. Those who want to streamline the installation can visit [https://download.microsoft.com/download/5/f/7/5f7acaeb-8363-451f-9425-68a90f98b238/visualcppbuildtools_full.exe](https://download.microsoft.com/download/5/f/7/5f7acaeb-8363-451f-9425-68a90f98b238/visualcppbuildtools_full.exe) directly. cpp-build-tools Download the Visual CPP Build Tools installation, or install it from the `npm install --global --production windows-build-tools` command line to get the compilation tools you deserve.
 
 Now that we have that out of the way, let's take a look at the basic structure of `binding.gyp`:
