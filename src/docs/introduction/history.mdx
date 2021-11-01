@@ -187,6 +187,7 @@ void Init(napi_env env, napi_value exports, napi_value module, void* priv)
 ```cpp
 typedef struct {
   const char* utf8name;
+  napi_value name;
 
   napi_callback method;
   napi_callback getter;
