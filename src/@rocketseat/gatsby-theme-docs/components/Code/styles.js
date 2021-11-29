@@ -99,6 +99,7 @@ export const PreHeader = styled.div`
   margin-top: 0.5rem;
   padding: 0.8rem 1rem;
   border-radius: 5px 5px 0 0;
+  max-width: 960px;
 `
 
 export const LineNo = styled.span`
