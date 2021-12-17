@@ -291,6 +291,10 @@ export namespace xxh3 {
 
 Besides the new features, `v2` also brings some breaking changes.
 
+### **Rust** version
+
+The minimal version of Rust required to use `napi` is `1.57.0` because of the new `#[napi]` macro requires [60fe8b3](https://github.com/rust-lang/rust/commit/60fe8b3a65be709fe2163b8ab438ef14209055cc).
+
 ### `Task` trait
 
 The `fn resolve` and `fn reject` methods of `Task` trait now accepted `&mut self` rather thant `self`. Because we introduced a new `fn finally` method on it.
