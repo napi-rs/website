@@ -58,6 +58,7 @@ JavaScript `Number` type with Rust Int/Float types: `u32`, `i32`, `i64`, `f64`.
 For Rust types like `u64`, `u128`, `i128`, checkout [`BigInt`](#bigint) section.
 
 ```rust title=lib.rs
+#[napi]
 fn sum(a: u32, b: i32) -> i64 {
 	(b + a as i32).into()
 }
@@ -106,7 +107,7 @@ fn with_buffer(buf: Buffer) {
 	// do something
 }
 
-fn read_buffer(file: String): Buffer {
+fn read_buffer(file: String) -> Buffer {
 	Buffer::from(std::fs::read(file).unwrap())
 }
 ```
