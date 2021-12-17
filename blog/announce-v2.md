@@ -4,7 +4,7 @@ import { Diff } from './v2-diff'
 
 > 🦀 NAPI-RS v2 - [Faster 🚀](https://github.com/Brooooooklyn/rust-to-nodejs-overhead-benchmark) , Easier to use, and compatible improvements.
 >
-> 📅 2021/12/15
+> 📅 2021/12/17
 
 We are proudly announcing the release of NAPI-RS `v2`. This is the biggest release of **NAPI-RS** ever.
 
