@@ -1,0 +1,163 @@
+---
+title: 'JsValue'
+description: N-API JsValue.
+---
+
+`JsValue` represent the **_JavaScript value_** in `Rust`.
+
+## `JsUndefined`
+
+Represent `undefined` in JavaScript. It can not be casted into `Rust` value, and no `Rust` value can be casted into `JsUndefined`.
+
+The only way to create `JsUndefined` in Rust is calling `Env::get_undefined()`.
+
+## `JsNull`
+
+Represent `null` in JavaScript. Like `JsUndefined`, it can not be casted to `Rust` value and no `Rust` value can be casted to it.
+
+The only way to create `JsNull` in Rust is calling `Env::get_null()`.
+
+## `JsNumber`
+
+|      | f64                  | u32                  | i32                 | i64                 |
+| ---- | -------------------- | -------------------- | ------------------- | ------------------- |
+| From | `Env::create_double` | `Env::create_uint32` | `Env::create_int32` | `Env::create_int64` |
+| Into | `TryInto`            | `TryInto`            | `TryInto`           | `TryInto`           |
+
+```rust
+use std::convert::TryInto;
+
+use napi::*;
+
+#[js_function(1)]
+fn fib(ctx: CallContext) -> Result<JsNumber> {
+  let input_number: i64 = ctx.get::<JsNumber>(0)?.try_into()?;
+  ctx.env.create_int64(fibonacci_native(input_number))
+}
+
+#[inline(always)]
+fn fibonacci_native(n: i64) -> i64 {
+  match n {
+    1 | 2 => 1,
+    _ => fibonacci_native(n - 1) + fibonacci_native(n - 2),
+  }
+}
+```
+
+## `JsBoolean`
+
+`JsBoolean` represent boolean value in JavaScript.
+
+Use `JsBoolean::get_value()` to convert `JsBoolean` into Rust `bool`. And `Env::get_boolean()` to convert Rust `bool` into `JsBoolean`.
+
+```rust
+#[js_function(1)]
+fn not(ctx: CallContext) -> Result<JsBoolean> {
+  let condition: JsBoolean = ctx.get(0)?;
+  ctx.env.get_boolean(!condition.get_value()?)
+}
+```
+
+```js
+not(true) // false
+not(false) // true
+```
+
+## `JsString`
+
+Represent `string` value in JavaScript. There 3 types of `string` encoding you can interactive with `N-API`: `utf8`, `utf16` and `latin1`.
+
+> There is a article which may help you to understand encoding story in Node.js: https://kevin.burke.dev/kevin/node-js-string-encoding/
+
+Using `Env::create_string()` you could create `JsString` from Rust `&str`.
+If you want get utf8 value from `JsString`, you must using the `JsString::into_utf8()` to get utf8 value explicit.
+
+```rust
+#[js_function(1)]
+fn world(ctx: CallContext) -> Result<JsString> {
+  // or into_utf16/into_latin1 here
+  // if you want using into_latin1, you must enable `latin1` feature for `napi-rs`.
+  let input_string = ctx.get::<JsString>(0)?.into_utf8()?;
+  let output = format!("{} world!", input_string.as_str()?);
+  ctx.env.create_string(output.as_str())
+}
+```
+
+```js
+world('hello') // hello world!
+```
+
+## `JsBuffer`
+
+<!-- 使用 JsBuffer 在 JavaScript 与 Rust 之间传递数据是开销最小的一种方式。 -->
+
+Represents a `Buffer` value in Node.js. Passing data between JavaScript and Rust using `JsBuffer` has a small overhead so you might prefer it over other types.
+
+For example, in some cases, converting a JavaScript `string` into a `Buffer`, pass it to Rust as a `JsBuffer` and cast it as a `&[u8]` is faster than passing the string directly to Rust. The string implementation in V8 is far more complicated than the `ArrayBuffer` one, which is what `Buffer` is implemented by.
+
+```rust
+#[js_function(1)]
+fn set_buffer(ctx: CallContext) -> Result<JsUndefined> {
+  let buf = &mut ctx.get::<JsBuffer>(0)?.into_value()?; // &mut [u8]
+  buf[0] = 1;
+  buf[1] = 2;
+  ctx.env.get_undefined()
+}
+```
+
+```js
+setBuffer(Buffer.from([0, 1])) // <Buffer 01 02>
+```
+
+## `JsSymbol`
+
+Represent `Symbol` value in JavaScript. You can create `JsSymbol` from `&str` or `JsString`
+
+```rust
+// create from &str
+#[js_function(1)]
+fn create_symbol(ctx: CallContext) -> Result<JsSymbol> {
+  let desc = ctx.get::<JsString>(0)?.into_utf8()?;
+  ctx.env.create_symbol(Some(desc.as_str()?))
+}
+```
+
+```rust
+// create from JsString
+#[js_function(1)]
+fn create_symbol(ctx: CallContext) -> Result<JsSymbol> {
+  let desc = ctx.get::<JsString>(0)?;
+  ctx.env.create_symbol_from_js_string(desc)
+}
+```
+
+## `JsObject`
+
+Represent `Object` value in JavaScript. There are many object related api in `JsObject`. See [document](https://docs.rs/napi/latest/napi/struct.JsObject.html).
+
+```rust
+#[js_function(1)]
+fn set_bar(ctx: CallContext) -> Result<JsUndefined> {
+  let mut obj = ctx.get::<JsObject>(0)?;
+  let bar: JsString = obj.get_named_property("bar")?;
+  let bar_str = bar.into_utf8()?;
+  obj.set_named_property("bar", ctx.env.create_string_from_std(format!("{} bar", bar_str.as_str()?)))?;
+  ctx.env.get_undefined()
+}
+```
+
+```js
+setBar({ bar: 'bar' }) // { bar: "bar bar" }
+```
+
+## `JsDate`
+
+Represent `Date` object in JavaScript. JavaScript `Date` objects are described in [Section 20.3](https://tc39.es/ecma262/#sec-date-objects) of the ECMAScript Language Specification.
+
+## `JsBigint`
+
+Represent `Bigint` value in JavaScript.
+
+## `JsExternal`
+
+This API allocates a JavaScript value with external data attached to it. This is used to pass external data through JavaScript code, so it can be retrieved later by native code using [`Env::get_value_external`](https://docs.rs/napi/latest/napi/struct.Env.html#method.get_value_external).
