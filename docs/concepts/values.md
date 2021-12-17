@@ -138,8 +138,8 @@ fn log_string_field(obj: Object, field: String) {
 }
 
 #[napi]
-fn crete_obj(env: Env) -> Object {
-	let mut obj = env.create_object();
+fn create_obj(env: Env) -> Object {
+	let mut obj = env.create_object().unwrap();
 	obj.set("test", 1).unwrap();
 	obj
 }
@@ -181,7 +181,7 @@ export interface PackageJson {
   dependencies: Record<string, string> | null
   devDependencies: Record<string, string> | null
 }
-export function logPackageName(packageJson: PackageJson)
+export function logPackageName(packageJson: PackageJson): void
 export function readPackageJson(): PackageJson
 ```
 
@@ -221,46 +221,48 @@ The conversion between `Array` and `Vec<T>` is even heavier, which is in `O(2n)`
 
 ```rust title=lib.rs
 #[napi]
-fn arr_len(arr: Array): u32 {
-	arr.len()
+fn arr_len(arr: Array) -> u32 {
+  arr.len()
 }
 
 #[napi]
 fn get_tuple_array(env: Env) -> Array {
   let mut arr = env.create_array(2).unwrap();
 
-  arr.push(1).unwrap();
-  arr.push("test").unwrap();
+  arr.insert(1).unwrap();
+  arr.insert("test").unwrap();
 
   arr
 }
 
 #[napi]
-fn vec_len(nums: Vec<u32>): u32 {
-	nums.len()
+fn vec_len(nums: Vec<u32>) -> u32 {
+  u32::try_from(nums.len()).unwrap()
 }
 
 #[napi]
 fn get_nums() -> Vec<u32> {
-	vec![1, 1, 2, 3, 5, 8]
+  vec![1, 1, 2, 3, 5, 8]
 }
 ```
 
 ```ts title=index.d.ts
-export function arrLen(arr: Array<unknown>): number
-export function getTupleArray(): Array<unknown>
+export function arrLen(arr: unknown[]): number
+export function getTupleArray(): unknown[]
 export function vecLen(nums: Array<number>): number
 export function getNums(): Array<number>
 ```
 
 ### BigInt
 
+This requires the `napi6` feature.
+
 :::caution
 The only way to pass `BigInt` in `Rust` is using `BigInt` type. But you can return `BigInt`, `i64n`, `u64`, `i128`, `u128`. Return `i64` will be treated as `JavaScript` number, not `BigInt`.
 :::
 
 :::info
-The reason why Rust fn can't received `i128` `u128` `u64` `i64n` as arguments is that may losses precision while converting JavaScript `BigInt` into them. You can use `BigInt::get_u128`, `BigInt::get_i128` ... to get the value in `BigInt`. And also you can know if the loss of precision is happened by the return value of these methods.
+The reason why Rust fn can't receive `i128` `u128` `u64` `i64n` as arguments is that they may lose precision while converting JavaScript `BigInt` into them. You can use `BigInt::get_u128`, `BigInt::get_i128` ... to get the value in `BigInt`. The return value of these methods also indicates if precision is lost.
 :::
 
 ```rust title=lib.rs
