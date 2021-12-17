@@ -12,7 +12,7 @@ Represent `undefined` in JavaScript.
 ```rust {3} title=lib.rs
 #[napi]
 fn get_undefined() -> Undefined {
-	Undefined
+	()
 }
 
 // default return or empty tuple `()` are `undefined` after converted into JS value.
