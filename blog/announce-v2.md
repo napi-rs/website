@@ -358,6 +358,10 @@ And we want to investigate the `Deno FFI` support too. See [#12577](https://gith
 
 [`node-bindgen`](https://github.com/infinyon/node-bindgen) [`neon`](https://github.com/neon-bindings/neon) and [`wasm-bindgen`](https://github.com/rustwasm/wasm-bindgen) inspiring many of API designs in the `v2`.
 
+:::info
+Special thanks to my wife. Without the weekends she sacrificed, I probably wouldn't even know how to Rust!
+:::
+
 ### Contributors ✨
 
 Thanks goes to these wonderful people ✨:

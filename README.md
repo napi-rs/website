@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./static/favicon.png" alt="napi-rs logo" width="100">
+  <img src="./static/img/favicon.png" alt="napi-rs logo" width="100">
 </p>
 
 <h2 align="center">
@@ -7,7 +7,7 @@
 </h2>
 
 <p align="center">
-  Powered by Gatsby 🔥 Using the theme: <a href="https://github.com/Rocketseat/gatsby-themes/tree/master/%40rocketseat/gatsby-theme-docs">@rocketseat/gatsby-theme-docs</a>
+  Powered by <a href="https://docusaurus.io/">Docusaurus</a> 🔥 
 </p>
 
 <p align="center">
