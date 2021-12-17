@@ -10,7 +10,7 @@ module.exports = {
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/favicon.png',
+  favicon: 'img/favicon.ico',
   organizationName: 'napi-rs',
   projectName: 'napi-rs',
   plugins: [
@@ -55,6 +55,7 @@ module.exports = {
     ({
       colorMode: {
         defaultMode: 'dark',
+        respectPrefersColorScheme: true,
       },
       navbar: {
         title: 'NAPI-RS',
@@ -98,7 +99,7 @@ module.exports = {
               },
               {
                 label: 'Twitter',
-                href: 'https://twitter.com/docusaurus',
+                href: 'https://twitter.com/napi_rs',
               },
               {
                 label: 'GitHub',
@@ -126,5 +127,7 @@ module.exports = {
       gtag: {
         trackingID: 'G-38WMNQBW8F',
       },
+      image: 'img/favicon.png',
+      metadata: [{ name: 'twitter:card', content: 'summary' }],
     }),
 }
