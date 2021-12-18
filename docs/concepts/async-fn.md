@@ -1,6 +1,6 @@
 ---
 title: 'async fn'
-description: Run a Rust async fn with tokio runtime.
+description: Run a Rust async fn with the tokio runtime.
 ---
 
 You can do a lot of async/multi-threaded work with `AsyncTask` and `ThreadsafeFunction`, but sometimes you may want to use the crates from the Rust async ecosystem directly.
