@@ -15,10 +15,10 @@ pub struct Pet {
 Any `impl` block of this `struct` will not affect the JavaScript `Object`.
 
 :::caution
-If you want a convert Rust `struct` into JavaScript `Object` using `#[napi(object)]` attribute, you need to mark all of its fields as `pub`.
+If you want to convert a Rust `struct` into JavaScript `Object` using `#[napi(object)]` attribute, you need to mark all of its fields as `pub`.
 :::
 
-Once `struct` is marked as `#[napi(object)]`, you can use it as function arguments type or return type.
+Once `struct` is marked as `#[napi(object)]`, you can use it as a function argument type or return type.
 
 ```rust title=lib.rs
 #[napi(object)]
