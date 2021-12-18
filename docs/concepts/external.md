@@ -1,6 +1,6 @@
 ---
 title: 'External'
-description: External Object holds the native value with a JavaScript Object.
+description: External Object holds the native value in a JavaScript Object.
 ---
 
 [`External`](https://nodejs.org/api/n-api.html#napi_create_external) is very similar to [`Object Wrap`](https://nodejs.org/api/n-api.html#object-wrap), which is used in [Class](./class) under the hood.

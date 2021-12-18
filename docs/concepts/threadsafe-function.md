@@ -1,6 +1,6 @@
 ---
 title: 'ThreadsafeFunction'
-description: Call JavaScript callback in other threads.
+description: Call a JavaScript callback in other threads.
 ---
 
 [`ThreadSafe Function`](https://nodejs.org/api/n-api.html#asynchronous-thread-safe-function-calls) is a complex concept in Node.js. As we all know, Node.js is single threaded, so you can't access [`napi_env`](https://nodejs.org/api/n-api.html#napi_env), [`napi_value`](https://nodejs.org/api/n-api.html#napi_value), and [`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref) on another thread.

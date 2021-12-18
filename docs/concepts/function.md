@@ -11,7 +11,7 @@ fn sum(a: u32, b: u32) -> u32 {
 }
 ```
 
-The most important thing you should keep in mind is **_NAPI-RS fn can not take every kind of type in Rust_**. Here is a table to illustrate how JavaScript types map with Rust types when they are `fn` arguments and return type:
+The most important thing you should keep in mind is **_NAPI-RS fn can not take every kind of type in Rust_**. Here is a table to illustrate how JavaScript types map to Rust types when they are `fn` arguments and return types:
 
 ## Arguments
 

@@ -1,6 +1,6 @@
 ---
 title: 'Types Overwrite'
-description: Overwrite the arguments and return TypeScript types.
+description: Overwrite the argument and return TypeScript types.
 ---
 
 In most cases, **NAPI-RS** will generate the right TypeScript types for you. But in some scenarios, you may want to overwrite the arguments or return type.

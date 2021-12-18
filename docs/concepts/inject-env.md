@@ -1,6 +1,6 @@
 ---
 title: 'Inject Env'
-description: 'Inject Node-API Env into functions and methods'
+description: Inject Node-API Env into functions and methods.
 ---
 
 The `#[napi]` macro is a very high level abstraction for the `Node-API`. Most of the time, you use the Rust native API and crates.

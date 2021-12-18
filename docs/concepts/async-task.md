@@ -1,6 +1,6 @@
 ---
 title: 'AsyncTask'
-description: Run task in libuv thread pool and abort it with AbortSignal.
+description: Run a task in the libuv thread pool and abort it with AbortSignal.
 ---
 
 We need to talk about `Task` before talking about `AsyncTask`.

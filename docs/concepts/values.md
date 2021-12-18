@@ -1,9 +1,9 @@
 ---
 title: 'Values'
-description: 'Conversion relation between Rust and JavaScript types'
+description: Conversions between Rust and JavaScript types.
 ---
 
-Conversion relation between Rust and JavaScript types
+Conversions between Rust and JavaScript types.
 
 ### Undefined
 
