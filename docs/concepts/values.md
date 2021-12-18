@@ -103,10 +103,11 @@ export function isGood(): boolean
 ```rust title=lib.rs
 #[napi]
 fn with_buffer(buf: Buffer) {
-	let buf = Vec::<u8>::from(buf);
-	// do something
+  let buf: Vec<u8> = buf.into();
+  // do something
 }
 
+#[napi]
 fn read_buffer(file: String) -> Buffer {
 	Buffer::from(std::fs::read(file).unwrap())
 }
@@ -152,7 +153,7 @@ export function logStringField(obj: object): void
 export function createObj(): object
 ```
 
-If you want `napi-rs` convert objects from JavaScript with the same shape defined in Rust, you could use `#[napi]` macro with `object` attribute.
+If you want **NAPI-RS** to convert objects from JavaScript with the same shape defined in Rust, you can use the `#[napi]` macro with the `object` attribute.
 
 ```rust title=lib.rs
 /// #[napi(object)] requires all struct fields to be public

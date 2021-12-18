@@ -3,16 +3,16 @@ title: 'Types Overwrite'
 description: Overwrite the arguments and return TypeScript types.
 ---
 
-In most cases, **NAPI-RS** will generate the right TypeScript types for you. But in some scenario, you may want overwrite the arguments or return type.
+In most cases, **NAPI-RS** will generate the right TypeScript types for you. But in some scenarios, you may want to overwrite the arguments or return type.
 
-[ThreadsafeFunction](./threadsafe-function) is an example, because the `ThreadsafeFunction` is too complex, **NAPI-RS** can't generate the right TypeScript types for it. You always need to overwrite the arguments type of it.
+[ThreadsafeFunction](./threadsafe-function) is an example, because the `ThreadsafeFunction` is too complex, **NAPI-RS** can't generate the right TypeScript types for it. You always need to overwrite its argument type.
 
 ## `ts_args_type`
 
 Rewrite the arguments type of the function, **NAPI-RS** will put the rewritten type into the brace of the function signature.
 
 ```rust {1} title=lib.rs
-#[napi(ts_args_type="a: (err: Error | null, result: number) => void")]
+#[napi(ts_args_type="callback: (err: null | Error, result: number) => void")]
 fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
   let tsfn: ThreadsafeFunction<u32, ErrorStrategy::CalleeHandled> = callback
     .create_threadsafe_function(0, |ctx| {
@@ -38,7 +38,7 @@ export function callThreadsafeFunction(
 
 ## `ts_return_type`
 
-Rewrite the return type of the function, **NAPI-RS** will put the rewritten type into the end of the function signature.
+Rewrite the return type of the function, **NAPI-RS** will add the rewritten type to the end of the function signature.
 
 ```rust {1} title=lib.rs
 #[napi(ts_return_type="number")]

@@ -12,13 +12,13 @@ pub struct Pet {
 }
 ```
 
-Any `impl` block of this `struct` will not affect to the JavaScript `Object`.
+Any `impl` block of this `struct` will not affect the JavaScript `Object`.
 
 :::caution
-If you want a convert Rust `struct` into JavaScript `Object` using `#[napi(object)]` attribute, you need to mark all of the fields of it as `pub`.
+If you want a convert Rust `struct` into JavaScript `Object` using `#[napi(object)]` attribute, you need to mark all of its fields as `pub`.
 :::
 
-Once `struct` was marked as `#[napi(object)]`, you can use it as function arguments type or return type.
+Once `struct` is marked as `#[napi(object)]`, you can use it as function arguments type or return type.
 
 ```rust title=lib.rs
 #[napi(object)]
@@ -42,5 +42,5 @@ fn create_cat() -> Pet {
 ```
 
 :::caution
-The JavaScript Object passed in or returned from `Rust` is cloned. Which means any mutation on JavaScript `Object` will not affect the original Rust `struct`. And any mutation on Rust `struct` will not affect the JavaScript `Object` either.
+The JavaScript Object passed in or returned from Rust is cloned. This means any mutation on JavaScript `Object` will not affect the original Rust `struct`. And any mutation on Rust `struct` will not affect the JavaScript `Object` either.
 :::

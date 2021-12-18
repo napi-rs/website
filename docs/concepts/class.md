@@ -3,14 +3,14 @@ title: 'Class'
 ---
 
 :::info
-There is no concept of a class in Rust. We decide to use the `struct` to represent a JavaScript `Class`.
+There is no concept of a class in Rust. We use `struct` to represent a JavaScript `Class`.
 :::
 
 ## `Constructor`
 
 ### Default `constructor`
 
-If a all fields in a `Rust` struct is `pub`, then you can use `#[napi(constructor)]` to make the `struct` have a default `constructor`.
+If all fields in a `Rust` struct are `pub`, then you can use `#[napi(constructor)]` to make the `struct` have a default `constructor`.
 
 ```rust title=lib.rs
 #[napi(constructor)]
@@ -30,11 +30,10 @@ export class AnimalWithDefaultConstructor {
 
 ### Custom `constructor`
 
-If you want to define a custom `constructor`, you can specified on of the `fn` in struct `impl` block as your custom constructor by using `#[napi(constructor)]`.
+If you want to define a custom `constructor`, you can use `#[napi(constructor)]` on your constructor `fn` in the struct `impl` block.
 
 ```rust title=lib.rs
-
-// A complexity struct which can not be exposed into JavaScript directly.
+// A complex struct which cannot be exposed to JavaScript directly.
 struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
@@ -58,7 +57,7 @@ export class QueryEngine {
 ```
 
 :::caution
-**NAPI-RS** now is not support `private constructor`. Your custom constructor must be `pub` in Rust.
+**NAPI-RS** does not currently support `private constructor`. Your custom constructor must be `pub` in Rust.
 :::
 
 ## Factory
@@ -66,7 +65,7 @@ export class QueryEngine {
 Besides `constructor`, you can also define factory methods on `Class` by using `#[napi(factory)]`.
 
 ```rust title=lib.rs
-// A complexity struct which can not be exposed into JavaScript directly.
+// A complex struct which cannot be exposed to JavaScript directly.
 struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
@@ -91,21 +90,21 @@ export class QueryEngine {
 ```
 
 :::caution
-If no `#[napi(constructor)]` defined in `struct`, and `new` the `Class` in JavaScript. An error will be thrown.
+If no `#[napi(constructor)]` is defined in the `struct`, and you attempt to create an instance (`new`) of the `Class` in JavaScript, an error will be thrown.
 :::
 
 ```js {3} title=test.mjs
 import { QueryEngine } from './index.js'
 
-new QueryEngine() // Error: Class contains no `constructor`, can not new it!
+new QueryEngine() // Error: Class contains no `constructor`, cannot create it!
 ```
 
 ## `class method`
 
-You can define a JavaScript class method with `#[napi]` on a struct `method` in **Rust**.
+You can define a JavaScript class method with `#[napi]` on a struct method in **Rust**.
 
 ```rust title=lib.rs
-// A complexity struct which can not be exposed into JavaScript directly.
+// A complex struct which cannot be exposed to JavaScript directly.
 struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
@@ -143,19 +142,19 @@ export class QueryEngine {
 ```
 
 :::caution
-`async fn` need `napi4` and `tokio_rt` features to be enabled.
+`async fn` needs the `napi4` and `tokio_rt` features to be enabled.
 :::
 
 :::info
-Any fn in `Rust` return `Result<T>` will be treated as `T` in JavaScript/TypeScript. If the `Result<T>` is `Err`, an JavaScript Error will be thrown.
+Any `fn` in `Rust` that returns `Result<T>` will be treated as `T` in JavaScript/TypeScript. If the `Result<T>` is `Err`, a JavaScript Error will be thrown.
 :::
 
 ## `Getter`
 
-Define [JavaScript class `getter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get) using `#[napi(getter)]`. The Rust fn must be struct methods, not associated function.
+Define [JavaScript class `getter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get) using `#[napi(getter)]`. The Rust `fn` must be a struct method, not an associated function.
 
 ```rust {22-25} title=lib.rs
-// A complexity struct which can not be exposed into JavaScript directly.
+// A complex struct which cannot be exposed to JavaScript directly.
 struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
@@ -193,10 +192,10 @@ export class QueryEngine {
 
 ## `Setter`
 
-Define [JavaScript class `setter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set) using `#[napi(setter)]`. The Rust fn must be struct methods, not associated function.
+Define [JavaScript class `setter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set) using `#[napi(setter)]`. The Rust `fn` must be a struct method, not an associated function.
 
 ```rust {27-30} title=lib.rs
-// A complexity struct which can not be exposed into JavaScript directly.
+// A complex struct which cannot be exposed to JavaScript directly.
 struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
@@ -240,9 +239,9 @@ export class QueryEngine {
 
 ## Class as argument
 
-`Class` is different between [`Object`](./object). `Class` could have Rust methods, associated functions on it. Every field in `Class` could be mutated in JavaScript.
+`Class` is different from [`Object`](./object). `Class` can have Rust methods and associated functions on it. Every field in `Class` can mutated in JavaScript.
 
-So the ownership of the `Class` is actually transferred to the JavaScript side while you are creating it. It is managed by JavaScript GC, and the only way you can pass it back is pass the `reference` of it.
+So the ownership of the `Class` is actually transferred to the JavaScript side while you are creating it. It is managed by the JavaScript GC, and you can only pass it back by passing its `reference`.
 
 ```rust title=lib.rs
 fn accept_class(engine: &QueryEngine) {

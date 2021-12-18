@@ -3,15 +3,15 @@ title: 'Exports'
 ---
 
 :::info
-Unlike defining modules in `Node.js`, we don't need to explicitly register exports like `module.exports.xxx = xxx`.
+Unlike defining modules in Node.js, we don't need to explicitly register exports like `module.exports.xxx = xxx`.
 
-`#[napi]` macro will automatically generate module registering code for you.
-The auto registering idea inspired by [node-bindgen](https://github.com/infinyon/node-bindgen)
+The `#[napi]` macro will automatically generate module registering code for you.
+This auto registering idea was inspired by [node-bindgen](https://github.com/infinyon/node-bindgen).
 :::
 
 ### `Function`
 
-exports a function is incredibly simple. What you should do is just decorate a normal rust function with `#[napi]` macro:
+EXporting a function is incredibly simple. Just decorate a normal rust function with `#[napi]`:
 
 ```rust title=lib.rs
 #[napi]
@@ -38,8 +38,8 @@ See [`class section`](./class) for more details.
 ```rust title=lib.rs
 #[napi(constructor)]
 struct Animal {
-  pub name: String
-  pub kind: u32
+  pub name: String,
+  pub kind: u32,
 }
 
 #[napi]
