@@ -1,12 +1,12 @@
 ---
 title: 'Await Promise'
-description: Await JavaScript Promise in the Rust.
+description: Await a JavaScript Promise in Rust.
 ---
 
-Await JavaScript `Promise` in the Rust sounds crazy, but it's feasible in **NAPI-RS**.
+Awaiting a JavaScript `Promise` in Rust sounds crazy, but it's feasible in **NAPI-RS**.
 
 :::caution
-await JavaScript `Promise` need the `tokio_rt` and `napi4` features to be enabled.
+Awaiting a JavaScript `Promise` needs the `tokio_rt` and `napi4` features to be enabled.
 :::
 
 ```rust title=lib.rs

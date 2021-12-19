@@ -4,7 +4,7 @@ title: 'Naming conventions'
 
 ## `snake_case` to `camelCase`
 
-The code styles is very different between Rust and JavaScript. The Rust community is prefer the `snake_case` style variable while the JavaScript community is prefer the `camelCase` style. **NAPI-RS** will change the case of the Rust code to the `camelCase` style automatically.
+The code styles are very different between Rust and JavaScript. The Rust community prefers the `snake_case` style while the JavaScript community prefers the `camelCase` style. **NAPI-RS** will change the case of the Rust code to the `camelCase` style automatically.
 
 ```rust title=lib.rs
 #[napi]
@@ -19,12 +19,12 @@ fn a_function(a_arg: u32) -> u32 {
 export function aFunction(aArg: number): number
 ```
 
-## `js_rename`
+## `js_name`
 
-You can use the `js_rename` directive in `#[napi]` attribute to rename the JavaScript function.
+You can use the `js_name` attribute in `#[napi]` to rename the JavaScript function.
 
 ```rust {1} title=lib.rs
-#[napi(js_rename = "coolFunction")]
+#[napi(js_name = "coolFunction")]
 fn a_function(a_arg: u32) -> u32 {
   a_arg + 1
 }

@@ -1,11 +1,11 @@
 ---
 title: 'External'
-description: External Object holds the native value with a JavaScript Object.
+description: External Object holds the native value in a JavaScript Object.
 ---
 
 [`External`](https://nodejs.org/api/n-api.html#napi_create_external) is very similar to [`Object Wrap`](https://nodejs.org/api/n-api.html#object-wrap), which is used in [Class](./class) under the hood.
 
-The `Object Wrap` is attach a Native value to a existed JavaScript Object, and you can get a notify when the attached JavaScript Object is recycled by GC. The `External` is create an empty blank JavaScript Object which hold the native value under the hood. The only way it works is to pass back to the Rust:
+`Object Wrap` attaches a native value to a JavaScript Object and can notify you when the attached JavaScript Object is recycled by GC. `External` creates an empty, blank JavaScript Object which holds the native value under the hood. It only works by passing the object back to Rust:
 
 ```rust title=lib.rs
 use napi::bindgen_prelude::*;
@@ -30,7 +30,7 @@ export class ExternalObject<T> {
 export function createSourceMap(length: number): ExternalObject<Buffer>
 ```
 
-The `External` is very useful when you want return a JavaScript Object with some methods on it to interact with the native Rust code.
+`External` is very useful when you want to return a JavaScript Object with some methods on it to interact with the native Rust code.
 
 Here is an real world example:
 
@@ -63,7 +63,7 @@ impl MagicString {
 }
 ```
 
-First the `generate_map` method return an `External` object, and then the `JavaScript` function hold the `External` object in closure:
+First the `generate_map` method returns an `External` object, and then the JavaScript function holds the `External` object in closure:
 
 ```ts title=index.js
 module.exports.MagicString = class MagicString extends MagicStringNative {
