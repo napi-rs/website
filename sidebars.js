@@ -53,6 +53,11 @@ module.exports = {
     },
     {
       type: 'category',
+      label: 'CLI',
+      items: ['cli/build', 'cli/napi-config'],
+    },
+    {
+      type: 'category',
       label: 'Deep dive',
       items: [
         'deep-dive/native-module',

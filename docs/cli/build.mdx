@@ -1,0 +1,139 @@
+---
+title: 'Build'
+description: napi build command in @napi-rs/cli.
+---
+
+import { Green, Rust, Warning } from './chalk'
+
+| Flag                             | Type/Defualt Value                                                                  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| -------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--platform`                     | `Boolean`/`false`                                                                   | Add platform triple to the `.node` file. <Green>[name].linux-x64-gnu.node</Green> for example.                                                                                                                                                                                                                                                                                                                                                                       |
+| `--release`                      | `Boolean`/`false`                                                                   | Bypass to <Green>cargo build --release</Green>                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `--config` or `-c`               | `String`/`package.json`                                                             | napi config path, only JSON format accepted. Default to <Green>package.json</Green>                                                                                                                                                                                                                                                                                                                                                                                  |
+| `--cargo-name`                   | `String`/The `[package].name` field in <Rust>Cargo.toml</Rust> under command `cwd`. | `@napi-rs/cli` will copy `./target/release/lib_[CARGO_NAME].[dll/dylib/so]` file to `[NAPI_NAME].[TRIPLE?].node` by default. The `[CARGO_NAME]` in source path is read from <Rust>Cargo.toml</Rust> in `cwd` by default. If you are building some other crate other than the one in current cwd using the `cargo build -p` flag, you should override the `CARGO_NAME` by `--cargo-name`.                                                                             |
+| `--target`                       | `String`/`undefined`                                                                | Bypass to <Green>cargo build --target</Green>, use this flag for cross compile.<br /><Warning>⚠️ If no `--target` specified, `@napi-rs/cli` will invoke `rustup` to determine the current target you build for. Make sure you have `rustup` installed on your `PATH` if this flag is omitted.</Warning>                                                                                                                                                              |
+| `--features`                     | `String`/`undefined`                                                                | Bypass to <Green>cargo build --features</Green>                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `--dts`                          | `String`/`index.d.ts`                                                               | The filename and path of generated `.d.ts` file, relative to command cwd. <br />If you don't want **NAPI-RS** generate `.d.ts` for you, you can disable the `type-def` feature in `napi-derive` crate. <br />eg. `napi-derive = { veriosn = "2", default-features = false }`<br /><Warning>⚠️ If `type-def` features is disabled, the **NAPI-RS** will not generate the JavaScript binding file for you either because the lack of **_type information_**</Warning>. |
+| `-p`                             | `String`/`undefined`                                                                | By pass to <Green>cargo build -p</Green>                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `--cargo-flags`                  | `String`/`''`                                                                       | All the others flag bypass to <Green>cargo build</Green> command.                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `--js`                           | `String`/`index.js`                                                                 | The filename and path of the JavaScript binding file, relative to the command `cwd`, pass <Warning>false</Warning> to disable it. Only effect if <Green>--platform</Green> is specified **and** `type-def` feature in `napi-derive` is enabled .                                                                                                                                                                                                                     |
+| `--js-package-name`              | `String`/`name` filed in <Green>package.json</Green> under command cwd.             | Packages name in generated js binding file, Only affect if <Green>--js</Green> is affected. [#Note](#note-for---js-package-name)<br /><Warning>⚠️ This flag will override the `package.name` field in napi config</Warning><br />You can omit it if you have specificed `package.name` config of [**napi config**](./napi-config)                                                                                                                                    |
+| `--cargo-cwd`                    | `String`/`process.cwd()`                                                            | The cwd of `Cargo.toml`. Speciefied this flag if you don't want to pass <Green>--cargo-name</Green>                                                                                                                                                                                                                                                                                                                                                                  |
+| `--pipe`                         | `String`/`undefined`                                                                | Pipe the generated <Green>.js/.d.ts</Green> files to this command, eg <Green>`prettier -w`</Green>                                                                                                                                                                                                                                                                                                                                                                   |
+| `--disable-windows-x32-optimize` | `Boolean`/`true`                                                                    | `@napi-rs/cli` will disable some optimization when <Green>--target</Green> is `i686-pc-windows-msvc` . See [#297 ](https://github.com/napi-rs/napi-rs/issues/297) for background.<br /> If you want to disable this behavior, you can pass <Green>--no-disable-windows-x32-optimize</Green>                                                                                                                                                                          |
+
+### Note for `--js-package-name`
+
+In [Deep dive section](../introduction/getting-started#deep-dive), we recommended you to publish your package under [`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/). But if your are migrating an existed package which is not under the [`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) or you just don't want your package under a [`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) , you may trigger the [_npm spam detection_](https://stackoverflow.com/questions/48668389/npm-publish-failed-with-package-name-triggered-spam-detection/54135900#54135900) while publishing the native platform packages. Like `snappy-darwin-x64` `snappy-darwin-arm64` etc...
+
+In this case, you can publish your platform packages in [`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) to avoid the [_npm spam detection_](https://stackoverflow.com/questions/48668389/npm-publish-failed-with-package-name-triggered-spam-detection/54135900#54135900) . And your users doesn't care about the platform native packages in `optionalDependencies`. Like [`snappy`](https://github.com/Brooooooklyn/snappy/), users only need to install it via `yarn add snappy`. But platform native packages of it is under `@napi-rs` scope:
+
+```json
+{
+  "name": "snappy",
+  "version": "7.0.0",
+  "optionalDependencies": {
+    "@napi-rs/snappy-win32-x64-msvc": "7.0.0",
+    "@napi-rs/snappy-darwin-x64": "7.0.0",
+    "@napi-rs/snappy-linux-x64-gnu": "7.0.0",
+    "@napi-rs/snappy-linux-x64-musl": "7.0.0",
+    "@napi-rs/snappy-linux-arm64-gnu": "7.0.0",
+    "@napi-rs/snappy-win32-ia32-msvc": "7.0.0",
+    "@napi-rs/snappy-linux-arm-gnueabihf": "7.0.0",
+    "@napi-rs/snappy-darwin-arm64": "7.0.0",
+    "@napi-rs/snappy-android-arm64": "7.0.0",
+    "@napi-rs/snappy-android-arm-eabi": "7.0.0",
+    "@napi-rs/snappy-freebsd-x64": "7.0.0",
+    "@napi-rs/snappy-linux-arm64-musl": "7.0.0",
+    "@napi-rs/snappy-win32-arm64-msvc": "7.0.0"
+  }
+}
+```
+
+For this case, `@napi-rs/cli` provide the `--js-package-name` to override generated packages loading logic. For example in `snappy` we have <Green>package.json</Green> like this:
+
+```json
+{
+  "name": "snappy",
+  "version": "7.0.0",
+  "napi": {
+    "name": "snappy"
+  }
+}
+```
+
+Without the `--js-package-name` flag, `@napi-rs/cli` will generate JavaScript binding to load platform native packages for you:
+
+```js {10,22} title=index.js
+switch (platform) {
+  case 'darwin':
+    switch (arch) {
+      case 'x64':
+        localFileExisted = existsSync(join(__dirname, 'snappy.darwin-x64.node'))
+        try {
+          if (localFileExisted) {
+            nativeBinding = require('./snappy.darwin-x64.node')
+          } else {
+            nativeBinding = require('snappy-darwin-x64')
+          }
+        } catch (e) {
+          loadError = e
+        }
+        break
+      case 'arm64':
+        localFileExisted = existsSync(join(__dirname, 'snappy.darwin-arm64.node'))
+        try {
+          if (localFileExisted) {
+            nativeBinding = require('./snappy.darwin-arm64.node')
+          } else {
+            nativeBinding = require('snappy-darwin-arm64')
+          }
+        } catch (e) {
+          loadError = e
+        }
+        break
+      default:
+        throw new Error(`Unsupported architecture on macOS: ${arch}`)
+    }
+    break
+    ...
+}
+```
+
+This isn't what we want. So build it with `--js-package-name` to override the `package name` in generated JavaScript binding file: `napi build --release --platform --js-package-name @napi-rs/snappy`. Then the generated JavaScript file will become:
+
+```js {10,22} title=index.js
+switch (platform) {
+  case 'darwin':
+    switch (arch) {
+      case 'x64':
+        localFileExisted = existsSync(join(__dirname, 'snappy.darwin-x64.node'))
+        try {
+          if (localFileExisted) {
+            nativeBinding = require('./snappy.darwin-x64.node')
+          } else {
+            nativeBinding = require('@napi-rs/snappy-darwin-x64')
+          }
+        } catch (e) {
+          loadError = e
+        }
+        break
+      case 'arm64':
+        localFileExisted = existsSync(join(__dirname, 'snappy.darwin-arm64.node'))
+        try {
+          if (localFileExisted) {
+            nativeBinding = require('./snappy.darwin-arm64.node')
+          } else {
+            nativeBinding = require('@napi-rs/snappy-darwin-arm64')
+          }
+        } catch (e) {
+          loadError = e
+        }
+        break
+      default:
+        throw new Error(`Unsupported architecture on macOS: ${arch}`)
+    }
+    break
+    ...
+}
+```
