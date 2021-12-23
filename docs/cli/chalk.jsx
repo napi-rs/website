@@ -1,7 +1,13 @@
+import useThemeContext from '@theme/hooks/useThemeContext'
 import React from 'react'
 
 export function Green({ children }) {
-  return <span style={{ color: '#00e676' }}>{children}</span>
+  const { isDarkTheme } = useThemeContext()
+  return (
+    <span style={{ color: isDarkTheme ? '#d7ffd9' : '#255d00' }}>
+      {children}
+    </span>
+  )
 }
 
 export function Rust({ children }) {
@@ -9,5 +15,10 @@ export function Rust({ children }) {
 }
 
 export function Warning({ children }) {
-  return <span style={{ color: '#fbc02d' }}>{children}</span>
+  const { isDarkTheme } = useThemeContext()
+  return (
+    <span style={{ color: isDarkTheme ? '#fbc02d' : '#ff7043' }}>
+      {children}
+    </span>
+  )
 }
