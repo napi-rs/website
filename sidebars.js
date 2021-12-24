@@ -54,7 +54,12 @@ module.exports = {
     {
       type: 'category',
       label: 'CLI',
-      items: ['cli/build', 'cli/napi-config'],
+      items: [
+        'cli/build',
+        'cli/artifacts',
+        'cli/pre-publish',
+        'cli/napi-config',
+      ],
     },
     {
       type: 'category',
