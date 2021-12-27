@@ -3,8 +3,25 @@ title: 'Prepublish'
 description: napi prepublish command in @napi-rs/cli.
 ---
 
+import { Green, Warning } from './chalk'
+
 Running some preparation for publishing **NAPI-RS** packages.
 
 :::info
 This command is usually used in `prepublishOnly` lifecycle scripts in `package.json`.
 :::
+
+```json {2} title=package.json
+"scripts": {
+  "prepublishOnly": "napi prepublish -t npm"
+}
+```
+
+## Flags
+
+| Flag                | Type/Default Value   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--tagstyle,-t`     | `String`/`lerna`     | The tag style of your git commit. We support two types of styles for now: `npm` and `lerna`. For example, if you change your package version by `npm version patch`, the latest commit will be `v1.2.1`. And the `napi prepublish -t npm` command will collect the `version` information from the latest commit message. And this information will be used to upload artifacts into **GitHub Releases**. <br />If the <Green>`--skip-gh-release`</Green> is provided, the <Green>`--tagstyle,-t`</Green> will have no effect. |
+| `--skip-gh-release` | `Boolean`/`false`    | Wheather to skip upload platform binary into **GitHub Relaese**.                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `-p,--prefix`       | `String`/`npm`       | The path in which the platform packages are. `@napi-rs/cli` will update all the `package.json` files in it. Bump the `version` field to align the `package.json` in the root of project.                                                                                                                                                                                                                                                                                                                                      |
+| `-c,--config`       | `String`/`undefined` | The `package.json` file path to read, relative to the `process.cwd()`.<br />The `package.json` file must contains the `napi` config field.<br /><Warning>`@napi-rs/cli` will write `optionalDependencies` filed into the `package.json`, and the `optionalDependencies` contains all the platform defined in [`napi.triples`](./napi-config) filed.</Warning>                                                                                                                                                                 |
