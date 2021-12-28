@@ -2,15 +2,15 @@ import { NodeJS, Rust } from '../lang'
 import { Badges } from '../badges'
 
 <p>
-  <span style={{ fontSize: '24px', fontWeight: 'bold' }}>NAPI-RS</span> is a
-  minimal library for building pre-compiled <NodeJS /> addons in <Rust />.
+  <span style={{ fontSize: '24px', fontWeight: 'bold' }}>NAPI-RS</span>{' '}
+  是一个使用 <Rust /> 构建预编译 <NodeJS /> 原生扩展的框架
 </p>
 
 <Badges />
 
 <br />
 
-## Rustify Node.js in few lines!
+## 轻松绣化你的 Node.js 应用!
 
 ```rust title=lib.rs
 use napi_derive::napi;
@@ -24,7 +24,7 @@ fn fibonacci(n: u32) -> u32 {
 }
 ```
 
-Compatible with both `CommonJS` and `esm`, with auto generated `.d.ts` file:
+与 `CommonJS`， `esm` 模块系统兼容， 自动生成 `.d.ts` 定义文件:
 
 ```js title=main.mjs
 import { fibonacci } from './index.js'
@@ -40,17 +40,17 @@ const { fibonacci } = require('./index')
 console.log(fibonacci(5))
 ```
 
-## Features
+## 功能
 
-🚀 Bring native performance for `Node.js`
+🚀 为 `Node.js` 应用带来原生性能
 
-👷‍♂️ Memory safe, guaranteed by `Rust` compiler
+👷‍♂️ 由 <Rust /> 编译器保障的内存安全
 
-⚡️ Zero copy data interactive between `Rust` & `Node.js`
+⚡️ <Rust /> 与 <NodeJS /> 之间零数据拷贝交互
 
-⚙️ Parallelism in few lines
+⚙️ 轻松并行代码
 
-### Well tested
+### 全平台测试覆盖
 
 ![Lint](https://github.com/napi-rs/napi-rs/workflows/Lint/badge.svg)
 ![Linux N-API@3](https://github.com/napi-rs/napi-rs/workflows/Linux%20N-API@3/badge.svg)
@@ -63,7 +63,7 @@ console.log(fibonacci(5))
 [![Windows arm64](https://github.com/napi-rs/napi-rs/actions/workflows/windows-arm.yml/badge.svg)](https://github.com/napi-rs/napi-rs/actions/workflows/windows-arm.yml)
 [![FreeBSD](https://api.cirrus-ci.com/github/napi-rs/napi-rs.svg)](https://cirrus-ci.com/github/napi-rs/napi-rs?branch=main)
 
-## Ecosystem
+## 生态
 
 <p align="left" style={{ width: '70vw' }}>
   <a href="https://www.prisma.io/" target="_blank">
@@ -122,7 +122,7 @@ console.log(fibonacci(5))
   </a>
 </p>
 
-## Support matrix
+## 支持列表
 
 ### Node.js
 
@@ -130,7 +130,7 @@ console.log(fibonacci(5))
 | ------ | ------ | ------ | ------ | ------ |
 | ✓      | ✓      | ✓      | ✓      | ✓      |
 
-### Platform support
+### 操作系统与平台
 
 > ✅ Means official tested in napi-rs repo. <br/> `-` Means no official Node.js release.
 
@@ -143,7 +143,7 @@ console.log(fibonacci(5))
 | FreeBSD    | -    | ✅  | -       | -   |
 | Android    | -    | -   | ✅      | ✅  |
 
-## Related projects
+## 相关项目
 
 - [neon](https://www.neon-bindings.com)
 - [node-bindgen](https://github.com/infinyon/node-bindgen)

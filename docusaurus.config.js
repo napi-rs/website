@@ -13,6 +13,20 @@ module.exports = {
   favicon: 'img/favicon.ico',
   organizationName: 'napi-rs',
   projectName: 'napi-rs',
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'cn'],
+    localeConfigs: {
+      en: {
+        label: 'English',
+        direction: 'ltr',
+      },
+      cn: {
+        label: 'cn',
+        direction: 'ltr',
+      },
+    },
+  },
   plugins: [
     '@docusaurus/plugin-ideal-image',
     [

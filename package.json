@@ -35,8 +35,9 @@
     "vercel": "^23.1.2"
   },
   "scripts": {
-    "start": "docusaurus start",
-    "build": "docusaurus build --out-dir public",
+    "start": "cp src/index-en.mdx src/pages/index.mdx && docusaurus start",
+    "build": "cp src/index-en.mdx src/pages/index.mdx && docusaurus build --out-dir public",
+    "build:cn": "cp src/index-cn.mdx src/pages/index.mdx && docusaurus build --out-dir public --locale cn",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
