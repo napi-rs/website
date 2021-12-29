@@ -1,0 +1,52 @@
+---
+title: 'Reference'
+description: Create object reference and make it live longer than it would be.
+---
+
+`Ref` is very similar to `Rc` in Rust. But it will not decrease the ref count when dropped, you need to call the `unref` method on it manually.
+
+<!-- 在某些场景下，你可能需要手动延长某些 JavaScript 对象的 lifetime，防止他们过早的被 GC 回收掉。与在 JavaScript 中使用 Object 不一样，在 Rust 中保存一个 JsObject 的引用或者值对 Node.js 的 GC 系统而言是不透明的，也就是说 GC 并不知道你还存着一个 Object 的值想以后某个时候使用，GC 会在它认为合适的时候无情的回收他。这个时候我们需要为这个对象创建一个 *Reference*，相当于告诉 Node.js 的 GC 系统: hey 这个对象我还有用，你先不要回收他。 -->
+
+In some scenarios, you may need to manually extend the lifetime of certain JavaScript objects to prevent them from being reclaimed by the GC prematurely. Unlike using objects in JavaScript, keeping a reference or value of a `JsObject` in Rust is opaque to the Node.js GC system, meaning that the GC doesn't know that you still have an Object value that you want to use at some point in the future. GC will ruthlessly recycle it when it sees fit. At this point we need to create a _Reference_ for this object, which is equivalent to telling the Node.js GC system: hey I still need this object, don't recycle it yet.
+
+<!-- 我们通常是在进行一些异步操作的时候需要手动延长 Object 的 lifetime，比如在 `Task` 或者 `ThreadSafeFunction` 中存储一些对象的值。这些对象在函数执行完成之后不能被销毁，需要等到异步任务执行完成之后再手动调用 `unref` 方法来告诉 GC 我们已经不需要这个 Object 了。 -->
+
+We usually need to manually extend the lifetime of an Object when doing some asynchronous operations, such as storing the value of some object in `Task` or `ThreadSafeFunction`. These objects can't be destroyed after the function finishes executing, so we need to wait until the asynchronous task finishes executing and then manually call the `unref` method to tell the GC that we don't need the object anymore.
+
+```rust
+
+struct Hash(Ref<JsBufferValue>);
+
+impl Task for Hash {
+  type Output = String;
+  type JsValue = JsString;
+
+  fn compute(&mut self) -> Result<Self::Output> {
+    Ok(base64(&self.0))
+  }
+
+  fn resolve(self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
+    let result = env.create_string_from_std(output);
+    self.0.unref(env)?;
+    result
+  }
+}
+
+#[js_function(1)]
+// return Promise Object
+fn async_hash(ctx: CallContext) -> Result<JsObject> {
+  let input_data = ctx.get::<JsBuffer>(0)?.into_ref()?;
+  let hash = Hash(input_data);
+  ctx.env.spawn(hash).map(|async_task| async_task.promise_object())
+}
+
+fn base64(data: &[u8]) -> String {
+  todo!();
+}
+```
+
+```js
+asyncHash(Buffer::from([1, 2])).then((result) => {
+  console.log(result) // 0102
+})
+```

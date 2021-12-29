@@ -30,3 +30,12 @@ jobs:
         run: npx vercel --confirm --prod -t $NOW_TOKEN
         env:
           NOW_TOKEN: ${{ secrets.NOW_TOKEN }}
+
+      - name: 'Deploy CN'
+        run: |
+          echo "{\"projectId\":\"${CN_PROJECT_ID}\",\"orgId\":\"${CN_ORG_ID}\"}" > .vercel/project.json
+          npx vercel --confirm --prod -t $NOW_TOKEN
+        env:
+          NOW_TOKEN: ${{ secrets.NOW_TOKEN }}
+          CN_ORG_ID: ${{ secrets.CN_ORG_ID }}
+          CN_PROJECT_ID: ${{ secrets.CN_PROJECT_ID }}

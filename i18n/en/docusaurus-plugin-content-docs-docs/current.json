@@ -1,0 +1,46 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.napiSidebar.category.Introduction": {
+    "message": "Introduction",
+    "description": "The label for category Introduction in sidebar napiSidebar"
+  },
+  "sidebar.napiSidebar.category.Concepts": {
+    "message": "Concepts",
+    "description": "The label for category Concepts in sidebar napiSidebar"
+  },
+  "sidebar.napiSidebar.category.Compat mode": {
+    "message": "Compat mode",
+    "description": "The label for category Compat mode in sidebar napiSidebar"
+  },
+  "sidebar.napiSidebar.category.Recipes": {
+    "message": "Recipes",
+    "description": "The label for category Recipes in sidebar napiSidebar"
+  },
+  "sidebar.napiSidebar.category.CLI": {
+    "message": "CLI",
+    "description": "The label for category CLI in sidebar napiSidebar"
+  },
+  "sidebar.napiSidebar.category.Deep dive": {
+    "message": "Deep dive",
+    "description": "The label for category Deep dive in sidebar napiSidebar"
+  },
+  "sidebar.napiSidebar.category.Ecosystem": {
+    "message": "Ecosystem",
+    "description": "The label for category Ecosystem in sidebar napiSidebar"
+  },
+  "sidebar.napiSidebar.category.@napi-rs": {
+    "message": "@napi-rs",
+    "description": "The label for category @napi-rs in sidebar napiSidebar"
+  },
+  "sidebar.napiSidebar.category.@node-rs": {
+    "message": "@node-rs",
+    "description": "The label for category @node-rs in sidebar napiSidebar"
+  },
+  "sidebar.napiSidebar.category.More": {
+    "message": "More",
+    "description": "The label for category More in sidebar napiSidebar"
+  }
+}

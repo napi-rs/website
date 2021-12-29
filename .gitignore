@@ -71,5 +71,5 @@ yarn-error.log
 .vercel
 .docusaurus/
 build
-
+src/pages/index.mdx
 .vercel
