@@ -36,7 +36,7 @@
   },
   "scripts": {
     "start": "cp src/index-en.mdx src/pages/index.mdx && docusaurus start",
-    "build": "cp src/index-en.mdx src/pages/index.mdx && docusaurus build --out-dir public",
+    "build": "cp src/index-en.mdx src/pages/index.mdx && docusaurus build --out-dir public --locale en",
     "build:cn": "cp src/index-cn.mdx src/pages/index.mdx && docusaurus build --out-dir public --locale cn",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
