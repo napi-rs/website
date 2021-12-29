@@ -52,6 +52,7 @@ module.exports = {
           routeBasePath: 'docs',
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: 'https://github.com/napi-rs/website/edit/main/docs',
+          showLastUpdateTime: true,
         },
         blog: {
           showReadingTime: true,
