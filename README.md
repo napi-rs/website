@@ -1,14 +1,10 @@
 <p align="center">
-  <img src="./static/img/favicon.png" alt="napi-rs logo" width="100">
+  <img src="./public/img/favicon.png" alt="napi-rs logo" width="100">
 </p>
 
 <h2 align="center">
   NAPI-RS website
 </h2>
-
-<p align="center">
-  Powered by <a href="https://docusaurus.io/">Docusaurus</a> 🔥 
-</p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/PRs-welcome-%238257E6.svg" alt="PRs welcome!" />
@@ -32,7 +28,3 @@
 3. Launch
 
    Website is now running at `http://localhost:8000`
-
-## 📄 Docs
-
-Documentation for [Rocketseat theme](https://rocketdocs.netlify.com).

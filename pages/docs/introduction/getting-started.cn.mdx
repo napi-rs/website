@@ -1,0 +1,158 @@
+---
+description: 学习如何开始开发 NAPI-RS
+---
+
+# 起步
+
+import { GuideVideo } from '../../../components/guide-video'
+
+## 从 `@napi-rs/cli` 开始
+
+> 这是推荐的方式。
+
+<GuideVideo />
+
+### 安装 cli
+
+```bash
+yarn global add @napi-rs/cli
+# 或者
+npm install -g @napi-rs/cli
+# 或者
+pnpm add -g @napi-rs/cli
+```
+
+### 创建项目
+
+```bash
+napi new
+```
+
+#### Package name
+
+`package.json` 中的 name 字段。
+
+#### Choose targets you want to support
+
+你想要支持的平台。
+
+#### Enable GitHub actions
+
+是否生成 GitHub actions 配置文件。
+
+### 深入
+
+我们推荐你使用 [npm scope](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) 来发布你的 npm 包， 因为 `@napi-rs/cli` 默认会将不同平台的后缀插入到你的包名后面用于发布不同平台的二进制包。
+
+比如你希望发布一个叫 `@cool/core` 的 npm 包, 支持 `macOS x64`, `Windows x64` 和 `Linux aarch64` 三个平台, `@napi-rs/cli` 会生成这些包用于发布:
+
+- `@cool/core` 只包含 `JavaScript` 代码, 它只在不同的平台上加载对应的二进制包。
+- `@cool/core-darwin-x64` 包含 `macOS x64` 平台的二进制文件。
+- `@cool/core-win32-x64` 包含 `Windows x64` 平台的二进制文件。
+- `@cool/core-linux-arm64-gnu` 包含 `Linux aarch64` 平台的二进制文件。
+
+在每个特定平台的 npm 包中, 它们的 `package.json` 定义了与平台对应的 `cpu` 和 `os` 字段:
+
+```json filename="package.json"
+{
+  "name": "@cool/core-darwin-x64",
+  "version": "1.0.0",
+  "os": ["darwin"],
+  "cpu": ["x64"]
+}
+```
+
+`@cool/core` 会将这些平台相关的二进制包作为 `optionalDependencies`:
+
+```json filename="package.json"
+{
+  "name": "@cool/core",
+  "version": "1.0.0",
+  "optionalDependencies": {
+    "@cool/core-darwin-x64": "^1.0.0",
+    "@cool/core-win32-x64": "^1.0.0",
+    "@cool/core-linux-arm64": "^1.0.0"
+  }
+}
+```
+
+`@cool/core` 中的 `index.js` 文件会有这样的加载逻辑:
+
+```js filename="index.js"
+const { existsSync, readFileSync } = require('fs')
+const { join } = require('path')
+
+const { platform, arch } = process
+
+let nativeBinding = null
+let localFileExisted = false
+let isMusl = false
+let loadError = null
+
+switch (platform) {
+  case 'darwin':
+    switch (arch) {
+      case 'x64':
+        localFileExisted = existsSync(join(__dirname, 'core.darwin-x64.node'))
+        try {
+          if (localFileExisted) {
+            nativeBinding = require('./core.darwin-x64.node')
+          } else {
+            nativeBinding = require('@cool/core-darwin-x64')
+          }
+        } catch (e) {
+          loadError = e
+        }
+        break
+      case 'arm64':
+        localFileExisted = existsSync(join(__dirname, 'core.darwin-arm64.node'))
+        try {
+          if (localFileExisted) {
+            nativeBinding = require('./core.darwin-arm64.node')
+          } else {
+            nativeBinding = require('@cool/core-darwin-arm64')
+          }
+        } catch (e) {
+          loadError = e
+        }
+        break
+      default:
+        throw new Error(`Unsupported architecture on macOS: ${arch}`)
+    }
+    break
+  // ...
+  default:
+    throw new Error(`Unsupported OS: ${platform}, architecture: ${arch}`)
+}
+
+if (!nativeBinding) {
+  if (loadError) {
+    throw loadError
+  }
+  throw new Error(`Failed to load native binding`)
+}
+
+const { plus100 } = nativeBinding
+
+module.exports.plus100 = plus100
+```
+
+这个自动生成的 `index.js` 文件会帮助你找到 **_合适的_** 二进制文件， 无论是在本地开发阶段还是在 npm 包被发布以后。 `index.js` 会处理以下两种情况:
+
+#### 你的包被安装到用户的 `node_modules` 中
+
+为了加载正确二进制文件，`index.js` 函数会尝试加载该平台下所有可能的包(在给定系统和 CPU 架构下可能存在多种可能的二进制包)，比如在 `Linux x64` 平台，`index.js` 会尝试加载 `@cool/core-linux-x64-gnu` 和 `@cool/core-linux-x64-musl`。 如果用户使用的是 `Ubuntu` `Debian` 等预装 `gnu libc` 的操作系统，则 `@cool/core-linux-x64-gnu` 这个包会被加载进来。而如果用户使用的是 `Alpine` 这种预装 `musl libc` 的操作系统，则 `@cool/core-linux-x64-musl` 会被加载进来。
+
+#### 本地开发
+
+使用 `napi new` 命令生成的项目中， package.json 中的 `build` 命令会在当前目录下生成一个动态链接文件，用于本地开发与调试。还是以 `Linux x64` 平台为例，`build` 命令会生成 `cool.linux-x64-musl.node` 或者 `cool.linux-x64-gnu.node` 文件，而 `index.js` 会帮你正确的加载这个文件。
+
+## 从 [GitHub template project](https://github.com/napi-rs/package-template) 开始
+
+![package-template](./package-template.png)
+
+1. 点击进入 [GitHub template project](https://github.com/napi-rs/package-template)
+2. 点击 **Use this template** 按钮。
+3. Clone 你的项目。
+4. 运行 `yarn install` 来安装依赖。
+5. 在项目目录内运行 `npx napi rename` 命令来重命名你的包。
