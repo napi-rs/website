@@ -10,7 +10,7 @@ We are proudly announcing the release of NAPI-RS `v2`. This is the biggest relea
 
 <Diff />
 
-The `v2` was started at [Aug 10, 2021](https://github.com/napi-rs/napi-rs/pull/696). `v2` aims to provide easier use API and better compatible with the Node.js ecosystem.
+Work for `v2` started on [Aug 10, 2021](https://github.com/napi-rs/napi-rs/pull/696) and it aims to provide easier to use API's and better compatibility with the Node.js ecosystem.
 
 The core of the `v2` release is the new `macro` API for defining **JavaScript** values in **Rust**. Let's see the differences between `v1` and `v2` by implementing a minimal runnable `sum` function:
 
@@ -45,19 +45,19 @@ fn sum(ctx: CallContext) -> Result<JsNumber> {
 }
 ```
 
-The `v2` API is clearly more clean and elegant. The complexity of the value cast between Node.js value and Rust value is hidden by the new `#[napi]` macro. You will not be confused by how to get a value via `Node-API` and how to cast a Rust value into `JsValue` anymore.
+The `v2` API is clearly cleaner and more elegant. The complexity of the value cast between Node.js value and Rust value is hidden by the new `#[napi]` macro. You will not be confused by how to get a value via `Node-API` and how to cast a Rust value into `JsValue` any more.
 
 ## What's new in **NAPI-RS** v2
 
-**NAPI-RS** v2 is totally rewrite top on the `v1` codebase. But most of the `v1` API is still available for compatibility. Which means you can smoothly upgrade to `v2` in most cases.
+**NAPI-RS** v2 is totally rewrite on top of the `v1` codebase. But most of the `v1` API is still available for compatibility. Which means you can smoothly upgrade to `v2` in most cases.
 
 Besides the small refactor and breaking changes in on the `v1` API, there are also some new exciting features in `v2`.
 
 ### TypeScript and JavaScript binding files generation
 
-**NAPI-RS** now will generate TypeScript definition and JavaScript binding files for you. In previous version, you need [`@node-rs/helper`](https://github.com/napi-rs/node-rs/tree/main/packages/helper) to help you load the right native addon. But this package has many problem with the existed JavaScript toolchain. Like [#316](https://github.com/napi-rs/node-rs/issues/316) and [#491](https://github.com/napi-rs/node-rs/issues/491).
+**NAPI-RS** now will generate TypeScript definition and JavaScript binding files for you. In previous version, you need [`@node-rs/helper`](https://github.com/napi-rs/node-rs/tree/main/packages/helper) to help you load the right native addon. But this package has many problem with the existing JavaScript toolchain. Like [#316](https://github.com/napi-rs/node-rs/issues/316) and [#491](https://github.com/napi-rs/node-rs/issues/491).
 
-In the **NAPI-RS** `v2`, we are totally rewrite the JavaScript load logic and there will be no more need to use `@node-rs/helper` anymore, and you can use the packages which are built by **NAPI-RS** with `webpack`, `vercel` and the others JavaScript toolchain.
+In the **NAPI-RS** `v2`, we totally rewrote the JavaScript load logic and there will be no more need to use `@node-rs/helper`. You can now use packages built by **NAPI-RS** with `webpack`, `vercel` and the others JavaScript toolchains.
 
 ### Support async fn
 
@@ -122,7 +122,7 @@ The JavaScript `Promise` will be converted into `Promise<T>` struct in Rust, and
 Like [`PyO3`](https://github.com/PyO3/pyo3/blob/main/examples/maturin-starter/src/lib.rs) and [`node-bindgen`](https://github.com/infinyon/node-bindgen#javascript-class), you can define a class in Rust with `struct` and `#[napi]` macro.
 
 ```rust title=lib.rs
-// A complexity struct which can not be exposed into JavaScript directly.
+// A complex struct which can not be exposed into JavaScript directly.
 struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
@@ -344,15 +344,15 @@ Yes, `v2` beta has been tested in many projects. Including `SWC` `Prisma` and `@
 
 ## What's the next step
 
-**NAPI-RS** has grown to be a vast ecosystem. We are planning to add more platform support to make `Rust` codes easier to deploy to the **Developers** and the end **Users**.
+**NAPI-RS** has grown to be a vast ecosystem. We are planning to add more platform support to make easier for **Developers** and end **Users** to deploy `Rust`.
 
-The first priority feature in the future is the `WebAssembly` support. We want to make the existed projects with **NAPI-RS** v2 being able to compile into `WebAssembly` with no extra effort. (If the crates they are using supported `WebAssembly`). And after that, it's more easier for developers to share codes between Node.js and Browser.
+The first priority feature in the future is the `WebAssembly` support. We want to allow existing projects with **NAPI-RS** v2 able to compile into `WebAssembly` with no extra effort. (If the crates they are using supported `WebAssembly`). After that, it's easier for developers to share code between Node.js and the Browser.
 
 And we want to investigate the `Deno FFI` support too. See [#12577](https://github.com/denoland/deno/issues/12577#issuecomment-977570758) for the context.
 
 ## **Thanks**
 
-[yiliuliuyi](https://github.com/forehalo) for the initializing the `v2` alpha version. And most of the `#[napi]` macro was implemented by him.
+[yiliuliuyi](https://github.com/forehalo) for initiating the `v2` alpha version. And most of the `#[napi]` macro was implemented by him.
 
 [Jared Palmer](https://github.com/jaredpalmer) for reviewing the full documentation and the blog.
 

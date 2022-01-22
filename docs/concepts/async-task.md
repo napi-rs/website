@@ -34,7 +34,7 @@ impl Task for AsyncFib {
 
 `fn compute` ran on the libuv thread, you can run some heavy computation here, which will not block the main JavaScript thread.
 
-You may notice there are two associate types on the `Task` trait. The `type Output` and the `type JsValue`. `Output` is the return type of the `compute` method. `JsValue` is the return type of the `resolve` method.
+You may notice there are two associated types on the `Task` trait. The `type Output` and the `type JsValue`. `Output` is the return type of the `compute` method. `JsValue` is the return type of the `resolve` method.
 
 :::info
 We need separate `type Output` and `type JsValue` because we can not call the JavaScript function back in `fn compute`, it is not executed on the main thread. So we need `fn resolve`, which runs on the main thread, to create the `JsValue` from `Output` and `Env` and call it back in JavaScript.

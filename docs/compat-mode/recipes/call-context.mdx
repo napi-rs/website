@@ -3,7 +3,7 @@ title: CallContext
 description: Call context in JsFunction.
 ---
 
-`CallContext` contains all information in a JavaScript function call.
+`CallContext` contains all the information in a JavaScript function call.
 
 ## Arguments
 
@@ -17,9 +17,9 @@ fn hey(ctx: CallContext) -> Result<JsUndefined> {
 }
 ```
 
-The argument sequence starts from `0`, and couldn't be lager than the number passed in the `js_function` macro. If you passed a position lager than it could be, an JavaScript Error will be thrown.
+The argument sequence starts from `0`, and can't be lager than the number passed in the `js_function` macro. If you passed a position lager, a JavaScript Error will be thrown.
 
-The type of result must be equal to the actually type of argument, or type error will be thrown.
+The type of result must be equal to the actual type of argument, or type error will be thrown.
 
 ```rust
 struct Native {
@@ -59,7 +59,7 @@ obj.get() // 101
 
 ## Argument length
 
-The number which was passed to `js_function` is the capability of the arguments Array, the actually arguments length could be retrieved by `CallContext::length`.
+The number which was passed to `js_function` is the capability of the arguments Array, the actual arguments length can be retrieved with `CallContext::length`.
 
 ```rust
 #[js_function(100)]
@@ -76,8 +76,8 @@ hey({}) // 1
 
 ## This
 
-You can get this object via `CallContext::this` or `CallContext::this_unchecked`. The only different between the two method is `CallContext::this` will perform a type check, if provided type of return type is not matched with the actually `this`, `InvalidArg` error will be thrown.
+You can get this object via `CallContext::this` or `CallContext::this_unchecked`. The only different between the two method is `CallContext::this` will perform a type check, if provided type of return type is not matched with `this`, `InvalidArg` error will be thrown.
 
 ## new target
 
-If function was called by `new` operator, you can use `CallContext::get_new_target` to get the new target of this constructor function.
+If the function was called by `new` operator, you can use `CallContext::get_new_target` to get the new target of this constructor function.

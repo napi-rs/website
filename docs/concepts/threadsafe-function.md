@@ -9,7 +9,7 @@ description: Call a JavaScript callback in other threads.
 [`napi_env`](https://nodejs.org/api/n-api.html#napi_env), [`napi_value`](https://nodejs.org/api/n-api.html#napi_value), and [`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref) are low level concepts in `Node-API`, which the `#[napi]` macro of **NAPI-RS** is built on top of. **NAPI-RS** also provides a [low level API](../compat-mode/concepts/env) to access the original `Node-API`.
 :::
 
-`Node-API` provide the complex `ThreadSafe Function` APIs to call the JavaScript function on the other thread. It's very complex so many developers don't understand how to use it correctly. **NAPI-RS** provides a limited version of `ThreadSafe Function` APIs to make it easier to use:
+`Node-API` provides the complex `ThreadSafe Function` APIs to call JavaScript functions on other threads. It's very complex so many developers don't understand how to use it correctly. **NAPI-RS** provides a limited version of `ThreadSafe Function` APIs to make it easier to use:
 
 ```rust {10} title=lib.rs
 use std::thread;
@@ -87,7 +87,7 @@ The first argument in the generic parameter of course is the return type of the 
 
 ### `ErrorStrategy::CalleeHandled`
 
-`Err` from Rust code will be pass into the first argument of the JavaScript callback. This behavior follows the async callback conventions from Node.js: https://nodejs.org/en/knowledge/errors/what-are-the-error-conventions/. Many async APIs in Node.js are designed in this shape, like `fs.read`.
+`Err` from Rust code will be passed into the first argument of the JavaScript callback. This behaviour follows the async callback conventions from Node.js: https://nodejs.org/en/knowledge/errors/what-are-the-error-conventions/. Many async APIs in Node.js are designed in this shape, like `fs.read`.
 
 With `ErrorStrategy::CalleeHandled`, you must call the `ThreadsafeFunction` with the `Result` type, so that the `Error` will be handled and passed back to the JavaScript callback:
 
