@@ -29,7 +29,7 @@ export function log(n: number): void
 
 ### Null
 
-Represent `null` value in JavaScript.
+Represents `null` value in JavaScript.
 
 ```rust {3} title=lib.rs
 #[napi]
@@ -70,7 +70,7 @@ export function sum(a: number, b: number): number
 
 ### String
 
-Represent JavaScript `String` type.
+Represents JavaScript `String` type.
 
 ```rust {3} title=lib.rs
 #[napi]
@@ -85,7 +85,7 @@ export function greet(name: string): string
 
 ### Boolean
 
-Represent JavaScript `Boolean` type.
+Represents JavaScript `Boolean` type.
 
 ```rust title=lib.rs
 #[napi]
@@ -120,7 +120,7 @@ export function readBuffer(file: string): Buffer
 
 ### Object
 
-Represent JavaScript anonymous object values.
+Represents JavaScript anonymous object values.
 
 :::caution Performance
 The costs of `Object` conversions between JavaScript and Rust are higher than other primitive types.

@@ -7,13 +7,13 @@ description: N-API JsValue.
 
 ## `JsUndefined`
 
-Represent `undefined` in JavaScript. It can not be casted into `Rust` value, and no `Rust` value can be casted into `JsUndefined`.
+Represents `undefined` in JavaScript. It can not be casted into a `Rust` value, and no `Rust` value can be casted into `JsUndefined`.
 
 The only way to create `JsUndefined` in Rust is calling `Env::get_undefined()`.
 
 ## `JsNull`
 
-Represent `null` in JavaScript. Like `JsUndefined`, it can not be casted to `Rust` value and no `Rust` value can be casted to it.
+Represents `null` in JavaScript. Like `JsUndefined`, it can not be casted to a `Rust` value and no `Rust` value can be casted to it.
 
 The only way to create `JsNull` in Rust is calling `Env::get_null()`.
 
@@ -46,7 +46,7 @@ fn fibonacci_native(n: i64) -> i64 {
 
 ## `JsBoolean`
 
-`JsBoolean` represent boolean value in JavaScript.
+`JsBoolean` represents boolean values in JavaScript.
 
 Use `JsBoolean::get_value()` to convert `JsBoolean` into Rust `bool`. And `Env::get_boolean()` to convert Rust `bool` into `JsBoolean`.
 
@@ -65,12 +65,12 @@ not(false) // true
 
 ## `JsString`
 
-Represent `string` value in JavaScript. There 3 types of `string` encoding you can interactive with `N-API`: `utf8`, `utf16` and `latin1`.
+Represents a `string` value in JavaScript. There are 3 types of `string` encoding you can interactive with `N-API`: `utf8`, `utf16` and `latin1`.
 
 > There is a article which may help you to understand encoding story in Node.js: https://kevin.burke.dev/kevin/node-js-string-encoding/
 
-Using `Env::create_string()` you could create `JsString` from Rust `&str`.
-If you want get utf8 value from `JsString`, you must using the `JsString::into_utf8()` to get utf8 value explicit.
+Using `Env::create_string()` you can create `JsString` from Rust `&str`.
+If you would like to get utf8 string from `JsString`, you must use the `JsString::into_utf8()` to get utf8 value explicitly.
 
 ```rust
 #[js_function(1)]
@@ -111,7 +111,7 @@ setBuffer(Buffer.from([0, 1])) // <Buffer 01 02>
 
 ## `JsSymbol`
 
-Represent `Symbol` value in JavaScript. You can create `JsSymbol` from `&str` or `JsString`
+Represents a `Symbol` value in JavaScript. You can create `JsSymbol` from `&str` or `JsString`
 
 ```rust
 // create from &str
@@ -133,7 +133,7 @@ fn create_symbol(ctx: CallContext) -> Result<JsSymbol> {
 
 ## `JsObject`
 
-Represent `Object` value in JavaScript. There are many object related api in `JsObject`. See [document](https://docs.rs/napi/latest/napi/struct.JsObject.html).
+Represents an `Object` value in JavaScript. There are many object related API's in `JsObject`. See the [docs](https://docs.rs/napi/latest/napi/struct.JsObject.html).
 
 ```rust
 #[js_function(1)]
@@ -152,11 +152,11 @@ setBar({ bar: 'bar' }) // { bar: "bar bar" }
 
 ## `JsDate`
 
-Represent `Date` object in JavaScript. JavaScript `Date` objects are described in [Section 20.3](https://tc39.es/ecma262/#sec-date-objects) of the ECMAScript Language Specification.
+Represents a `Date` object in JavaScript. JavaScript `Date` objects are described in [Section 20.3](https://tc39.es/ecma262/#sec-date-objects) of the ECMAScript Language Specification.
 
 ## `JsBigint`
 
-Represent `Bigint` value in JavaScript.
+Represents a `Bigint` value in JavaScript.
 
 ## `JsExternal`
 

@@ -32,7 +32,7 @@ All the fields in `napi` is optional.
 
 | Filed                | Description                                                                                                                                                                                                               |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`               | The binary file name in generated `.node` file. Eg <Green>`[NAME].[TRIPLE?].node`</Green>                                                                                                                                 |
+| `name`               | The binary file name of generated `.node` file. Eg <Green>`[NAME].[TRIPLE?].node`</Green>                                                                                                                                 |
 | `triples.default`    | Whether to enable the default triples. <br />The default triples is `['x86_64-apple-darwin', 'x86_64-unknown-linux-gnu', 'x86_64-pc-windows-msvc']`.<br />The default value of `triples.default` is <Green>`true`</Green> |
 | `triples.additional` | Additional triples besides the default triples you want to build. Target triples could be found in the output of `rustup target list` command.                                                                            |
 | `package.name`       | Override the `name` field in `package.json`. See [Build#js-package-name](./build#note-for---js-package-name) for usage.                                                                                                   |
@@ -41,7 +41,7 @@ All the fields in `napi` is optional.
 
 See [rustc/platform-support](https://doc.rust-lang.org/nightly/rustc/platform-support.html) and [LLVM/CrossCompilation](https://clang.llvm.org/docs/CrossCompilation.html#target-triple)
 
-> Targets are identified by their "target triple" which is the string to inform the compiler what kind of output should be produced.
+> Targets are identified by their "target triple" which is the string to inform the compiler what kind of output that should be produced.
 
 > The triple has the general format `<arch><sub>-<vendor>-<sys>-<abi>`, where:
 >

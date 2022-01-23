@@ -7,7 +7,7 @@ The `#[napi]` macro is a very high level abstraction for the `Node-API`. Most of
 
 But sometimes you still need to access the low-level `Node-API`, for example, to call [`napi_async_cleanup_hook`](https://nodejs.org/api/n-api.html#napi_async_cleanup_hook) or [`napi_adjust_external_memory`](https://nodejs.org/api/n-api.html#napi_adjust_external_memory).
 
-For this scenario, **NAPI-RS** allow you to inject `Env` into your `fn` which is decorated by the `#[napi]`.
+For this scenario, **NAPI-RS** allows you to inject `Env` into your `fn` which is decorated by the `#[napi]`.
 
 ```rust {4} title=lib.rs
 use napi::{Env, bindgen_prelude::*};
@@ -51,4 +51,4 @@ impl JsQueryEngine {
 }
 ```
 
-The behavior is just the same with the pure `fn`.
+The behaviour is just the same with the pure `fn`.

@@ -26,9 +26,9 @@ import { Green, Rust, Warning } from './chalk'
 
 ## Note for `--js-package-name`
 
-In [Deep dive section](../introduction/getting-started#deep-dive), we recommended you to publish your package under [`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/). But if your are migrating an existed package which is not under the [`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) or you just don't want your package under a [`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) , you may trigger the [_npm spam detection_](https://stackoverflow.com/questions/48668389/npm-publish-failed-with-package-name-triggered-spam-detection/54135900#54135900) while publishing the native platform packages. Like `snappy-darwin-x64` `snappy-darwin-arm64` etc...
+In the [Deep dive section](../introduction/getting-started#deep-dive), we recommended you publish your package under [`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/). But if you are migrating an existed package which is not under the [`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) or you just don't want your package under a [`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) , you may trigger the [_npm spam detection_](https://stackoverflow.com/questions/48668389/npm-publish-failed-with-package-name-triggered-spam-detection/54135900#54135900) while publishing the native platform packages. Like `snappy-darwin-x64` `snappy-darwin-arm64` etc...
 
-In this case, you can publish your platform packages in [`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) to avoid the [_npm spam detection_](https://stackoverflow.com/questions/48668389/npm-publish-failed-with-package-name-triggered-spam-detection/54135900#54135900) . And your users doesn't care about the platform native packages in `optionalDependencies`. Like [`snappy`](https://github.com/Brooooooklyn/snappy/), users only need to install it via `yarn add snappy`. But platform native packages of it is under `@napi-rs` scope:
+In this case, you can publish your platform packages under [`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) to avoid the [_npm spam detection_](https://stackoverflow.com/questions/48668389/npm-publish-failed-with-package-name-triggered-spam-detection/54135900#54135900). And your users don't need to care about the platform native packages in `optionalDependencies`. Like [`snappy`](https://github.com/Brooooooklyn/snappy/), users only need to install it via `yarn add snappy`. But platform native packages are under `@napi-rs` scope:
 
 ```json
 {
@@ -52,7 +52,7 @@ In this case, you can publish your platform packages in [`npm scope`](https://do
 }
 ```
 
-For this case, `@napi-rs/cli` provide the `--js-package-name` to override generated packages loading logic. For example in `snappy` we have <Green>package.json</Green> like this:
+For this case, `@napi-rs/cli` provides the `--js-package-name` to override generated package loading logic. For example in `snappy` we have <Green>package.json</Green> like this:
 
 ```json
 {

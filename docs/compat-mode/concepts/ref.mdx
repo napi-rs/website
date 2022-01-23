@@ -3,7 +3,7 @@ title: 'Reference'
 description: Create object reference and make it live longer than it would be.
 ---
 
-`Ref` is very similar to `Rc` in Rust. But it will not decrease the ref count when dropped, you need to call the `unref` method on it manually.
+`Ref` is very similar to `Rc` in Rust. However it will not decrease the ref count when dropped, you need to call the `unref` method on it manually.
 
 <!-- 在某些场景下，你可能需要手动延长某些 JavaScript 对象的 lifetime，防止他们过早的被 GC 回收掉。与在 JavaScript 中使用 Object 不一样，在 Rust 中保存一个 JsObject 的引用或者值对 Node.js 的 GC 系统而言是不透明的，也就是说 GC 并不知道你还存着一个 Object 的值想以后某个时候使用，GC 会在它认为合适的时候无情的回收他。这个时候我们需要为这个对象创建一个 *Reference*，相当于告诉 Node.js 的 GC 系统: hey 这个对象我还有用，你先不要回收他。 -->
 

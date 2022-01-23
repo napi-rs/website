@@ -9,7 +9,7 @@ GitHub Actions [artifacts](https://docs.github.com/en/actions/advanced-guides/st
 
 :::info
 
-This command is usually used in publish step, before the `npm publish` command and after the `Download artifacts` step.
+This command is usually used in the publish step, before the `npm publish` command and after the `Download artifacts` step.
 
 :::
 
@@ -22,7 +22,7 @@ This command is usually used in publish step, before the `npm publish` command a
 
 ## How does it work
 
-Assume you have a project which build native addon for these platform:
+Assume you have a project which builds native addon for these platform:
 
 - `x86_64-apple-darwin`
 - `x86_64-pc-windows-msvc`
@@ -47,7 +47,7 @@ And you can download these artifacts via `actions/download-artifact`:
   	path: artifacts
 ```
 
-Now the directory structure will be like this:
+Now the directory structure will look like this:
 
 ```text {4,6,8,10,12,14,16,18,20,22,24,26,28} title='directory structure'
 .
@@ -120,9 +120,9 @@ Now the directory structure will be like this:
 │       └── package.json
 ```
 
-As you see, we need to copy all <Green>`.node`</Green> file into `npm` directory so that we can publish them via [`napi prepublish`](./pre-publish) command.
+As you can see, we need to copy all <Green>`.node`</Green> files into the `npm` directory so that we can publish them via the [`napi prepublish`](./pre-publish) command.
 
-`napi artifacts` command will do this job for you. Assume the <Green>`-d`</Green> flag and <Green>`--dist`</Green> flags are the default value, and the directory structure is the same with below. After `napi artifacts` command run, the directory structure will become to:
+`napi artifacts` command will do this job for you. Assume the <Green>`-d`</Green> flag and <Green>`--dist`</Green> flags are the default value, and the directory structure is the same as below. After `napi artifacts` command run, the directory structure will become:
 
 ```text {6,10,14,18,22,26,30,34,38,42,46,50,54} title='directory structure'
 .
