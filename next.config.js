@@ -7,17 +7,7 @@ const withNextra = require('nextra')({
 
 module.exports = withNextra({
   i18n: {
-    locales: ['en', 'cn'],
     defaultLocale: process.env.LOCALE || 'en',
-    domains: [
-      {
-        domain: 'napi.rs',
-        defaultLocale: 'en',
-      },
-      {
-        domain: 'cn.napi.rs',
-        defaultLocale: 'cn',
-      },
-    ],
+    locales: ['en', 'cn'],
   },
 })

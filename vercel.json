@@ -1,0 +1,6 @@
+{
+  "redirects": [
+    { "source": "/cn", "destination": "https://cn.napi.rs" },
+    { "source": "/en", "destination": "https://napi.rs" }
+  ]
+}
