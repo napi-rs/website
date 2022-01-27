@@ -14,7 +14,7 @@ Work for `v2` started on [Aug 10, 2021](https://github.com/napi-rs/napi-rs/pull/
 
 The core of the `v2` release is the new `macro` API for defining **JavaScript** values in **Rust**. Let's see the differences between `v1` and `v2` by implementing a minimal runnable `sum` function:
 
-#### v2
+**v2**
 
 ```rust
 use napi_derive::napi;
@@ -25,7 +25,7 @@ fn sum(a: u32, b: u32) -> u32 {
 }
 ```
 
-#### v1
+**v1**
 
 ```rust
 use napi::{CallContext, JsNumber, JsObject, Result};

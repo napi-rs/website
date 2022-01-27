@@ -12,7 +12,7 @@ import { Diff } from '../../components/v2-diff'
 
 `v2` 版本的核心是新的 `Rust 宏` API, 通过新的 `#[napi]` 宏，你可以更轻松的在 `Rust` 中定义 `JavaScript` 值。让我们看一下 `v1` 和 `v2` 版本同样定一个最小可运行的 `sum` 函数使两数相加的例子:
 
-#### v2
+**v2**
 
 ```rust
 use napi_derive::napi;
@@ -23,7 +23,7 @@ fn sum(a: u32, b: u32) -> u32 {
 }
 ```
 
-#### v1
+**v1**
 
 ```rust
 use napi::{CallContext, JsNumber, JsObject, Result};

@@ -5,3 +5,5 @@ public
 build
 .vercel
 docs/concepts/function.md
+.next
+pnpm-lock.yaml
