@@ -14,20 +14,21 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: 16
-          cache: yarn
           check-latest: true
 
-      - name: Cache NPM dependencies
+      - name: Cache pnpm store
         uses: actions/cache@v2
         with:
-          path: node_modules
-          key: npm-cache-${{ hashFiles('yarn.lock') }}
+          path: ~/.pnpm-store
+          key: pnpm-cache
 
       - name: 'Install dependencies'
-        run: yarn install --frozen-lockfile --registry https://registry.npmjs.org
+        run: |
+          yarn global add pnpm
+          pnpm install --frozen-lockfile --registry https://registry.npmjs.org
 
       - name: 'Deploy'
-        run: npx vercel --confirm --prod -t $NOW_TOKEN
+        run: pnpx vercel --confirm --prod -t $NOW_TOKEN
         env:
           NOW_TOKEN: ${{ secrets.NOW_TOKEN }}
 

@@ -1,0 +1,19 @@
+{
+  "index": {
+    "title": "Introduction",
+    "type": "nav",
+    "hidden": true
+  },
+  "docs": {
+    "title": "文档",
+    "type": "nav"
+  },
+  "blog": {
+    "title": "博客",
+    "type": "nav"
+  },
+  "changelog": {
+    "title": "更新日志",
+    "type": "nav"
+  }
+}

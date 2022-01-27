@@ -1,0 +1,16 @@
+{
+  "exports": "Exports",
+  "naming-conventions": "Naming conventions",
+  "values": "Values",
+  "class": "Class",
+  "enum": "Enum",
+  "object": "Object",
+  "function": "Function",
+  "threadsafe-function": "ThreadsafeFunction",
+  "async-task": "AsyncTask",
+  "inject-env": "Inject Env",
+  "async-fn": "async fn",
+  "external": "External",
+  "await-promise": "Await Promise",
+  "types-overwrite": "Types Overwrite"
+}

@@ -1,0 +1,367 @@
+---
+description: Changelog for napi crate https://crates.io/crates/napi
+---
+
+# napi
+
+## [napi@2.0.2](https://github.com/napi-rs/napi-rs/releases/tag/napi%402.0.2)
+
+### What's Changed
+
+- fix(napi): compile issue without `compat-mode` by [@Brooooooklyn](https://github.com/Brooooooklyn) in [#961](https://github.com/napi-rs/napi-rs/pull/961)
+
+**Full Changelog**: https://github.com/napi-rs/napi-rs/compare/napi@2.0.1...napi@2.0.2
+
+## [napi@2.0.1](https://github.com/napi-rs/napi-rs/releases/tag/napi%402.0.1)
+
+### What's Changed
+
+- fix(napi): refine return type by [@liulinboyi](https://github.com/liulinboyi) in [#938](https://github.com/napi-rs/napi-rs/pull/938)
+- fix(napi): impl `From<Buffer>` for `Vec<u8>` by [@forehalo](https://github.com/forehalo) in [#939](https://github.com/napi-rs/napi-rs/pull/939)
+- test(napi): add tests for hashmap {'<->'} object by [@mischnic](https://github.com/mischnic) in [#946](https://github.com/napi-rs/napi-rs/pull/946)
+- chore(napi): upgrade windows crate to 0.29 by [@Brooooooklyn](https://github.com/Brooooooklyn) in [#950](https://github.com/napi-rs/napi-rs/pull/950)
+- fix(napi) undefined module in worker_threads by [@Brooooooklyn](https://github.com/Brooooooklyn) in [#960](https://github.com/napi-rs/napi-rs/pull/960)
+
+### New Contributors
+
+- [@liulinboyi](https://github.com/liulinboyi) made their first contribution in [#938](https://github.com/napi-rs/napi-rs/pull/938)
+- [@mischnic](https://github.com/mischnic) made their first contribution in [#946](https://github.com/napi-rs/napi-rs/pull/946)
+
+**Full Changelog**: https://github.com/napi-rs/napi-rs/compare/napi@2.0.0...napi@2.0.1
+
+## [napi@2.0.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%402.0.0)
+
+### Breaking changes
+
+### `Task` trait
+
+The `fn resolve` and `fn reject` methods of `Task` trait now accepted `&mut self` rather thant `self`. Because we introduced a new `fn finally` method on it.
+
+```diff
+struct BufferLength(Ref<JsBufferValue>);
+
+impl Task for BufferLength {
+  type Output = usize;
+  type JsValue = JsNumber;
+
+  fn compute(&mut self) -> Result<Self::Output> {
+    Ok(self.0.len() + 1)
+  }
+
+-  fn resolve(self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
+-    self.0.unref(env)?;
++  fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
+    env.create_uint32(output as u32)
+   }
+
+-  fn reject(self, err: Error) -> Result<Self::JsValue> {
+-    self.0.unref(env)?;
+-    Err(err)
+-  }
+
++  fn finally(&mut self, env: Env) -> Result<()> {
++    self.0.unref(env)?;
++    Ok(())
++  }
+}
+
+```
+
+### `Property::new`
+
+`Property::new` now accept single `name: &str`:
+
+```diff
+- Property::new(&env, "name)
++ Property::new("name")
+```
+
+### Features
+
+See [**Announcing NAPI-RS v2**](../../blog/announce-v2)
+
+## [napi@1.8.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.8.0)
+
+### Features
+
+- Allow create reference with initial ref count [12df7e0](https://github.com/napi-rs/napi-rs/commit/12df7e0159c1f8a9d0340ece7299391f71192420) [@Brooooooklyn](https://github.com/Brooooooklyn)
+
+**Full Changelog**: https://github.com/napi-rs/napi-rs/compare/napi@1.7.11...napi@1.8.0
+
+## [napi@1.7.11](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.7.11)
+
+### Bugfix
+
+- missing `coerce_to_bool` on `JsValue` [5d32a54](https://github.com/napi-rs/napi-rs/commit/5d32a54d6c2a01d7114f1eafdf86889e15efdb8f) [@Brooooooklyn](https://github.com/Brooooooklyn)
+- `freeze` and `seal` should be methods of `JsObject` [bc9529](https://github.com/napi-rs/napi-rs/commit/bc952929fc7157dbb1c423eb4b636b45cfeba124) [@Brooooooklyn](https://github.com/Brooooooklyn)
+
+**Full Changelog**: https://github.com/napi-rs/napi-rs/compare/napi@1.7.10...napi@1.7.11
+
+## [napi@1.7.10](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.7.10)
+
+### Bugfix
+
+- `set_property` on `JsObject` should accept any `JsValue` as key [bfbe2c0](https://github.com/napi-rs/napi-rs/commit/bfbe2c0d915789d986594d9a5a4d4805d0083745) [@Brooooooklyn](https://github.com/Brooooooklyn)
+
+## [napi@1.7.9](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.7.9)
+
+### Bugfix
+
+- Wrong `CString` usage [#854](https://github.com/napi-rs/napi-rs/pull/854) [@Brooooooklyn](https://github.com/Brooooooklyn)
+
+## [napi@1.7.8](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.7.8)
+
+### Features
+
+- feat(napi): implement `Env::throw` to throw any `JsValue` [#839](https://github.com/napi-rs/napi-rs/pull/839) [@Brooooooklyn](https://github.com/Brooooooklyn)
+
+#### Throw `SyntaxError`:
+
+```rust
+#[js_function(1)]
+pub fn throw_syntax_error(ctx: CallContext) -> Result<JsUndefined> {
+  let message: JsString = ctx.get(0)?;
+  let syntax_error = ctx
+    .env
+    .get_global()?
+    .get_named_property::<JsFunction>("SyntaxError")?;
+  ctx.env.throw(syntax_error.new(&[message])?)?;
+  ctx.env.get_undefined()
+}
+```
+
+## [napi@1.7.7](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.7.7)
+
+### Bugfix
+
+- fix(napi): `drop_wrapped` implementation [5fe8003](https://github.com/napi-rs/napi-rs/commit/5fe8003f9c9cc2d80f40a1af0364b41335a0495b)
+
+## [napi@1.7.6](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.7.6)
+
+### Bugfix
+
+- fix(napi): utf16 value should not contains 0 terminate [#697](https://github.com/napi-rs/napi-rs/pull/697)
+
+### Performance
+
+- perf(napi): make FuturePromise static dispatch [#621](https://github.com/napi-rs/napi-rs/pull/621)
+
+## [napi@1.7.5](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.7.5)
+
+### Perf
+
+- perf(napi): reduce tokio future execution overhead [#597](https://github.com/napi-rs/napi-rs/pull/597)
+
+## [napi@1.7.4](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.7.4)
+
+### Chore
+
+- chore(napi): remove useless build dependencies
+
+## [napi@1.7.3](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.7.3)
+
+### Bugfix
+
+- fix(napi): JsString\* leak in from_js_value [#584](https://github.com/napi-rs/napi-rs/pull/584)
+
+## [napi@1.7.2](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.7.2)
+
+### Bugfix
+
+- Allow dropping of string&buffer values when converting [#582](https://github.com/napi-rs/napi-rs/pull/582)
+
+## [napi@1.7.1](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.7.1)
+
+### Bugfix
+
+- fix(napi): wrong memory location of data in future resolved callback [#579](https://github.com/napi-rs/napi-rs/pull/579)
+
+## [napi@1.7.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.7.0)
+
+### Feature
+
+- feat(napi): impl more types `AsRef` and `AsMut` for `TypedArray` [#578](https://github.com/napi-rs/napi-rs/pull/578)
+
+### Refactor
+
+- refactor(napi): change more generic constraint from `NapiValue` => `NapiRaw` [#565](https://github.com/napi-rs/napi-rs/pull/565)
+
+## [napi@1.6.1](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.6.1)
+
+### Chore
+
+- chore(napi): upgrade `once_cell`
+
+## [napi@1.6.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.6.0)
+
+### Feature
+
+- Support N-API **_version 8_** features:
+
+  - [Object freeze](https://nodejs.org/api/n-api.html#n_api_napi_object_freeze)
+  - [Object seal](https://nodejs.org/api/n-api.html#n_api_napi_object_seal)
+  - [Async cleanup hook](https://nodejs.org/api/n-api.html#n_api_napi_add_async_cleanup_hook)
+
+`napi8` feature added into `napi` crate.
+
+### Chore
+
+- `Node.js@10` and `Node.js@15` removed from `CI`.
+
+## [napi@1.5.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.5.0)
+
+### Feature
+
+- feat(napi): expose create_string_from_c_char for C ffi scenario [d1bcecc](https://github.com/napi-rs/napi-rs/commit/d1bceccbe63ef8b799f21b89f09de8e5c4121829)
+
+### Fix
+
+- fix(napi): memory ordering issues in tsfn [5a21bbe](https://github.com/napi-rs/napi-rs/commit/5a21bbeb8e1d844b6176a680e7eaecd5b0adb939)
+
+## [napi@1.4.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.4.0)
+
+### Feature
+
+- refactor(napi): split NapiRaw trait from NapiValue [#524](https://github.com/napi-rs/napi-rs/pull/524)
+
+## [napi@1.3.4](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.3.4)
+
+### Bugfix
+
+- fix(napi): do not call release tsfn in Drop when ref count is 0 [#522](https://github.com/napi-rs/napi-rs/pull/522)
+
+## [napi@1.3.3](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.3.3)
+
+### Bugfix
+
+- fix(napi): finalizer maybe_ref pointer value [f45f1ae](https://github.com/napi-rs/napi-rs/commit/f45f1aeb537fe8e73c1a76ca79653137910f22a1)
+- Add a way to convert _stateful_ (Rust) closures into `JsFunction` [4aba159](https://github.com/napi-rs/napi-rs/commit/4aba1599585eb763cb64a38ed6ccf61f2336e205)
+
+### Docs
+
+- Remove deprecated `register_module` from example in README.md [5527451](https://github.com/napi-rs/napi-rs/commit/5527451b8d72d9c8e53dbba59b80f03cf3508cfc)
+
+## [napi@1.3.2](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.3.2)
+
+### Bugfix
+
+- fix(napi): napi_adjust_external_memory issue on wini686. [1e3290c](https://github.com/napi-rs/napi-rs/commit/1e3290cd01db78970b07598f2efba7eaf6a2e569)
+
+## [napi@1.3.1](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.3.1)
+
+### Bugfix
+
+- fix(napi): InvalidArg error when create_external with size hint. [50f207f](https://github.com/napi-rs/napi-rs/commit/50f207f744c16d305984be1d172174034e78bca9)
+
+## [napi@1.3.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.3.0)
+
+### Feature
+
+- Add a way to opt out of error handling for `ThreadsafeFunction` [#500](https://github.com/napi-rs/napi-rs/pull/500)
+
+## [napi@1.2.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.2.0)
+
+### Feature
+
+- feat(napi): unwrap &'static value from Ref object [e622d96](https://github.com/napi-rs/napi-rs/commit/e622d9693a1e7f230eb74bc50c00355ef7feb7b3)
+- feat(napi): add back clone trait to ThreadsafeFunction [071dcff](https://github.com/napi-rs/napi-rs/commit/071dcff9ebe0e631e60d1915a93ea9fd2583348e)
+
+### Chore
+
+- chore(napi): relax the tokio version from `1.1` to `1`. [c39b364](https://github.com/napi-rs/napi-rs/commit/c39b364319add276f04391228fd8a97463006efb)
+
+## [napi@1.1.3](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.1.3)
+
+### Chore
+
+- chore(napi): upgrade tokio to 1.1 [2775b47](https://github.com/napi-rs/napi-rs/commit/2775b47e33e5c67b4cb89dff985f15f8bd729388)
+
+## [napi@1.1.2](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.1.2)
+
+### Bugfix
+
+- fix(napi): throw JavaScript error in tsfn rather than rust thread panic [f46aa1f](https://github.com/napi-rs/napi-rs/commit/f46aa1f67ac078dd67a1ef894aa4866724472697)
+
+## [napi@1.1.1](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.1.1)
+
+### Feature
+
+- Implement `Copy` and `Clone` trait for JavaScript Primitive types. [c121537](https://github.com/napi-rs/napi-rs/commit/c1215379f2deda197c23879d0b40ea177955017c)
+
+### Bugfix
+
+- Remove unexpected `into_*_ref` from `JsString`. [e24738a](https://github.com/napi-rs/napi-rs/commit/e24738a4d86ebe8c6778ce1ddb1bb29c95b91132)
+
+## [napi@1.1.0](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.1.0)
+
+### Feature
+
+- Implement `Env::create_arraybuffer_with_borrowed_data` for `ffi` scenario. [911a0c1](https://github.com/napi-rs/napi-rs/pull/409/commits/911a0c139d6862b2042b80439e958e2d0a9257fc)
+
+## [napi@1.0.1](https://github.com/napi-rs/napi-rs/releases/tag/napi%401.0.1)
+
+### Bugfix
+
+- enable `napi4` feature when `tokio_rt` enabled.
+- Remove unexpected `napi_acquire_threadsafe_function` in `Env::execute_tokio_future` which would prevent Node.js process to exit: [#397](https://github.com/napi-rs/napi-rs/issues/397)
+
+## [napi@1.0.0](https://github.com/napi-rs/napi-rs/releases/tag/1.0.0)
+
+### Breaking changes
+
+#### Module register
+
+The old way:
+
+```rust
+register_module!(test_module, init);
+
+fn init(module: &mut Module) -> Result<()> {
+  // ....
+  Ok(())
+}
+```
+
+The new way:
+
+```rust
+#[module_exports]
+fn init(mut exports: JsObject) -> Result<()> {
+  // ...
+  Ok(())
+}
+```
+
+or
+
+```rust
+#[module_exports]
+fn init(mut exports: JsObject, env: Env) -> Result<()> {
+  // ...
+  Ok(())
+}
+```
+
+#### Task
+
+```diff
+- pub trait Task: Send {
++ pub trait Task: Send + Sized {
+    type Output: Send + Sized + 'static;
+    type JsValue: NapiValue;
+
+
+-   fn compute(&self) -> Result<Self::Output>;
++   fn compute(&mut self) -> Result<Self::Output>;
+
+
+-   fn resolve(&self, env: &mut Env, output: Self::Output) -> Result<Self::JsValue>;
++   fn resolve(self, env: Env, output: Self::Output) -> Result<Self::JsValue>;
+
+
++   fn reject(self, _env: Env, err: Error) -> Result<Self::JsValue> {
++     Err(err)
++   }
+}
+
+```

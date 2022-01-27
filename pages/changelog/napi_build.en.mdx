@@ -1,0 +1,35 @@
+---
+description: Changelog for napi-build crate https://crates.io/crates/napi-build
+---
+
+# napi-build
+
+## [napi-build@1.2.1](https://github.com/napi-rs/napi-rs/releases/tag/napi-build%401.2.1)
+
+### What's Changed
+
+- fix: keep `.d.ts` and `.js` untouched if native doesn't change by [@forehalo](https://github.com/forehalo) in [#941](https://github.com/napi-rs/napi-rs/pull/941)
+
+**Full Changelog**: https://github.com/napi-rs/napi-rs/compare/napi@2.0.0...napi-build@1.2.1
+
+## [napi-build@1.2.0](https://github.com/napi-rs/napi-rs/releases/tag/napi-build%401.2.0)
+
+### Features
+
+- Update Windows x64 and Windows x86 lib file to `Node.js@17.2.0`
+
+⚠️ There is no official Node.js build for **Windows ARM64** for now: https://github.com/nodejs/build/issues/2450
+
+So if you want build library for **Windows ARM64**, you can not use `experimental` features for now.
+
+## [napi-build@1.1.0](https://github.com/napi-rs/napi-rs/releases/tag/napi-build%401.1.0)
+
+### Feature
+
+- feat(build): remove `ureq` to support windows arm64 [#587](https://github.com/napi-rs/napi-rs/pull/587)
+
+## [napi-build@1.0.1](https://github.com/napi-rs/napi-rs/releases/tag/napi-build%401.0.1)
+
+### chore
+
+- Upgrade [ureq](https://github.com/algesten/ureq) to 2.0 (Only effect windows platform).

@@ -1,0 +1,89 @@
+---
+title: 'Home'
+description: 'NAPI-RS is a framework for building Node.js addons in Rust.'
+---
+
+import { NodeJS, Rust } from '../components/lang'
+import { Badges, CIBadges } from '../components/badges'
+import { Ecosystem } from '../components/ecosystem'
+
+<p>
+  <span style={{ fontSize: '36px', fontWeight: 'bold' }}>NAPI-RS</span> is a
+  framework for building pre-compiled <NodeJS /> addons in <Rust />.
+</p>
+
+<Badges />
+
+## Rustify Node.js in few lines!
+
+```rust filename="lib.rs"
+use napi_derive::napi;
+
+#[napi]
+fn fibonacci(n: u32) -> u32 {
+  match n {
+    1 | 2 => 1,
+    _ => fibonacci(n - 1) + fibonacci(n - 2),
+  }
+}
+```
+
+Compatible with both `CommonJS` and `esm`, with auto generated `.d.ts` file:
+
+```js filename="main.mjs"
+import { fibonacci } from './index.js'
+
+// output: 5
+console.log(fibonacci(5))
+```
+
+```js filename="main.cjs"
+const { fibonacci } = require('./index')
+
+// output: 5
+console.log(fibonacci(5))
+```
+
+## Features
+
+🚀 Bring native performance for `Node.js`
+
+👷‍♂️ Memory safe, guaranteed by `Rust` compiler
+
+⚡️ Zero copy data interactive between `Rust` & `Node.js`
+
+⚙️ Parallelism in few lines
+
+### Well tested
+
+<CIBadges />
+
+## Ecosystem
+
+<Ecosystem />
+
+## Support matrix
+
+### Node.js
+
+| Node10 | Node12 | Node14 | Node16 | Node17 |
+| ------ | ------ | ------ | ------ | ------ |
+| ✓      | ✓      | ✓      | ✓      | ✓      |
+
+### Platform support
+
+> ✅ Means official tested in napi-rs repo. <br/> `-` Means no official Node.js release.
+
+|            | i686 | x64 | aarch64 | arm |
+| ---------- | ---- | --- | ------- | --- |
+| Windows    | ✅   | ✅  | ✅      | -   |
+| macOS      | -    | ✅  | ✅      | ✅  |
+| Linux      | -    | ✅  | ✅      | ✅  |
+| Linux musl | -    | ✅  | ✅      | -   |
+| FreeBSD    | -    | ✅  | -       | -   |
+| Android    | -    | -   | ✅      | ✅  |
+
+## Related projects
+
+- [neon](https://www.neon-bindings.com)
+- [node-bindgen](https://github.com/infinyon/node-bindgen)
