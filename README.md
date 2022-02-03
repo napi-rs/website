@@ -16,15 +16,15 @@
 1. Install dependencies
 
    ```sh
-   yarn install
+   pnpm install
    ```
 
 2. Start developing.
 
    ```sh
-   yarn start
+   pnpm dev
    ```
 
 3. Launch
 
-   Website is now running at `http://localhost:8000`
+   Website is now running at `http://localhost:3000`
