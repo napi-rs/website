@@ -13,9 +13,9 @@
     "arrowParens": "always"
   },
   "dependencies": {
-    "next": "^12.0.9",
-    "nextra": "2.0.0-alpha.23",
-    "nextra-theme-docs": "2.0.0-alpha.23",
+    "next": "^12.0.10",
+    "nextra": "2.0.0-alpha.24",
+    "nextra-theme-docs": "2.0.0-alpha.24",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   },
