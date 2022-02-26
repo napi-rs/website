@@ -86,14 +86,14 @@ export function Ecosystem() {
             r="22"
           />
           <path
-            fill-rule="evenodd"
-            clip-rule="evenodd"
+            fillRule="evenodd"
+            clipRule="evenodd"
             d="M166.7 154.5a84 84 0 0 1-29 11.8 59 59 0 0 0 2.9-26.6 59 59 0 1 0-67.4-90.1A98 98 0 0 0 41 59a84 84 0 1 1 125.7 95.5zM42 74.3l20.6 2.5a59 59 0 0 1 2.6-11.7A84 84 0 0 0 42 74.3z"
             fill="#FFC131"
           />
           <path
-            fill-rule="evenodd"
-            clip-rule="evenodd"
+            fillRule="evenodd"
+            clipRule="evenodd"
             d="M38.4 76.5a84 84 0 0 1 29.2-11.9 58.9 58.9 0 0 0-3.3 26.7 59 59 0 1 0 67.7 90 98 98 0 0 0 32.2-9.3A84 84 0 1 1 38.4 76.5zm124.7 80.2-.4.2.4-.2z"
             fill="#24C8DB"
           />
