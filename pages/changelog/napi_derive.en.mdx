@@ -2,34 +2,10 @@
 description: Changelog for napi crate https://crates.io/crates/napi-derive
 ---
 
+import { Changelog, getChangelog } from '../../components/changelog-generator'
+
 # napi-derive
 
-## [napi-derive@2.0.4](https://github.com/napi-rs/napi-rs/releases/tag/napi-derive%402.0.4)
+export const getStaticProps = getChangelog
 
-### What's Changed
-
-- Missing wrap in NAPI-RS created class instance by [@Brooooooklyn](https://github.com/Brooooooklyn) in [#967](https://github.com/napi-rs/napi-rs/pull/967)
-- Ignore warnings on generated fn by [@Brooooooklyn](https://github.com/Brooooooklyn) in [#969](https://github.com/napi-rs/napi-rs/pull/969)
-
-## [napi-derive@2.0.3](https://github.com/napi-rs/napi-rs/releases/tag/napi-derive%402.0.3)
-
-### What's Changed
-
-- Fix return instance from non-default constructor `Class` by [@Brooooooklyn](https://github.com/Brooooooklyn) in [#966](https://github.com/napi-rs/napi-rs/pull/966)
-
-**Full Changelog**: https://github.com/napi-rs/napi-rs/compare/napi-derive@2.0.2...napi-derive@2.0.3
-
-## [napi-derive@2.0.2](https://github.com/napi-rs/napi-rs/releases/tag/napi-derive%402.0.2)
-
-### What's Changed
-
-- fix(napi-derive): return `Class instance` in `fn` by [@Brooooooklyn](https://github.com/Brooooooklyn) in [#964](https://github.com/napi-rs/napi-rs/pull/964)
-
-**Full Changelog**: https://github.com/napi-rs/napi-rs/compare/napi-derive@2.0.1...napi-derive@2.0.2
-
-## [napi-derive@2.0.1](https://github.com/napi-rs/napi-rs/releases/tag/napi-derive%402.0.1)
-
-- fix(napi-derive-backend): Null and Undefined return type by [@Brooooooklyn](https://github.com/Brooooooklyn) in [#940](https://github.com/napi-rs/napi-rs/pull/940)
-- Add `skip_typescript` attribute for macro by [@h-a-n-a](https://github.com/h-a-n-a) in [#947](https://github.com/napi-rs/napi-rs/pull/947)
-
-**Full Changelog**: https://github.com/napi-rs/napi-rs/compare/napi-derive@2.0.0...napi-derive@2.0.1
+<Changelog packageName="napi-derive" />

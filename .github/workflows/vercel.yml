@@ -9,26 +9,25 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js 16.x
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 16
           check-latest: true
+          cache: 'yarn'
 
       - name: Cache pnpm store
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
-          path: ~/.pnpm-store
-          key: pnpm-cache
+          path: .yarn/cache
+          key: yarn-cache
 
       - name: 'Install dependencies'
-        run: |
-          yarn global add pnpm
-          pnpm install --frozen-lockfile --registry https://registry.npmjs.org
+        run: yarn install --immutable
 
       - name: 'Deploy'
-        run: pnpx vercel --confirm --prod -t $NOW_TOKEN
+        run: yarn vercel --confirm --prod -t $NOW_TOKEN
         env:
           NOW_TOKEN: ${{ secrets.NOW_TOKEN }}
 

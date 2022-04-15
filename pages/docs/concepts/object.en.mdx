@@ -2,6 +2,8 @@
 title: 'Object'
 ---
 
+import Callout from 'nextra-theme-docs/callout'
+
 # Object
 
 `Object` is very easy to confuse with the use of `Class`. Unlike `Class` you can't assign `function` or `method` to `Object`.
@@ -15,8 +17,6 @@ pub struct Pet {
 ```
 
 Any `impl` block of this `struct` will not affect the JavaScript `Object`.
-
-import Callout from 'nextra-theme-docs/callout'
 
 <Callout type="warning" emoji="⚠️">
   If you want to convert a Rust `struct` into JavaScript `Object` using

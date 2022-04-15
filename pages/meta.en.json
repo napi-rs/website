@@ -6,14 +6,14 @@
   },
   "docs": {
     "title": "Docs",
-    "type": "nav"
+    "type": "page"
   },
   "blog": {
     "title": "Blog",
-    "type": "nav"
+    "type": "page"
   },
   "changelog": {
     "title": "Changelog",
-    "type": "nav"
+    "type": "page"
   }
 }

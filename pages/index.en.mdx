@@ -3,15 +3,24 @@ title: 'Home'
 description: 'NAPI-RS is a framework for building Node.js addons in Rust.'
 ---
 
-import { NodeJS, Rust } from '../components/lang'
 import { Badges, CIBadges } from '../components/badges'
+import { Rust } from '../components/chalk'
 import { Ecosystem } from '../components/ecosystem'
 import { Sponsors } from '../components/sponsors'
+import { TitleEN } from '../components/title.en'
 
-<p>
-  <span style={{ fontSize: '36px', fontWeight: 'bold' }}>NAPI-RS</span> is a
-  framework for building pre-compiled <NodeJS /> addons in <Rust />.
-</p>
+export const getStaticProps = async () => {
+  const sponsorsSVG = await fetch(`https://sponsors.napi.rs/sponsors.svg`).then(
+    (res) => res.text(),
+  )
+  return {
+    props: {
+      ssg: sponsorsSVG,
+    },
+  }
+}
+
+<TitleEN />
 
 <Badges />
 
