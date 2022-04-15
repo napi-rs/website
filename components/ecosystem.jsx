@@ -1,8 +1,6 @@
-import React from 'react'
-
 export function Ecosystem() {
   return (
-    <p style={{ display: 'flex', gap: '1em' }}>
+    <p style={{ display: 'flex', gap: '1em', flexWrap: 'wrap' }}>
       <style jsx>{`
         .themed {
           fill: black;

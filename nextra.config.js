@@ -12,6 +12,7 @@ export default {
   titleSuffix: ' – NAPI-RS',
   search: true,
   unstable_flexsearch: true,
+  unstable_staticImage: true,
   floatTOC: true,
   feedbackLink: () => {
     const { locale } = useRouter()

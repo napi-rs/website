@@ -1,0 +1,30 @@
+---
+title: 'TypedArray'
+description: JavaScript TypedArray primitive.
+---
+
+import Callout from 'nextra-theme-docs/callout'
+
+# TypedArray
+
+`TypedArray` describes an array-like view of an underlying [binary data buffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer). Using `TypedArray` allows you to share data between Node.js and Rust without copy or move data underlying.
+
+## Buffer
+
+[`Buffer`](https://nodejs.org/api/buffer.html) is a subclass of JavaScript's [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array). It is often used to share data between Node.js and Rust.
+
+`Buffer` could be created with `Vec<u8>`, if you created `Buffer` in this way, the ownership of the `Vec<8>` will be transferred into the `v8`, and the `Vec<u8>` will be dropped when `v8` GC the `Buffer`.
+
+```rust {6} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn create_buffer() -> Buffer {
+  vec![0, 1, 2].into()
+}
+```
+
+<Callout>
+  The underlying `Vec<u8>` will not be moved or copied in this way.
+</Callout>

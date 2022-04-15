@@ -6,14 +6,14 @@
   },
   "docs": {
     "title": "文档",
-    "type": "nav"
+    "type": "page"
   },
   "blog": {
     "title": "博客",
-    "type": "nav"
+    "type": "page"
   },
   "changelog": {
     "title": "更新日志",
-    "type": "nav"
+    "type": "page"
   }
 }

@@ -3,15 +3,23 @@ title: '主页'
 description: 'NAPI-RS 是一个使用 Rust 构建预编译 Node.js 原生扩展的框架.'
 ---
 
-import { NodeJS, Rust } from '../components/lang'
 import { Badges, CIBadges } from '../components/badges'
 import { Ecosystem } from '../components/ecosystem'
 import { Sponsors } from '../components/sponsors'
+import { TitleZH } from '../components/title.zh'
 
-<p>
-  <span style={{ fontSize: '36px', fontWeight: 'bold' }}>NAPI-RS</span>{' '}
-  是一个使用 <Rust /> 构建预编译 <NodeJS /> 原生扩展的框架
-</p>
+export const getStaticProps = async () => {
+  const sponsorsSVG = await fetch(`https://sponsors.napi.rs/sponsors.svg`).then(
+    (res) => res.text(),
+  )
+  return {
+    props: {
+      ssg: sponsorsSVG,
+    },
+  }
+}
+
+<TitleZH />
 
 <Badges />
 
@@ -49,9 +57,9 @@ console.log(fibonacci(5))
 
 🚀 为 `Node.js` 应用带来原生性能
 
-👷‍♂️ 由 <Rust /> 编译器保障的内存安全
+👷‍♂️ 由 `Rust` 编译器保障的内存安全
 
-⚡️ <Rust /> 与 <NodeJS /> 之间零数据拷贝交互
+⚡️ `Rust` 与 `Node.js` 之间零数据拷贝交互
 
 ⚙️ 轻松并行代码
 

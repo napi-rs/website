@@ -12,5 +12,6 @@
   "async-fn": "async fn",
   "external": "External",
   "await-promise": "Await Promise",
-  "types-overwrite": "Types Overwrite"
+  "types-overwrite": "Types Overwrite",
+  "typed-array": "Typed Array"
 }
