@@ -68,6 +68,125 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@napi-rs/simple-git-android-arm-eabi@npm:0.1.7":
+  version: 0.1.7
+  resolution: "@napi-rs/simple-git-android-arm-eabi@npm:0.1.7"
+  conditions: os=android & cpu=arm
+  languageName: node
+  linkType: hard
+
+"@napi-rs/simple-git-android-arm64@npm:0.1.7":
+  version: 0.1.7
+  resolution: "@napi-rs/simple-git-android-arm64@npm:0.1.7"
+  conditions: os=android & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@napi-rs/simple-git-darwin-arm64@npm:0.1.7":
+  version: 0.1.7
+  resolution: "@napi-rs/simple-git-darwin-arm64@npm:0.1.7"
+  conditions: os=darwin & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@napi-rs/simple-git-darwin-x64@npm:0.1.7":
+  version: 0.1.7
+  resolution: "@napi-rs/simple-git-darwin-x64@npm:0.1.7"
+  conditions: os=darwin & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@napi-rs/simple-git-linux-arm-gnueabihf@npm:0.1.7":
+  version: 0.1.7
+  resolution: "@napi-rs/simple-git-linux-arm-gnueabihf@npm:0.1.7"
+  conditions: os=linux & cpu=arm
+  languageName: node
+  linkType: hard
+
+"@napi-rs/simple-git-linux-arm64-gnu@npm:0.1.7":
+  version: 0.1.7
+  resolution: "@napi-rs/simple-git-linux-arm64-gnu@npm:0.1.7"
+  conditions: os=linux & cpu=arm64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@napi-rs/simple-git-linux-arm64-musl@npm:0.1.7":
+  version: 0.1.7
+  resolution: "@napi-rs/simple-git-linux-arm64-musl@npm:0.1.7"
+  conditions: os=linux & cpu=arm64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@napi-rs/simple-git-linux-x64-gnu@npm:0.1.7":
+  version: 0.1.7
+  resolution: "@napi-rs/simple-git-linux-x64-gnu@npm:0.1.7"
+  conditions: os=linux & cpu=x64 & libc=glibc
+  languageName: node
+  linkType: hard
+
+"@napi-rs/simple-git-linux-x64-musl@npm:0.1.7":
+  version: 0.1.7
+  resolution: "@napi-rs/simple-git-linux-x64-musl@npm:0.1.7"
+  conditions: os=linux & cpu=x64 & libc=musl
+  languageName: node
+  linkType: hard
+
+"@napi-rs/simple-git-win32-arm64-msvc@npm:0.1.7":
+  version: 0.1.7
+  resolution: "@napi-rs/simple-git-win32-arm64-msvc@npm:0.1.7"
+  conditions: os=win32 & cpu=arm64
+  languageName: node
+  linkType: hard
+
+"@napi-rs/simple-git-win32-x64-msvc@npm:0.1.7":
+  version: 0.1.7
+  resolution: "@napi-rs/simple-git-win32-x64-msvc@npm:0.1.7"
+  conditions: os=win32 & cpu=x64
+  languageName: node
+  linkType: hard
+
+"@napi-rs/simple-git@npm:^0.1.7":
+  version: 0.1.7
+  resolution: "@napi-rs/simple-git@npm:0.1.7"
+  dependencies:
+    "@napi-rs/simple-git-android-arm-eabi": 0.1.7
+    "@napi-rs/simple-git-android-arm64": 0.1.7
+    "@napi-rs/simple-git-darwin-arm64": 0.1.7
+    "@napi-rs/simple-git-darwin-x64": 0.1.7
+    "@napi-rs/simple-git-linux-arm-gnueabihf": 0.1.7
+    "@napi-rs/simple-git-linux-arm64-gnu": 0.1.7
+    "@napi-rs/simple-git-linux-arm64-musl": 0.1.7
+    "@napi-rs/simple-git-linux-x64-gnu": 0.1.7
+    "@napi-rs/simple-git-linux-x64-musl": 0.1.7
+    "@napi-rs/simple-git-win32-arm64-msvc": 0.1.7
+    "@napi-rs/simple-git-win32-x64-msvc": 0.1.7
+  dependenciesMeta:
+    "@napi-rs/simple-git-android-arm-eabi":
+      optional: true
+    "@napi-rs/simple-git-android-arm64":
+      optional: true
+    "@napi-rs/simple-git-darwin-arm64":
+      optional: true
+    "@napi-rs/simple-git-darwin-x64":
+      optional: true
+    "@napi-rs/simple-git-linux-arm-gnueabihf":
+      optional: true
+    "@napi-rs/simple-git-linux-arm64-gnu":
+      optional: true
+    "@napi-rs/simple-git-linux-arm64-musl":
+      optional: true
+    "@napi-rs/simple-git-linux-x64-gnu":
+      optional: true
+    "@napi-rs/simple-git-linux-x64-musl":
+      optional: true
+    "@napi-rs/simple-git-win32-arm64-msvc":
+      optional: true
+    "@napi-rs/simple-git-win32-x64-msvc":
+      optional: true
+  checksum: 9eb2f02144bb3a5b6d19205c294b137990b14d7f282f8b96cbcc5149a436100f7410ab6b501d8d678ae1c76c97d2d284ebfb33ec22b6fd1ae643d7d578f3d5fa
+  languageName: node
+  linkType: hard
+
 "@next/env@npm:12.1.5":
   version: 12.1.5
   resolution: "@next/env@npm:12.1.5"
@@ -3133,8 +3252,8 @@ __metadata:
     lodash-es: ^4.17.21
     markdown-to-jsx: ^7.1.7
     next: 12.1.5
-    nextra: 2.0.0-alpha.48
-    nextra-theme-docs: 2.0.0-alpha.48
+    nextra: 2.0.0-alpha.49
+    nextra-theme-docs: 2.0.0-alpha.50
     prettier: ^2.6.2
     react: ^18.0.0
     react-dom: ^18.0.0
@@ -3226,9 +3345,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nextra-theme-docs@npm:2.0.0-alpha.48":
-  version: 2.0.0-alpha.48
-  resolution: "nextra-theme-docs@npm:2.0.0-alpha.48"
+"nextra-theme-docs@npm:2.0.0-alpha.50":
+  version: 2.0.0-alpha.50
+  resolution: "nextra-theme-docs@npm:2.0.0-alpha.50"
   dependencies:
     "@headlessui/react": ^1.5.0
     "@mdx-js/react": ^2.1.0
@@ -3247,25 +3366,27 @@ __metadata:
     next: ">=9.5.3"
     react: ">=16.13.1"
     react-dom: ">=16.13.1"
-  checksum: 7dc2d20088f71f1ab33d4a6ba1c19ef04f70d6836cd3f00f8de0383721edd3400ed4072cf76b7ae91c751f9bb4d75af7bb42efb8295ae00181e8ebfce644f70c
+  checksum: b32d2d2226898590fbea503d45cb7fd4b8800bc513fb7ea809033e47b4d9b177736bc8e8e78889767267d90eb3fb51b7f90731d8f154de24ae31400bb6a089d0
   languageName: node
   linkType: hard
 
-"nextra@npm:2.0.0-alpha.48":
-  version: 2.0.0-alpha.48
-  resolution: "nextra@npm:2.0.0-alpha.48"
+"nextra@npm:2.0.0-alpha.49":
+  version: 2.0.0-alpha.49
+  resolution: "nextra@npm:2.0.0-alpha.49"
   dependencies:
     "@mdx-js/mdx": ^2.1.0
+    "@napi-rs/simple-git": ^0.1.7
     github-slugger: ^1.4.0
     graceful-fs: ^4.2.6
     gray-matter: ^4.0.3
+    p-limit: ^4.0.0
     rehype-pretty-code: ^0.1.0
     remark-gfm: ^3.0.1
     shiki: 0.10.1
     slash: ^3.0.0
   peerDependencies:
     react: ">=16.13.1"
-  checksum: 79ce2736ffa0a9aace259e3f66240ae9d4ae44a25812266434d6dd70d21c8741e43023f3fb213addf6819a1d6008088278157462b5bf2f3f27fa9852cdf0f803
+  checksum: 64de8350f560928aec5dce1fe3dde1880c9eaa2698036357789b312f722f9dc58b49fd58feb545797577aa8abb7b2835124dfcbbcbbabccfca4435281d93f172
   languageName: node
   linkType: hard
 
@@ -3387,6 +3508,15 @@ __metadata:
   version: 1.0.0
   resolution: "p-finally@npm:1.0.0"
   checksum: 93a654c53dc805dd5b5891bab16eb0ea46db8f66c4bfd99336ae929323b1af2b70a8b0654f8f1eae924b2b73d037031366d645f1fd18b3d30cbd15950cc4b1d4
+  languageName: node
+  linkType: hard
+
+"p-limit@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "p-limit@npm:4.0.0"
+  dependencies:
+    yocto-queue: ^1.0.0
+  checksum: 01d9d70695187788f984226e16c903475ec6a947ee7b21948d6f597bed788e3112cc7ec2e171c1d37125057a5f45f3da21d8653e04a3a793589e12e9e80e756b
   languageName: node
   linkType: hard
 
@@ -4870,6 +5000,13 @@ __metadata:
   version: 3.1.1
   resolution: "yn@npm:3.1.1"
   checksum: 2c487b0e149e746ef48cda9f8bad10fc83693cd69d7f9dcd8be4214e985de33a29c9e24f3c0d6bcf2288427040a8947406ab27f7af67ee9456e6b84854f02dd6
+  languageName: node
+  linkType: hard
+
+"yocto-queue@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "yocto-queue@npm:1.0.0"
+  checksum: 2cac84540f65c64ccc1683c267edce396b26b1e931aa429660aefac8fbe0188167b7aee815a3c22fa59a28a58d898d1a2b1825048f834d8d629f4c2a5d443801
   languageName: node
   linkType: hard
 
