@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Use Node.js 16.x
         uses: actions/setup-node@v3
         with:
@@ -26,10 +28,20 @@ jobs:
       - name: 'Install dependencies'
         run: yarn install --immutable
 
+      - name: 'Build'
+        run: |
+          rm -rf .next
+          yarn build:en
+
       - name: 'Deploy'
         run: yarn vercel --confirm --prod -t $NOW_TOKEN
         env:
           NOW_TOKEN: ${{ secrets.NOW_TOKEN }}
+
+      - name: 'Build'
+        run: |
+          rm -rf .next
+          yarn build:cn
 
       - name: 'Deploy CN'
         run: |
