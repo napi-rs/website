@@ -6,7 +6,7 @@ export const getChangelog = async () => {
     `https://api.github.com/repos/napi-rs/napi-rs/releases?per_page=100`,
     {
       headers: {
-        Authorization: `token ${process.env.GH_TOKEN}`,
+        Authorization: `token ${process.env.GITHUB_TOKEN}`,
       },
     },
   ).then((res) => res.json())

@@ -32,6 +32,8 @@ jobs:
         run: |
           rm -rf .next
           yarn build:en
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 'Deploy'
         run: yarn vercel --confirm --prod -t $NOW_TOKEN
@@ -42,6 +44,8 @@ jobs:
         run: |
           rm -rf .next
           yarn build:cn
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 'Deploy CN'
         run: |
