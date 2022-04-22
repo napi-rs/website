@@ -26,13 +26,16 @@ export default {
     return (
       <>
         <img src="/img/favicon.png" width={32} />
-        <span className="mx-2 font-extrabold hidden md:inline select-none">
+        <span
+          style={{ width: 120 }}
+          className="mx-2 font-extrabold hidden md:inline select-none"
+        >
           NAPI-RS
         </span>
       </>
     )
   },
-  head: ({ title, meta }) => {
+  head: ({ meta }) => {
     return (
       <>
         {/* Favicons, meta */}
@@ -63,6 +66,15 @@ export default {
             'a framework for building pre-compiled Node.js addons in Rust'
           }
         />
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-38WMNQBW8F"
+        ></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-38WMNQBW8F');`,
+          }}
+        ></script>
       </>
     )
   },
@@ -77,11 +89,13 @@ export default {
   footerText: () => {
     return (
       <p>
-        Copyright © {new Date().getFullYear()} NAPI-RS. Powered by{' '}
+        <a href="https://vercel.com?utm_source=napi-rs&utm_campaign=oss">
+          <img src="assets/powered-by-vercel.svg" />
+        </a>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Powered by{' '}
         <a href="https://nextra.vercel.app" target="_blank">
           Nextra
         </a>
-        .
       </p>
     )
   },
