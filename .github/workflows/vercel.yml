@@ -32,11 +32,12 @@ jobs:
         run: |
           rm -rf .next
           yarn build:en
+          rm -rf .next/cache
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 'Deploy'
-        run: yarn vercel --confirm --prod -t $NOW_TOKEN
+        run: yarn vercel -f --confirm --prod -t $NOW_TOKEN
         env:
           NOW_TOKEN: ${{ secrets.NOW_TOKEN }}
 
@@ -44,13 +45,14 @@ jobs:
         run: |
           rm -rf .next
           yarn build:cn
+          rm -rf .next/cache
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 'Deploy CN'
         run: |
           echo "{\"projectId\":\"${CN_PROJECT_ID}\",\"orgId\":\"${CN_ORG_ID}\"}" > .vercel/project.json
-          npx vercel --confirm --prod -t $NOW_TOKEN
+          npx vercel --confirm -f --prod -t $NOW_TOKEN
         env:
           NOW_TOKEN: ${{ secrets.NOW_TOKEN }}
           CN_ORG_ID: ${{ secrets.CN_ORG_ID }}

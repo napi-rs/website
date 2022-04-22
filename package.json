@@ -36,7 +36,7 @@
   "scripts": {
     "dev": "next",
     "start": "next start",
-    "build": "echo hello",
+    "build": "next build",
     "build:en": "next build",
     "build:cn": "cross-env LOCALE=cn next build",
     "format": "prettier -w .",
