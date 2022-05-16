@@ -51,3 +51,43 @@ asyncHash(Buffer::from([1, 2])).then((result) => {
   console.log(result) // 0102
 })
 ```
+
+For JavaScript objects other than `JsBuffer`, you can use `Env::create_reference` to create references for them and fetch these JavaScript objects back with `Env::get_reference_value` later. For example:
+
+```rust
+struct CallbackContext {
+  callback: Ref<()>
+}
+
+#[napi]
+pub fn wrap_in_obj(env: Env, js_fn: JsFunction) -> Result<JsObject> {
+  let mut js_obj = env.create_object()?;
+  // create a reference for the javascript function
+  let js_fn_ref = env.create_reference(js_fn)?;
+  let ctx = CallbackContext {
+    callback: js_fn_ref,
+  };
+  // wrap it in an object
+  env.wrap(&mut js_obj, ctx)?;
+  Ok(js_obj)
+}
+
+#[napi]
+pub fn call_wrapped_fn(env: Env, js_obj: JsObject) -> Result<()> {
+  let ctx: &mut CallbackContext = env.unwrap(&js_obj)?;
+  let js_fn: JsFunction = env.get_reference_value(&ctx.callback)?;
+  // the javascript function should not be reclaimed before we call Ref::unref()
+  js_fn.call_without_args(None)?;
+  Ok(())
+}
+```
+
+```js
+const logSomething = () => {
+  console.log('hello')
+}
+const obj = wrapInObj(logSomething)
+callWrappedFn(obj) // log 'hello'
+```
+
+You should always get JavaScript objects from references instead of caching these JavaScript objects directly. Referenced `JsValue` could still become invalid after some time.
