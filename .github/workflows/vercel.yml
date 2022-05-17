@@ -19,7 +19,7 @@ jobs:
           check-latest: true
           cache: 'yarn'
 
-      - name: Cache pnpm store
+      - name: Cache yarn
         uses: actions/cache@v3
         with:
           path: .yarn/cache

@@ -32,12 +32,11 @@ export function createSourceMap(length: number): ExternalObject<Buffer>
 ```
 
 `External` is very useful when you want to return a JavaScript Object with some methods on it to interact with the native Rust code.
+Here is a real-world example:
 
-Here is an real world example:
+https://github.com/h-a-n-a/magic-string-rs/blob/v0.3.0/node/src/lib.rs#L96-L103
 
-https://github.com/h-a-n-a/magic-string-rs/blob/main/node/src/lib.rs#L101
-
-https://github.com/h-a-n-a/magic-string-rs/blob/main/node/index.js#L7-L23
+https://github.com/h-a-n-a/magic-string-rs/blob/v0.3.0/node/index.js#L7-L23
 
 ```rust filename="lib.rs"
 impl MagicString {

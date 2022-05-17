@@ -28,7 +28,9 @@ export function callEnv(length: number) -> ExternalObject<number[]>
 
 You can also inject `Env` in `impl` block:
 
-```rust {18} filename="lib.rs"
+```rust {20} filename="lib.rs"
+use napi::bindgen_prelude::*;
+
 // A complex struct which can not be exposed into JavaScript directly.
 struct QueryEngine {}
 
@@ -46,10 +48,10 @@ impl JsQueryEngine {
 
   /// Class method
   #[napi]
-  pub async fn query(&self, env: Env, query: String) -> napi::Result<String> {
-    self.engine.query(query).await
+  pub fn query(&self, env: Env, query: String) -> napi::Result<String> {
+    self.engine.query(query).map_err(|err| Error::new(Status::GenericFailure, format!("Query failed {}", err)))
   }
 }
 ```
 
-The behaviour is just the same with the pure `fn`.
+The behavior is just the same with the pure `fn`.

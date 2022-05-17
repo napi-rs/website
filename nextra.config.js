@@ -1,4 +1,5 @@
 import { useRouter } from 'next/router'
+import Script from 'next/script'
 
 const FEEDBACK_LINK_WITH_TRANSLATIONS = {
   'en-US': 'Question? Give us feedback →',
@@ -66,15 +67,15 @@ export default {
             'a framework for building pre-compiled Node.js addons in Rust'
           }
         />
-        <script
+        <Script
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-38WMNQBW8F"
-        ></script>
-        <script
+        ></Script>
+        <Script
           dangerouslySetInnerHTML={{
             __html: `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-38WMNQBW8F');`,
           }}
-        ></script>
+        ></Script>
       </>
     )
   },
