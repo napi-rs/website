@@ -37,6 +37,30 @@ export function callThreadsafeFunction(
 ): void
 ```
 
+## `ts_arg_type`
+
+Rewrite one or more argument types of a function _individually_, **NAPI-RS** will put the rewritten types into the brace of the function
+signature and will auto-derive the other ones.
+
+```rust {1} filename="lib.rs"
+#[napi]
+fn override_individual_arg_on_function(
+  not_overridden: String,
+  #[napi(ts_arg_type = "() => string")] f: JsFunction,
+  not_overridden2: u32,
+) {
+// code ...
+}
+```
+
+```ts filename="index.d.ts"
+export function overrideIndividualArgOnFunction(
+  notOverridden: string,
+  f: () => string,
+  notOverridden2: number,
+): string
+```
+
 ## `ts_return_type`
 
 Rewrite the return type of the function, **NAPI-RS** will add the rewritten type to the end of the function signature.
@@ -50,4 +74,26 @@ fn return_something_unknown(env: Env) -> Result<JsUnknown> {
 
 ```ts filename="index.d.ts"
 export function returnSomethingUnknown(): number
+```
+
+## `ts_type`
+
+Overwrite the generated ts-type of a field in a struct.
+
+```rust {1} filename="lib.rs"
+#[napi(object)]
+pub struct TsTypeChanged {
+  #[napi(ts_type = "MySpecialString")]
+  pub type_override: String,
+
+  #[napi(ts_type = "object")]
+  pub type_override_optional: Option<String>,
+}
+```
+
+```ts filename="index.d.ts"
+export interface TsTypeChanged {
+  typeOverride: MySpecialString
+  typeOverrideOptional?: object
+}
 ```
