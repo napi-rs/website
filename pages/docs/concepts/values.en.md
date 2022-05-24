@@ -297,9 +297,9 @@ export function createBigIntI128(): BigInt
 
 ### TypedArray
 
-:::info
+<Callout>
 Unlike JavaScript Object, the `TypedArray` passed into Rust fn is a **Reference**. No data `Copy` or `Clone` will be performed. Every mutation on the `TypedArray` will be reflected to the original JavaScript `TypedArray`.
-:::
+</Callout>
 
 ```rust filename="lib.rs"
 #[napi]
