@@ -265,3 +265,34 @@ fn accept_class_mut(engine: &mut QueryEngine) {
 export function acceptClass(engine: QueryEngine): void
 export function acceptClassMut(engine: QueryEngine): void
 ```
+
+## Get struct instances from Class instances
+
+In some cases you want to get struct instances from Class instances in Rust side, you can use `FromNapiValue::from_unknown` like below:
+
+```rust filename="lib.rs"
+use napi::{bindgen_prelude::FromNapiValue, Result, JsObject};
+
+// A complex struct which cannot be exposed to JavaScript directly.
+#[napi]
+struct QueryEngine {
+  num: i32,
+}
+
+#[napi]
+impl QueryEngine {
+  #[napi(constructor)]
+  pub fn new() -> Result<Self> {
+    Ok(Self {
+      num: 42,
+    })
+  }
+}
+
+fn print_num(obj: JsObject) -> Result<()> {
+  // unwrap js objects to get rust instances
+  let qe: &mut QueryEngine = FromNapiValue::from_unknown(obj.into_unknown())?;
+  println!("num is: {}", qe.num);
+  Ok(())
+}
+```
