@@ -1,5 +1,3 @@
-import React from 'react'
-
 export function Green({ children }) {
   return (
     <span>

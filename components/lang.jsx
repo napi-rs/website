@@ -1,5 +1,3 @@
-import React from 'react'
-
 export function NodeJS() {
   return <span style={{ color: 'green', fontWeight: 'bold' }}>Node.js</span>
 }
