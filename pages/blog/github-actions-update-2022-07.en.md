@@ -8,31 +8,33 @@ There are two big changes that happened in GitHub Actions:
 
 Android NDK **22** on GitHub Actions was replaced in favor of **24**, version **23** will be set as the default one: https://github.com/actions/virtual-environments/issues/5595.
 
+And Android ndk-bundle along with old NDK versions will be deprecated: https://github.com/actions/virtual-environments/issues/5879. The `ANDROID_NDK_HOME` doesn't exist anymore, you need to replace it to `ANDROID_NDK_LATEST_HOME` cross your project.
+
 For NAPI-RS projects, there may some issues with the new NDK:
 
 1. The `arm-linux-androideabi-strip` and `aarch64-linux-android-strip` don't exist anymore, we need to use `llvm-strip` to replace them in pipeline. So if your pipeline failed because the `arm-linux-androideabi-strip` or `aarch64-linux-android-strip` doesn't exist, please replace them to `llvm-strip` instead:
 
 ```diff
 - ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/arm-linux-androideabi-strip *.node
-+ ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip *.node
++ ${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip *.node
 ```
 
 ```diff
 - ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-androideabi-strip *.node
-+ ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip *.node
++ ${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip *.node
 ```
 
 2. The `arm-linux-androideabi-ar` and `aarch64-linux-androideabi-ar` doesn't exist on NDK bin path anymore, your build may failed with **_error occurred: Failed to find tool. Is `arm-linux-androideabi-ar` installed?_** or **_error occurred: Failed to find tool. Is `aarch64-linux-androideabi-ar` installed?_**. You need to export `AR` environment variable to point to the correct `ar` path:
 
 ```diff
   export CXX="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi24-clang++"
-+ export AR="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
++ export AR="${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
   export PATH="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin:${PATH}"
 ```
 
 ```diff
   export CXX="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-androideabi24-clang++"
-+ export AR="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
++ export AR="${ANDROID_NDK_LATEST_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
   export PATH="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin:${PATH}"
 ```
 
