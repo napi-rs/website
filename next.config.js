@@ -6,9 +6,6 @@ const withNextra = require('nextra')({
 })
 
 module.exports = withNextra({
-  experiments: {
-    esmExternals: true,
-  },
   i18n: {
     defaultLocale: process.env.LOCALE || 'en',
     locales: ['en', 'cn'],
