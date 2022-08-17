@@ -359,7 +359,7 @@ And we want to investigate the `Deno FFI` support too. See [#12577](https://gith
 
 [`node-bindgen`](https://github.com/infinyon/node-bindgen) [`neon`](https://github.com/neon-bindings/neon) and [`wasm-bindgen`](https://github.com/rustwasm/wasm-bindgen) inspiring many of API designs in the `v2`.
 
-import Callout from 'nextra-theme-docs/callout'
+import { Callout } from 'nextra-theme-docs'
 
 <Callout>
 Special thanks to my wife. Without the weekends she sacrificed, I probably wouldn't even know how to Rust!

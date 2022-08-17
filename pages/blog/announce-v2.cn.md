@@ -355,7 +355,7 @@ impl Task for BufferLength {
 
 `v2` 的 API 设计和实现部分借鉴于 [`node-bindgen`](https://github.com/infinyon/node-bindgen) [`neon`](https://github.com/neon-bindings/neon) 和 [`wasm-bindgen`](https://github.com/rustwasm/wasm-bindgen).
 
-import Callout from 'nextra-theme-docs/callout'
+import { Callout } from 'nextra-theme-docs'
 
 <Callout>
 特别感谢我的妻子。如果没有她牺牲掉的那些周末，我现在连 `Rust` 都不会写。

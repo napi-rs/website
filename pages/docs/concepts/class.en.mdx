@@ -4,7 +4,7 @@ title: 'Class'
 
 # Class
 
-import Callout from 'nextra-theme-docs/callout'
+import { Callout } from 'nextra-theme-docs'
 
 <Callout>
   There is no concept of a class in Rust. We use `struct` to represent a
@@ -39,10 +39,10 @@ If you want to define a custom `constructor`, you can use `#[napi(constructor)]`
 
 ```rust filename="lib.rs"
 // A complex struct which cannot be exposed to JavaScript directly.
-struct QueryEngine {}
+pub struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
-struct JsQueryEngine {
+pub struct JsQueryEngine {
   engine: QueryEngine,
 }
 
@@ -72,10 +72,10 @@ Besides `constructor`, you can also define factory methods on `Class` by using `
 
 ```rust filename="lib.rs"
 // A complex struct which cannot be exposed to JavaScript directly.
-struct QueryEngine {}
+pub struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
-struct JsQueryEngine {
+pub struct JsQueryEngine {
   engine: QueryEngine,
 }
 
@@ -113,10 +113,10 @@ You can define a JavaScript class method with `#[napi]` on a struct method in **
 
 ```rust filename="lib.rs"
 // A complex struct which cannot be exposed to JavaScript directly.
-struct QueryEngine {}
+pub struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
-struct JsQueryEngine {
+pub struct JsQueryEngine {
   engine: QueryEngine,
 }
 
@@ -163,10 +163,10 @@ Define [JavaScript class `getter`](https://developer.mozilla.org/en-US/docs/Web/
 
 ```rust {22-25} filename="lib.rs"
 // A complex struct which cannot be exposed to JavaScript directly.
-struct QueryEngine {}
+pub struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
-struct JsQueryEngine {
+pub struct JsQueryEngine {
   engine: QueryEngine,
 }
 
@@ -204,10 +204,10 @@ Define [JavaScript class `setter`](https://developer.mozilla.org/en-US/docs/Web/
 
 ```rust {27-30} filename="lib.rs"
 // A complex struct which cannot be exposed to JavaScript directly.
-struct QueryEngine {}
+pub struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
-struct JsQueryEngine {
+pub struct JsQueryEngine {
   engine: QueryEngine,
 }
 
@@ -251,12 +251,12 @@ export class QueryEngine {
 
 So the ownership of the `Class` is actually transferred to the JavaScript side while you are creating it. It is managed by the JavaScript GC, and you can only pass it back by passing its `reference`.
 
-```rust filename="lib.rs"
-fn accept_class(engine: &QueryEngine) {
+```rust {1,5} filename="lib.rs"
+pub fn accept_class(engine: &QueryEngine) {
   // ...
 }
 
-fn accept_class_mut(engine: &mut QueryEngine) {
+pub fn accept_class_mut(engine: &mut QueryEngine) {
   // ...
 }
 ```
@@ -270,12 +270,13 @@ export function acceptClassMut(engine: QueryEngine): void
 
 In some cases you want to get struct instances from Class instances in Rust side, you can use `FromNapiValue::from_unknown` like below:
 
-```rust filename="lib.rs"
-use napi::{bindgen_prelude::FromNapiValue, Result, JsObject};
+```rust {21-22} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
 
 // A complex struct which cannot be exposed to JavaScript directly.
 #[napi]
-struct QueryEngine {
+pub struct QueryEngine {
   num: i32,
 }
 
@@ -289,10 +290,50 @@ impl QueryEngine {
   }
 }
 
-fn print_num(obj: JsObject) -> Result<()> {
+pub fn print_num(obj: Object) -> Result<()> {
   // unwrap js objects to get rust instances
   let qe: &mut QueryEngine = FromNapiValue::from_unknown(obj.into_unknown())?;
   println!("num is: {}", qe.num);
   Ok(())
 }
+```
+
+## Property attributes
+
+The default Property attributes are `writable = true`, `enumerable = true` and `configurable = true`. You can control the Property attributes over the `#[napi]` macro:
+
+```rust {20} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+// A complex struct which cannot be exposed to JavaScript directly.
+#[napi]
+pub struct QueryEngine {
+  num: i32,
+}
+
+#[napi]
+impl QueryEngine {
+  #[napi(constructor)]
+  pub fn new() -> Result<Self> {
+    Ok(Self {
+      num: 42,
+    })
+  }
+
+  // writable / enumerable / configurable
+  #[napi(writable = false)]
+  pub fn get_num(&self) -> i32 {
+    self.num
+  }
+}
+```
+
+In this case, the `getNum` method of `QueryEngine` is not writable:
+
+```js {4} filename="main.mjs"
+import { QueryEngine } from './index.js'
+
+const qe = new QueryEngine()
+qe.getNum = function () {} // TypeError: Cannot assign to read only property 'getNum' of object '#<QueryEngine>'
 ```

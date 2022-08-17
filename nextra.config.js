@@ -63,7 +63,7 @@ export default {
         <meta
           name="description"
           content={
-            meta.description ||
+            meta?.description ||
             'a framework for building pre-compiled Node.js addons in Rust'
           }
         />

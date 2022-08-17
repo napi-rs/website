@@ -124,7 +124,7 @@ export function readBuffer(file: string): Buffer
 
 Represents JavaScript anonymous object values.
 
-import Callout from 'nextra-theme-docs/callout'
+import { Callout } from 'nextra-theme-docs'
 
 <Callout type="warning" emoji="⚠️">
 **Performance**

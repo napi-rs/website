@@ -9,6 +9,8 @@
   "threadsafe-function": "ThreadsafeFunction",
   "async-task": "AsyncTask",
   "inject-env": "Inject Env",
+  "inject-this": "Inject This",
+  "reference": "Reference",
   "async-fn": "async fn",
   "external": "External",
   "await-promise": "Await Promise",
