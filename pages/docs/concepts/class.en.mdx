@@ -349,3 +349,28 @@ First, you can set `custom_finalize` attribute in `#[napi]` macro, and NAPI-RS w
 Then, you can implement `ObjectFinalize` yourself for the Rust struct.
 
 In this case, the `CustomFinalize` struct increase external memory in the **constructor** and decrease it in `fn finalize`.
+
+## `instance of`
+
+There is `fn instance_of` on all `#[napi]` class:
+
+```rust {9} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub struct NativeClass {}
+
+#[napi]
+pub fn is_native_class_instance(env: Env, value: Unknown) -> Result<bool> {
+  NativeClass::instance_of(env, value)
+}
+```
+
+```js filename="main.mjs"
+import { NativeClass, isNativeClassInstance } from './index.js'
+
+const nc = new NativeClass()
+console.log(isNativeClassInstance(nc)) // true
+console.log(isNativeClassInstance(1)) // false
+```
