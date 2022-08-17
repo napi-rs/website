@@ -91,7 +91,7 @@ export default {
     return (
       <p>
         <a href="https://vercel.com?utm_source=napi-rs&utm_campaign=oss">
-          <img src="assets/powered-by-vercel.svg" />
+          <img src="/assets/powered-by-vercel.svg" />
         </a>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Powered by{' '}
         <a href="https://nextra.vercel.app" target="_blank">
