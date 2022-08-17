@@ -337,3 +337,47 @@ import { QueryEngine } from './index.js'
 const qe = new QueryEngine()
 qe.getNum = function () {} // TypeError: Cannot assign to read only property 'getNum' of object '#<QueryEngine>'
 ```
+
+## Custom Finalize logic
+
+NAPI-RS will drop the Rust struct wrapped in the JavaScript object when the JavaScript object is garbage collected. You can also specify a custom finalize logic for the Rust struct.
+
+```rust {4, 26} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi(custom_finalize)]
+pub struct CustomFinalize {
+  width: u32,
+  height: u32,
+  inner: Vec<u8>,
+}
+
+#[napi]
+impl CustomFinalize {
+  #[napi(constructor)]
+  pub fn new(mut env: Env, width: u32, height: u32) -> Result<Self> {
+    let inner = vec![0; (width * height * 4) as usize];
+    let inner_size = inner.len();
+    env.adjust_external_memory(inner_size as i64)?;
+    Ok(Self {
+      width,
+      height,
+      inner,
+    })
+  }
+}
+
+impl ObjectFinalize for CustomFinalize {
+  fn finalize(self, mut env: Env) -> Result<()> {
+    env.adjust_external_memory(-(self.inner.len() as i64))?;
+    Ok(())
+  }
+}
+```
+
+First, you can set `custom_finalize` attribute in `#[napi]` macro, and NAPI-RS will not generate the default `ObjectFinalize` for the Rust struct.
+
+Then, you can implement `ObjectFinalize` yourself for the Rust struct.
+
+In this case, the `CustomFinalize` struct increase external memory in the **constructor** and decrease it in `fn finalize`.
