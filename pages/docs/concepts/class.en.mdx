@@ -266,38 +266,6 @@ export function acceptClass(engine: QueryEngine): void
 export function acceptClassMut(engine: QueryEngine): void
 ```
 
-## Get struct instances from Class instances
-
-In some cases you want to get struct instances from Class instances in Rust side, you can use `FromNapiValue::from_unknown` like below:
-
-```rust {21-22} filename="lib.rs"
-use napi::bindgen_prelude::*;
-use napi_derive::napi;
-
-// A complex struct which cannot be exposed to JavaScript directly.
-#[napi]
-pub struct QueryEngine {
-  num: i32,
-}
-
-#[napi]
-impl QueryEngine {
-  #[napi(constructor)]
-  pub fn new() -> Result<Self> {
-    Ok(Self {
-      num: 42,
-    })
-  }
-}
-
-pub fn print_num(obj: Object) -> Result<()> {
-  // unwrap js objects to get rust instances
-  let qe: &mut QueryEngine = FromNapiValue::from_unknown(obj.into_unknown())?;
-  println!("num is: {}", qe.num);
-  Ok(())
-}
-```
-
 ## Property attributes
 
 The default Property attributes are `writable = true`, `enumerable = true` and `configurable = true`. You can control the Property attributes over the `#[napi]` macro:
