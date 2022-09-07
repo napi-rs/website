@@ -16,13 +16,13 @@
 1. Install dependencies
 
    ```sh
-   pnpm install
+   yarn install
    ```
 
 2. Start developing.
 
    ```sh
-   pnpm dev
+   yarn dev
    ```
 
 3. Launch
