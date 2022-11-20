@@ -36,7 +36,8 @@ export default {
       </>
     )
   },
-  head: ({ title, meta }) => {
+  head: (props) => {
+    const { title, meta } = props
     return (
       <>
         {/* Favicons, meta */}
@@ -70,7 +71,7 @@ export default {
             'a framework for building pre-compiled Node.js addons in Rust'
           }
         />
-        <meta property="og:title" content={title} />
+        <meta property="og:title" content={title ?? 'NAPI-RS'} />
         <meta
           property="og:image"
           content={`https://${
