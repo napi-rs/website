@@ -36,10 +36,13 @@ export default {
       </>
     )
   },
-  head: ({ meta }) => {
+  head: ({ title, meta }) => {
     return (
       <>
         {/* Favicons, meta */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@napi_rs" />
+        <meta name="twitter:creator" content="@napi_rs" />
         <link
           rel="apple-touch-icon"
           sizes="180x180"
@@ -67,6 +70,25 @@ export default {
             'a framework for building pre-compiled Node.js addons in Rust'
           }
         />
+        <meta property="og:title" content={title} />
+        <meta
+          property="og:image"
+          content={`https://${
+            process.env.VERCEL_URL && process.env.VERCEL_ENV !== 'production'
+              ? process.env.VERCEL_URL
+              : 'napi.rs'
+          }/img/og.png`}
+        />
+        <meta
+          property="og:description"
+          content={
+            meta?.description ||
+            'NAPI-RS, a framework for building pre-compiled Node.js addons in Rust'
+          }
+        />
+        <meta property="og:url" content="https://napi.rs" />
+        <meta property="og:site_name" content="NAPI-RS" />
+        <meta property="og:type" content="website" />
         <Script
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-38WMNQBW8F"
