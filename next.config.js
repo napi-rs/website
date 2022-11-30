@@ -17,6 +17,7 @@ module.exports = withNextra({
         project: 'napi-rs-website',
         artifactName: 'main',
       })
+      config.devtool = 'hidden-nosources-source-map'
       if (Array.isArray(config.plugins)) {
         config.plugins.push(plugin)
       } else {
