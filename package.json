@@ -23,6 +23,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@perfsee/webpack": "^1.1.1",
     "@types/node": "^18.7.6",
     "@types/react": "^18.0.17",
     "cross-env": "^7.0.3",
