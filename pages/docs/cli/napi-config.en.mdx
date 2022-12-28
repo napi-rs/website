@@ -24,17 +24,19 @@ import { Callout } from 'nextra-theme-docs'
     },
     package?: {
       name?: string
-    }
+    },
+    npmClient?: string
   }
 }
 ```
 
-| Filed                | Description                                                                                                                                                                                                                |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`               | The binary file name of generated `.node` file. Eg <Green>`[NAME].[TRIPLE?].node`</Green>                                                                                                                                  |
-| `triples.defaults`   | Whether to enable the default triples. <br />The default triples is `['x86_64-apple-darwin', 'x86_64-unknown-linux-gnu', 'x86_64-pc-windows-msvc']`.<br />The default value of `triples.defaults` is <Green>`true`</Green> |
-| `triples.additional` | Additional triples besides the default triples you want to build. Target triples could be found in the output of `rustup target list` command.                                                                             |
-| `package.name`       | Override the `name` field in `package.json`. See [Build#js-package-name](./build#note-for---js-package-name) for usage.                                                                                                    |
+| Field                |          Default           | Description                                                                                                                                          |
+| -------------------- | :------------------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`               | <Green>`index`</Green>     | The binary file name of generated `.node` file. Eg <Green>`[NAME].[TRIPLE?].node`</Green> becomes <Green>`index.win32-x64-msvc.node`</Green>         |
+| `triples.defaults`   | <Green>`true`</Green>      | Whether to enable the default triples. <br />The default triples is `['x86_64-apple-darwin', 'x86_64-unknown-linux-gnu', 'x86_64-pc-windows-msvc']`. |
+| `triples.additional` | <Green>`[]`</Green>        | Additional triples besides the default triples you want to build. Target triples could be found in the output of `rustup target list` command.       |
+| `package.name`       | <Green>`undefined`</Green> | Override the `name` field in `package.json`. See [Build#js-package-name](./build#note-for---js-package-name) for usage.                              |
+| `npmClient`          | <Green>`npm`</Green>       | Specify a different NPM client for usage when executing NPM actions such as publishing.                                                              |
 
 ## What is `target triple`
 
