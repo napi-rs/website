@@ -127,4 +127,5 @@ export default {
     { locale: 'en', text: 'English' },
     { locale: 'cn', text: '简体中文' },
   ],
+  useNextSeoProps: () => ({ titleTemplate: '%s \u2013 NAPI-RS' }),
 }
