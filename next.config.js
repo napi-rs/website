@@ -24,6 +24,15 @@ module.exports = withNextra({
         config.plugins = [plugin]
       }
     }
+    config.module.rules.push({
+      test: /\.mp4$/,
+      loader: 'file-loader',
+      options: {
+        name: '[name]-[contenthash:8].[ext]',
+        publicPath: `/_next/static/videos/`,
+        outputPath: `${isServer ? '../' : ''}static/videos/`,
+      },
+    })
     return config
   },
 })
