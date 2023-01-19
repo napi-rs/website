@@ -7,29 +7,20 @@ const FEEDBACK_LINK_WITH_TRANSLATIONS = {
 }
 
 export default {
-  projectLink: 'https://github.com/napi-rs/napi-rs',
-  docsRepositoryBase: 'https://github.com/napi-rs/website/blob/main/pages',
-  projectChatLink: 'https://discord.gg/SpWzYHsKHs',
-  titleSuffix: ' – NAPI-RS',
-  search: true,
-  unstable_flexsearch: true,
-  unstable_staticImage: true,
-  floatTOC: true,
-  feedbackLink: () => {
-    const { locale } = useRouter()
-    return (
-      FEEDBACK_LINK_WITH_TRANSLATIONS[locale] ||
-      FEEDBACK_LINK_WITH_TRANSLATIONS['en-US']
-    )
+  docsRepositoryBase: 'https://github.com/napi-rs/website/blob/main',
+  chat: {
+    link: 'https://discord.gg/SpWzYHsKHs',
   },
-  feedbackLabels: 'feedback',
+  project: {
+    link: 'https://github.com/napi-rs/napi-rs',
+  },
   logo: () => {
     return (
       <>
         <img src="/img/favicon.png" width={32} />
         <span
           style={{ width: 120 }}
-          className="mx-2 font-extrabold hidden md:inline select-none"
+          className="nx-mx-2 nx-font-extrabold nx-md:inline nx-select-none"
         >
           NAPI-RS
         </span>
@@ -102,26 +93,35 @@ export default {
       </>
     )
   },
-  footerEditLink: ({ locale }) => {
-    switch (locale) {
-      case 'cn':
-        return '在 GitHub 上编辑本页 →'
-      default:
-        return 'Edit this page on GitHub →'
-    }
+  footer: {
+    text: () => {
+      return (
+        <p>
+          <a href="https://vercel.com?utm_source=napi-rs&utm_campaign=oss">
+            <img src="/assets/powered-by-vercel.svg" />
+          </a>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Powered by{' '}
+          <a
+            href="https://nextra.vercel.app"
+            className="nx-text-primary-600 nx-underline nx-decoration-from-font [text-underline-position:from-font]"
+            target="_blank"
+          >
+            Nextra
+          </a>
+        </p>
+      )
+    },
   },
-  footerText: () => {
-    return (
-      <p>
-        <a href="https://vercel.com?utm_source=napi-rs&utm_campaign=oss">
-          <img src="/assets/powered-by-vercel.svg" />
-        </a>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Powered by{' '}
-        <a href="https://nextra.vercel.app" target="_blank">
-          Nextra
-        </a>
-      </p>
-    )
+  editLink: {
+    text: () => {
+      const { locale } = useRouter()
+      switch (locale) {
+        case 'cn':
+          return '在 GitHub 上编辑本页 →'
+        default:
+          return 'Edit this page on GitHub →'
+      }
+    },
   },
   i18n: [
     { locale: 'en', text: 'English' },

@@ -4,13 +4,16 @@ description: 学习如何开始开发 NAPI-RS
 
 # 起步
 
-import { GuideVideo } from '../../../components/guide-video'
+import Video from '../../../public/assets/napi-rs-guide.mp4'
 
 ## 从 `@napi-rs/cli` 开始
 
 > 这是推荐的方式。
 
-<GuideVideo />
+<video controls style={{ width: '100%' }}>
+  <source src={Video} type="video/mp4" />
+  <track kind="captions" srcLang="en" />
+</video>
 
 ### 安装 cli
 
