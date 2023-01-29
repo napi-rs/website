@@ -90,7 +90,14 @@ export function Badges() {
 
 export function CIBadges() {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', marginTop: '10px' }}>
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        marginTop: '10px',
+        gap: '5px',
+      }}
+    >
       <img
         src="https://github.com/napi-rs/napi-rs/workflows/Lint/badge.svg"
         alt="Lint"
