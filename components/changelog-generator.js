@@ -1,7 +1,7 @@
-import Markdown from 'markdown-to-jsx'
 import { useSSG } from 'nextra/ssg'
+import { MDXRemote } from 'next-mdx-remote'
 
-export const getChangelog = async () => {
+export const getChangelog = async (packageName, locale = 'en') => {
   const releases = await fetch(
     `https://api.github.com/repos/napi-rs/napi-rs/releases?per_page=100`,
     {
@@ -13,30 +13,26 @@ export const getChangelog = async () => {
 
   return {
     props: {
-      ssg: releases,
-    },
-  }
-}
-
-export function Changelog({ locale = 'en', packageName }) {
-  const releases = useSSG()
-  return (
-    <Markdown>
-      {releases
+      ssg: releases
         .filter(({ name }) => name.startsWith(packageName))
         .map((release) => {
           const body = release.body
             .replace(/&#39;/g, "'")
             .replace(
               /@([a-zA-Z0-9_-]+)(?=(,| ))/g,
-              '<a href="https://github.com/$1" target="_blank" rel="noopener">@$1</a>',
+              '[@$1](https://github.com/$1)',
             )
           return `## <a href="${
             release.html_url
           }" target="_blank" rel="noopener">${release.tag_name}</a> 
-${new Date(release.published_at).toLocaleDateString(locale)} \n${body}`
+  ${new Date(release.published_at).toLocaleDateString(locale)} \n${body}`
         })
-        .join('\n\n')}
-    </Markdown>
-  )
+        .join('\n\n'),
+    },
+  }
+}
+
+export function Changelog() {
+  const releases = useSSG()
+  return <MDXRemote {...releases} />
 }

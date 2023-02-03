@@ -2,10 +2,22 @@
 description: Changelog for napi crate https://crates.io/crates/napi
 ---
 
+import { serialize } from 'next-mdx-remote/serialize'
+
 import { Changelog, getChangelog } from '../../components/changelog-generator'
 
 # napi
 
-export const getStaticProps = getChangelog
+export const getStaticProps = async () => {
+  const {
+    props: { ssg },
+  } = await getChangelog('napi')
+  const mdx = await serialize(ssg)
+  return {
+    props: {
+      ssg: mdx,
+    },
+  }
+}
 
-<Changelog packageName="napi" />
+<Changelog />
