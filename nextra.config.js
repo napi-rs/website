@@ -51,6 +51,10 @@ export default {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta httpEquiv="Content-Language" content="en" />
         <meta
+          name="keywords"
+          content="Nodejs, Rust, Node.js, neon, performance, napi-rs, napi"
+        />
+        <meta
           name="description"
           content={
             meta?.description ||
