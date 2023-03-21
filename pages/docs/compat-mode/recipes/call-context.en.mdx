@@ -18,7 +18,7 @@ fn hey(ctx: CallContext) -> Result<JsUndefined> {
 }
 ```
 
-The argument sequence starts from `0`, and can't be lager than the number passed in the `js_function` macro. If you passed a position lager, a JavaScript Error will be thrown.
+The argument sequence starts from `0`, and can't be larger than the number passed in the `js_function` macro. If you pass in an index that is larger than the number in the `js_function` macro, a JavaScript Error will be thrown.
 
 The type of result must be equal to the actual type of argument, or type error will be thrown.
 
