@@ -54,7 +54,7 @@ This does not affect the macOS builds, but it will make the `freebsd-x64` pipeli
       - name: Build
         id: build
 -       uses: vmactions/freebsd-vm@v0.1.6
-+       uses: vmactions/freebsd-vm@v0.2.0
++       uses: vmactions/freebsd-vm@v0
 ```
 
 Happy hacking :)

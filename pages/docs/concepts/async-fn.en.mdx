@@ -2,7 +2,19 @@
 description: Run a Rust async fn with the tokio runtime.
 ---
 
+import { Callout } from 'nextra-theme-docs'
+
 # async fn
+
+<Callout>
+You must enable the ***async*** or ***tokio_rt*** feature in `napi` to use `async fn`:
+
+```toml {3} filename="Cargo.toml"
+[dependencies]
+napi = { version = "2", features = ["async"] }
+```
+
+</Callout>
 
 You can do a lot of async/multi-threaded work with `AsyncTask` and `ThreadsafeFunction`, but sometimes you may want to use the crates from the Rust async ecosystem directly.
 
