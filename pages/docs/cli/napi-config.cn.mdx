@@ -1,0 +1,53 @@
+---
+description: Config schema of NAPI-RS.
+---
+
+# NAPI Config
+
+import { Green } from '../../../components/chalk'
+
+The config schema of **NAPI-RS**.
+
+import { Callout } from 'nextra-theme-docs'
+
+<Callout>All the fields in `napi` is optional.</Callout>
+
+## Schema
+
+```ts
+{
+  napi?: {
+    name?: string
+    triples?: {
+      defaults?: boolean,
+      additional?: string[]
+    },
+    package?: {
+      name?: string
+    },
+    npmClient?: string
+  }
+}
+```
+
+| Field                |          Default           | Description                                                                                                                                          |
+| -------------------- | :------------------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`               |   <Green>`index`</Green>   | The binary file name of generated `.node` file. Eg <Green>`[NAME].[TRIPLE?].node`</Green> becomes <Green>`index.win32-x64-msvc.node`</Green>         |
+| `triples.defaults`   |   <Green>`true`</Green>    | Whether to enable the default triples. <br />The default triples is `['x86_64-apple-darwin', 'x86_64-unknown-linux-gnu', 'x86_64-pc-windows-msvc']`. |
+| `triples.additional` |    <Green>`[]`</Green>     | Additional triples besides the default triples you want to build. Target triples could be found in the output of `rustup target list` command.       |
+| `package.name`       | <Green>`undefined`</Green> | Override the `name` field in `package.json`. See [Build#js-package-name](./build#note-for---js-package-name) for usage.                              |
+| `npmClient`          |    <Green>`npm`</Green>    | Specify a different NPM client for usage when executing NPM actions such as publishing.                                                              |
+
+## What is `target triple`
+
+See [rustc/platform-support](https://doc.rust-lang.org/nightly/rustc/platform-support.html) and [LLVM/CrossCompilation](https://clang.llvm.org/docs/CrossCompilation.html#target-triple)
+
+> Targets are identified by their "target triple" which is the string to inform the compiler what kind of output that should be produced.
+
+> The triple has the general format `<arch><sub>-<vendor>-<sys>-<abi>`, where:
+>
+> - `arch` = `x86_64`, `i386`, `arm`, `thumb`, `mips`, etc.
+> - `sub` = for ex. on ARM: `v5`, `v6m`, `v7a`, `v7m`, etc.
+> - `vendor` = `pc`, `apple`, `nvidia`, `ibm`, etc.
+> - `sys` = `none`, `linux`, `win32`, `darwin`, `cuda`, etc.
+> - `abi` = `eabi`, `gnu`, `android`, `macho`, `elf`, etc.
