@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@mdx-js/react": "^2.3.0",
-    "@vercel/analytics": "^0.1.11",
+    "@vercel/analytics": "^1.0.0",
     "lodash-es": "^4.17.21",
     "next": "13.3.0",
     "nextra": "2.4.0",
