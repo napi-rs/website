@@ -35,4 +35,25 @@ export const enum Kind {
 
 In `TypeScript`, numeric `enums` members also get a reverse mapping from enum values to enum names. But in Rust, we don't have this reverse mapping behaviour. It is just a plain JavaScript Object.
 
-Also, **NAPI-RS** doesn't support generating Rust `enum` `impl` into JavaScript.
+## String enum
+
+```rust filename="lib.rs"
+#[napi(string_enum)]
+enum Kind {
+  Duck,
+  Dog,
+  Cat,
+}
+```
+
+⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+
+```ts filename="index.d.ts"
+export const enum Kind {
+  Duck = 'Duck',
+  Dog = 'Dog',
+  Cat = 'Cat',
+}
+```
+
+**NAPI-RS** doesn't support generating Rust `enum` `impl` into JavaScript.
