@@ -93,7 +93,7 @@ cd cool
 yarn install
 ```
 
-我在这里使用`yarn`来安装依赖，你可以用你便好的包管理器来代替它。
+我在这里使用`yarn`来安装依赖，你可以用你偏好的包管理器来代替它。
 
 而现在的目录结构是这样的:
 
@@ -278,11 +278,11 @@ git commit -m "Init"
 git push
 ```
 
-:::caution
+<Callout type="warning" emoji="⚠️">
 为了在 `GitHub Actions` 中发布你的包, 你需要在你的 GitHub 仓库中配置 `NPM_TOKEN` 环境变量.
 
 在项目的 **Settings -> Secrets** 中新建 **_NPM_TOKEN_** 环境变量。
-:::
+</Callout>
 
 如果所有步骤都完成了，你可以在 GitHub 上看到如下的 CI 流程:
 
