@@ -1,10 +1,10 @@
 {
-  "introduction": "Introduction",
-  "concepts": "Concepts",
+  "introduction": "简介-Introduction",
+  "concepts": "概念-Concepts",
   "compat-mode": "Compat mode",
-  "cli": "CLI",
+  "cli": "命令行-CLI",
   "deep-dive": "Deep dive",
-  "cross-build": "Cross build",
-  "ecosystem": "Ecosystem",
-  "more": "More"
+  "cross-build": "跨平台构建-Cross build",
+  "ecosystem": "生态-Ecosystem",
+  "more": "更多-More"
 }

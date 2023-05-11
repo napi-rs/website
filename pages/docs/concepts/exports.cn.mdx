@@ -1,0 +1,66 @@
+# Exports-js 模块导出
+
+import { Callout } from 'nextra-theme-docs'
+
+<Callout type="info">
+并不像nodejs，我们不需要像这样`module.exports.xxx = xxx`明确的定义模块导出
+
+`#[napi]`宏将为你自动的生成模块注册代码.
+这个自动注册的灵感来自[node-bindgen](https://github.com/infinyon/node-bindgen).
+
+</Callout>
+
+## `函数-Function`
+
+导出函数非常简单。只需用' #[napi] '修饰一个普通的 rust 函数:
+
+```rust filename="lib.rs"
+#[napi]
+fn sum(a: u32, b: u32) -> u32 {
+	a + b
+}
+```
+
+## `常量-Const`
+
+```rust filename="lib.rs"
+#[napi]
+pub const DEFAULT_COST: u32 = 12;
+```
+
+```ts filename="index.d.ts"
+export const DEFAULT_COST: number
+```
+
+## `类-Class`
+
+详细查看 [`类 章节`](./class).
+
+```rust filename="lib.rs"
+#[napi(constructor)]
+struct Animal {
+  pub name: String,
+  pub kind: u32,
+}
+
+#[napi]
+impl Animal {
+  #[napi]
+  pub fn change_name(&mut self, new_name: String) {
+    self.name = new_name;
+  }
+}
+```
+
+## `枚举-Enum`
+
+详细查看 [`枚举 章节`](./enum)
+
+```rust filename="lib.rs"
+#[napi]
+pub enum Kind {
+  Dog,
+  Cat,
+  Duck,
+}
+```

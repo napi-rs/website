@@ -1,0 +1,384 @@
+---
+title: 'Class'
+---
+
+# Class
+
+import { Callout } from 'nextra-theme-docs'
+
+<Callout>
+
+Rust 中没有类的概念。我们用`struct`来表示 JavaScript `Class` 。
+
+</Callout>
+
+## `构造函数 - Constructor`
+
+### 默认的 `constructor`
+
+如果 `Rust` struct 中的所有字段都是 `pub` ，那么你可以使用 `#[napi(constructor)]` 让 `struct` 有一个默认的 `constructor`。
+
+```rust filename="lib.rs"
+#[napi(constructor)]
+pub struct AnimalWithDefaultConstructor {
+  pub name: String,
+  pub kind: u32,
+}
+```
+
+```ts filename="index.d.ts"
+export class AnimalWithDefaultConstructor {
+  name: string
+  kind: number
+  constructor(name: string, kind: number)
+}
+```
+
+### Custom `constructor`
+
+如果你想定义一个自定义的`constructor`,你可以在 struct `impl` 块中的构造函数 `fn` 上使用`#[napi(constructor)]`。
+
+```rust filename="lib.rs"
+// A complex struct which cannot be exposed to JavaScript directly.
+pub struct QueryEngine {}
+
+#[napi(js_name = "QueryEngine")]
+pub struct JsQueryEngine {
+  engine: QueryEngine,
+}
+
+#[napi]
+impl JsQueryEngine {
+  #[napi(constructor)]
+  pub fn new() -> Self {
+    JsQueryEngine { engine: QueryEngine::new() }
+  }
+}
+```
+
+```ts filename="index.d.ts"
+export class QueryEngine {
+  constructor()
+}
+```
+
+<Callout type="warning" emoji="⚠️">
+
+**NAPI-RS**目前不支持`private constructor`。您的自定义 constructor 在 Rust 中必须是`pub`。
+
+</Callout>
+
+## 工厂方法 - Factory
+
+除了`constructor`，你还可以使用`#[napi(factory)]`在 `Class` 上定义工厂方法。
+
+```rust filename="lib.rs"
+// 不能直接暴露给JavaScript的复杂结构。
+pub struct QueryEngine {}
+
+#[napi(js_name = "QueryEngine")]
+pub struct JsQueryEngine {
+  engine: QueryEngine,
+}
+
+#[napi]
+impl JsQueryEngine {
+  #[napi(factory)]
+  pub fn with_initial_count(count: u32) -> Self {
+    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+  }
+}
+```
+
+```ts filename="index.d.ts"
+export class QueryEngine {
+  static withInitialCount(count: number): QueryEngine
+  constructor()
+}
+```
+
+<Callout type="warning" emoji="⚠️">
+
+如果 `struct` 中没有定义 `#[napi(constructor)]` ，你尝试在 JavaScript 中创建(`new`)一个`Class`的实例，将会抛出错误。
+
+</Callout>
+
+```js {3} filename="test.mjs"
+import { QueryEngine } from './index.js'
+
+new QueryEngine() // Error: Class contains no `constructor`, cannot create it!（错误:Class不包含“constructor”，不能创建它!）
+```
+
+## `类 方法 - class method`
+
+你可以用 `#[napi]` 在 **Rust** 中的 struct 方法上定义一个 JavaScript 类方法。
+
+```rust filename="lib.rs"
+
+// 不能直接暴露给JavaScript的复杂结构。
+// A complex struct which cannot be exposed to JavaScript directly.()
+
+pub struct QueryEngine {}
+
+#[napi(js_name = "QueryEngine")]
+pub struct JsQueryEngine {
+  engine: QueryEngine,
+}
+
+#[napi]
+impl JsQueryEngine {
+  #[napi(factory)]
+  pub fn with_initial_count(count: u32) -> Self {
+    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+  }
+
+  /// Class method
+  #[napi]
+  pub async fn query(&self, query: String) -> napi::Result<String> {
+    self.engine.query(query).await
+  }
+
+  #[napi]
+  pub fn status(&self) -> napi::Result<u32> {
+    self.engine.status()
+  }
+}
+```
+
+```ts filename="index.d.ts"
+export class QueryEngine {
+  static withInitialCount(count: number): QueryEngine
+  constructor()
+  query(query: string) => Promise<string>
+  status() => number
+}
+```
+
+<Callout type="warning" emoji="⚠️">
+
+`async fn` 需要 `napi4` 和 `tokio_rt` 特性启用.
+
+</Callout>
+
+<Callout>
+
+任何在`Rust` 中返回 `Result<T>` 的 `fn` 在 JavaScript/TypeScript 中都会被当作 `T` 处理。如果 `Result<T>` 为 `Err` ，则会抛出 JavaScript 错误。
+
+</Callout>
+
+## `Getter`
+
+定义 [JavaScript class `getter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get) 使用 `#[napi(getter)]`.Rust 的 `fn` 必须是一个 struct method，而不是一个关联函数。
+
+```rust {22-25} filename="lib.rs"
+// A complex struct which cannot be exposed to JavaScript directly.
+pub struct QueryEngine {}
+
+#[napi(js_name = "QueryEngine")]
+pub struct JsQueryEngine {
+  engine: QueryEngine,
+}
+
+#[napi]
+impl JsQueryEngine {
+  #[napi(factory)]
+  pub fn with_initial_count(count: u32) -> Self {
+    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+  }
+
+  /// Class method
+  #[napi]
+  pub async fn query(&self, query: String) -> napi::Result<String> {
+    self.engine.query(query).await
+  }
+
+  #[napi(getter)]
+  pub fn status(&self) -> napi::Result<u32> {
+    self.engine.status()
+  }
+}
+```
+
+```ts {4} filename="index.d.ts"
+export class QueryEngine {
+  static withInitialCount(count: number): QueryEngine
+  constructor()
+  get status(): number
+}
+```
+
+## `Setter`
+
+定义 [JavaScript class `setter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set) 使用 `#[napi(setter)]`. 这个 Rust `fn` 必须是一个 struct method, 而不是一个关联函数.
+
+```rust {27-30} filename="lib.rs"
+// A complex struct which cannot be exposed to JavaScript directly.
+pub struct QueryEngine {}
+
+#[napi(js_name = "QueryEngine")]
+pub struct JsQueryEngine {
+  engine: QueryEngine,
+}
+
+#[napi]
+impl JsQueryEngine {
+  #[napi(factory)]
+  pub fn with_initial_count(count: u32) -> Self {
+    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+  }
+
+  /// Class method
+  #[napi]
+  pub async fn query(&self, query: String) -> napi::Result<String> {
+    self.engine.query(query).await
+  }
+
+  #[napi(getter)]
+  pub fn status(&self) -> napi::Result<u32> {
+    self.engine.status()
+  }
+
+  #[napi(setter)]
+  pub fn count(&mut self, count: u32) {
+    self.engine.count = count;
+  }
+}
+```
+
+```ts {5} filename="index.d.ts"
+export class QueryEngine {
+  static withInitialCount(count: number): QueryEngine
+  constructor()
+  get status(): number
+  set count(count: number)
+}
+```
+
+## 类作为参数 - Class as argument
+
+`Class` 不同于[`Object`](./object)。`Class`可以有 Rust 方法和相关函数。`Class`中的每个字段都可以在 JavaScript 中发生变化。
+
+所以 `Class` 的所有权实际上是转移到 JavaScript 一边，而你正在创建它。它是由 JavaScript GC 管理的，你只能通过传递它的`reference（引用）`来传递它。
+
+```rust {1,5} filename="lib.rs"
+pub fn accept_class(engine: &QueryEngine) {
+  // ...
+}
+
+pub fn accept_class_mut(engine: &mut QueryEngine) {
+  // ...
+}
+```
+
+```ts filename="index.d.ts"
+export function acceptClass(engine: QueryEngine): void
+export function acceptClassMut(engine: QueryEngine): void
+```
+
+## Property attributes
+
+默认属性是`writable = true`, `enumerable = true` 和 `configurable = true`。你可以通过 `#[napi]` 宏来控制 Property 属性:
+
+```rust {20} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+// A complex struct which cannot be exposed to JavaScript directly.
+#[napi]
+pub struct QueryEngine {
+  num: i32,
+}
+
+#[napi]
+impl QueryEngine {
+  #[napi(constructor)]
+  pub fn new() -> Result<Self> {
+    Ok(Self {
+      num: 42,
+    })
+  }
+
+  // writable / enumerable / configurable
+  #[napi(writable = false)]
+  pub fn get_num(&self) -> i32 {
+    self.num
+  }
+}
+```
+
+在这种情况下， `QueryEngine` 的 `getNum` 方法是不可写的:
+
+```js {4} filename="main.mjs"
+import { QueryEngine } from './index.js'
+
+const qe = new QueryEngine()
+qe.getNum = function () {} // TypeError: Cannot assign to read only property 'getNum' of object '#<QueryEngine>'（类型错误:无法给对象#<QueryEngine>的只读属性'getNum'赋值）
+```
+
+## 自定义析构逻辑 - Custom Finalize logic
+
+当 JavaScript 对象被垃圾收集时，NAPI-RS 将丢弃包装在 JavaScript 对象中的 Rust 结构。您还可以为 Rust 结构指定自定义的析构（finalize）逻辑。
+
+```rust {4, 26} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi(custom_finalize)]
+pub struct CustomFinalize {
+  width: u32,
+  height: u32,
+  inner: Vec<u8>,
+}
+
+#[napi]
+impl CustomFinalize {
+  #[napi(constructor)]
+  pub fn new(mut env: Env, width: u32, height: u32) -> Result<Self> {
+    let inner = vec![0; (width * height * 4) as usize];
+    let inner_size = inner.len();
+    env.adjust_external_memory(inner_size as i64)?;
+    Ok(Self {
+      width,
+      height,
+      inner,
+    })
+  }
+}
+
+impl ObjectFinalize for CustomFinalize {
+  fn finalize(self, mut env: Env) -> Result<()> {
+    env.adjust_external_memory(-(self.inner.len() as i64))?;
+    Ok(())
+  }
+}
+```
+
+首先，你可以在 `#[napi]` 宏中设置 `custom_finalize` 属性，NAPI-RS 不会为 Rust 结构体生成默认的 `ObjectFinalize` 。
+然后，你可以自己为 Rust 结构体实现 `ObjectFinalize` 。
+
+在这种情况下， `CustomFinalize` 结构在 **constructor** 中增加外部内存，在`fn finalize`中减少外部内存。
+
+## `instance of`
+
+在所有 `#[napi]` 的 Class 上都有 `fn instance_of`:
+
+```rust {9} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub struct NativeClass {}
+
+#[napi]
+pub fn is_native_class_instance(env: Env, value: Unknown) -> Result<bool> {
+  NativeClass::instance_of(env, value)
+}
+```
+
+```js filename="main.mjs"
+import { NativeClass, isNativeClassInstance } from './index.js'
+
+const nc = new NativeClass()
+console.log(isNativeClassInstance(nc)) // true
+console.log(isNativeClassInstance(1)) // false
+```

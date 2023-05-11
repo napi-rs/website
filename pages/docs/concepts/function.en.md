@@ -1,4 +1,5 @@
 ---
+title: 'Function'
 ---
 
 # Function

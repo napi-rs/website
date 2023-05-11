@@ -1,15 +1,15 @@
 ---
-title: 'Values'
-description: Conversions between Rust and JavaScript types.
+title: '值-Values'
+description: Rust和JavaScript类型之间的转换.
 ---
 
-# Values
+# 值-Values
 
-Conversions between Rust and JavaScript types.
+Rust 和 JavaScript 类型之间的转换.
 
 ### Undefined
 
-Represent `undefined` in JavaScript.
+在 JavaScript 中表示`undefined`。
 
 ```rust {3} filename="lib.rs"
 #[napi]
@@ -17,7 +17,7 @@ fn get_undefined() -> Undefined {
 	()
 }
 
-// default return or empty tuple `()` are `undefined` after converted into JS value.
+// 默认返回或空元组'()'在转换为JS值后是`undefined`。
 #[napi]
 fn log(n: u32) {
 	println!("{}", n);
@@ -31,7 +31,7 @@ export function log(n: number): void
 
 ### Null
 
-Represents `null` value in JavaScript.
+在 JavaScript 中表示 `null` 值。
 
 ```rust {3} filename="lib.rs"
 #[napi]
@@ -55,9 +55,9 @@ export function getEnv(env: string): string | null
 
 ### Numbers
 
-JavaScript `Number` type with Rust Int/Float types: `u32`, `i32`, `i64`, `f64`.
+JavaScript `Number` 类型包含 Rust Int/Float 类型: `u32`, `i32`, `i64`, `f64`.
 
-For Rust types like `u64`, `u128`, `i128`, checkout [`BigInt`](#bigint) section.
+如果是 Rust `u64`, `u128`, `i128`类型, 请查看 [`BigInt`](#bigint) 章节.
 
 ```rust filename="lib.rs"
 #[napi]
@@ -72,7 +72,7 @@ export function sum(a: number, b: number): number
 
 ### String
 
-Represents JavaScript `String` type.
+表示 JavaScript `String` 类型。
 
 ```rust {3} filename="lib.rs"
 #[napi]
@@ -87,7 +87,7 @@ export function greet(name: string): string
 
 ### Boolean
 
-Represents JavaScript `Boolean` type.
+表示 JavaScript `Boolean` 类型。
 
 ```rust filename="lib.rs"
 #[napi]
@@ -120,18 +120,17 @@ export function withBuffer(buf: Buffer): void
 export function readBuffer(file: string): Buffer
 ```
 
-### Object
+### 对象 - Object
 
-Represents JavaScript anonymous object values.
+表示 JavaScript 匿名对象值.
 
 <Callout type="warning" emoji="⚠️">
 
-**Performance**
+**性能 - Performance**
 
-The costs of `Object` conversions between JavaScript and Rust are higher than other primitive types.
+JavaScript 和 Rust 之间 `Object` 转换的成本比其他基本类型要高。
 
-Every call of `Object.get("key")` is actually dispatched to node side including two steps: fetch value, convert JS to rust value, and so as `Object.set("key", v)`.
-
+每一次调用 `Object.get("key")`实际上都会被分发到 node 端，它包含两个步骤：取值，并将 JS 值转为 Rust 值。`Object.set("key", v)`与之类似。
 </Callout>
 
 ```rust filename="lib.rs"
@@ -159,10 +158,10 @@ export function logStringField(obj: object): void
 export function createObj(): object
 ```
 
-If you want **NAPI-RS** to convert objects from JavaScript with the same shape defined in Rust, you can use the `#[napi]` macro with the `object` attribute.
+如果你想用 **NAPI-RS** 转换看似与 JavaScript 相同的 Rust 结构定义，你可以用`#[napi]`宏的`object`属性
 
 ```rust filename="lib.rs"
-/// #[napi(object)] requires all struct fields to be public
+/// #[napi(object)] 要求所有结构字段都是公共（public）的
 #[napi(object)]
 struct PackageJson {
 	pub name: String,
@@ -197,7 +196,7 @@ export function readPackageJson(): PackageJson
 
 **Clone over Reference**
 
-The `#[napi(object)]` struct passed in Rust `fn` is cloned from **_JavaScript Object_**. Any mutation on it will not be reflected to the original **_JavaScript_** object.
+在 Rust `fn` 中传递的 `#[napi(object)]` struct 是从 **_JavaScript Object_** 克隆的。它的任何变化都不会反映到原始的 **_JavaScript_** 对象。
 
 </Callout>
 
@@ -220,18 +219,16 @@ changeAnimalName(animal)
 console.log(animal.name) // "dog"
 ```
 
-### Array
+### 数组 - Array
 
-Because `Array` values in JavaScript can hold elements with different types, but rust `Vec<T>`
-can only contains same type elements. So there two different way for array types.
+因为 JavaScript 中的`Array`值可以包含不同类型的元素，但是 rust ' Vec<T> '只能包含相同类型的元素。所以数组类型有两种不同的方式。
 
 <Callout type="warning" emoji="⚠️">
 
-**Performance**
+**性能 - Performance**
 
-Because JavaScript `Array` type is backed with `Object` actually, so the performance of manipulating `Array`s would be the same as `Object`s.
-
-The conversion between `Array` and `Vec<T>` is even heavier, which is in `O(2n)` complexity.
+因为 JavaScript `Array` 类型实际上支持 `Object` ，所以操作 `Array` 的性能将与 `Object` 的性能相同。
+`Array` 和 `Vec<T>` 之间的转换更加复杂，复杂度为' O(2n) '。
 
 </Callout>
 
@@ -271,22 +268,25 @@ export function getNums(): Array<number>
 
 ### BigInt
 
-This requires the `napi6` feature.
+这需要`napi6` 的特性支持.
 
 <Callout type="warning" emoji="⚠️">
-
-The only way to pass `BigInt` in `Rust` is using `BigInt` type. But you can return `BigInt`, `i64n`, `u64`, `i128`, `u128`. Return `i64` will be treated as `JavaScript` number, not `BigInt`.
-
+在Rust中传递 `BigInt` 的唯一方法是使用 `BigInt` 类型。但是你可以返回 `BigInt`, `i64n`, `u64`, `i128`, `u128`。返回 `i64` 将被视为 `JavaScript` number，而不是`BigInt`。
 </Callout>
 
 <Callout>
 
-The reason why Rust fn can't receive `i128` `u128` `u64` `i64n` as arguments is that they may lose precision while converting JavaScript `BigInt` into them. You can use `BigInt::get_u128`, `BigInt::get_i128` ... to get the value in `BigInt`. The return value of these methods also indicates if precision is lost.
+Rust fn 不能接收 `i128` `u128` `u64` `i64n` 作为参数的原因是它们在将 JavaScript ' BigInt '转换为它们时可能会失去精度。你可以使用 `BigInt::get_u128` ， `BigInt::get_i128`...获取 `BigInt` 中的值。这些方法的返回值也表明了精度是否丢失。
+
+The return value of these methods also indicates if precision is lost.
 
 </Callout>
 
 ```rust filename="lib.rs"
+
 /// the return value of `get_u128` is (signed: bool, value: u128, lossless: bool)
+/// `get_u128` 的返回值为(signed: bool, value: u128, lossless: bool)
+
 #[napi]
 fn bigint_add(a: BigInt, b: BigInt) -> u128 {
   a.get_u128().1 + b.get_u128().1
@@ -306,7 +306,9 @@ export function createBigIntI128(): BigInt
 ### TypedArray
 
 <Callout>
-Unlike JavaScript Object, the `TypedArray` passed into Rust fn is a **Reference**. No data `Copy` or `Clone` will be performed. Every mutation on the `TypedArray` will be reflected to the original JavaScript `TypedArray`.
+
+与 JavaScript Object 不同，传入 Rust fn 的 `TypedArray` 是一个 **引用** 。不执行数据 `复制`或 `克隆` 。`TypedArray`上的每一个变化都会反映到原来的 JavaScript `TypedArray` 上。
+
 </Callout>
 
 ```rust filename="lib.rs"

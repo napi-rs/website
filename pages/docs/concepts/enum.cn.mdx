@@ -1,0 +1,59 @@
+---
+title: '枚举 - Enum'
+---
+
+# 枚举 - Enum
+
+import { Callout } from 'nextra-theme-docs'
+
+<Callout type="warning" emoji="⚠️">
+
+JavaScript 中没有 `enum` ，Rust 中的 `enum` 与 TypeScript 中的 `enum` 非常不同。您在使用 JavaScript 里的 `enum`.之前，您需要仔细阅读本节
+
+</Callout>
+
+在 **NAPI-RS** 中，Rust 的 `enum` 基本上是被转换成一个普通的 JavaScript 对象。
+
+```rust filename="lib.rs"
+#[napi]
+enum Kind {
+  Duck,
+  Dog,
+  Cat,
+}
+```
+
+⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+
+```ts filename="index.d.ts"
+export const enum Kind {
+  Duck,
+  Dog,
+  Cat,
+}
+```
+
+在' TypeScript '中，数值型' enum '成员也获得了从枚举值到枚举名的反向映射。但是在 Rust 中，我们没有这种反向映射行为。它只是一个普通的 JavaScript 对象。
+
+## String enum
+
+```rust filename="lib.rs"
+#[napi(string_enum)]
+enum Kind {
+  Duck,
+  Dog,
+  Cat,
+}
+```
+
+⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+
+```ts filename="index.d.ts"
+export const enum Kind {
+  Duck = 'Duck',
+  Dog = 'Dog',
+  Cat = 'Cat',
+}
+```
+
+**NAPI-RS** 不支持在 JavaScript 中生成 Rust `enum` `impl`。
