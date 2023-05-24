@@ -5645,7 +5645,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graceful-fs@npm:^4.1.6, graceful-fs@npm:^4.2.0, graceful-fs@npm:^4.2.10, graceful-fs@npm:^4.2.6, graceful-fs@npm:^4.2.9":
+"graceful-fs@npm:^4.1.6, graceful-fs@npm:^4.2.0, graceful-fs@npm:^4.2.11, graceful-fs@npm:^4.2.6, graceful-fs@npm:^4.2.9":
   version: 4.2.11
   resolution: "graceful-fs@npm:4.2.11"
   checksum: ac85f94da92d8eb6b7f5a8b20ce65e43d66761c55ce85ac96df6865308390da45a8d3f0296dd3a663de65d30ba497bd46c696cc1e248c72b13d6d567138a4fc7
@@ -6530,7 +6530,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"katex@npm:^0.16.0, katex@npm:^0.16.4":
+"katex@npm:^0.16.0, katex@npm:^0.16.7":
   version: 0.16.7
   resolution: "katex@npm:0.16.7"
   dependencies:
@@ -7940,8 +7940,8 @@ __metadata:
     lodash-es: ^4.17.21
     next: 13.4.3
     next-mdx-remote: ^4.4.1
-    nextra: 2.6.0
-    nextra-theme-docs: 2.6.0
+    nextra: 2.6.1
+    nextra-theme-docs: 2.6.1
     postcss: ^8.4.21
     prettier: ^2.8.6
     react: ^18.2.0
@@ -8065,9 +8065,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nextra-theme-docs@npm:2.6.0":
-  version: 2.6.0
-  resolution: "nextra-theme-docs@npm:2.6.0"
+"nextra-theme-docs@npm:2.6.1":
+  version: 2.6.1
+  resolution: "nextra-theme-docs@npm:2.6.1"
   dependencies:
     "@headlessui/react": ^1.7.10
     "@popperjs/core": ^2.11.6
@@ -8083,29 +8083,29 @@ __metadata:
     zod: ^3.20.2
   peerDependencies:
     next: ">=9.5.3"
-    nextra: 2.6.0
+    nextra: 2.6.1
     react: ">=16.13.1"
     react-dom: ">=16.13.1"
-  checksum: 7289d52867b77b04f75b6757b6db10caa8fcedcd81bfca34e4c30510b20f8e43e2734b4aa9899c6143652cf803218d7b5fdf5be47a4294298db9e5758c96f4e9
+  checksum: f07f1e820e7677114620a9073b9be34f2d022934032fe5c3bad842ddbf577c9142a609f4e3b4a17c5046b5d1b54f828070212217e239f19fa9d62e84937ac549
   languageName: node
   linkType: hard
 
-"nextra@npm:2.6.0":
-  version: 2.6.0
-  resolution: "nextra@npm:2.6.0"
+"nextra@npm:2.6.1":
+  version: 2.6.1
+  resolution: "nextra@npm:2.6.1"
   dependencies:
     "@mdx-js/mdx": ^2.3.0
     "@mdx-js/react": ^2.3.0
     "@napi-rs/simple-git": ^0.1.8
     clsx: ^1.2.1
     github-slugger: ^2.0.0
-    graceful-fs: ^4.2.10
+    graceful-fs: ^4.2.11
     gray-matter: ^4.0.3
-    katex: ^0.16.4
+    katex: ^0.16.7
     lodash.get: ^4.4.2
     next-mdx-remote: ^4.2.1
     p-limit: ^3.1.0
-    rehype-katex: ^6.0.2
+    rehype-katex: ^6.0.3
     rehype-pretty-code: 0.9.4
     remark-gfm: ^3.0.1
     remark-math: ^5.1.1
@@ -8120,7 +8120,7 @@ __metadata:
     next: ">=9.5.3"
     react: ">=16.13.1"
     react-dom: ">=16.13.1"
-  checksum: a1cc13b68ad6889b1d943244406e89bfd94c4d5b4e8b7761773bdb1e8ab491ee4ab4be8e57ab1e4105ecb58c84dfa117c95085151d442786e5d5e592becdd3b3
+  checksum: 3418b2dfde1c1c663dacc00b20439249ebed2289115631e6e67bf965683e787ea3ff49e6f3b28502b9f2ea70792551c4500854ca2ed44783088685d81ca5966c
   languageName: node
   linkType: hard
 
@@ -9334,7 +9334,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rehype-katex@npm:^6.0.2":
+"rehype-katex@npm:^6.0.3":
   version: 6.0.3
   resolution: "rehype-katex@npm:6.0.3"
   dependencies:
