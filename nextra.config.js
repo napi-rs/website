@@ -1,6 +1,16 @@
 import { useRouter } from 'next/router'
 import Script from 'next/script'
 
+const LOADING_LOCALES = {
+  en: 'Loading',
+  cn: '正在加载',
+}
+
+const PLACEHOLDER_LOCALES = {
+  en: 'Search documentation',
+  cn: '搜索文档',
+}
+
 export default {
   docsRepositoryBase: 'https://github.com/napi-rs/website/blob/main',
   chat: {
@@ -120,6 +130,21 @@ export default {
         default:
           return 'Edit this page on GitHub →'
       }
+    },
+  },
+  search: {
+    loading: function useLoading() {
+      const { locale, defaultLocale = DEFAULT_LOCALE } = useRouter()
+      const text =
+        (locale && LOADING_LOCALES[locale]) || LOADING_LOCALES[defaultLocale]
+      return <>{text}…</>
+    },
+    placeholder: function usePlaceholder() {
+      const { locale, defaultLocale = DEFAULT_LOCALE } = useRouter()
+      const text =
+        (locale && PLACEHOLDER_LOCALES[locale]) ||
+        PLACEHOLDER_LOCALES[defaultLocale]
+      return `${text}…`
     },
   },
   i18n: [
