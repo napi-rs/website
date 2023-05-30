@@ -2,8 +2,8 @@ const { PerfseePlugin } = require('@perfsee/webpack')
 const withNextra = require('nextra')({
   theme: 'nextra-theme-docs',
   themeConfig: './nextra.config.js',
-  unstable_flexsearch: true,
-  unstable_staticImage: true,
+  flexsearch: true,
+  staticImage: true,
 })
 
 module.exports = withNextra({
