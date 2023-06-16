@@ -126,7 +126,7 @@ The `#[napi]` macro above the `impl Task for AsyncFib` is just for `.d.ts` gener
 
 ## `AsyncTask`
 
-The `Task` you defined cannot be returned to JavaScript directly, the JavaScript engine has no idea how to run and resolve the value from your `struct`. `AsyncTask` is a wrapper of `Task` which can return to the JavaScript engine. It can created with `Task` and an optional [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal).
+The `Task` you define cannot be returned to JavaScript directly, the JavaScript engine has no idea how to run and resolve the value from your `struct`. `AsyncTask` is a wrapper of `Task` which can return to the JavaScript engine. It can be created with `Task` and an optional [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal).
 
 ```rust filename="lib.rs"
 #[napi]
