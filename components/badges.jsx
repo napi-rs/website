@@ -103,40 +103,8 @@ export function CIBadges() {
         alt="Lint"
       />
       <img
-        alt="Linux musl"
-        src="https://github.com/napi-rs/napi-rs/workflows/Linux%20musl/badge.svg"
-      />
-      <img
-        alt="macOS/Windows/Linux x64"
-        src="https://github.com/napi-rs/napi-rs/workflows/macOS/Windows/Linux%20x64/badge.svg"
-      />
-      <img
-        alt="Linux-aarch64"
-        src="https://github.com/napi-rs/napi-rs/workflows/Linux-aarch64/badge.svg"
-      />
-      <img
-        alt="Linux-armv7"
-        src="https://github.com/napi-rs/napi-rs/workflows/Linux-armv7/badge.svg"
-      />
-      <img
-        alt="macOS-Android"
-        src="https://github.com/napi-rs/napi-rs/workflows/macOS-Android/badge.svg"
-      />
-      <img
-        alt="Android-armv7"
-        src="https://github.com/napi-rs/napi-rs/actions/workflows/android-armv7.yml/badge.svg"
-      />
-      <img
-        alt="Windows i686"
-        src="https://github.com/napi-rs/napi-rs/workflows/Windows%20i686/badge.svg"
-      />
-      <img
-        alt="Windows arm64"
-        src="https://github.com/napi-rs/napi-rs/actions/workflows/windows-arm.yml/badge.svg"
-      />
-      <img
-        alt="FreeBSD"
-        src="https://api.cirrus-ci.com/github/napi-rs/napi-rs.svg"
+        alt="Test"
+        src="https://github.com/napi-rs/napi-rs/actions/workflows/test.yaml/badge.svg"
       />
     </div>
   )
