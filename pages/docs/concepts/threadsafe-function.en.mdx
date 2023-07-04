@@ -99,7 +99,7 @@ The first argument in the generic parameter of course is the return type of the 
 
 With `ErrorStrategy::CalleeHandled`, you must call the `ThreadsafeFunction` with the `Result` type, so that the `Error` will be handled and passed back to the JavaScript callback:
 
-```rust {17} filename="lib.rs"
+```rust {10,17} filename="lib.rs"
 use std::thread;
 
 use napi::{
@@ -129,7 +129,7 @@ No `Error` will be passed back to the JavaScript side. You can use this strategy
 
 With this strategy, `ThreadsafeFunction` doesn't need to be called with `Result<T>`, and the first argument of JavaScript callback is the value from the Rust, not `Error | null`.
 
-```rust {17} filename="lib.rs"
+```rust {10,17} filename="lib.rs"
 use std::thread;
 
 use napi::{
