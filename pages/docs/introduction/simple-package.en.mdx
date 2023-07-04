@@ -117,7 +117,7 @@ tree -a
     └── lib.rs
 ```
 
-Your native codes are in `src/lib.rs`. The `.cargo/config.toml` file is used in `GitHub CI` for cross compiling. In general this file is not affect your development on your local machine.
+Your native codes are in `src/lib.rs`. The `.cargo/config.toml` file is used in `GitHub CI` for cross compiling. In general, this file does not affect your development on your local machine.
 The `.github/workflows/CI.yml` file is the configuration file for [`GitHub Actions`](https://docs.github.com/en/actions).
 The `build.rs` file is necessary for building a native addon for `Node.js`. Don't delete it or move it to the other place.
 
