@@ -2445,15 +2445,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@theguild/remark-mermaid@npm:^0.0.3":
-  version: 0.0.3
-  resolution: "@theguild/remark-mermaid@npm:0.0.3"
+"@theguild/remark-mermaid@npm:^0.0.4":
+  version: 0.0.4
+  resolution: "@theguild/remark-mermaid@npm:0.0.4"
   dependencies:
     mermaid: ^10.2.2
-    unist-util-visit: ^4.1.2
+    unist-util-visit: ^5.0.0
   peerDependencies:
     react: ^18.2.0
-  checksum: 31cbb688fa6f9ad3cacb6ec9910e2c0df438d4f578ed6422be81d8b3ff8002dd7e5d88f2490b48ba5a1703f0b86b62459a598966e32a07644261e517a3570219
+  checksum: a00d29530552ef8729a2da455c7681cf1830f22388c66f4c92b34e371bbcc2604be6bc68ebadad2e1f78ef7b235b2e3887530bbf6ae9f73eef47d87114cab8fc
+  languageName: node
+  linkType: hard
+
+"@theguild/remark-npm2yarn@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "@theguild/remark-npm2yarn@npm:0.1.1"
+  dependencies:
+    npm-to-yarn: ^2.0.0
+    unist-util-visit: ^5.0.0
+  checksum: 3533d1f06e8e9623c0c2ef9d7bb31fc2d025989df71682479b64bc5ad27acffe0cd4d354f5b68ae53ed5517110080ae77256032fdafdc36fb189d8ef6339e928
   languageName: node
   linkType: hard
 
@@ -8586,8 +8596,8 @@ __metadata:
     lodash-es: ^4.17.21
     next: 13.4.9
     next-mdx-remote: ^4.4.1
-    nextra: 2.9.0
-    nextra-theme-docs: 2.9.0
+    nextra: 2.10.0
+    nextra-theme-docs: 2.10.0
     postcss: ^8.4.21
     prettier: ^2.8.6
     react: ^18.2.0
@@ -8709,9 +8719,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nextra-theme-docs@npm:2.9.0":
-  version: 2.9.0
-  resolution: "nextra-theme-docs@npm:2.9.0"
+"nextra-theme-docs@npm:2.10.0":
+  version: 2.10.0
+  resolution: "nextra-theme-docs@npm:2.10.0"
   dependencies:
     "@headlessui/react": ^1.7.10
     "@popperjs/core": ^2.11.6
@@ -8727,22 +8737,23 @@ __metadata:
     zod: ^3.20.2
   peerDependencies:
     next: ">=9.5.3"
-    nextra: 2.9.0
+    nextra: 2.10.0
     react: ">=16.13.1"
     react-dom: ">=16.13.1"
-  checksum: f298cdea17fd775cbda7df0a056406d085850f753f4e6492b6814a2692e6465c274f44262da8fde7393beec3e48aeb5a92554a052dcf717e05eb66a25d0aba76
+  checksum: 82d6c981eee33398148b5f53ab82915867eec7c8d70a39c851f3e34becc504dffe6b1d7f1f81ed053388fdbebe56905ac795b947886ae924144e3cad2452f941
   languageName: node
   linkType: hard
 
-"nextra@npm:2.9.0":
-  version: 2.9.0
-  resolution: "nextra@npm:2.9.0"
+"nextra@npm:2.10.0":
+  version: 2.10.0
+  resolution: "nextra@npm:2.10.0"
   dependencies:
     "@headlessui/react": ^1.7.10
     "@mdx-js/mdx": ^2.3.0
     "@mdx-js/react": ^2.3.0
     "@napi-rs/simple-git": ^0.1.8
-    "@theguild/remark-mermaid": ^0.0.3
+    "@theguild/remark-mermaid": ^0.0.4
+    "@theguild/remark-npm2yarn": ^0.1.1
     clsx: ^1.2.1
     github-slugger: ^2.0.0
     graceful-fs: ^4.2.11
@@ -8766,7 +8777,7 @@ __metadata:
     next: ">=9.5.3"
     react: ">=16.13.1"
     react-dom: ">=16.13.1"
-  checksum: b4625b1b9eba5346f64432f0524727f68711d822ac7bc3cdac032fc8e7f9cf2fd46c58c1ab6f921d26154e47c86e7874456bfbd1cfa3adbd0db28c43dfb0eba1
+  checksum: 796aa475c60aa8c4ce7f3d9da9b74e43e67cb9be0ed0b10dcf62eb94be1607e0604d38daaeb88742e963b0d1ff61185aa79b992fb8f7a67020c4bb6b9d518c6d
   languageName: node
   linkType: hard
 
@@ -8938,6 +8949,13 @@ __metadata:
   dependencies:
     path-key: ^4.0.0
   checksum: dc184eb5ec239d6a2b990b43236845332ef12f4e0beaa9701de724aa797fe40b6bbd0157fb7639d24d3ab13f5d5cf22d223a19c6300846b8126f335f788bee66
+  languageName: node
+  linkType: hard
+
+"npm-to-yarn@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "npm-to-yarn@npm:2.0.0"
+  checksum: 9da0e88edf00843cdc37481c89e64b2bc4a3468919221f39b57856b04913e55d59fd91004f6e8a85013b3d1eac0c884f60d81a2504a33e48d785eaae8cb484ab
   languageName: node
   linkType: hard
 
@@ -11605,7 +11623,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"unist-util-visit@npm:^4.0.0, unist-util-visit@npm:^4.1.2":
+"unist-util-visit@npm:^4.0.0":
   version: 4.1.2
   resolution: "unist-util-visit@npm:4.1.2"
   dependencies:
