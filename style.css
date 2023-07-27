@@ -15,7 +15,7 @@ article pre code .line.highlighted::before {
 }
 
 /* HACK Hide the title of footnotes section. Since Nextra cannot handle footnotes style correctly */
-/* For detail: https://github.com/shuding/nextra/pull/2104 */
+/* For details: https://github.com/shuding/nextra/pull/2104 */
 section.footnotes > h2 {
   display: none;
 }
