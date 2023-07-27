@@ -132,6 +132,7 @@ import { Callout } from 'nextra-theme-docs'
 The costs of `Object` conversions between JavaScript and Rust are higher than other primitive types.
 
 Every call of `Object.get("key")` is actually dispatched to node side including two steps: fetch value, convert JS to rust value, and so as `Object.set("key", v)`.
+
 </Callout>
 
 ```rust filename="lib.rs"
@@ -197,6 +198,7 @@ export function readPackageJson(): PackageJson
 **Clone over Reference**
 
 The `#[napi(object)]` struct passed in Rust `fn` is cloned from **_JavaScript Object_**. Any mutation on it will not be reflected to the original **_JavaScript_** object.
+
 </Callout>
 
 ```rust filename="lib.rs"
@@ -229,6 +231,7 @@ can only contains same type elements. So there two different way for array types
 Because JavaScript `Array` type is backed with `Object` actually, so the performance of manipulating `Array`s would be the same as `Object`s.
 
 The conversion between `Array` and `Vec<T>` is even heavier, which is in `O(2n)` complexity.
+
 </Callout>
 
 ```rust filename="lib.rs"
@@ -270,11 +273,17 @@ export function getNums(): Array<number>
 This requires the `napi6` feature.
 
 <Callout type="warning" emoji="⚠️">
-The only way to pass `BigInt` in `Rust` is using `BigInt` type. But you can return `BigInt`, `i64n`, `u64`, `i128`, `u128`. Return `i64` will be treated as `JavaScript` number, not `BigInt`.
+  The only way to pass `BigInt` in `Rust` is using `BigInt` type. But you can
+  return `BigInt`, `i64n`, `u64`, `i128`, `u128`. Return `i64` will be treated
+  as `JavaScript` number, not `BigInt`.
 </Callout>
 
 <Callout>
-The reason why Rust fn can't receive `i128` `u128` `u64` `i64n` as arguments is that they may lose precision while converting JavaScript `BigInt` into them. You can use `BigInt::get_u128`, `BigInt::get_i128` ... to get the value in `BigInt`. The return value of these methods also indicates if precision is lost.
+  The reason why Rust fn can't receive `i128` `u128` `u64` `i64n` as arguments
+  is that they may lose precision while converting JavaScript `BigInt` into
+  them. You can use `BigInt::get_u128`, `BigInt::get_i128` ... to get the value
+  in `BigInt`. The return value of these methods also indicates if precision is
+  lost.
 </Callout>
 
 ```rust filename="lib.rs"
@@ -298,7 +307,9 @@ export function createBigIntI128(): BigInt
 ### TypedArray
 
 <Callout>
-Unlike JavaScript Object, the `TypedArray` passed into Rust fn is a **Reference**. No data `Copy` or `Clone` will be performed. Every mutation on the `TypedArray` will be reflected to the original JavaScript `TypedArray`.
+  Unlike JavaScript Object, the `TypedArray` passed into Rust fn is a
+  **Reference**. No data `Copy` or `Clone` will be performed. Every mutation on
+  the `TypedArray` will be reflected to the original JavaScript `TypedArray`.
 </Callout>
 
 ```rust filename="lib.rs"
