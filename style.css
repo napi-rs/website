@@ -13,3 +13,9 @@ article pre code .line.highlighted::before {
 .dark {
   --nextra-primary-hue: 16deg;
 }
+
+/* HACK Hide the title of footnotes section. Since Nextra cannot handle footnotes style correctly */
+/* For details: https://github.com/shuding/nextra/pull/2104 */
+section.footnotes > h2 {
+  display: none;
+}
