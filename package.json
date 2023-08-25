@@ -17,8 +17,8 @@
     "@vercel/analytics": "^1.0.0",
     "lodash-es": "^4.17.21",
     "next": "13.4.19",
-    "nextra": "2.12.1",
-    "nextra-theme-docs": "2.12.1",
+    "nextra": "2.12.2",
+    "nextra-theme-docs": "2.12.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
