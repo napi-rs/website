@@ -361,72 +361,72 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@next/env@npm:13.5.1":
-  version: 13.5.1
-  resolution: "@next/env@npm:13.5.1"
-  checksum: 251859d90a953d88692129b72a1c09e9f44b2981ccab1c2d9ad67898634f8999c15b290dd6b341be9fc710cc2d25ceb9229a40de90ab0946fa2c6997144fe13f
+"@next/env@npm:13.5.2":
+  version: 13.5.2
+  resolution: "@next/env@npm:13.5.2"
+  checksum: f6ef14b7643049dafc2d53b5091e3f74eed0af14743cfd61f1db7782a99e69b5bef63f36ba700034b23656a264c7ec498aac8fa4f9377dad01e544ffa507388f
   languageName: node
   linkType: hard
 
-"@next/swc-darwin-arm64@npm:13.5.1":
-  version: 13.5.1
-  resolution: "@next/swc-darwin-arm64@npm:13.5.1"
+"@next/swc-darwin-arm64@npm:13.5.2":
+  version: 13.5.2
+  resolution: "@next/swc-darwin-arm64@npm:13.5.2"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@next/swc-darwin-x64@npm:13.5.1":
-  version: 13.5.1
-  resolution: "@next/swc-darwin-x64@npm:13.5.1"
+"@next/swc-darwin-x64@npm:13.5.2":
+  version: 13.5.2
+  resolution: "@next/swc-darwin-x64@npm:13.5.2"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@next/swc-linux-arm64-gnu@npm:13.5.1":
-  version: 13.5.1
-  resolution: "@next/swc-linux-arm64-gnu@npm:13.5.1"
+"@next/swc-linux-arm64-gnu@npm:13.5.2":
+  version: 13.5.2
+  resolution: "@next/swc-linux-arm64-gnu@npm:13.5.2"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@next/swc-linux-arm64-musl@npm:13.5.1":
-  version: 13.5.1
-  resolution: "@next/swc-linux-arm64-musl@npm:13.5.1"
+"@next/swc-linux-arm64-musl@npm:13.5.2":
+  version: 13.5.2
+  resolution: "@next/swc-linux-arm64-musl@npm:13.5.2"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@next/swc-linux-x64-gnu@npm:13.5.1":
-  version: 13.5.1
-  resolution: "@next/swc-linux-x64-gnu@npm:13.5.1"
+"@next/swc-linux-x64-gnu@npm:13.5.2":
+  version: 13.5.2
+  resolution: "@next/swc-linux-x64-gnu@npm:13.5.2"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@next/swc-linux-x64-musl@npm:13.5.1":
-  version: 13.5.1
-  resolution: "@next/swc-linux-x64-musl@npm:13.5.1"
+"@next/swc-linux-x64-musl@npm:13.5.2":
+  version: 13.5.2
+  resolution: "@next/swc-linux-x64-musl@npm:13.5.2"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@next/swc-win32-arm64-msvc@npm:13.5.1":
-  version: 13.5.1
-  resolution: "@next/swc-win32-arm64-msvc@npm:13.5.1"
+"@next/swc-win32-arm64-msvc@npm:13.5.2":
+  version: 13.5.2
+  resolution: "@next/swc-win32-arm64-msvc@npm:13.5.2"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@next/swc-win32-ia32-msvc@npm:13.5.1":
-  version: 13.5.1
-  resolution: "@next/swc-win32-ia32-msvc@npm:13.5.1"
+"@next/swc-win32-ia32-msvc@npm:13.5.2":
+  version: 13.5.2
+  resolution: "@next/swc-win32-ia32-msvc@npm:13.5.2"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@next/swc-win32-x64-msvc@npm:13.5.1":
-  version: 13.5.1
-  resolution: "@next/swc-win32-x64-msvc@npm:13.5.1"
+"@next/swc-win32-x64-msvc@npm:13.5.2":
+  version: 13.5.2
+  resolution: "@next/swc-win32-x64-msvc@npm:13.5.2"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -5350,7 +5350,7 @@ __metadata:
     husky: 8
     lint-staged: ^14.0.0
     lodash-es: ^4.17.21
-    next: 13.5.1
+    next: 13.5.2
     next-mdx-remote: ^4.4.1
     nextra: 2.12.3
     nextra-theme-docs: 2.12.3
@@ -5409,20 +5409,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"next@npm:13.5.1":
-  version: 13.5.1
-  resolution: "next@npm:13.5.1"
+"next@npm:13.5.2":
+  version: 13.5.2
+  resolution: "next@npm:13.5.2"
   dependencies:
-    "@next/env": 13.5.1
-    "@next/swc-darwin-arm64": 13.5.1
-    "@next/swc-darwin-x64": 13.5.1
-    "@next/swc-linux-arm64-gnu": 13.5.1
-    "@next/swc-linux-arm64-musl": 13.5.1
-    "@next/swc-linux-x64-gnu": 13.5.1
-    "@next/swc-linux-x64-musl": 13.5.1
-    "@next/swc-win32-arm64-msvc": 13.5.1
-    "@next/swc-win32-ia32-msvc": 13.5.1
-    "@next/swc-win32-x64-msvc": 13.5.1
+    "@next/env": 13.5.2
+    "@next/swc-darwin-arm64": 13.5.2
+    "@next/swc-darwin-x64": 13.5.2
+    "@next/swc-linux-arm64-gnu": 13.5.2
+    "@next/swc-linux-arm64-musl": 13.5.2
+    "@next/swc-linux-x64-gnu": 13.5.2
+    "@next/swc-linux-x64-musl": 13.5.2
+    "@next/swc-win32-arm64-msvc": 13.5.2
+    "@next/swc-win32-ia32-msvc": 13.5.2
+    "@next/swc-win32-x64-msvc": 13.5.2
     "@swc/helpers": 0.5.2
     busboy: 1.6.0
     caniuse-lite: ^1.0.30001406
@@ -5461,7 +5461,7 @@ __metadata:
       optional: true
   bin:
     next: dist/bin/next
-  checksum: a54aaeadb68d324107ddd2bd0c12967f06b844ef321aae4aba99f7a79406bab4ab85d51e3430106f1bc2831c55c8bf408a2352f702590d9bedb88fbdb60b2955
+  checksum: cc0635ad5aaab9fc1f4315b9506361b1abf1a12146542d6054b9434e2e892e967f19fbabd3f3763ba5e227306aa91627c1d73af089e9b853b84c74e20bb0be00
   languageName: node
   linkType: hard
 
