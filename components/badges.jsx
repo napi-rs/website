@@ -87,25 +87,3 @@ export function Badges() {
     </div>
   )
 }
-
-export function CIBadges() {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        marginTop: '10px',
-        gap: '5px',
-      }}
-    >
-      <img
-        src="https://github.com/napi-rs/napi-rs/workflows/Lint/badge.svg"
-        alt="Lint"
-      />
-      <img
-        alt="Test"
-        src="https://github.com/napi-rs/napi-rs/actions/workflows/test.yaml/badge.svg"
-      />
-    </div>
-  )
-}
