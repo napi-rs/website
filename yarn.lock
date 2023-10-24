@@ -233,6 +233,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mdx-js/react@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@mdx-js/react@npm:3.0.0"
+  dependencies:
+    "@types/mdx": "npm:^2.0.0"
+  peerDependencies:
+    "@types/react": ">=16"
+    react: ">=16"
+  checksum: 865f6ebc7ae83c6cb9f7e92db4eddd3f85cd1664391643b4736887ddc32b0ddb5aec012db6fbc9b486b552e08e6d5ad800450fcd9d51c20665667ff0f174d966
+  languageName: node
+  linkType: hard
+
 "@napi-rs/simple-git-android-arm-eabi@npm:0.1.9":
   version: 0.1.9
   resolution: "@napi-rs/simple-git-android-arm-eabi@npm:0.1.9"
@@ -5592,7 +5604,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "napi-rs-docs@workspace:."
   dependencies:
-    "@mdx-js/react": "npm:^2.3.0"
+    "@mdx-js/react": "npm:^3.0.0"
     "@perfsee/webpack": "npm:^1.8.4"
     "@types/node": "npm:^20.8.7"
     "@types/react": "npm:^18.2.31"
