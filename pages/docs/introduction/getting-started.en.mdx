@@ -50,7 +50,7 @@ Generate GitHub actions config for you.
 
 Here it is recommended to distribute your package under [npm scope](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) because `@napi-rs/cli` by default appends the different platform suffixes to the npm package name as the package name for the different platform binary distribution. Using npm scope will reduce the case of package name was taken.
 
-For example if you want publish package `@cool/core`, with the `macOS x64`, `Windows x64` and `Linux aarch64` supported, `@napi-rs/cli` will create and publish four package for you:
+For example if you want publish package `@cool/core`, with the `macOS x64`, `Windows x64` and `Linux aarch64` supported, `@napi-rs/cli` will create and publish four packages for you:
 
 - `@cool/core` includes just `JavaScript` codes, which actually load the native binary from per platforms.
 - `@cool/core-darwin-x64` for `macOS x64` platform.
