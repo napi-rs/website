@@ -13,11 +13,11 @@ __metadata:
   linkType: hard
 
 "@babel/runtime@npm:^7.12.5":
-  version: 7.23.5
-  resolution: "@babel/runtime@npm:7.23.5"
+  version: 7.23.6
+  resolution: "@babel/runtime@npm:7.23.6"
   dependencies:
     regenerator-runtime: "npm:^0.14.0"
-  checksum: ca679cc91bb7e424bc2db87bb58cc3b06ade916b9adb21fbbdc43e54cdaacb3eea201ceba2a0464b11d2eb65b9fe6a6ffcf4d7521fa52994f19be96f1af14788
+  checksum: d886954e985ef8e421222f7a2848884d96a752e0020d3078b920dd104e672fdf23bcc6f51a44313a048796319f1ac9d09c2c88ec8cbb4e1f09174bcd3335b9ff
   languageName: node
   linkType: hard
 
@@ -118,9 +118,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@img/sharp-darwin-arm64@npm:0.33.0":
-  version: 0.33.0
-  resolution: "@img/sharp-darwin-arm64@npm:0.33.0"
+"@img/sharp-darwin-arm64@npm:0.33.1":
+  version: 0.33.1
+  resolution: "@img/sharp-darwin-arm64@npm:0.33.1"
   dependencies:
     "@img/sharp-libvips-darwin-arm64": "npm:1.0.0"
   dependenciesMeta:
@@ -130,9 +130,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@img/sharp-darwin-x64@npm:0.33.0":
-  version: 0.33.0
-  resolution: "@img/sharp-darwin-x64@npm:0.33.0"
+"@img/sharp-darwin-x64@npm:0.33.1":
+  version: 0.33.1
+  resolution: "@img/sharp-darwin-x64@npm:0.33.1"
   dependencies:
     "@img/sharp-libvips-darwin-x64": "npm:1.0.0"
   dependenciesMeta:
@@ -198,9 +198,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@img/sharp-linux-arm64@npm:0.33.0":
-  version: 0.33.0
-  resolution: "@img/sharp-linux-arm64@npm:0.33.0"
+"@img/sharp-linux-arm64@npm:0.33.1":
+  version: 0.33.1
+  resolution: "@img/sharp-linux-arm64@npm:0.33.1"
   dependencies:
     "@img/sharp-libvips-linux-arm64": "npm:1.0.0"
   dependenciesMeta:
@@ -210,9 +210,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@img/sharp-linux-arm@npm:0.33.0":
-  version: 0.33.0
-  resolution: "@img/sharp-linux-arm@npm:0.33.0"
+"@img/sharp-linux-arm@npm:0.33.1":
+  version: 0.33.1
+  resolution: "@img/sharp-linux-arm@npm:0.33.1"
   dependencies:
     "@img/sharp-libvips-linux-arm": "npm:1.0.0"
   dependenciesMeta:
@@ -222,9 +222,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@img/sharp-linux-s390x@npm:0.33.0":
-  version: 0.33.0
-  resolution: "@img/sharp-linux-s390x@npm:0.33.0"
+"@img/sharp-linux-s390x@npm:0.33.1":
+  version: 0.33.1
+  resolution: "@img/sharp-linux-s390x@npm:0.33.1"
   dependencies:
     "@img/sharp-libvips-linux-s390x": "npm:1.0.0"
   dependenciesMeta:
@@ -234,9 +234,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@img/sharp-linux-x64@npm:0.33.0":
-  version: 0.33.0
-  resolution: "@img/sharp-linux-x64@npm:0.33.0"
+"@img/sharp-linux-x64@npm:0.33.1":
+  version: 0.33.1
+  resolution: "@img/sharp-linux-x64@npm:0.33.1"
   dependencies:
     "@img/sharp-libvips-linux-x64": "npm:1.0.0"
   dependenciesMeta:
@@ -246,9 +246,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@img/sharp-linuxmusl-arm64@npm:0.33.0":
-  version: 0.33.0
-  resolution: "@img/sharp-linuxmusl-arm64@npm:0.33.0"
+"@img/sharp-linuxmusl-arm64@npm:0.33.1":
+  version: 0.33.1
+  resolution: "@img/sharp-linuxmusl-arm64@npm:0.33.1"
   dependencies:
     "@img/sharp-libvips-linuxmusl-arm64": "npm:1.0.0"
   dependenciesMeta:
@@ -258,9 +258,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@img/sharp-linuxmusl-x64@npm:0.33.0":
-  version: 0.33.0
-  resolution: "@img/sharp-linuxmusl-x64@npm:0.33.0"
+"@img/sharp-linuxmusl-x64@npm:0.33.1":
+  version: 0.33.1
+  resolution: "@img/sharp-linuxmusl-x64@npm:0.33.1"
   dependencies:
     "@img/sharp-libvips-linuxmusl-x64": "npm:1.0.0"
   dependenciesMeta:
@@ -270,25 +270,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@img/sharp-wasm32@npm:0.33.0":
-  version: 0.33.0
-  resolution: "@img/sharp-wasm32@npm:0.33.0"
+"@img/sharp-wasm32@npm:0.33.1":
+  version: 0.33.1
+  resolution: "@img/sharp-wasm32@npm:0.33.1"
   dependencies:
     "@emnapi/runtime": "npm:^0.44.0"
   conditions: cpu=wasm32
   languageName: node
   linkType: hard
 
-"@img/sharp-win32-ia32@npm:0.33.0":
-  version: 0.33.0
-  resolution: "@img/sharp-win32-ia32@npm:0.33.0"
+"@img/sharp-win32-ia32@npm:0.33.1":
+  version: 0.33.1
+  resolution: "@img/sharp-win32-ia32@npm:0.33.1"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@img/sharp-win32-x64@npm:0.33.0":
-  version: 0.33.0
-  resolution: "@img/sharp-win32-x64@npm:0.33.0"
+"@img/sharp-win32-x64@npm:0.33.1":
+  version: 0.33.1
+  resolution: "@img/sharp-win32-x64@npm:0.33.1"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
@@ -681,13 +681,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@perfsee/bundle-analyzer@npm:1.8.4":
-  version: 1.8.4
-  resolution: "@perfsee/bundle-analyzer@npm:1.8.4"
+"@perfsee/bundle-analyzer@npm:1.10.0":
+  version: 1.10.0
+  resolution: "@perfsee/bundle-analyzer@npm:1.10.0"
   dependencies:
     "@eyhn/msgpack-stream": "npm:^2.8.4"
-    "@perfsee/jsonr": "npm:1.8.4"
-    "@perfsee/utils": "npm:1.3.0"
+    "@perfsee/jsonr": "npm:1.10.0"
+    "@perfsee/utils": "npm:1.10.0"
     acorn: "npm:^8.7.1"
     acorn-walk: "npm:^8.2.0"
     htmlparser2: "npm:^8.0.1"
@@ -695,26 +695,26 @@ __metadata:
     query-string: "npm:^7.1.1"
     tar: "npm:^6.1.11"
     tslib: "npm:^2.4.0"
-  checksum: ea051a07b39103e44d9afdb54afc912e4c1d0e3144c3eb503cffe2001f123e816250322a4b289ba09dcd35f75f5dc67a3124973c4b3faaec4c253218e36d51ed
+  checksum: c8589dee6d49be333495673dd685313781a10c7bdabe088d871d18924d476d2f04394c15e55cd910e60410f4c024c68b0e885e0721d135cd6be816f8d1e2c957
   languageName: node
   linkType: hard
 
-"@perfsee/jsonr@npm:1.8.4":
-  version: 1.8.4
-  resolution: "@perfsee/jsonr@npm:1.8.4"
+"@perfsee/jsonr@npm:1.10.0":
+  version: 1.10.0
+  resolution: "@perfsee/jsonr@npm:1.10.0"
   dependencies:
     tslib: "npm:^2.4.0"
-  checksum: b746fbd488b91a7c33833a6827057a5ec53c897511753b372e026577ffe518713801178d80b4f6ea8791c5b619ea7284937ba7715d018b437b08f20a1cd6f103
+  checksum: d87f93754416606234051577621abfbbee3859d720ce5849ff328710ac411e83d1a0bbed7dc19a171341b98d2e43b9fed472121d66a465d392ef5bc323190e6b
   languageName: node
   linkType: hard
 
-"@perfsee/plugin-utils@npm:1.8.4":
-  version: 1.8.4
-  resolution: "@perfsee/plugin-utils@npm:1.8.4"
+"@perfsee/plugin-utils@npm:1.10.0":
+  version: 1.10.0
+  resolution: "@perfsee/plugin-utils@npm:1.10.0"
   dependencies:
-    "@perfsee/bundle-analyzer": "npm:1.8.4"
-    "@perfsee/jsonr": "npm:1.8.4"
-    "@perfsee/utils": "npm:1.3.0"
+    "@perfsee/bundle-analyzer": "npm:1.10.0"
+    "@perfsee/jsonr": "npm:1.10.0"
+    "@perfsee/utils": "npm:1.10.0"
     chalk: "npm:^4.1.2"
     debug: "npm:4.3.4"
     env-ci: "npm:^7.2.1"
@@ -728,30 +728,30 @@ __metadata:
     tar: "npm:^6.1.11"
     tslib: "npm:^2.4.0"
     uuid: "npm:^9.0.0"
-  checksum: b0746611e0f728fbce7c6dbe5e41417951a4fb0755c19b83f0b2e0f113613d79bf8b97b02dce77854fb1efabb9430ae40055fda2498ade84c201a4cc0e515850
+  checksum: ebc6a6c7f98e29044127750438fb6e2524a3d9c39fcd446b072305cbda52d951858a9d62ce6014eb6522ee13c21c59c9b5fe6881b5f20ab910755f3935913277
   languageName: node
   linkType: hard
 
-"@perfsee/utils@npm:1.3.0":
-  version: 1.3.0
-  resolution: "@perfsee/utils@npm:1.3.0"
+"@perfsee/utils@npm:1.10.0":
+  version: 1.10.0
+  resolution: "@perfsee/utils@npm:1.10.0"
   dependencies:
     tslib: "npm:^2.4.0"
-  checksum: a80053efd4e10d8f563527e95e8b34581d983771969588799fd30436efbe6d3d632f8f520029902bcfd0a71e94f335cafaa36f9dc8dab80e722008a0955fc5d6
+  checksum: 6a57a08948a0720d92d9cecd5539ea0f05eb2e251527be623c68a8e06462169e9cf053fdba1589d0824ea82e465015e97acdcb02d0cceaef322993e9ebc758f0
   languageName: node
   linkType: hard
 
 "@perfsee/webpack@npm:^1.8.4":
-  version: 1.8.4
-  resolution: "@perfsee/webpack@npm:1.8.4"
+  version: 1.10.0
+  resolution: "@perfsee/webpack@npm:1.10.0"
   dependencies:
-    "@perfsee/bundle-analyzer": "npm:1.8.4"
-    "@perfsee/plugin-utils": "npm:1.8.4"
+    "@perfsee/bundle-analyzer": "npm:1.10.0"
+    "@perfsee/plugin-utils": "npm:1.10.0"
     chalk: "npm:^4.1.2"
     tslib: "npm:^2.4.0"
   peerDependencies:
     webpack: ">= 4"
-  checksum: 534e1695f03f1ea20f4a4dba5bececf24f4c47165f9cb0904912d0a11b3d395ae64a6c10d16fe15cffcceeee19e067f267f20babaa015567c379a54d96a52db7
+  checksum: aed191a64d3579182e7d94e14e220554e335dc6338f2569fb8145273a8bd831e229685c53640343676aafc90a02e1cbea69e3f7adbba8afa93c0214b40e34493
   languageName: node
   linkType: hard
 
@@ -993,11 +993,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*, @types/node@npm:^20.8.7":
-  version: 20.10.4
-  resolution: "@types/node@npm:20.10.4"
+  version: 20.10.5
+  resolution: "@types/node@npm:20.10.5"
   dependencies:
     undici-types: "npm:~5.26.4"
-  checksum: 2c8b70cba731eb2ae3ae046daa74903bfcbb0e7b9196da767e5895054f6d252296ae7a04fb1dbbcb53bb004c4c658c05eaea2731bc9e2dd9e08f7e88d672f563
+  checksum: be30609aae0bfe492097815f166ccc07f465220cb604647fa4e5ec05a1d16c012a41b82b5f11ecfe2485cbb479d4d20384b95b809ca0bcff6d94d5bbafa645bb
   languageName: node
   linkType: hard
 
@@ -1016,13 +1016,13 @@ __metadata:
   linkType: hard
 
 "@types/react@npm:>=16, @types/react@npm:^18.2.31":
-  version: 18.2.43
-  resolution: "@types/react@npm:18.2.43"
+  version: 18.2.45
+  resolution: "@types/react@npm:18.2.45"
   dependencies:
     "@types/prop-types": "npm:*"
     "@types/scheduler": "npm:*"
     csstype: "npm:^3.0.2"
-  checksum: 10477a50fbd3c0cc5b8a2ade679f442717f68fb27c8460b2aa1d3256cd18c48f742bbe5b9ee37a8c4c5f832ffa37b3a23c09fd96dd880a8e3182d8929c05e803
+  checksum: 4cc650c47ffb88baac29fb7a74e842e4af4a55f437086ef70250fdc75f0a5f2fcf8adc272d05ab2e00b1de6e14613296881271caee037dadf9130fdeb498c59e
   languageName: node
   linkType: hard
 
@@ -1072,10 +1072,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vercel/build-utils@npm:7.2.5":
-  version: 7.2.5
-  resolution: "@vercel/build-utils@npm:7.2.5"
-  checksum: dd536353419166f1f03cd41b220fb86c42ba71265a04f8953ec1e67eb929af2410e600812688eb4906f34a30b81081d965b03a2b36e03b8e13da2fb027425297
+"@vercel/build-utils@npm:7.3.0":
+  version: 7.3.0
+  resolution: "@vercel/build-utils@npm:7.3.0"
+  checksum: 051df4fd15f8fcaaf2c06193a0e5b4f019753f5a3c4e45ca2e3fda59326aa77cb0680161a62f7a355502dc246cdec2ede2d346dec294ee223a77e1342db34860
   languageName: node
   linkType: hard
 
@@ -1123,17 +1123,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vercel/gatsby-plugin-vercel-builder@npm:2.0.11":
-  version: 2.0.11
-  resolution: "@vercel/gatsby-plugin-vercel-builder@npm:2.0.11"
+"@vercel/gatsby-plugin-vercel-builder@npm:2.0.12":
+  version: 2.0.12
+  resolution: "@vercel/gatsby-plugin-vercel-builder@npm:2.0.12"
   dependencies:
     "@sinclair/typebox": "npm:0.25.24"
-    "@vercel/build-utils": "npm:7.2.5"
+    "@vercel/build-utils": "npm:7.3.0"
     "@vercel/routing-utils": "npm:3.1.0"
     esbuild: "npm:0.14.47"
     etag: "npm:1.8.1"
     fs-extra: "npm:11.1.0"
-  checksum: 863882381e5b56fcc3873f2dbbf8eee0edfa14b671b6e160ed0a45e160b77912a0e90c7ea6f25638bc3513e9ca86211c4e534de868c17d98bb603abb8058baac
+  checksum: 9289196873a8173c9b9b3b6c030b263e2384cf63f73e3e2c88e660f213bf86ecbf11dee91ec0e391efebc3e324cbac1c63e180240f825ea9d56e4d648e9db4f8
   languageName: node
   linkType: hard
 
@@ -1184,15 +1184,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vercel/node@npm:3.0.11":
-  version: 3.0.11
-  resolution: "@vercel/node@npm:3.0.11"
+"@vercel/node@npm:3.0.12":
+  version: 3.0.12
+  resolution: "@vercel/node@npm:3.0.12"
   dependencies:
     "@edge-runtime/node-utils": "npm:2.2.1"
     "@edge-runtime/primitives": "npm:4.0.5"
     "@edge-runtime/vm": "npm:3.1.7"
     "@types/node": "npm:14.18.33"
-    "@vercel/build-utils": "npm:7.2.5"
+    "@vercel/build-utils": "npm:7.3.0"
     "@vercel/error-utils": "npm:2.0.2"
     "@vercel/nft": "npm:0.24.2"
     "@vercel/static-config": "npm:3.0.0"
@@ -1207,7 +1207,7 @@ __metadata:
     ts-node: "npm:10.9.1"
     typescript: "npm:4.9.5"
     undici: "npm:5.26.5"
-  checksum: 1d92187619baa7f274143074b9e5b2f45ab3663b9dfd21b4fc7032c4c09b755bbbc1daddf54b69b14f0a11ac481ff66ac23513307517535a3ff03997ca9c2541
+  checksum: c60b4d214f3b4cc465526c2b1022f7e82aa6b5cfbd563c277baaf0ab76671286efccfb2881c7432a89baf627b0fcbc1666d12be16c9f4ceacb96bfb359be7102
   languageName: node
   linkType: hard
 
@@ -1229,14 +1229,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vercel/remix-builder@npm:2.0.12":
-  version: 2.0.12
-  resolution: "@vercel/remix-builder@npm:2.0.12"
+"@vercel/remix-builder@npm:2.0.14":
+  version: 2.0.14
+  resolution: "@vercel/remix-builder@npm:2.0.14"
   dependencies:
     "@vercel/nft": "npm:0.24.2"
     "@vercel/static-config": "npm:3.0.0"
     ts-morph: "npm:12.0.0"
-  checksum: 8af5d99507333f1c8aeacef55e5eed2ace0265aabae2afa993254d1254afa0b851bf86d102a8e559a6a128ec5ce6101a682ce85a19aa119b99b3d9e9a173a066
+  checksum: 6e65eb03e32b6d5758d77d22ab4c0fa33c75ad947772c28576069c3dfea151f9dd14dd527e531682bc0d2c548d1a961ca861261f13b07423d0f99dbb4db50eec
   languageName: node
   linkType: hard
 
@@ -1253,22 +1253,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vercel/ruby@npm:2.0.3":
-  version: 2.0.3
-  resolution: "@vercel/ruby@npm:2.0.3"
-  checksum: fca72db44af7696b26e6c01270faa269f24ac83285cfed11c98c61e90ed6c8da6f02ec8755cee854a33ac01984acb5244b9e80a161013d32dc3914b53692416d
+"@vercel/ruby@npm:2.0.4":
+  version: 2.0.4
+  resolution: "@vercel/ruby@npm:2.0.4"
+  checksum: 0ea2fbf8e2fe7b312b34d69ce80ed0d3c07ce994c6d890d5d40b76402cf23a1907c5c056d787f47b13977ef7510f99567cd51cb59e633e347b09de9b81abbdc4
   languageName: node
   linkType: hard
 
-"@vercel/static-build@npm:2.0.13":
-  version: 2.0.13
-  resolution: "@vercel/static-build@npm:2.0.13"
+"@vercel/static-build@npm:2.0.14":
+  version: 2.0.14
+  resolution: "@vercel/static-build@npm:2.0.14"
   dependencies:
     "@vercel/gatsby-plugin-vercel-analytics": "npm:1.0.11"
-    "@vercel/gatsby-plugin-vercel-builder": "npm:2.0.11"
+    "@vercel/gatsby-plugin-vercel-builder": "npm:2.0.12"
     "@vercel/static-config": "npm:3.0.0"
     ts-morph: "npm:12.0.0"
-  checksum: f87a24d4bfeedb8242cd6efb3d68dc7ad795b58e43da9c568bcf713507dc77935c7723e329da53394d47025ce54d1d0d9c6554c639b891487cf39ee634de3034
+  checksum: 8203c33b583ff6144d6d8200a713c34c5e621833ab1a148aed898e6a501daaa2bcf0165cc8b1546138638638c1c44773f57a9ad861a1c2798bb6cd784f1eb3ba
   languageName: node
   linkType: hard
 
@@ -1727,9 +1727,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.30001406, caniuse-lite@npm:^1.0.30001538, caniuse-lite@npm:^1.0.30001565":
-  version: 1.0.30001568
-  resolution: "caniuse-lite@npm:1.0.30001568"
-  checksum: 13f01e5a2481134bd61cf565ce9fecbd8e107902927a0dcf534230a92191a81f1715792170f5f39719c767c3a96aa6df9917a8d5601f15bbd5e4041a8cfecc99
+  version: 1.0.30001570
+  resolution: "caniuse-lite@npm:1.0.30001570"
+  checksum: e47230d2016edea56e002fa462a5289f697b48dcfbf703fb01aecc6c98ad4ecaf945ab23c253cb7af056c2d05f266e4e4cbebf45132100e2c9367439cb95b95b
   languageName: node
   linkType: hard
 
@@ -2148,12 +2148,12 @@ __metadata:
   linkType: hard
 
 "cytoscape@npm:^3.23.0":
-  version: 3.27.0
-  resolution: "cytoscape@npm:3.27.0"
+  version: 3.28.0
+  resolution: "cytoscape@npm:3.28.0"
   dependencies:
     heap: "npm:^0.2.6"
     lodash: "npm:^4.17.21"
-  checksum: 89cf57de58fe9742a31466198f32d527d7aead8537bb72538712fc3cf029aeacb90a4721f9a42f5f19fed72d71929f04676711d6c37634c0c156782b7377d858
+  checksum: 2e74ce46f132eb6e0a8cbbdd0933c5695c8bd71dc0b79edf239905b021196c2862dd350d2fede62367e1159a5cc4153caf364b2ebb98cbd6bd5d53bd6515aeb0
   languageName: node
   linkType: hard
 
@@ -2717,9 +2717,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.4.601":
-  version: 1.4.609
-  resolution: "electron-to-chromium@npm:1.4.609"
-  checksum: 9675a79388acbaff5953a4c61589af7da93e0d1f9d6a3b284c7630f10126eb0998557b07448514214d5a3d19025310039b55f405ab701b1253130fc94907f743
+  version: 1.4.614
+  resolution: "electron-to-chromium@npm:1.4.614"
+  checksum: 2cc4209c5f5794be069d74a4aa9b0849fba3570d06f981dbe41d626b0cc88cfbf8b9aae47b033e67370f477ce49168b4d4324c7c518ee28012e8430b65c5fe84
   languageName: node
   linkType: hard
 
@@ -6676,9 +6676,9 @@ __metadata:
   linkType: hard
 
 "regenerator-runtime@npm:^0.14.0":
-  version: 0.14.0
-  resolution: "regenerator-runtime@npm:0.14.0"
-  checksum: e25f062c1a183f81c99681691a342760e65c55e8d3a4d4fe347ebe72433b123754b942b70b622959894e11f8a9131dc549bd3c9a5234677db06a4af42add8d12
+  version: 0.14.1
+  resolution: "regenerator-runtime@npm:0.14.1"
+  checksum: 1b16eb2c4bceb1665c89de70dcb64126a22bc8eb958feef3cd68fe11ac6d2a4899b5cd1b80b0774c7c03591dc57d16631a7f69d2daa2ec98100e2f29f7ec4cc4
   languageName: node
   linkType: hard
 
@@ -7017,11 +7017,11 @@ __metadata:
   linkType: hard
 
 "sharp@npm:^0.33.0":
-  version: 0.33.0
-  resolution: "sharp@npm:0.33.0"
+  version: 0.33.1
+  resolution: "sharp@npm:0.33.1"
   dependencies:
-    "@img/sharp-darwin-arm64": "npm:0.33.0"
-    "@img/sharp-darwin-x64": "npm:0.33.0"
+    "@img/sharp-darwin-arm64": "npm:0.33.1"
+    "@img/sharp-darwin-x64": "npm:0.33.1"
     "@img/sharp-libvips-darwin-arm64": "npm:1.0.0"
     "@img/sharp-libvips-darwin-x64": "npm:1.0.0"
     "@img/sharp-libvips-linux-arm": "npm:1.0.0"
@@ -7030,15 +7030,15 @@ __metadata:
     "@img/sharp-libvips-linux-x64": "npm:1.0.0"
     "@img/sharp-libvips-linuxmusl-arm64": "npm:1.0.0"
     "@img/sharp-libvips-linuxmusl-x64": "npm:1.0.0"
-    "@img/sharp-linux-arm": "npm:0.33.0"
-    "@img/sharp-linux-arm64": "npm:0.33.0"
-    "@img/sharp-linux-s390x": "npm:0.33.0"
-    "@img/sharp-linux-x64": "npm:0.33.0"
-    "@img/sharp-linuxmusl-arm64": "npm:0.33.0"
-    "@img/sharp-linuxmusl-x64": "npm:0.33.0"
-    "@img/sharp-wasm32": "npm:0.33.0"
-    "@img/sharp-win32-ia32": "npm:0.33.0"
-    "@img/sharp-win32-x64": "npm:0.33.0"
+    "@img/sharp-linux-arm": "npm:0.33.1"
+    "@img/sharp-linux-arm64": "npm:0.33.1"
+    "@img/sharp-linux-s390x": "npm:0.33.1"
+    "@img/sharp-linux-x64": "npm:0.33.1"
+    "@img/sharp-linuxmusl-arm64": "npm:0.33.1"
+    "@img/sharp-linuxmusl-x64": "npm:0.33.1"
+    "@img/sharp-wasm32": "npm:0.33.1"
+    "@img/sharp-win32-ia32": "npm:0.33.1"
+    "@img/sharp-win32-x64": "npm:0.33.1"
     color: "npm:^4.2.3"
     detect-libc: "npm:^2.0.2"
     semver: "npm:^7.5.4"
@@ -7081,7 +7081,7 @@ __metadata:
       optional: true
     "@img/sharp-win32-x64":
       optional: true
-  checksum: 9a8ac405f1a2f1eaac59b78e1118af1fe4fd55df473f58e5fba8bce6c177396b57069267d3af38d79ce36db78701a476a841fac347c798562ae4776f7ffe49de
+  checksum: b5fee2a0e0d6861516c1439143e8dfcadf09d5c323c520dce2820fd8bea9e323764f781cfab58e3f41917ffe1bfcd91a50b7d07028977501154f4c9f5cbfb649
   languageName: node
   linkType: hard
 
@@ -7118,14 +7118,14 @@ __metadata:
   linkType: hard
 
 "shiki@npm:^0.14.3":
-  version: 0.14.6
-  resolution: "shiki@npm:0.14.6"
+  version: 0.14.7
+  resolution: "shiki@npm:0.14.7"
   dependencies:
     ansi-sequence-parser: "npm:^1.1.0"
     jsonc-parser: "npm:^3.2.0"
     vscode-oniguruma: "npm:^1.7.0"
     vscode-textmate: "npm:^8.0.0"
-  checksum: cd056244c09b46df2ad1c4841358b5d510df44203394f54de8f42b6fb7ce37b7e788b3ec45ffec5acf82784fcf7eeb687e7a3854d8072daa8d53284948126bc1
+  checksum: 5c7fcbb870d0facccc7ae2f3410a28121f8e0b3f298e4e956de817ad6ab60a4c7e20a9184edfe50a93447addbb88b95b69e6ef88ac16ac6ca3e94c50771a6459
   languageName: node
   linkType: hard
 
@@ -8137,25 +8137,25 @@ __metadata:
   linkType: hard
 
 "vercel@npm:^32.5.0":
-  version: 32.6.1
-  resolution: "vercel@npm:32.6.1"
+  version: 32.7.2
+  resolution: "vercel@npm:32.7.2"
   dependencies:
-    "@vercel/build-utils": "npm:7.2.5"
+    "@vercel/build-utils": "npm:7.3.0"
     "@vercel/fun": "npm:1.1.0"
     "@vercel/go": "npm:3.0.4"
     "@vercel/hydrogen": "npm:1.0.1"
     "@vercel/next": "npm:4.0.15"
-    "@vercel/node": "npm:3.0.11"
+    "@vercel/node": "npm:3.0.12"
     "@vercel/python": "npm:4.1.0"
     "@vercel/redwood": "npm:2.0.5"
-    "@vercel/remix-builder": "npm:2.0.12"
-    "@vercel/ruby": "npm:2.0.3"
-    "@vercel/static-build": "npm:2.0.13"
+    "@vercel/remix-builder": "npm:2.0.14"
+    "@vercel/ruby": "npm:2.0.4"
+    "@vercel/static-build": "npm:2.0.14"
     chokidar: "npm:3.3.1"
   bin:
     vc: dist/index.js
     vercel: dist/index.js
-  checksum: 508a872e348518943b8d19c65e07543375e0fe12a781546f9157971dcea7123d60d0f8faf0f2f8405a51725b04171bb0d6fa7c12d2ba992607e8dcb2210d2aab
+  checksum: 61362f2e7a5cf60f48683c3813d83655c22e59f6c692e4c4dd44af7d04cb6543fea53e09fb1687ea6ae6d41657e1d6f3f54491ad09a9f5c63f4c7786041e6c8f
   languageName: node
   linkType: hard
 
