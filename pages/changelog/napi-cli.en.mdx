@@ -3,22 +3,14 @@ title: '@napi-rs/cli'
 description: napi cli changelog.
 ---
 
-import { serialize } from 'next-mdx-remote/serialize'
+import { RemoteContent } from 'nextra/data'
 
-import { Changelog, getChangelog } from '../../components/changelog-generator'
+import { getChangelog } from '../../components/changelog-generator'
 
 # @napi-rs/cli
 
 export const getStaticProps = async () => {
-  const {
-    props: { ssg },
-  } = await getChangelog('@napi-rs/cli')
-  const mdx = await serialize(ssg)
-  return {
-    props: {
-      ssg: mdx,
-    },
-  }
+  return getChangelog('@napi-rs/cli')
 }
 
-<Changelog />
+<RemoteContent />
