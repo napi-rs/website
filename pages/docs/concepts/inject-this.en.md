@@ -56,5 +56,5 @@ pub fn plus_one(this: This<&Width>) -> i32 {
 import { Width, plusOne } from './index.js'
 
 const width = new Width(1)
-console.log(plusOne(width)) // 2
+console.log(plusOne.call(width)) // 2
 ```
