@@ -7,10 +7,10 @@ description: Inject This Object into functions and methods.
 In class methods, you may want to access the raw `Object` value of the `Class` instance.
 
 ```rust {15} filename="lib.rs"
-#[napi]
-use napi::bindgen_prelude::*;
+use napi::{bindgen_prelude::*, JsObject};
 use napi_derive::napi;
 
+#[napi]
 pub struct QueryEngine {}
 
 #[napi]
@@ -21,7 +21,7 @@ impl QueryEngine {
   }
 
   #[napi]
-  pub fn get_ref_count(&self, this: This) -> Result<Option<i32>> {
+  pub fn get_ref_count(&self, this: This<JsObject>) -> Result<Option<i32>> {
     this.get::<i32>("refCount")
   }
 }
