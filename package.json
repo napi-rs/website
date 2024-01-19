@@ -16,7 +16,7 @@
     "@mdx-js/react": "^3.0.0",
     "@vercel/analytics": "^1.1.1",
     "lodash-es": "^4.17.21",
-    "next": "14.0.4",
+    "next": "14.1.0",
     "nextra": "2.13.2",
     "nextra-theme-docs": "2.13.2",
     "react": "^18.2.0",
