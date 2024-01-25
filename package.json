@@ -30,7 +30,7 @@
     "autoprefixer": "^10.4.16",
     "cross-env": "^7.0.3",
     "file-loader": "^6.2.0",
-    "husky": "8",
+    "husky": "9",
     "lint-staged": "^15.2.0",
     "next-mdx-remote": "^4.4.1",
     "postcss": "^8.4.32",
