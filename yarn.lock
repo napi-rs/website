@@ -106,7 +106,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@headlessui/react@npm:^1.7.10":
+"@headlessui/react@npm:^1.7.17":
   version: 1.7.18
   resolution: "@headlessui/react@npm:1.7.18"
   dependencies:
@@ -772,7 +772,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@popperjs/core@npm:^2.11.6":
+"@popperjs/core@npm:^2.11.8":
   version: 2.11.8
   resolution: "@popperjs/core@npm:2.11.8"
   checksum: 10c0/4681e682abc006d25eb380d0cf3efc7557043f53b6aea7a5057d0d1e7df849a00e281cd8ea79c902a35a414d7919621fc2ba293ecec05f413598e0b23d5a1e63
@@ -5733,8 +5733,8 @@ __metadata:
     lodash-es: "npm:^4.17.21"
     next: "npm:14.1.0"
     next-mdx-remote: "npm:^4.4.1"
-    nextra: "npm:2.13.2"
-    nextra-theme-docs: "npm:2.13.2"
+    nextra: "npm:2.13.3"
+    nextra-theme-docs: "npm:2.13.3"
     postcss: "npm:^8.4.32"
     prettier: "npm:^3.1.1"
     react: "npm:^18.2.0"
@@ -5845,12 +5845,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nextra-theme-docs@npm:2.13.2":
-  version: 2.13.2
-  resolution: "nextra-theme-docs@npm:2.13.2"
+"nextra-theme-docs@npm:2.13.3":
+  version: 2.13.3
+  resolution: "nextra-theme-docs@npm:2.13.3"
   dependencies:
-    "@headlessui/react": "npm:^1.7.10"
-    "@popperjs/core": "npm:^2.11.6"
+    "@headlessui/react": "npm:^1.7.17"
+    "@popperjs/core": "npm:^2.11.8"
     clsx: "npm:^2.0.0"
     escape-string-regexp: "npm:^5.0.0"
     flexsearch: "npm:^0.7.31"
@@ -5860,22 +5860,22 @@ __metadata:
     match-sorter: "npm:^6.3.1"
     next-seo: "npm:^6.0.0"
     next-themes: "npm:^0.2.1"
-    scroll-into-view-if-needed: "npm:^3.0.0"
+    scroll-into-view-if-needed: "npm:^3.1.0"
     zod: "npm:^3.22.3"
   peerDependencies:
     next: ">=9.5.3"
-    nextra: 2.13.2
+    nextra: 2.13.3
     react: ">=16.13.1"
     react-dom: ">=16.13.1"
-  checksum: 10c0/94e1cf80074efd6887961459ae35f58731ccc94de5ef4a5c144f4534a62e1b099bc3c0d6a2ce6ee020984cf42e6721d0115de5cde57cbca2f4888a3489563799
+  checksum: 10c0/fc8cbd9e68be497d35a15b88ab4fa72bbe3ff521a2344e65a1f6fc8a2f899bcb02ef1714b29a273232c04285a6eb21959e624b712676eb10e81f7cc002c13856
   languageName: node
   linkType: hard
 
-"nextra@npm:2.13.2":
-  version: 2.13.2
-  resolution: "nextra@npm:2.13.2"
+"nextra@npm:2.13.3":
+  version: 2.13.3
+  resolution: "nextra@npm:2.13.3"
   dependencies:
-    "@headlessui/react": "npm:^1.7.10"
+    "@headlessui/react": "npm:^1.7.17"
     "@mdx-js/mdx": "npm:^2.3.0"
     "@mdx-js/react": "npm:^2.3.0"
     "@napi-rs/simple-git": "npm:^0.1.9"
@@ -5905,7 +5905,7 @@ __metadata:
     next: ">=9.5.3"
     react: ">=16.13.1"
     react-dom: ">=16.13.1"
-  checksum: 10c0/39fc0de0bc27eaca2cb8e364c55a149d65972c778846249557e218a0e316e63e38bd44c9b107159d23145c8a008c3f97c80df8aa83e390906d64b64b9327bdb6
+  checksum: 10c0/c074cd0643a141169dfb5e6b3f4f793ed5c12f2a557682798302431facca3a2e2b6b74af17118e64d39abd580ad1ea00361395baefeca1057a4bbf12895f8314
   languageName: node
   linkType: hard
 
@@ -6955,7 +6955,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"scroll-into-view-if-needed@npm:^3.0.0":
+"scroll-into-view-if-needed@npm:^3.1.0":
   version: 3.1.0
   resolution: "scroll-into-view-if-needed@npm:3.1.0"
   dependencies:
