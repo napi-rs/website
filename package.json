@@ -46,6 +46,7 @@
     "build": "next build",
     "build:en": "next build",
     "build:cn": "cross-env LOCALE=cn next build",
+    "build:pt-BR": "cross-env LOCALE=pt-BR next build",
     "format": "prettier -w .",
     "postinstall": "husky install"
   },

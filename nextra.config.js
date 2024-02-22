@@ -4,11 +4,13 @@ import Script from 'next/script'
 const LOADING_LOCALES = {
   en: 'Loading',
   cn: '正在加载',
+  'pt-BR': 'Carregando',
 }
 
 const PLACEHOLDER_LOCALES = {
   en: 'Search documentation',
   cn: '搜索文档',
+  'pt-BR': 'Buscar documentação',
 }
 
 export default {
@@ -127,6 +129,8 @@ export default {
       switch (locale) {
         case 'cn':
           return '在 GitHub 上编辑本页 →'
+        case 'pt-BR':
+          return 'Editar essa página no Github →'
         default:
           return 'Edit this page on GitHub →'
       }
@@ -150,6 +154,7 @@ export default {
   i18n: [
     { locale: 'en', text: 'English' },
     { locale: 'cn', text: '简体中文' },
+    { locale: 'pt-BR', text: 'Português do Brasil' },
   ],
   useNextSeoProps: () => ({ titleTemplate: '%s \u2013 NAPI-RS' }),
 }
