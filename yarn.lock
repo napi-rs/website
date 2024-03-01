@@ -5737,8 +5737,8 @@ __metadata:
     lodash-es: "npm:^4.17.21"
     next: "npm:14.1.1"
     next-mdx-remote: "npm:^4.4.1"
-    nextra: "npm:2.13.3"
-    nextra-theme-docs: "npm:2.13.3"
+    nextra: "npm:2.13.4"
+    nextra-theme-docs: "npm:2.13.4"
     postcss: "npm:^8.4.32"
     prettier: "npm:^3.1.1"
     react: "npm:^18.2.0"
@@ -5849,9 +5849,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nextra-theme-docs@npm:2.13.3":
-  version: 2.13.3
-  resolution: "nextra-theme-docs@npm:2.13.3"
+"nextra-theme-docs@npm:2.13.4":
+  version: 2.13.4
+  resolution: "nextra-theme-docs@npm:2.13.4"
   dependencies:
     "@headlessui/react": "npm:^1.7.17"
     "@popperjs/core": "npm:^2.11.8"
@@ -5868,16 +5868,16 @@ __metadata:
     zod: "npm:^3.22.3"
   peerDependencies:
     next: ">=9.5.3"
-    nextra: 2.13.3
+    nextra: 2.13.4
     react: ">=16.13.1"
     react-dom: ">=16.13.1"
-  checksum: 10c0/fc8cbd9e68be497d35a15b88ab4fa72bbe3ff521a2344e65a1f6fc8a2f899bcb02ef1714b29a273232c04285a6eb21959e624b712676eb10e81f7cc002c13856
+  checksum: 10c0/3c8711391a771878370db9e71296d700f30fdcc31a1c739eac1f586b12b0d7960326f5e4a75e1b7c3ffc16734bc2c98347b001734e6e607f0f89efa2ac0e84d2
   languageName: node
   linkType: hard
 
-"nextra@npm:2.13.3":
-  version: 2.13.3
-  resolution: "nextra@npm:2.13.3"
+"nextra@npm:2.13.4":
+  version: 2.13.4
+  resolution: "nextra@npm:2.13.4"
   dependencies:
     "@headlessui/react": "npm:^1.7.17"
     "@mdx-js/mdx": "npm:^2.3.0"
@@ -5909,7 +5909,7 @@ __metadata:
     next: ">=9.5.3"
     react: ">=16.13.1"
     react-dom: ">=16.13.1"
-  checksum: 10c0/c074cd0643a141169dfb5e6b3f4f793ed5c12f2a557682798302431facca3a2e2b6b74af17118e64d39abd580ad1ea00361395baefeca1057a4bbf12895f8314
+  checksum: 10c0/68941552f83639ae818e27b1cfbfef4031362c95bb5c80188cabe29ccd700e0889e20d90cde621d79e151fdf02713b096cfaa42b9304946133b82c223d2e01e3
   languageName: node
   linkType: hard
 
