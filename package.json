@@ -26,7 +26,7 @@
     "@perfsee/webpack": "^1.10.0",
     "@types/node": "^20.10.5",
     "@types/react": "^18.2.45",
-    "@types/sharp": "^0.31.1",
+    "@types/sharp": "^0.32.0",
     "autoprefixer": "^10.4.16",
     "cross-env": "^7.0.3",
     "file-loader": "^6.2.0",
