@@ -9,7 +9,7 @@ const withNextra = require('nextra')({
 module.exports = withNextra({
   i18n: {
     defaultLocale: process.env.LOCALE || 'en',
-    locales: ['en', 'cn'],
+    locales: ['en', 'cn', 'pt-BR'],
   },
   webpack(config, { dev, isServer }) {
     if (!dev && !isServer) {

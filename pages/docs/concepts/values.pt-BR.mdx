@@ -1,0 +1,345 @@
+---
+title: 'Values'
+description: Conversions between Rust and JavaScript types.
+---
+
+# Valores
+
+Conversões entre tipos Rust e JavaScript.
+
+### Undefined
+
+Representa `undefined` no JavaScript.
+
+```rust {3} filename="lib.rs"
+#[napi]
+fn get_undefined() -> Undefined {
+	()
+}
+
+//  O retorno padrão ou a tupla vazia `()` são convertidos em `undefined` após serem convertidos em valor JavaScript.
+#[napi]
+fn log(n: u32) {
+	println!("{}", n);
+}
+```
+
+```ts filename="index.d.ts"
+export function getUndefined(): undefined
+export function log(n: number): void
+```
+
+### Null
+
+Representa o valor `null` em JavaScript.
+
+```rust {3} filename="lib.rs"
+#[napi]
+fn get_null() -> Null {
+	Null
+}
+
+#[napi]
+fn get_env(env: String) -> Option<String> {
+	match std::env::var(env) {
+		Ok(val) => Some(val),
+		Err(e) => None,
+	}
+}
+```
+
+```ts filename="index.d.ts"
+export function getNull(): null
+export function getEnv(env: string): string | null
+```
+
+### Numbers
+
+Tipo JavaScript `Number` com tipos Rust Int/Float: `u32`, `i32`, `i64`, `f64`.
+
+Para tipos Rust como `u64`, `u128`, `i128`, confira a seção [`BigInt`](#bigint).
+
+```rust filename="lib.rs"
+#[napi]
+fn sum(a: u32, b: i32) -> i64 {
+	(b + a as i32).into()
+}
+```
+
+```ts filename="index.d.ts"
+export function sum(a: number, b: number): number
+```
+
+### String
+
+Representa o tipo `String` do JavaScript.
+
+```rust {3} filename="lib.rs"
+#[napi]
+fn greet(name: String) -> String {
+	format!("greeting, {}", name)
+}
+```
+
+```ts filename="index.d.ts"
+export function greet(name: string): string
+```
+
+### Boolean
+
+Representa o tipo `Boolean` do JavaScript.
+
+```rust filename="lib.rs"
+#[napi]
+fn is_good() -> bool {
+	true
+}
+```
+
+```ts filename="index.d.ts"
+export function isGood(): boolean
+```
+
+### Buffer
+
+```rust filename="lib.rs"
+#[napi]
+fn with_buffer(buf: Buffer) {
+  let buf: Vec<u8> = buf.into();
+  // faz alguma coisa
+}
+
+#[napi]
+fn read_buffer(file: String) -> Buffer {
+	Buffer::from(std::fs::read(file).unwrap())
+}
+```
+
+```ts filename="index.d.ts"
+export function withBuffer(buf: Buffer): void
+export function readBuffer(file: string): Buffer
+```
+
+### Object
+
+Representa valores de objeto anônimo do JavaScript.
+
+import { Callout } from 'nextra-theme-docs'
+
+<Callout type="warning" emoji="⚠️">
+**Desempenho**
+
+Os custos de conversão de `Object` entre JavaScript e Rust são maiores do que outros tipos primitivos.
+
+Cada chamada de `Object.get("key")` é na verdade despachada para o lado do node, incluindo duas etapas: buscar valor, converter JS para valor de Rust, e o mesmo vale para `Object.set("key", v)`.
+
+</Callout>
+
+```rust filename="lib.rs"
+#[napi]
+fn keys(obj: Object) -> Vec<String> {
+	Object::keys(&obj).unwrap()
+}
+
+#[napi]
+fn log_string_field(obj: Object, field: String) {
+	println!("{}: {:?}", &field, obj.get::<String>::(field.as_ref()));
+}
+
+#[napi]
+fn create_obj(env: Env) -> Object {
+	let mut obj = env.create_object().unwrap();
+	obj.set("test", 1).unwrap();
+	obj
+}
+```
+
+```ts filename="index.d.ts"
+export function keys(obj: object): Array<string>
+export function logStringField(obj: object): void
+export function createObj(): object
+```
+
+Se você deseja que o **NAPI-RS** converta objetos do JavaScript com a mesma forma definida em Rust, você pode usar o macro `#[napi]` com o atributo `object`.
+
+```rust filename="lib.rs"
+/// #[napi(object)] requer que todos os campos da struct sejam públicos
+#[napi(object)]
+struct PackageJson {
+	pub name: String,
+	pub version: String,
+	pub dependencies: Option<HashMap<String, String>>,
+	pub dev_dependencies: Option<HashMap<String, String>>,
+}
+
+#[napi]
+fn log_package_name(package_json: PackageJson) {
+	println!("name: {}", package_json.name);
+}
+
+#[napi]
+fn read_package_json() -> PackageJson {
+	// ...
+}
+```
+
+```ts filename="index.d.ts"
+export interface PackageJson {
+  name: string
+  version: string
+  dependencies: Record<string, string> | null
+  devDependencies: Record<string, string> | null
+}
+export function logPackageName(packageJson: PackageJson): void
+export function readPackageJson(): PackageJson
+```
+
+<Callout type="warning" emoji="⚠️">
+**Clone sobre Referência**
+
+A estrutura `#[napi(object)]` passada na função Rust `fn` é clonada do **_JavaScript Object_**. Qualquer mutação nela não será refletida no objeto **_JavaScript_**.
+
+</Callout>
+
+```rust filename="lib.rs"
+/// #[napi(object)] requer que todos os campos da struct sejam públicos
+#[napi(object)]
+struct Animal {
+	pub name: String,
+}
+
+#[napi]
+fn change_animal_name(mut animal: Animal) {
+  animal.name = "cat".to_string();
+}
+```
+
+```js
+const animal = { name: 'dog' }
+changeAnimalName(animal)
+console.log(animal.name) // "dog"
+```
+
+### Array
+
+Porque os valores de `Array` em JavaScript podem conter elementos com tipos diferentes, mas `Vec<T>`
+em Rust só pode conter elementos do mesmo tipo. Portanto, existem duas maneiras diferentes para os tipos de array.
+
+<Callout type="warning" emoji="⚠️">
+**Desempenho**
+
+Como o tipo `Array` do JavaScript é realmente suportado por `Object`, o desempenho de manipulação de `Array`s seria o mesmo que o de `Object`s.
+
+A conversão entre `Array` e `Vec<T>` é ainda mais pesada, com complexidade `O(2n)`.
+
+</Callout>
+
+```rust filename="lib.rs"
+#[napi]
+fn arr_len(arr: Array) -> u32 {
+  arr.len()
+}
+
+#[napi]
+fn get_tuple_array(env: Env) -> Array {
+  let mut arr = env.create_array(2).unwrap();
+
+  arr.insert(1).unwrap();
+  arr.insert("test").unwrap();
+
+  arr
+}
+
+#[napi]
+fn vec_len(nums: Vec<u32>) -> u32 {
+  u32::try_from(nums.len()).unwrap()
+}
+
+#[napi]
+fn get_nums() -> Vec<u32> {
+  vec![1, 1, 2, 3, 5, 8]
+}
+```
+
+```ts filename="index.d.ts"
+export function arrLen(arr: unknown[]): number
+export function getTupleArray(): unknown[]
+export function vecLen(nums: Array<number>): number
+export function getNums(): Array<number>
+```
+
+### BigInt
+
+Isso requer o recurso `napi6`.
+
+<Callout type="warning" emoji="⚠️">
+  A única maneira de passar `BigInt` em `Rust` é usando o tipo `BigInt`. Mas
+  você pode retornar `BigInt`, `i64n`, `u64`, `i128`, `u128`. Retornar `i64`
+  será tratado como um número `JavaScript`, não `BigInt`.
+</Callout>
+
+<Callout>
+  A razão pela qual as funções Rust não podem receber `i128` `u128` `u64` `i64n`
+  como argumentos é que eles podem perder precisão ao converter `BigInt` do
+  JavaScript para eles. Você pode usar `BigInt::get_u128`, `BigInt::get_i128`
+  ... para obter o valor em `BigInt`. O valor de retorno desses métodos também
+  indica se houve perda de precisão.
+</Callout>
+
+```rust filename="lib.rs"
+/// O valor de retorno de `get_u128` é (signed: bool, value: u128, lossless: bool)
+#[napi]
+fn bigint_add(a: BigInt, b: BigInt) -> u128 {
+  a.get_u128().1 + b.get_u128().1
+}
+
+#[napi]
+fn create_big_int_i128() -> i128 {
+  100
+}
+```
+
+```ts filename="index.d.ts"
+export function bigintAdd(a: BigInt, b: BigInt): BigInt
+export function createBigIntI128(): BigInt
+```
+
+### TypedArray
+
+<Callout>
+  Ao contrário do objeto JavaScript, o `TypedArray` passado para a função Rust é
+  uma **Referência**. Nenhum dado `Copy` ou `Clone` será realizado. Toda mutação
+  no `TypedArray` será refletida no `TypedArray` JavaScript original.
+</Callout>
+
+```rust filename="lib.rs"
+#[napi]
+fn convert_u32_array(input: Uint32Array) -> Vec<u32> {
+  input.to_vec()
+}
+
+#[napi]
+fn create_external_typed_array() -> Uint32Array {
+  Uint32Array::new(vec![1, 2, 3, 4, 5])
+}
+
+#[napi]
+fn mutate_typed_array(mut input: Float32Array) {
+  for item in input.as_mut() {
+    *item *= 2.0;
+  }
+}
+```
+
+```ts filename="index.d.ts"
+export function convertU32Array(input: Uint32Array): Array<number>
+export function createExternalTypedArray(): Uint32Array
+export function mutateTypedArray(input: Float32Array): void
+```
+
+```js filename="test.mjs"
+import { convertU32Array, mutateTypedArray } from './index.js'
+
+convertU32Array(new Uint32Array([1, 2, 3, 4, 5])) // [1, 2, 3, 4, 5]
+mutateTypedArray(new Float32Array([1, 2, 3, 4, 5])) // Float32Array(5) [ 2, 4, 6, 8, 10 ]
+```

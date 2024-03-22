@@ -1,0 +1,45 @@
+---
+description: Summary of cross build NAPI-RS packages.
+---
+
+# Sumário da compilação cruzada de pacotes NAPI-RS
+
+O NAPI-RS tem como objetivo fornecer uma solução completa para a construção de complementos nativos do Node.js, especialmente para usuários empresariais.
+
+Para os projetos de código aberto no GitHub, o **NAPI-RS** forneceu suporte integrado para CI/CD para construção e publicação de binários pré-compilados para Windows, Linux, macOS e FreeBSD com o lançamento do **NAPI-RS** v2. Também existem muitos usuários que estão usando CI auto-hospedado e desejam construir complementos nativos para várias plataformas em um único sistema (principalmente Linux). O **NAPI-RS** v2 fornece uma solução para esse caso de uso.
+
+Há um [projeto de demonstração](https://github.com/napi-rs/cross-build) para aqueles usuários que desejam construir complementos multiplataforma em um único sistema. A CI deste projeto constrói pacotes **NAPI-RS** em um CI Linux do GitHub e produz complementos para as seguintes plataformas:
+
+- Windows x64
+- Windows x86
+- Windows arm64
+- macOS x64
+- macOS arm64
+- Linux x64 gnu (`glibc` 2.17)
+- Linux x64 musl
+- Linux arm64 gnu (`glibc` 2.17)
+- Linux arm64 musl
+- Linux armv7 gnueabihf
+- Android arm64
+- Android armv7
+
+Se você estiver construindo pacotes NAPI-RS com um CI Linux auto-hospedado, você deve instalar o seguinte conjunto de ferramentas para construir os complementos para as plataformas acima:
+
+- Conjunto de ferramentas `Rust`, incluindo `Cargo`, `rustup` e sua std de destino Rust. ex: `rustup target add aarch64-apple-darwin`.
+- [`llvm`](https://apt.llvm.org/). A versão mais recente _qualificada_ é recomendada.
+- [`cargo-xwin`](https://github.com/messense/cargo-xwin) se você quiser construir para o Windows em um sistema não Windows. `cargo install cargo-xwin`.
+
+## Suporte da plataforma de hospedagem
+
+- Linux x64/arm64 tanto gnu quanto musl ✅
+- macOS x64/arm64 ✅
+- O Windows está bloqueado por: https://github.com/ziglang/zig/issues/10881
+
+## Patrocine nossa equipe
+
+https://github.com/sponsors/napi-rs/
+
+Integrar e configurar adequadamente uma cadeia de ferramentas de compilação multiplataforma na comunidade de código aberto pode ser muito tedioso e trabalhoso. Compreender esses parâmetros de compilação e resolver possíveis bugs pode ser muito demorado e difícil de testar.
+Um agradecimento especial para nosso membro da equipe [@messense](https://github.com/messense) que tem trabalhado no `cargo-xwin`, que nos permite construir complementos nativos do Windows em sistemas não Windows.
+
+Se você está usando NAPI-RS em sua empresa, considere patrocinar nossa equipe para apoiar o desenvolvimento do NAPI-RS. Ficaremos muito gratos pelo seu apoio.
