@@ -95,7 +95,7 @@ O primeiro argumento no parâmetro genérico é o tipo de retorno da `Threadsafe
 
 ### `ErrorStrategy::CalleeHandled`
 
-O `Err` do código Rust será passado como o primeiro argumento para a função de retorno de chamada(callback) JavaScript. Esse comportamento segue as convenções de retorno de chamada assíncrona do Node.js: https://nodejs.org/en/knowledge/errors/what-are-the-error-conventions/. Muitas APIs assíncronas no Node.js são projetadas nesse formato, como `fs.read`.
+O `Err` do código Rust será passado como o primeiro argumento para a função de retorno de chamada(callback) JavaScript. Esse comportamento segue as convenções de retorno de chamada assíncrona do Node.js: https://nodejs.org/en/learn/asynchronous-work/javascript-asynchronous-programming-and-callbacks#handling-errors-in-callbacks. Muitas APIs assíncronas no Node.js são projetadas nesse formato, como `fs.read`.
 
 Com `ErrorStrategy::CalleeHandled`, você deve chamar a `ThreadsafeFunction` com o tipo `Result`, para que o `Error` seja tratado e retornado para a função de callback JavaScript:
 

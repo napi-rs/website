@@ -1,0 +1,33 @@
+---
+title: 'TypedArray'
+description: JavaScript TypedArray primitive.
+---
+
+import { Callout } from 'nextra-theme-docs'
+
+# TypedArray
+
+`TypedArray` 描述了一个底层 [二进制数据缓冲区](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer) 的类数组视图，
+使用 `TypedArray` 允许你在 Node.js 和 Rust 之间无需复制或移动底层数据也可共享数据。
+
+## Buffer
+
+[`Buffer`](https://nodejs.org/api/buffer.html) 是 JavaScript的
+[`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)
+的子类，它经常用于在 Node.js 和 Rust 之间共享数据。
+
+`Buffer` 可以通过 `Vec<u8>` 创建，如果你以这种方式创建 `Buffer`，`Vec<u8>` 的所有权将被转移给 `v8`，当 `v8` GC `Buffer` 时，`Vec<u8>` 将被丢弃。
+
+```rust {6} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn create_buffer() -> Buffer {
+  vec![0, 1, 2].into()
+}
+```
+
+<Callout>
+  底层的 `Vec<u8>` 不会以这种方式被移动或复制。
+</Callout>
