@@ -484,7 +484,7 @@ export function Ecosystem() {
       >
         <img
           alt="rspack"
-          src="https://www.rspack.dev/static/image/logo.b5ceba6d.png"
+          src="https://assets.rspack.dev/rspack/rspack-logo.svg"
           style={{ height: 40, marginRight: '1em' }}
         />
         <b
