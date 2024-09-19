@@ -19,7 +19,7 @@ There are two ways to pass this argument:
 
   ```toml
   [target.x86_64-unknown-linux-musl]
-  crt_static = false
+  rustflags = ["-C", "target-feature=-crt-static"]
   ```
 
 ## Build for `Windows i686`
