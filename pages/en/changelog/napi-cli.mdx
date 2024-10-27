@@ -1,0 +1,16 @@
+---
+title: '@napi-rs/cli'
+description: napi cli changelog.
+---
+
+import { RemoteContent } from 'nextra/components'
+
+import { getChangelog } from '@/components/changelog-generator'
+
+# @napi-rs/cli
+
+export const getStaticProps = async () => {
+  return getChangelog('@napi-rs/cli')
+}
+
+<RemoteContent />

@@ -1,0 +1,43 @@
+---
+description: Attach native object to existed JsObject.
+---
+
+# Wrap native object
+
+Encapsula(wrap) uma instância nativa em um objeto JavaScript. A instância nativa pode ser recuperada posteriormente usando `Env::unwrap`.
+
+```rust
+struct Native {
+  value: i32,
+}
+
+#[js_function(1)]
+fn attach_native_object(ctx: CallContext) -> Result<JsUndefined> {
+  let count: i32 = ctx.get::<JsNumber>(0)?.try_into()?;
+  let mut this: JsObject = ctx.this_unchecked();
+  ctx
+    .env
+    .wrap(&mut this, Native { value: count + 100 })?;
+  ctx.env.get_undefined()
+}
+
+#[js_function(1)]
+fn get_native_object(ctx: CallContext) -> Result<JsNumber> {
+  let count: i32 = ctx.get::<JsNumber>(0)?.try_into()?;
+  let mut this: JsObject = ctx.this_unchecked();
+  let native: Native = ctx
+    .env
+    .unwrap(&mut this)?;
+  ctx.env.create_int32(native.value + 1)
+}
+```
+
+```js
+const obj = {
+  attach: attachNativeObject,
+  get: getNativeObject,
+}
+
+obj.attach(100)
+obj.get() // 101
+```

@@ -1,0 +1,6 @@
+export default {
+  bcrypt: '@node-rs/bcrypt',
+  crc32: '@node-rs/crc32',
+  'deno-lint': '@node-rs/deno-lint',
+  jieba: '@node-rs/jieba',
+}

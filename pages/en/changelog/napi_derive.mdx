@@ -1,0 +1,15 @@
+---
+description: Changelog for napi crate https://crates.io/crates/napi-derive
+---
+
+import { RemoteContent } from 'nextra/components'
+
+import { getChangelog } from '@/components/changelog-generator'
+
+# napi-derive
+
+export const getStaticProps = async () => {
+  return getChangelog('napi-derive')
+}
+
+<RemoteContent />

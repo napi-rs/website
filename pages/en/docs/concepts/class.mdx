@@ -1,0 +1,376 @@
+---
+title: 'Class'
+---
+
+# Class
+
+import { Callout } from 'nextra/components'
+
+<Callout>
+  There is no concept of a class in Rust. We use `struct` to represent a
+  JavaScript `Class`.
+</Callout>
+
+## `Constructor`
+
+### Default `constructor`
+
+If all fields in a `Rust` struct are `pub`, then you can use `#[napi(constructor)]` to make the `struct` have a default `constructor`.
+
+```rust filename="lib.rs"
+#[napi(constructor)]
+pub struct AnimalWithDefaultConstructor {
+  pub name: String,
+  pub kind: u32,
+}
+```
+
+```ts filename="index.d.ts"
+export class AnimalWithDefaultConstructor {
+  name: string
+  kind: number
+  constructor(name: string, kind: number)
+}
+```
+
+### Custom `constructor`
+
+If you want to define a custom `constructor`, you can use `#[napi(constructor)]` on your constructor `fn` in the struct `impl` block.
+
+```rust filename="lib.rs"
+// A complex struct which cannot be exposed to JavaScript directly.
+pub struct QueryEngine {}
+
+#[napi(js_name = "QueryEngine")]
+pub struct JsQueryEngine {
+  engine: QueryEngine,
+}
+
+#[napi]
+impl JsQueryEngine {
+  #[napi(constructor)]
+  pub fn new() -> Self {
+    JsQueryEngine { engine: QueryEngine::new() }
+  }
+}
+```
+
+```ts filename="index.d.ts"
+export class QueryEngine {
+  constructor()
+}
+```
+
+<Callout type="warning" emoji="⚠️">
+  **NAPI-RS** does not currently support `private constructor`. Your custom
+  constructor must be `pub` in Rust.
+</Callout>
+
+## Factory
+
+Besides `constructor`, you can also define factory methods on `Class` by using `#[napi(factory)]`.
+
+```rust filename="lib.rs"
+// A complex struct which cannot be exposed to JavaScript directly.
+pub struct QueryEngine {}
+
+#[napi(js_name = "QueryEngine")]
+pub struct JsQueryEngine {
+  engine: QueryEngine,
+}
+
+#[napi]
+impl JsQueryEngine {
+  #[napi(factory)]
+  pub fn with_initial_count(count: u32) -> Self {
+    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+  }
+}
+```
+
+```ts filename="index.d.ts"
+export class QueryEngine {
+  static withInitialCount(count: number): QueryEngine
+  constructor()
+}
+```
+
+<Callout type="warning" emoji="⚠️">
+  If no `#[napi(constructor)]` is defined in the `struct`, and you attempt to
+  create an instance (`new`) of the `Class` in JavaScript, an error will be
+  thrown.
+</Callout>
+
+```js {3} filename="test.mjs"
+import { QueryEngine } from './index.js'
+
+new QueryEngine() // Error: Class contains no `constructor`, cannot create it!
+```
+
+## `class method`
+
+You can define a JavaScript class method with `#[napi]` on a struct method in **Rust**.
+
+```rust filename="lib.rs"
+// A complex struct which cannot be exposed to JavaScript directly.
+pub struct QueryEngine {}
+
+#[napi(js_name = "QueryEngine")]
+pub struct JsQueryEngine {
+  engine: QueryEngine,
+}
+
+#[napi]
+impl JsQueryEngine {
+  #[napi(factory)]
+  pub fn with_initial_count(count: u32) -> Self {
+    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+  }
+
+  /// Class method
+  #[napi]
+  pub async fn query(&self, query: String) -> napi::Result<String> {
+    self.engine.query(query).await
+  }
+
+  #[napi]
+  pub fn status(&self) -> napi::Result<u32> {
+    self.engine.status()
+  }
+}
+```
+
+```ts filename="index.d.ts"
+export class QueryEngine {
+  static withInitialCount(count: number): QueryEngine
+  constructor()
+  query(query: string) => Promise<string>
+  status() => number
+}
+```
+
+<Callout type="warning" emoji="⚠️">
+  `async fn` needs the `napi4` and `tokio_rt` features to be enabled.
+</Callout>
+
+<Callout>
+Any `fn` in `Rust` that returns `Result<T>` will be treated as `T` in JavaScript/TypeScript. If the `Result<T>` is `Err`, a JavaScript Error will be thrown.
+</Callout>
+
+## `Getter`
+
+Define [JavaScript class `getter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get) using `#[napi(getter)]`. The Rust `fn` must be a struct method, not an associated function.
+
+```rust {22-25} filename="lib.rs"
+// A complex struct which cannot be exposed to JavaScript directly.
+pub struct QueryEngine {}
+
+#[napi(js_name = "QueryEngine")]
+pub struct JsQueryEngine {
+  engine: QueryEngine,
+}
+
+#[napi]
+impl JsQueryEngine {
+  #[napi(factory)]
+  pub fn with_initial_count(count: u32) -> Self {
+    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+  }
+
+  /// Class method
+  #[napi]
+  pub async fn query(&self, query: String) -> napi::Result<String> {
+    self.engine.query(query).await
+  }
+
+  #[napi(getter)]
+  pub fn status(&self) -> napi::Result<u32> {
+    self.engine.status()
+  }
+}
+```
+
+```ts {4} filename="index.d.ts"
+export class QueryEngine {
+  static withInitialCount(count: number): QueryEngine
+  constructor()
+  get status(): number
+}
+```
+
+## `Setter`
+
+Define [JavaScript class `setter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set) using `#[napi(setter)]`. The Rust `fn` must be a struct method, not an associated function.
+
+```rust {27-30} filename="lib.rs"
+// A complex struct which cannot be exposed to JavaScript directly.
+pub struct QueryEngine {}
+
+#[napi(js_name = "QueryEngine")]
+pub struct JsQueryEngine {
+  engine: QueryEngine,
+}
+
+#[napi]
+impl JsQueryEngine {
+  #[napi(factory)]
+  pub fn with_initial_count(count: u32) -> Self {
+    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+  }
+
+  /// Class method
+  #[napi]
+  pub async fn query(&self, query: String) -> napi::Result<String> {
+    self.engine.query(query).await
+  }
+
+  #[napi(getter)]
+  pub fn status(&self) -> napi::Result<u32> {
+    self.engine.status()
+  }
+
+  #[napi(setter)]
+  pub fn count(&mut self, count: u32) {
+    self.engine.count = count;
+  }
+}
+```
+
+```ts {5} filename="index.d.ts"
+export class QueryEngine {
+  static withInitialCount(count: number): QueryEngine
+  constructor()
+  get status(): number
+  set count(count: number)
+}
+```
+
+## Class as argument
+
+`Class` is different from [`Object`](./object). `Class` can have Rust methods and associated functions on it. Every field in `Class` can mutated in JavaScript.
+
+So the ownership of the `Class` is actually transferred to the JavaScript side while you are creating it. It is managed by the JavaScript GC, and you can only pass it back by passing its `reference`.
+
+```rust {1,5} filename="lib.rs"
+pub fn accept_class(engine: &QueryEngine) {
+  // ...
+}
+
+pub fn accept_class_mut(engine: &mut QueryEngine) {
+  // ...
+}
+```
+
+```ts filename="index.d.ts"
+export function acceptClass(engine: QueryEngine): void
+export function acceptClassMut(engine: QueryEngine): void
+```
+
+## Property attributes
+
+The default Property attributes are `writable = true`, `enumerable = true` and `configurable = true`. You can control the Property attributes over the `#[napi]` macro:
+
+```rust {20} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+// A complex struct which cannot be exposed to JavaScript directly.
+#[napi]
+pub struct QueryEngine {
+  num: i32,
+}
+
+#[napi]
+impl QueryEngine {
+  #[napi(constructor)]
+  pub fn new() -> Result<Self> {
+    Ok(Self {
+      num: 42,
+    })
+  }
+
+  // writable / enumerable / configurable
+  #[napi(writable = false)]
+  pub fn get_num(&self) -> i32 {
+    self.num
+  }
+}
+```
+
+In this case, the `getNum` method of `QueryEngine` is not writable:
+
+```js {4} filename="main.mjs"
+import { QueryEngine } from './index.js'
+
+const qe = new QueryEngine()
+qe.getNum = function () {} // TypeError: Cannot assign to read only property 'getNum' of object '#<QueryEngine>'
+```
+
+## Custom Finalize logic
+
+NAPI-RS will drop the Rust struct wrapped in the JavaScript object when the JavaScript object is garbage collected. You can also specify a custom finalize logic for the Rust struct.
+
+```rust {4, 26} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi(custom_finalize)]
+pub struct CustomFinalize {
+  width: u32,
+  height: u32,
+  inner: Vec<u8>,
+}
+
+#[napi]
+impl CustomFinalize {
+  #[napi(constructor)]
+  pub fn new(mut env: Env, width: u32, height: u32) -> Result<Self> {
+    let inner = vec![0; (width * height * 4) as usize];
+    let inner_size = inner.len();
+    env.adjust_external_memory(inner_size as i64)?;
+    Ok(Self {
+      width,
+      height,
+      inner,
+    })
+  }
+}
+
+impl ObjectFinalize for CustomFinalize {
+  fn finalize(self, mut env: Env) -> Result<()> {
+    env.adjust_external_memory(-(self.inner.len() as i64))?;
+    Ok(())
+  }
+}
+```
+
+First, you can set `custom_finalize` attribute in `#[napi]` macro, and NAPI-RS will not generate the default `ObjectFinalize` for the Rust struct.
+
+Then, you can implement `ObjectFinalize` yourself for the Rust struct.
+
+In this case, the `CustomFinalize` struct increase external memory in the **constructor** and decrease it in `fn finalize`.
+
+## `instance of`
+
+There is `fn instance_of` on all `#[napi]` class:
+
+```rust {9} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub struct NativeClass {}
+
+#[napi]
+pub fn is_native_class_instance(env: Env, value: Unknown) -> Result<bool> {
+  NativeClass::instance_of(env, value)
+}
+```
+
+```js filename="main.mjs"
+import { NativeClass, isNativeClassInstance } from './index.js'
+
+const nc = new NativeClass()
+console.log(isNativeClassInstance(nc)) // true
+console.log(isNativeClassInstance(1)) // false
+```
