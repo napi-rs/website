@@ -1,0 +1,94 @@
+---
+description: The history of how to release native packages.
+---
+
+# Release de Pacotes Nativos
+
+Como você pode ver na seção anterior, o método de distribuição dominante na comunidade é **_distribuir o código-fonte `C/C++` diretamente_**.
+No entanto, essa abordagem não é uma solução de distribuição aceitável para desenvolvedores que usam `Rust` para escrever complementos nativos do Node.js,
+devido à complexidade e tempo de compilação da cadeia de ferramentas do Rust, tornando a distribuição do código-fonte diretamente um grande problema para os desenvolvedores que usam esses complementos nativos.
+
+A seguir, descreverei várias maneiras de distribuir complementos nativos, incluindo **_distribuição direta do código-fonte_**. Após esta introdução, acredito que você poderá encontrar a forma mais adequada de distribuição de complementos nativos para `Rust`.
+
+## 1. Distribuição do Código-fonte
+
+Usar esse método requer que o usuário instale ferramentas de compilação como `node-gyp`, `cmake`, `g++`, etc.
+Isso não é um problema durante a fase de desenvolvimento, mas com a popularidade do `Docker`,
+instalar um monte de ferramentas de compilação em um determinado ambiente `Docker` é um pesadelo para muitas equipes.
+E se esse problema não for tratado adequadamente, aumentará o tamanho da `imagem do Docker` sem motivo (na verdade, esse problema pode ser resolvido compilando a imagem do Docker em uma imagem de Construtor especial antes de compilá-la, mas conversei com várias empresas e poucas equipes farão isso).
+
+## 2. Distribuir apenas o código JavaScript, baixar o produto correspondente na fase `postinstall`
+
+Algumas dependências de compilação de complementos nativos são tão complexas que não é prático para o desenvolvedor médio do Node instalar um conjunto completo de ferramentas de compilação durante a fase de desenvolvimento.
+Outro cenário é que o próprio complemento nativo é tão complexo que pode levar muito tempo para compilar, e o autor da biblioteca não gostaria que as pessoas passassem horas apenas instalando-a ao usar sua biblioteca.
+
+Então, outra maneira popular é usar as ferramentas de `CI` para **_pré-compilar_** o complemento nativo na tarefa de `CI` para cada plataforma (win32/darwin/linux/...) e distribuir apenas o código JavaScript correspondente,
+enquanto o arquivo do complemento **_pré-compilado_** é baixado do **CDN/lançamento do GitHub** por meio do script `postinstall`.
+Por exemplo, existe uma ferramenta popular na comunidade que faz isso: [node-pre-gyp](https://github.com/mapbox/node-pre-gyp). Esta ferramenta faz o upload automaticamente do complemento nativo compilado em `CI` para um local específico com base na configuração do usuário e, em seguida, o baixa do local de upload durante a instalação.
+
+Este método de distribuição parece impecável, mas existem vários problemas que não podem ser contornados:
+
+- Ferramentas como `node-pre-gyp` adicionam muitas dependências **irrelevantes em tempo de execução** a um projeto.
+- Não importa para qual `CDN` você faça o upload, é difícil acomodar usuários de todo o mundo. Você se lembra das memórias dolorosas de ficar preso em `postinstall` por horas para baixar arquivos de algum lançamento do GitHub e depois falhar? É verdade que construir um espelho binário na região mais próxima pode amenizar parcialmente esse problema, mas o espelho não está sempre sincronizado/faltando de tempos em tempos.
+- Não é amigável para redes privadas. Muitas empresas podem não conseguir acessar a extranet em suas máquinas de CI/CD (elas terão um NPM privado para acompanhar, mas se não tiverem, não adianta discutir), muito menos baixar um complemento nativo de algum CDN.
+
+## 3. O complemento nativo para diferentes plataformas é distribuído por meio de pacotes npm diferentes
+
+A nova ferramenta de compilação da geração [esbuild](https://github.com/evanw/esbuild), que é muito popular no front-end, usa essa abordagem. Cada complemento nativo corresponde a um pacote npm e, em seguida, o script `postinstall` instala o pacote do complemento nativo para o sistema atual.
+
+Outra maneira é expor os pacotes a serem instalados pelo usuário, usar todos os pacotes nativos como `optionalDependencies
+
+```json
+{
+  "name": "@node-rs/bcrypt",
+  "version": "0.5.0",
+  "os": ["linux", "win32", "darwin"],
+  "cpu": ["x64"],
+  "optionalDependencies": {
+    "@node-rs/bcrypt-darwin": "^0.5.0",
+    "@node-rs/bcrypt-linux": "^0.5.0",
+    "@node-rs/bcrypt-win32": "^0.5.0"
+  }
+}
+```
+
+```json
+{
+  "name": "@node-rs/bcrypt-darwin",
+  "version": "0.5.0",
+  "os": ["darwin"],
+  "cpu": ["x64"]
+}
+```
+
+```json
+{
+  "name": "@node-rs/bcrypt-linux",
+  "version": "0.5.0",
+  "os": ["linux"],
+  "cpu": ["x64"]
+}
+```
+
+```json
+{
+  "name": "@node-rs/bcrypt-win32",
+  "version": "0.5.0",
+  "os": ["win32"],
+  "cpu": ["x64"]
+}
+```
+
+Esta abordagem é a distribuição menos intrusiva para usuários que utilizam complementos nativos e é usada por [@ffmpeg-installer/ffmpeg](https://github.com/kribblo/node-ffmpeg-installer#readme).
+
+No entanto, essa abordagem impõe uma carga de trabalho adicional aos autores de complementos nativos, incluindo a necessidade de escrever ferramentas para gerenciar o binário de lançamento e um monte de pacotes, que geralmente são muito difíceis de depurar (e normalmente abrangem vários sistemas e arquiteturas de CPU).
+
+Essas ferramentas precisam gerenciar todo o fluxo do complemento através das fases de desenvolvimento -> versão de lançamento local -> CI -> artefatos -> fase de implantação. Além disso, há muitas configurações de CI/CD para escrever/depurar, o que é demorado e tedioso.
+
+## Conclusão
+
+O complemento nativo com o terceiro método de distribuição (**distribuição de complementos nativos para diferentes plataformas por meio de pacotes npm diferentes**) é o mais fácil de usar e o menos mentalmente cansativo para os desenvolvedores que o utilizam, mas esse método de distribuição impõe custos adicionais de manutenção aos autores de complementos nativos.
+
+Mais tarde, descreveremos como o `napi-rs` pode ajudar os desenvolvedores de complementos nativos a resolver o problema dos altos custos de manutenção de CI/CD com essa distribuição.
+
+{/* 采用第 3 种分发方式(**不同平台的 native addon 通过不同的 npm package 分发**)的 native addon 是最易用的，对于使用这个 native addon 的开发者来说他们的心智负担最小，但这种分发方式会给 native addon 的作者带来额外的维护成本。后面的内容我们会介绍 `napi-rs` 如何在这种分发方式下帮 native addon 的开发者们解决 CI/CD 维护成本比较高的问题。 */}

@@ -1,17 +1,25 @@
-const { PerfseePlugin } = require('@perfsee/webpack')
-const withNextra = require('nextra')({
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+import { PerfseePlugin } from '@perfsee/webpack'
+import nextra from 'nextra'
+
+const withNextra = nextra({
   theme: 'nextra-theme-docs',
   themeConfig: './nextra.config.js',
-  flexsearch: true,
+  search: true,
   staticImage: true,
 })
 
-module.exports = withNextra({
+export default withNextra({
   i18n: {
-    defaultLocale: process.env.LOCALE || 'en',
-    locales: ['en', 'cn', 'pt-BR'],
+    defaultLocale: 'en',
+    locales: ['en', 'pt-BR'],
   },
-  webpack(config, { dev, isServer }) {
+  webpack(
+    /** @type {import('webpack').Configuration} */ config,
+    { dev, isServer },
+  ) {
     if (!dev && !isServer) {
       const plugin = new PerfseePlugin({
         project: 'napi-rs-website',
@@ -33,6 +41,8 @@ module.exports = withNextra({
         outputPath: `${isServer ? '../' : ''}static/videos/`,
       },
     })
+
+    config.resolve.alias['@'] = join(fileURLToPath(import.meta.url), '..')
     return config
   },
 })

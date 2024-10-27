@@ -1,0 +1,51 @@
+---
+description: Using thread safe function to interactive with native thread.
+---
+
+# Thread safe function
+
+> As funções JavaScript normalmente só podem ser chamadas a partir da thread principal de um addon nativo. Se um addon cria threads adicionais, então as funções N-API que requerem um `Env`, `JsValue`, ou `Ref` não devem ser chamadas a partir dessas threads. <br/>
+> Quando um addon tem threads adicionais e as funções JavaScript precisam ser invocadas com base no processamento concluído por essas threads, essas threads devem se comunicar com a thread principal do addon para que ela possa invocar a função JavaScript em nome delas. As APIs de funções thread-safe fornecem uma maneira fácil de fazer isso. <br/>
+> Essas APIs fornecem o tipo `ThreadSafeFunction`, bem como APIs para criar, destruir e chamar objetos desse tipo. `Env::create_threadsafe_function` cria uma referência persistente para uma `JsFunction` que contém uma função JavaScript que pode ser chamada de várias threads. As chamadas ocorrem de forma assíncrona. Isso significa que os valores com os quais o retorno de chamada JavaScript deve ser chamado serão colocados em uma fila e, para cada valor na fila, uma chamada eventualmente será feita para a função JavaScript. <br />
+> Após a criação de uma `ThreadSafeFunction`, um retorno de chamada `Finalize`pode ser fornecido. Esse retorno de chamada será invocado na thread principal quando a função thread-safe estiver prestes a ser destruída. Ele recebe o contexto e os dados de finalização fornecidos durante a construção e fornece uma oportunidade para limpar após as threads, por exemplo, chamando `uv_thread_join()`. Além da thread do loop principal, nenhuma thread deve estar usando a função thread-safe após a conclusão do retorno de chamada de finalização.
+
+```rust
+#[js_function(1)]
+pub fn test_threadsafe_function(ctx: CallContext) -> Result<JsUndefined> {
+  let func = ctx.get::<JsFunction>(0)?;
+
+  let tsfn =
+    ctx
+      .env
+      .create_threadsafe_function(&func, 0, |ctx: ThreadSafeCallContext<Vec<u32>>| {
+        ctx
+          .value
+          .iter()
+          .map(|v| ctx.env.create_uint32(*v))
+          .collect::<Result<Vec<JsNumber>>>()
+      })?;
+
+  let tsfn_cloned = tsfn.clone();
+
+  thread::spawn(move || {
+    let output: Vec<u32> = vec![0, 1, 2, 3];
+    // Está tudo bem em chamar uma função thread-safe várias vezes.
+    tsfn.call(Ok(output.clone()), ThreadsafeFunctionCallMode::Blocking);
+  });
+
+  thread::spawn(move || {
+    let output: Vec<u32> = vec![3, 2, 1, 0];
+    // Está tudo bem em chamar uma função thread-safe várias vezes.
+    tsfn_cloned.call(Ok(output.clone()), ThreadsafeFunctionCallMode::NonBlocking);
+  });
+
+  ctx.env.get_undefined()
+}
+```
+
+```js
+testThreadsafeFunction((err, ...values) => {
+  console.log(err) // null
+  console.log(values) // [0, 1, 2, 3] and [3, 2, 1, 0]
+})
+```

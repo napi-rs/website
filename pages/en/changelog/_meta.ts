@@ -1,0 +1,7 @@
+export default {
+  napi: 'napi',
+  napi_derive: 'napi-derive',
+  napi_sys: 'napi-sys',
+  napi_build: 'napi-build',
+  'napi-cli': '@napi-rs/cli',
+}

@@ -1,4 +1,4 @@
-import { buildDynamicMDX, buildDynamicMeta } from 'nextra/remote'
+import { buildDynamicMDX } from 'nextra/remote'
 
 export const getChangelog = async (packageName, locale = 'en') => {
   let page = 1
@@ -6,6 +6,8 @@ export const getChangelog = async (packageName, locale = 'en') => {
     `https://api.github.com/repos/napi-rs/napi-rs/releases?per_page=100&page=${page}`,
     {
       headers: {
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
         Authorization: `token ${process.env.GITHUB_TOKEN}`,
       },
     },
@@ -18,6 +20,8 @@ export const getChangelog = async (packageName, locale = 'en') => {
         `https://api.github.com/repos/napi-rs/napi-rs/releases?per_page=100&page=${page}`,
         {
           headers: {
+            Accept: 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
             Authorization: `token ${process.env.GITHUB_TOKEN}`,
           },
         },
@@ -39,12 +43,11 @@ export const getChangelog = async (packageName, locale = 'en') => {
               )
             return `## <a href="${
               release.html_url
-            }" target="_blank" rel="noopener">${release.tag_name}</a> 
+            }" target="_blank" rel="noopener">${release.tag_name}</a>
   ${new Date(release.published_at).toLocaleDateString(locale)} \n${body}`
           })
           .join('\n\n'),
       )),
-      ...(await buildDynamicMeta()),
     },
     revalidate: 10,
   }

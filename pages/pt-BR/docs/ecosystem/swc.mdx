@@ -1,0 +1,66 @@
+---
+description: swc is a super-fast typescript / javascript compiler written in rust.
+---
+
+# swc
+
+<a href="https://www.npmjs.com/package/@swc/core" target="_blank">
+  <img alt="npm Downloads" src="https://img.shields.io/npm/dm/@swc/core" />
+</a>
+<a href="https://github.com/swc-project/swc" target="_blank">
+  <img
+    alt="GitHub stars"
+    src="https://img.shields.io/github/stars/swc-project/swc?style=social"
+  />
+</a>
+
+<br />
+<br />
+
+> O swc é um compilador TypeScript / JavaScript super rápido escrito em Rust.
+
+## Performance
+
+> ⚠️ Observação: A API `transformSync` no esbuild tem uma grande sobrecarga. Portanto, o `swc` é apenas mais rápido que o esbuild na API `transformSync`. Na API `transform`, o `esbuild` é cerca de **1 ~ 1,6x mais rápido** que o `swc`. <br/>
+> Transforme o `AjaxObservable.ts` do RxJS em JavaScript ES2015 & CommonJS. Código de benchmark: [bench](https://github.com/Brooooooklyn/swc-node/blob/master/bench/index.ts)
+
+**Hardware info**:
+
+```
+Model Name: MacBook Pro
+Model Identifier: MacBookPro15,1
+Processor Name: 6-Core Intel Core i7
+Processor Speed: 2.6 GHz
+Number of Processors: 1
+Total Number of Cores: 6
+L2 Cache (per Core): 256 KB
+L3 Cache: 12 MB
+Hyper-Threading Technology: Enabled
+Memory: 16 GB
+```
+
+### `transformSync`
+
+```text {1}
+@swc/core x 368 ops/sec ±4.18% (84 runs sampled)
+esbuild x 42.16 ops/sec ±1.76% (55 runs sampled)
+typescript x 24.52 ops/sec ±14.38% (51 runs sampled)
+babel x 22.08 ops/sec ±10.17% (44 runs sampled)
+Transform rxjs/AjaxObservable.ts benchmark bench suite: Fastest is @swc/core
+```
+
+### `transform` single thread
+
+```text {2}
+@swc/core x 291 ops/sec ±1.66% (78 runs sampled)
+esbuild x 454 ops/sec ±3.66% (73 runs sampled)
+Transform rxjs/AjaxObservable.ts async benchmark bench suite: Fastest is esbuild
+```
+
+### `transform` parallel
+
+```text {1-2}
+@swc/core x 946 ops/sec ±2.36% (74 runs sampled)
+esbuild x 931 ops/sec ±3.56% (65 runs sampled)
+Transform rxjs/AjaxObservable.ts parallel benchmark bench suite: Fastest is @swc-node/core,esbuild
+```

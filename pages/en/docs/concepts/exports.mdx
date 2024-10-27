@@ -1,0 +1,66 @@
+# Exports
+
+import { Callout } from 'nextra/components'
+
+<Callout type="info">
+Unlike defining modules in Node.js, we don't need to explicitly register exports like `module.exports.xxx = xxx`.
+
+The `#[napi]` macro will automatically generate module registering code for you.
+This auto registering idea was inspired by [node-bindgen](https://github.com/infinyon/node-bindgen).
+
+</Callout>
+
+## `Function`
+
+Exporting a function is incredibly simple. Just decorate a normal rust function with `#[napi]`:
+
+```rust filename="lib.rs"
+#[napi]
+fn sum(a: u32, b: u32) -> u32 {
+	a + b
+}
+```
+
+## `Const`
+
+```rust filename="lib.rs"
+#[napi]
+pub const DEFAULT_COST: u32 = 12;
+```
+
+```ts filename="index.d.ts"
+export const DEFAULT_COST: number
+```
+
+## `Class`
+
+See [`class section`](./class) for more details.
+
+```rust filename="lib.rs"
+#[napi(constructor)]
+struct Animal {
+  pub name: String,
+  pub kind: u32,
+}
+
+#[napi]
+impl Animal {
+  #[napi]
+  pub fn change_name(&mut self, new_name: String) {
+    self.name = new_name;
+  }
+}
+```
+
+## `Enum`
+
+See [`enum section`](./enum) for more details.
+
+```rust filename="lib.rs"
+#[napi]
+pub enum Kind {
+  Dog,
+  Cat,
+  Duck,
+}
+```

@@ -1,0 +1,52 @@
+---
+description: jieba-rs binding to Node.js.
+---
+
+# @node-rs/jieba
+
+<a href="https://www.npmjs.com/package/@node-rs/jieba" target="_blank">
+  <img alt="npm Downloads" src="https://img.shields.io/npm/dm/@node-rs/jieba" />
+</a>
+<a href="https://github.com/napi-rs/node-rs" target="_blank">
+  <img
+    alt="GitHub stars"
+    src="https://img.shields.io/github/stars/napi-rs/node-rs?style=social"
+  />
+</a>
+
+> [jieba-rs](https://github.com/messense/jieba-rs) binding to Node.js.
+
+## Performance
+
+**Hardware info**:
+
+```
+Model Name: MacBook Pro
+Model Identifier: MacBookPro15,1
+Processor Name: 6-Core Intel Core i7
+Processor Speed: 2.6 GHz
+Number of Processors: 1
+Total Number of Cores: 6
+L2 Cache (per Core): 256 KB
+L3 Cache: 12 MB
+Hyper-Threading Technology: Enabled
+Memory: 16 GB
+```
+
+```bash {3,7,11,15}
+@node-rs/jieba x 3,763 ops/sec ±1.18% (92 runs sampled)
+nodejieba x 2,783 ops/sec ±0.67% (91 runs sampled)
+Cut 1184 words bench suite: Fastest is @node-rs/jieba
+
+@node-rs/jieba x 16.10 ops/sec ±1.58% (44 runs sampled)
+nodejieba x 9.81 ops/sec ±2.39% (29 runs sampled)
+Cut 246568 words bench suite: Fastest is @node-rs/jieba
+
+@node-rs/jieba x 1,739 ops/sec ±0.87% (92 runs sampled)
+nodejieba x 931 ops/sec ±1.31% (89 runs sampled)
+Tag 1184 words bench suite: Fastest is @node-rs/jieba
+
+@node-rs/jieba x 6.19 ops/sec ±2.01% (20 runs sampled)
+nodejieba x 3.06 ops/sec ±5.39% (12 runs sampled)
+Tag 246568 words bench suite: Fastest is @node-rs/jieba
+```

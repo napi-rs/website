@@ -1,7 +1,7 @@
-import { useSSG } from 'nextra/ssg'
+import { useData } from 'nextra/hooks'
 
 export function Sponsors() {
-  const sponsorsSVG = useSSG()
+  const sponsorsSVG = useData()
   const reg =
     /<svg xmlns="http:\/\/www.w3.org\/2000\/svg" xmlns:xlink="http:\/\/www.w3.org\/1999\/xlink" width="([0-9]+)" height="([0-9]+)">/
   const [_, width, height] = reg.exec(sponsorsSVG)

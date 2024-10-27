@@ -3,15 +3,15 @@ import Script from 'next/script'
 
 const LOADING_LOCALES = {
   en: 'Loading',
-  cn: '正在加载',
   'pt-BR': 'Carregando',
 }
 
 const PLACEHOLDER_LOCALES = {
   en: 'Search documentation',
-  cn: '搜索文档',
   'pt-BR': 'Buscar documentação',
 }
+
+const DEFAULT_LOCALE = 'en'
 
 export default {
   docsRepositoryBase: 'https://github.com/napi-rs/website/blob/main',
@@ -153,7 +153,6 @@ export default {
   },
   i18n: [
     { locale: 'en', text: 'English' },
-    { locale: 'cn', text: '简体中文' },
     { locale: 'pt-BR', text: 'Português do Brasil' },
   ],
   useNextSeoProps: () => ({ titleTemplate: '%s \u2013 NAPI-RS' }),
