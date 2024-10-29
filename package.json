@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@perfsee/webpack": "^1.10.0",
-    "@types/node": "^20.10.5",
+    "@types/node": "^22.0.0",
     "@types/react": "^18.2.45",
     "@types/sharp": "^0.32.0",
     "autoprefixer": "^10.4.16",
