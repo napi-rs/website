@@ -209,9 +209,9 @@ export class ExternalObject<T> {
 export function sum(a: number, b: number): number
 ```
 
-Let's create a `test.mjs` file to test the generated `sum` function:
+Let's create a `main.mjs` file to test the generated `sum` function:
 
-```js filename="test.mjs"
+```js filename="main.mjs"
 import { sum } from './index.js'
 
 console.log('From native', sum(40, 2))
@@ -220,7 +220,7 @@ console.log('From native', sum(40, 2))
 Execute it!
 
 ```bash
-node test.mjs
+node main.mjs
 From native 42
 ```
 
