@@ -1364,15 +1364,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vercel/remix-builder@npm:5.2.0":
-  version: 5.2.0
-  resolution: "@vercel/remix-builder@npm:5.2.0"
+"@vercel/remix-builder@npm:5.2.1":
+  version: 5.2.1
+  resolution: "@vercel/remix-builder@npm:5.2.1"
   dependencies:
     "@vercel/error-utils": "npm:2.0.3"
     "@vercel/nft": "npm:0.27.10"
     "@vercel/static-config": "npm:3.0.0"
     ts-morph: "npm:12.0.0"
-  checksum: 10c0/088068a4eaaa35673e371b93163a0a3dccb2ce17bef19d0a5b28b88b2281bfebdaa1bd6b8d3f235ea540d997e4e4f933ae752bc3b2cfcbcfa5107327a4560c8d
+  checksum: 10c0/6973d31e3ba584bee3246961f3f48dc26c04565f9329483cb2878939379941d49964aa071b3e744bb71aafa720adea325e23e31c49fa831f602f59e2924a9353
   languageName: node
   linkType: hard
 
@@ -6429,7 +6429,7 @@ __metadata:
     sharp: "npm:^0.33.1"
     tailwindcss: "npm:^3.4.0"
     typescript: "npm:^5.3.3"
-    vercel: "npm:^40.0.0"
+    vercel: "npm:^41.0.0"
   languageName: unknown
   linkType: soft
 
@@ -9104,9 +9104,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vercel@npm:^40.0.0":
-  version: 40.1.0
-  resolution: "vercel@npm:40.1.0"
+"vercel@npm:^41.0.0":
+  version: 41.0.0
+  resolution: "vercel@npm:41.0.0"
   dependencies:
     "@vercel/build-utils": "npm:9.2.0"
     "@vercel/fun": "npm:1.1.2"
@@ -9116,14 +9116,14 @@ __metadata:
     "@vercel/node": "npm:5.1.0"
     "@vercel/python": "npm:4.7.1"
     "@vercel/redwood": "npm:2.2.0"
-    "@vercel/remix-builder": "npm:5.2.0"
+    "@vercel/remix-builder": "npm:5.2.1"
     "@vercel/ruby": "npm:2.2.0"
     "@vercel/static-build": "npm:2.6.0"
     chokidar: "npm:4.0.0"
   bin:
     vc: dist/vc.js
     vercel: dist/vc.js
-  checksum: 10c0/ed9f3e3a8d6f4006e9b56304ed5ca3fad79c8c4a99329ed2addefd666208427a08a6d455319720548146d0f19a49bf6e0388febd02c47604131379a22a788e4d
+  checksum: 10c0/b7ca8e0686c7cefe2263639937092d23c05235e7d2bc21575b3f40d9520de92aa12a465d0a31d0f585e6c323e435fae49aa8fbeb7590810069ee40f779e50a66
   languageName: node
   linkType: hard
 
