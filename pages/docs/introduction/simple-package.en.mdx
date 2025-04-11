@@ -95,9 +95,9 @@ cd cool
 yarn install
 ```
 
-I'm using `yarn` to install the dependencies here, you can replace it by your favorite package manager.
+I'm using `yarn` to install the dependencies here, you can replace it with your favorite package manager.
 
-And now the directory structure is like this:
+And now the directory structure looks like this:
 
 ```
 tree -a
@@ -117,9 +117,9 @@ tree -a
     └── lib.rs
 ```
 
-Your native codes are in `src/lib.rs`. The `.cargo/config.toml` file is used in `GitHub CI` for cross compiling. In general, this file does not affect your development on your local machine.
+Your native code is in `src/lib.rs`. The `.cargo/config.toml` file is used in the `GitHub CI` for cross compiling. In general, this file does not affect your development on your local machine.
 The `.github/workflows/CI.yml` file is the configuration file for [`GitHub Actions`](https://docs.github.com/en/actions).
-The `build.rs` file is necessary for building a native addon for `Node.js`. Don't delete it or move it to the other place.
+The `build.rs` file is necessary for building a native addon for `Node.js`. Don't delete it or move it to another place.
 
 After the `yarn` installation finished, you can run the `build` command to build your first native package:
 
@@ -177,9 +177,11 @@ tree -a -I target
     └── lib.rs
 ```
 
-Here is three more files that `yarn build` command generated for you.
+Now there is three (3) more files that the `yarn build` command generated for you.
 
-`cool.darwin-x64.node` is the Node.js addon binary file, the `index.js` is the generated JavaScript binding file which helps you export all the stuffs in the addon to the package caller. And the `index.d.ts` is the generated TypeScript definition file.
+1. `cool.darwin-x64.node` is the Node.js addon binary file
+2. `index.js` is the generated JavaScript binding file which helps you export everything in the addon to the package caller
+3. `index.d.ts` is the generated TypeScript definition file.
 
 The `new` command generated a simple `sum` function for you in the `src/lib.rs`:
 
@@ -195,7 +197,7 @@ fn sum(a: i32, b: i32) -> i32 {
 }
 ```
 
-And you can inspect the `index.d.ts` file and see the `sum` function has generated for you:
+You can inspect the `index.d.ts` file and see the `sum` function typing that has been generated:
 
 ```ts {9} filename="index.d.ts"
 /* eslint-disable */
@@ -239,7 +241,7 @@ napi rename
 ? name: name field in package.json
 ```
 
-Assume you just created a npm scope named `jarvis`, you can type `@jarvis/cool` here:
+Let's assume you just created an npm scope named `jarvis`, you can type `@jarvis/cool` as the new name:
 
 ```bash {3}
 napi rename
@@ -256,7 +258,7 @@ napi rename
 ? repository: Leave empty to skip
 ```
 
-And you need a `GitHub` repository if you want publish a **NAPI-RS** package, because you need the `GitHub Actions` to do the compiling jobs for you. Just type your GitHub repo URL here.
+And you need a `GitHub` repository if you want to publish a **NAPI-RS** package, because you need the `GitHub Actions` to do the compiling jobs for you. Just type your GitHub repo URL here.
 
 ```bash {5}
 napi rename
@@ -270,7 +272,7 @@ And the `description` field in the `package.json`. Leave it empty to skip.
 
 Now your package name is renamed to `@jarvis/cool`, you can finally publish it.
 
-Now init the `git` configuration and push it into GitHub.
+Now init the `git` configuration and push it to GitHub.
 
 ```bash
 git init
@@ -291,7 +293,7 @@ If everything works fine, you will see the following CI matrix:
 
 ![](./CI.png)
 
-This is just a test CI matrix, let's finally publishing this package:
+This is just a test CI matrix, let's finally publish this package:
 
 ```bash
 npm version patch
