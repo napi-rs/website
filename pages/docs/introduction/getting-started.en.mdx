@@ -33,22 +33,23 @@ pnpm add -g @napi-rs/cli
 ```bash
 napi new
 ```
+This will then prompt you for some variables, including:
 
 #### Package name
 
-The name filed in `package.json`.
+The name that will be defined in `package.json`.
 
-#### Choose targets you want to support
+#### Target platforms
 
-Platforms you want support to.
+Specify the target platforms you want to support with the native package.
 
 #### Enable GitHub actions
 
-Generate GitHub actions config for you.
+Opt in for generated GitHub actions that will help publish the native package to the npm registry.
 
 ### Deep dive
 
-Here it is recommended to distribute your package under [npm scope](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) because `@napi-rs/cli` by default appends the different platform suffixes to the npm package name as the package name for the different platform binary distribution. Using npm scope will reduce the case of package name was taken.
+It is recommended to distribute your package under [npm scope](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) because `@napi-rs/cli` by default napi will append the different platform suffixes to the npm package name as the package name for the different platform binary distributions. Using npm scope will help reduce the chance that the package name was already taken.
 
 For example if you want publish package `@cool/core`, with the `macOS x64`, `Windows x64` and `Linux aarch64` supported, `@napi-rs/cli` will create and publish four packages for you:
 
@@ -68,7 +69,7 @@ In every platform binary package, there are `cpu` and `os` fields in there `pack
 }
 ```
 
-And `@cool/core` using these native packages as `optionalDependencies`:
+And `@cool/core` will be using these native packages as `optionalDependencies`:
 
 ```json filename="package.json"
 {
@@ -82,7 +83,7 @@ And `@cool/core` using these native packages as `optionalDependencies`:
 }
 ```
 
-And your `index.js` in `@cool/core` will be this:
+And the `index.js` in `@cool/core` will be:
 
 ```js filename="index.js"
 const { existsSync, readFileSync } = require('fs')
@@ -143,7 +144,7 @@ const { plus100 } = nativeBinding
 module.exports.plus100 = plus100
 ```
 
-The generated `index.js` file will help you to load the **_right_** binary file wherever you are. And the `index.js` handle two cases:
+The generated `index.js` file is responsible for loading the **_right_** binary file depending on the target platform that is executing the package. The `index.js` also handles two cases:
 
 #### Package installed in users `node_modules`
 
