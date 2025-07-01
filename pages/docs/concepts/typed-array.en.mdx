@@ -4,6 +4,7 @@ description: JavaScript TypedArray primitive.
 ---
 
 import { Callout } from 'nextra-theme-docs'
+import NodeLink from '../../../components/node-link'
 
 # TypedArray
 
@@ -11,7 +12,10 @@ import { Callout } from 'nextra-theme-docs'
 
 ## Buffer
 
-[`Buffer`](https://nodejs.org/api/buffer.html) is a subclass of JavaScript's [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array). It is often used to share data between Node.js and Rust.
+<NodeLink href="https://nodejs.org/api/buffer.html">`Buffer`</NodeLink> is a
+subclass of JavaScript's
+[`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array).
+It is often used to share data between Node.js and Rust.
 
 `Buffer` could be created with `Vec<u8>`, if you created `Buffer` in this way, the ownership of the `Vec<8>` will be transferred into the `v8`, and the `Vec<u8>` will be dropped when `v8` GC the `Buffer`.
 
@@ -25,6 +29,272 @@ pub fn create_buffer() -> Buffer {
 }
 ```
 
-<Callout>
-  The underlying `Vec<u8>` will not be moved or copied in this way.
+<Callout type="info">
+  The underlying `Vec<u8>` will not be copied in this way.
 </Callout>
+
+<Callout type="warning">
+  The `Electron` will not be able to create `Buffer` in zero copy way. See [V8
+  Memory Cage](https://www.electronjs.org/blog/v8-memory-cage) for more details.
+  NAPI-RS will copy the data of the `Vec<u8>` into the underlying `Buffer` in this case.
+</Callout>
+
+## Buffer and TypedArray Types
+
+NAPI-RS provides two categories of buffer types for different use cases. For more details on how lifetimes work for these types, see [Understanding Lifetime](/docs/concepts/understanding-lifetime#lifetime-of-buffer-and-typedarray).
+
+### Owned Types
+
+These types own their data and can be used across async boundaries:
+
+- `Buffer` - Owned Node.js Buffer with reference counting
+- `Uint8Array`, `Int32Array`, `Float64Array`, etc. - Owned TypedArrays
+
+The underlying owned types are wrapped with <NodeLink href="https://nodejs.org/api/n-api.html#napi_create_reference">`napi_ref`</NodeLink>. So they can be used across threads.
+
+```rust {5} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub async fn process_buffer(buffer: Buffer) -> Buffer {
+  // Buffer can be used in async context
+  // It maintains a reference to the underlying data
+  let mut data: Vec<u8> = buffer.into();
+  data.reverse();
+  data.into()
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+```ts filename="index.d.ts"
+export declare function processBuffer(buffer: Buffer): Promise<Buffer>
+```
+
+### Borrowed Types (`BufferSlice`, `Uint8ArraySlice`, etc.)
+
+These types borrow data and are lifetime-bound to the function scope:
+
+- `BufferSlice<'env>` - Zero-copy Buffer slice
+- `Uint8ArraySlice<'env>`, `Int32ArraySlice<'env>`, etc. - Zero-copy TypedArray slices
+- `ArrayBuffer<'env>` - Zero-copy ArrayBuffer view
+- `&[u8]/&[i8]/&[f32]/&[f64]...` - Zero-copy slice
+
+```rust {4} filename="lib.rs"
+use napi_derive::napi;
+
+#[napi]
+pub fn sum_array_slice(input: &[u32]) -> u32 {
+  // Zero-copy access to the underlying data
+  input.iter().sum()
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+```ts filename="index.d.ts"
+export declare function sumArraySlice(input: Uint32Array): number
+```
+
+```ts {5} filename="index.ts"
+import { sumArraySlice } from './index.js'
+
+const input = new Uint32Array([1, 2, 3, 4, 5])
+
+const result = sumArraySlice(input)
+console.log(result) // 15
+```
+
+### When to Use Each Type
+
+**Use `&[u8]/&[i8]/&[f32]/&[f64]...` when**:
+
+- You need zero-copy performance
+- Working in synchronous context only
+- Data lifetime is bounded to the function call
+
+**Use `BufferSlice<'env>` or `Uint8ArraySlice<'env>/Int32ArraySlice<'env>/...` when**:
+
+- You need zero-copy performance
+- You need to convert them into owned types in some scenarios
+- You need to convert them into `Object` or `Unknown`
+
+**Use `Buffer` when**:
+
+- You need to store the buffer beyond the function call
+- Working with async functions
+
+## Common Usage Patterns
+
+### Converting Between Types
+
+```rust {7,10} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn buffer_slice_to_buffer(env: &Env, slice: BufferSlice) -> Result<AsyncBlock<u8>> {
+  // Convert BufferSlice to owned Buffer for async usage
+  let buffer = slice.into_buffer(env)?;
+  AsyncBlockBuilder::new(async move {
+    // use the buffer in async context
+    Ok(buffer.iter().sum())
+  })
+  .build(env)
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+```ts filename="index.d.ts"
+export declare function bufferSliceToBuffer(slice: Buffer): Promise<number>
+```
+
+```ts {5} filename="index.ts"
+import { bufferSliceToBuffer } from './index.js'
+
+const slice = Buffer.from([1, 2, 3, 4, 5])
+
+const result = await bufferSliceToBuffer(slice)
+console.log(result) // 15
+```
+
+### Async vs Sync Patterns
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+// ✅ Correct: Using owned Buffer in async context
+#[napi]
+pub async fn process_async(buffer: Buffer) -> Result<Buffer> {
+    // Buffer can cross await boundaries
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    Ok(buffer)
+}
+
+// ❌ Won't compile: BufferSlice cannot cross await boundaries
+// #[napi]
+// pub async fn process_async_slice(slice: BufferSlice<'_>) -> Result<BufferSlice<'_>> {
+//     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+//     Ok(slice) // Error: slice doesn't live long enough
+// }
+
+#[napi]
+// ✅ Correct: Convert slice to owned for async usage
+pub fn process_slice_async(env: &Env, slice: BufferSlice<'_>) -> Result<AsyncBlock<Buffer>> {
+  let buffer = slice.into_buffer(env)?;
+  AsyncBlockBuilder::new(async move { Ok(buffer) }).build(env)
+}
+```
+
+## Memory Management
+
+### Copied Buffers
+
+For some cases, you can't transferred the ownership of the data to the `Buffer` or `TypedArray`. You can use the `copy_from` method to create a copy of the data.
+
+<Callout type="warning">
+  If you create the `Buffer` or `TypedArray` in this way, the ownership of the
+  data will not be transferred to the `Buffer` or `TypedArray`, but the
+  underlying data will be copied, there should be performance overhead of the
+  data copy.
+</Callout>
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn create_copied_buffer(env: &Env) -> Result<BufferSlice<'_>> {
+  let data = b"Hello, World!";
+  BufferSlice::copy_from(env, &data)
+}
+```
+
+### External Buffers
+
+Sometimes, you may want to create a `Buffer` or `TypedArray` from data types that can `deref` to `[u8]` or get the raw pointer like `*mut u8`. And you don't want to copy the whole data into a `Vec<u8>` which can be very expensive. We provide the `from_external` method to achieve this, but it's unsafe and you must ensure the data is valid until the `finalize` callback is called.
+
+<Callout type="info">
+  The `finalize_hint` param will be passed to the `finalize` callback. In the example below, the `finalize_hint` is the `Arc<Vec<u8>>` itself. So NAPI-RS will hold the `Arc<Vec<u8>>` until the `finalize` callback is called.
+  So you don't need to worry about the data being invalid when the `finalize` callback is called.
+</Callout>
+
+```rust filename="lib.rs"
+use std::sync::Arc;
+
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+// Safe external buffer management
+#[napi]
+pub fn create_shared_buffer(env: &Env) -> Result<BufferSlice<'_>> {
+  let data = Arc::new(vec![1, 2, 3, 4, 5]);
+  let data_ptr = data.as_ptr() as *mut u8;
+  let len = data.len();
+
+  unsafe {
+    BufferSlice::from_external(env, data_ptr, len, data, move |_, arc_data| {
+      drop(arc_data);
+    })
+  }
+}
+
+#[napi]
+pub fn create_external_buffer(env: &Env) -> Result<BufferSlice<'_>> {
+  let mut data = vec![1, 2, 3, 4, 5];
+  let data_ptr = data.as_mut_ptr();
+  let len = data.len();
+
+  // make sure the data is valid until the finalize callback is called
+  std::mem::forget(data);
+
+  unsafe {
+    BufferSlice::from_external(env, data_ptr, len, data_ptr, move |_, ptr| {
+      // Cleanup data when JavaScript GC runs
+      std::mem::drop(Vec::from_raw_parts(ptr, len, len));
+    })
+  }
+}
+```
+
+## Safety Considerations
+
+### External Buffer Safety
+
+When using `from_external` methods, ensure:
+
+1. **Pointer Validity**: The pointer must remain valid until the finalize callback
+2. **Memory Layout**: The memory must be compatible with the expected type
+3. **Proper Cleanup**: The finalize callback must properly deallocate memory
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn unsafe_external_example(env: &Env) -> Result<BufferSlice<'_>> {
+  let mut data = vec![1u8, 2, 3, 4, 5];
+  let ptr = data.as_mut_ptr();
+  let len = data.len();
+
+  // ⚠️ CRITICAL: Must forget the Vec to prevent double-free
+  std::mem::forget(data);
+
+  unsafe {
+    BufferSlice::from_external(env, ptr, len, ptr, move |_, ptr| {
+      // ✅ Properly reconstruct and drop the Vec
+      std::mem::drop(Vec::from_raw_parts(ptr, len, len));
+      // Vec automatically deallocates when dropped
+    })
+  }
+}
+```
+
+### Unsafe `as_mut`
+
+You can call `as_mut` method to get the mutable reference of the `Buffer` or `TypedArray`, but it's a **undefined behavior**. Because the `JavaScript` owned the same data access at the same time.
+
+Only call this method when you are sure the underlying data will not be modified by the `JavaScript` side.

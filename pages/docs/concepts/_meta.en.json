@@ -13,7 +13,7 @@
   "reference": "Reference",
   "async-fn": "async fn",
   "external": "External",
-  "await-promise": "Await Promise",
+  "promise": "Promise",
   "types-overwrite": "Types Overwrite",
   "typed-array": "Typed Array"
 }

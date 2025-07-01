@@ -15,7 +15,7 @@ fn a_function(a_arg: u32) -> u32 {
 }
 ```
 
-⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
 
 ```ts filename="index.d.ts"
 export function aFunction(aArg: number): number
@@ -32,7 +32,7 @@ fn a_function(a_arg: u32) -> u32 {
 }
 ```
 
-⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
 
 ```ts filename="index.d.ts"
 export function coolFunction(aArg: number): number

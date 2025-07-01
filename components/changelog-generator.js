@@ -25,25 +25,21 @@ export const getChangelog = async (packageName, locale = 'en') => {
     )
   }
 
+  const releasesMarkdown = releases
+    .filter(({ name }) => name.startsWith(packageName))
+    .map((release) => {
+      const body = release.body
+        .replace(/&#39;/g, "'")
+        .replace(/@([a-zA-Z0-9_-]+)(?=(,| ))/g, '[@$1](https://github.com/$1)')
+      return `## <a href="${
+        release.html_url
+      }" target="_blank" rel="noopener">${release.tag_name}</a> 
+  ${new Date(release.published_at).toLocaleDateString(locale)} \n${body}`
+    })
+    .join('\n\n')
   return {
     props: {
-      ...(await buildDynamicMDX(
-        releases
-          .filter(({ name }) => name.startsWith(packageName))
-          .map((release) => {
-            const body = release.body
-              .replace(/&#39;/g, "'")
-              .replace(
-                /@([a-zA-Z0-9_-]+)(?=(,| ))/g,
-                '[@$1](https://github.com/$1)',
-              )
-            return `## <a href="${
-              release.html_url
-            }" target="_blank" rel="noopener">${release.tag_name}</a> 
-  ${new Date(release.published_at).toLocaleDateString(locale)} \n${body}`
-          })
-          .join('\n\n'),
-      )),
+      ...(await buildDynamicMDX(releasesMarkdown)),
       ...(await buildDynamicMeta()),
     },
     revalidate: 10,
