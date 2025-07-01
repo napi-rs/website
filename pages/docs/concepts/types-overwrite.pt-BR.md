@@ -30,7 +30,7 @@ fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
 }
 ```
 
-⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
 
 ```ts filename="index.d.ts"
 export function callThreadsafeFunction(

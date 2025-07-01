@@ -13,13 +13,13 @@ Represent `undefined` in JavaScript.
 
 ```rust {3} filename="lib.rs"
 #[napi]
-fn get_undefined() -> Undefined {
+pub fn get_undefined() -> Undefined {
 	()
 }
 
 // default return or empty tuple `()` are `undefined` after converted into JS value.
 #[napi]
-fn log(n: u32) {
+pub fn log(n: u32) {
 	println!("{}", n);
 }
 ```
@@ -35,12 +35,12 @@ Represents `null` value in JavaScript.
 
 ```rust {3} filename="lib.rs"
 #[napi]
-fn get_null() -> Null {
+pub fn get_null() -> Null {
 	Null
 }
 
 #[napi]
-fn get_env(env: String) -> Option<String> {
+pub fn get_env(env: String) -> Option<String> {
 	match std::env::var(env) {
 		Ok(val) => Some(val),
 		Err(e) => None,
@@ -61,7 +61,7 @@ For Rust types like `u64`, `u128`, `i128`, checkout [`BigInt`](#bigint) section.
 
 ```rust filename="lib.rs"
 #[napi]
-fn sum(a: u32, b: i32) -> i64 {
+pub fn sum(a: u32, b: i32) -> i64 {
 	(b + a as i32).into()
 }
 ```
@@ -76,7 +76,7 @@ Represents JavaScript `String` type.
 
 ```rust {3} filename="lib.rs"
 #[napi]
-fn greet(name: String) -> String {
+pub fn greet(name: String) -> String {
 	format!("greeting, {}", name)
 }
 ```
@@ -91,7 +91,7 @@ Represents JavaScript `Boolean` type.
 
 ```rust filename="lib.rs"
 #[napi]
-fn is_good() -> bool {
+pub fn is_good() -> bool {
 	true
 }
 ```
@@ -104,13 +104,13 @@ export function isGood(): boolean
 
 ```rust filename="lib.rs"
 #[napi]
-fn with_buffer(buf: Buffer) {
+pub fn with_buffer(buf: Buffer) {
   let buf: Vec<u8> = buf.into();
   // do something
 }
 
 #[napi]
-fn read_buffer(file: String) -> Buffer {
+pub fn read_buffer(file: String) -> Buffer {
 	Buffer::from(std::fs::read(file).unwrap())
 }
 ```
@@ -137,17 +137,17 @@ Every call of `Object.get("key")` is actually dispatched to node side including 
 
 ```rust filename="lib.rs"
 #[napi]
-fn keys(obj: Object) -> Vec<String> {
+pub fn keys(obj: Object) -> Vec<String> {
 	Object::keys(&obj).unwrap()
 }
 
 #[napi]
-fn log_string_field(obj: Object, field: String) {
+pub fn log_string_field(obj: Object, field: String) {
 	println!("{}: {:?}", &field, obj.get::<String>::(field.as_ref()));
 }
 
 #[napi]
-fn create_obj(env: Env) -> Object {
+pub fn create_obj(env: Env) -> Object {
 	let mut obj = env.create_object().unwrap();
 	obj.set("test", 1).unwrap();
 	obj
@@ -165,7 +165,7 @@ If you want **NAPI-RS** to convert objects from JavaScript with the same shape d
 ```rust filename="lib.rs"
 /// #[napi(object)] requires all struct fields to be public
 #[napi(object)]
-struct PackageJson {
+pub struct PackageJson {
 	pub name: String,
 	pub version: String,
 	pub dependencies: Option<HashMap<String, String>>,
@@ -173,12 +173,12 @@ struct PackageJson {
 }
 
 #[napi]
-fn log_package_name(package_json: PackageJson) {
+pub fn log_package_name(package_json: PackageJson) {
 	println!("name: {}", package_json.name);
 }
 
 #[napi]
-fn read_package_json() -> PackageJson {
+pub fn read_package_json() -> PackageJson {
 	// ...
 }
 ```
@@ -197,19 +197,19 @@ export function readPackageJson(): PackageJson
 <Callout type="warning" emoji="⚠️">
 **Clone over Reference**
 
-The `#[napi(object)]` struct passed in Rust `fn` is cloned from **_JavaScript Object_**. Any mutation on it will not be reflected to the original **_JavaScript_** object.
+The `#[napi(object)]` struct passed to a Rust `fn` is cloned from the **_JavaScript Object_**. Any mutation on it will not be reflected in the original **_JavaScript_** object.
 
 </Callout>
 
 ```rust filename="lib.rs"
 /// #[napi(object)] requires all struct fields to be public
 #[napi(object)]
-struct Animal {
+pub struct Animal {
 	pub name: String,
 }
 
 #[napi]
-fn change_animal_name(mut animal: Animal) {
+pub fn change_animal_name(mut animal: Animal) {
   animal.name = "cat".to_string();
 }
 ```
@@ -222,26 +222,26 @@ console.log(animal.name) // "dog"
 
 ### Array
 
-Because `Array` values in JavaScript can hold elements with different types, but rust `Vec<T>`
-can only contains same type elements. So there two different way for array types.
+Because `Array` values in JavaScript can hold elements with different types, but Rust `Vec<T>`
+can only contain elements of the same type, there are two different ways to handle array types.
 
 <Callout type="warning" emoji="⚠️">
 **Performance**
 
-Because JavaScript `Array` type is backed with `Object` actually, so the performance of manipulating `Array`s would be the same as `Object`s.
+Because JavaScript `Array` type is actually backed by `Object`, the performance of manipulating `Array`s is the same as `Object`s.
 
-The conversion between `Array` and `Vec<T>` is even heavier, which is in `O(2n)` complexity.
+The conversion between `Array` and `Vec<T>` is even heavier, which is in `O(n)` complexity.
 
 </Callout>
 
 ```rust filename="lib.rs"
 #[napi]
-fn arr_len(arr: Array) -> u32 {
+pub fn arr_len(arr: Array) -> u32 {
   arr.len()
 }
 
 #[napi]
-fn get_tuple_array(env: Env) -> Array {
+pub fn get_tuple_array(env: Env) -> Array {
   let mut arr = env.create_array(2).unwrap();
 
   arr.insert(1).unwrap();
@@ -251,12 +251,12 @@ fn get_tuple_array(env: Env) -> Array {
 }
 
 #[napi]
-fn vec_len(nums: Vec<u32>) -> u32 {
+pub fn vec_len(nums: Vec<u32>) -> u32 {
   u32::try_from(nums.len()).unwrap()
 }
 
 #[napi]
-fn get_nums() -> Vec<u32> {
+pub fn get_nums() -> Vec<u32> {
   vec![1, 1, 2, 3, 5, 8]
 }
 ```
@@ -279,22 +279,22 @@ This requires the `napi6` feature.
 </Callout>
 
 <Callout>
-  The reason why Rust fn can't receive `i128` `u128` `u64` `i64n` as arguments
-  is that they may lose precision while converting JavaScript `BigInt` into
-  them. You can use `BigInt::get_u128`, `BigInt::get_i128` ... to get the value
-  in `BigInt`. The return value of these methods also indicates if precision is
-  lost.
+  The reason why Rust functions can't receive `i128` `u128` `u64` `i64n` as
+  arguments is that they may lose precision when converting JavaScript `BigInt`
+  into them. You can use `BigInt::get_u128`, `BigInt::get_i128`, etc. to get the
+  value in `BigInt`. The return value of these methods also indicates whether
+  precision is lost.
 </Callout>
 
 ```rust filename="lib.rs"
 /// the return value of `get_u128` is (signed: bool, value: u128, lossless: bool)
 #[napi]
-fn bigint_add(a: BigInt, b: BigInt) -> u128 {
+pub fn bigint_add(a: BigInt, b: BigInt) -> u128 {
   a.get_u128().1 + b.get_u128().1
 }
 
 #[napi]
-fn create_big_int_i128() -> i128 {
+pub fn create_big_int_i128() -> i128 {
   100
 }
 ```
@@ -314,17 +314,17 @@ export function createBigIntI128(): BigInt
 
 ```rust filename="lib.rs"
 #[napi]
-fn convert_u32_array(input: Uint32Array) -> Vec<u32> {
+pub fn convert_u32_array(input: Uint32Array) -> Vec<u32> {
   input.to_vec()
 }
 
 #[napi]
-fn create_external_typed_array() -> Uint32Array {
+pub fn create_external_typed_array() -> Uint32Array {
   Uint32Array::new(vec![1, 2, 3, 4, 5])
 }
 
 #[napi]
-fn mutate_typed_array(mut input: Float32Array) {
+pub fn mutate_typed_array(mut input: Float32Array) {
   for item in input.as_mut() {
     *item *= 2.0;
   }

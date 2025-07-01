@@ -14,7 +14,7 @@ Rewrite the arguments type of the function, **NAPI-RS** will put the rewritten t
 
 ```rust {1} filename="lib.rs"
 #[napi(ts_args_type="callback: (err: null | Error, result: number) => void")]
-fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
+pub fn call_threadsafe_function(callback: Function<u32>) -> Result<()> {
   let tsfn: ThreadsafeFunction<u32, ErrorStrategy::CalleeHandled> = callback
     .create_threadsafe_function(0, |ctx| {
       ctx.env.create_uint32(ctx.value + 1).map(|v| vec![v])
@@ -29,7 +29,7 @@ fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
 }
 ```
 
-⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
 
 ```ts filename="index.d.ts"
 export function callThreadsafeFunction(

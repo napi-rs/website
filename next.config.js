@@ -1,12 +1,14 @@
-const { PerfseePlugin } = require('@perfsee/webpack')
-const withNextra = require('nextra')({
+import { PerfseePlugin } from '@perfsee/webpack'
+import nextra from 'nextra'
+
+const withNextra = nextra({
   theme: 'nextra-theme-docs',
   themeConfig: './nextra.config.js',
   flexsearch: true,
   staticImage: true,
 })
 
-module.exports = withNextra({
+export default withNextra({
   i18n: {
     defaultLocale: process.env.LOCALE || 'en',
     locales: ['en', 'cn', 'pt-BR'],
