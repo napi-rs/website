@@ -4,11 +4,10 @@ description: Config schema of NAPI-RS.
 
 # NAPI Config
 
+import { Callout } from 'nextra-theme-docs'
 import { Green } from '../../../components/chalk'
 
 The config schema of **NAPI-RS**.
-
-import { Callout } from 'nextra-theme-docs'
 
 <Callout>All the fields in `napi` is optional.</Callout>
 
@@ -17,26 +16,38 @@ import { Callout } from 'nextra-theme-docs'
 ```ts
 {
   napi?: {
-    name?: string
-    triples?: {
-      defaults?: boolean,
-      additional?: string[]
-    },
-    package?: {
-      name?: string
-    },
+    binaryName?: string
+    targets?: string[],
+    packageName?: string,
     npmClient?: string
+    constEnum?: boolean
+    dtsHeader?: string
+    dtsHeaderFile?: string
+    wasm?: {
+      initialMemory?: number
+      maximumMemory?: number
+      browser?: {
+        fs?: boolean
+        asyncInit?: boolean
+      }
+    }
   }
 }
 ```
 
-| Field                |          Default           | Description                                                                                                                                          |
-| -------------------- | :------------------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`               | <Green>`index`</Green>     | The binary file name of generated `.node` file. Eg <Green>`[NAME].[TRIPLE?].node`</Green> becomes <Green>`index.win32-x64-msvc.node`</Green>         |
-| `triples.defaults`   | <Green>`true`</Green>      | Whether to enable the default triples. <br />The default triples is `['x86_64-apple-darwin', 'x86_64-unknown-linux-gnu', 'x86_64-pc-windows-msvc']`. |
-| `triples.additional` | <Green>`[]`</Green>        | Additional triples besides the default triples you want to build. Target triples could be found in the output of `rustup target list` command.       |
-| `package.name`       | <Green>`undefined`</Green> | Override the `name` field in `package.json`. See [Build#js-package-name](./build#note-for---js-package-name) for usage.                              |
-| `npmClient`          | <Green>`npm`</Green>       | Specify a different NPM client for usage when executing NPM actions such as publishing.                                                              |
+| Field                    |            Default            | Description                                                                                                                                                                            |
+| ------------------------ | :---------------------------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `binaryName`             |    <Green>`index`</Green>     | The binary file name of generated `.node` file. Eg <Green>`[NAME].[TRIPLE?].node`</Green> becomes <Green>`index.win32-x64-msvc.node`</Green>                                           |
+| `targets`                |      <Green>`[]`</Green>      | Targets you want to build. Target triples could be found in the output of `rustup target list` command.                                                                                |
+| `packageName`            |  <Green>`undefined`</Green>   | Override the `name` field in `package.json`. See [Build#js-package-name](./build#note-for---js-package-name) for usage.                                                                |
+| `npmClient`              |     <Green>`npm`</Green>      | Specify a different NPM client for usage when executing NPM actions such as publishing.                                                                                                |
+| `constEnum`              |    <Green>`false`</Green>     | Whether to generate `const enum` for the generated `index.d.ts` file.                                                                                                                  |
+| `dtsHeader`              |  <Green>`undefined`</Green>   | Header string that prepend to the generated `index.d.ts` file.                                                                                                                         |
+| `dtsHeaderFile`          |  <Green>`undefined`</Green>   | File path that contains the header string that prepend to the generated `index.d.ts` file. If both `dtsHeader` and `dtsHeaderFile` are provided, `dtsHeaderFile` will be used          |
+| `wasm.initialMemory`     | <Green>`4000` (256mb)</Green> | Initial memory size for the generated WebAssembly module. See [WebAssembly.Memory](https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Memory) for more details. |
+| `wasm.maximumMemory`     | <Green>`65536` (4GiB)</Green> | Maximum memory size for the generated WebAssembly module. See [WebAssembly.Memory](https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Memory) for more details. |
+| `wasm.browser.fs`        |    <Green>`false`</Green>     | Whether to enable the `node:fs` module polyfill for the generated WebAssembly module.                                                                                                  |
+| `wasm.browser.asyncInit` |    <Green>`false`</Green>     | Whether to enable the async initialization for the generated WebAssembly module.                                                                                                       |
 
 ## What is `target triple`
 

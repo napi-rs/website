@@ -19,3 +19,7 @@ article pre code .line.highlighted::before {
 section.footnotes > h2 {
   display: none;
 }
+
+.node-link {
+  color: #3e7a38;
+}

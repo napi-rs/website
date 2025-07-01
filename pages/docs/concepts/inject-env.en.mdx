@@ -2,11 +2,13 @@
 description: Inject Node-API Env into functions and methods.
 ---
 
+import NodeLink from '../../../components/node-link'
+
 # Inject Env
 
 The `#[napi]` macro is a very high level abstraction for the `Node-API`. Most of the time, you use the Rust native API and crates.
 
-But sometimes you still need to access the low-level `Node-API`, for example, to call [`napi_async_cleanup_hook`](https://nodejs.org/api/n-api.html#napi_async_cleanup_hook) or [`napi_adjust_external_memory`](https://nodejs.org/api/n-api.html#napi_adjust_external_memory).
+But sometimes you still need to access the low-level `Node-API`, for example, to call <NodeLink href="https://nodejs.org/api/n-api.html#napi_async_cleanup_hook">`napi_async_cleanup_hook`</NodeLink> or <NodeLink href="https://nodejs.org/api/n-api.html#napi_adjust_external_memory">`napi_adjust_external_memory`</NodeLink>.
 
 For this scenario, **NAPI-RS** allows you to inject `Env` into your `fn` which is decorated by the `#[napi]`.
 

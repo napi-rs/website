@@ -2,23 +2,32 @@
 description: External Object holds the native value in a JavaScript Object.
 ---
 
+import NodeLink from '../../../components/node-link'
+
 # External
 
-[`External`](https://nodejs.org/api/n-api.html#napi_create_external) is very similar to [`Object Wrap`](https://nodejs.org/api/n-api.html#object-wrap), which is used in [Class](./class) under the hood.
+<NodeLink href="https://nodejs.org/api/n-api.html#napi_create_external">
+  `External`
+</NodeLink>
+is very similar to
+<NodeLink href="https://nodejs.org/api/n-api.html#object-wrap">
+  `Object Wrap`
+</NodeLink>
+, which is used in [Class](./class) under the hood.
 
-`Object Wrap` attaches a native value to a JavaScript Object and can notify you when the attached JavaScript Object is recycled by GC. `External` creates an empty, blank JavaScript Object which holds the native value under the hood. It only works by passing the object back to Rust:
+`Object Wrap` attaches a native value to a JavaScript Object and can notify you when the attached JavaScript Object is recycled by GC. `External` creates an empty, blank JavaScript Object that holds the native value under the hood. It only works by passing the object back to Rust:
 
 ```rust filename="lib.rs"
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
 #[napi]
-fn create_source_map(length: u32) -> External<Buffer> {
+pub fn create_source_map(length: u32) -> External<Buffer> {
   External::new(vec![0; length as usize].into())
 }
 ```
 
-⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
 
 ```ts filename="index.d.ts"
 export class ExternalObject<T> {
@@ -31,7 +40,7 @@ export class ExternalObject<T> {
 export function createSourceMap(length: number): ExternalObject<Buffer>
 ```
 
-`External` is very useful when you want to return a JavaScript Object with some methods on it to interact with the native Rust code.
+`External` is very useful when you want to return a JavaScript Object with some methods that interact with the native Rust code.
 Here is a real-world example:
 
 https://github.com/h-a-n-a/magic-string-rs/blob/v0.3.0/node/src/lib.rs#L96-L103
@@ -63,7 +72,7 @@ impl MagicString {
 }
 ```
 
-First the `generate_map` method returns an `External` object, and then the JavaScript function holds the `External` object in closure:
+First, the `generate_map` method returns an `External` object, and then the JavaScript function holds the `External` object in a closure:
 
 ```ts filename="index.js"
 module.exports.MagicString = class MagicString extends MagicStringNative {

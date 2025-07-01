@@ -16,7 +16,7 @@ Exporting a function is incredibly simple. Just decorate a normal rust function 
 
 ```rust filename="lib.rs"
 #[napi]
-fn sum(a: u32, b: u32) -> u32 {
+pub fn sum(a: u32, b: u32) -> u32 {
 	a + b
 }
 ```
@@ -38,7 +38,7 @@ See [`class section`](./class) for more details.
 
 ```rust filename="lib.rs"
 #[napi(constructor)]
-struct Animal {
+pub struct Animal {
   pub name: String,
   pub kind: u32,
 }
@@ -62,5 +62,21 @@ pub enum Kind {
   Dog,
   Cat,
   Duck,
+}
+```
+
+## `exports` object
+
+You can use the `#[napi(module_exports)]` attribute to access the `exports` object.
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi(module_exports)]
+pub fn exports(mut export: Object) -> Result<()> {
+  let symbol = Symbol::for_desc("NAPI_RS_SYMBOL");
+  export.set_named_property("NAPI_RS_SYMBOL", symbol)?;
+  Ok(())
 }
 ```

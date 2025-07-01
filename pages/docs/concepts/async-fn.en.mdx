@@ -4,43 +4,133 @@ description: Run a Rust async fn with the tokio runtime.
 
 import { Callout } from 'nextra-theme-docs'
 
+import NodeLink from '../../../components/node-link'
+
 # async fn
 
 <Callout>
 You must enable the ***async*** or ***tokio_rt*** feature in `napi` to use `async fn`:
 
-```toml {3} filename="Cargo.toml"
+```toml {2} filename="Cargo.toml"
 [dependencies]
-napi = { version = "2", features = ["async"] }
+napi = { version = "3", features = ["async"] }
 ```
 
 </Callout>
+
+## Tokio integration
 
 You can do a lot of async/multi-threaded work with `AsyncTask` and `ThreadsafeFunction`, but sometimes you may want to use the crates from the Rust async ecosystem directly.
 
 **NAPI-RS** supports the `tokio` runtime by default. If you `await` a tokio `future` in `async fn`, **NAPI-RS** will execute it in the tokio runtime and convert it into a JavaScript `Promise`.
 
 ```rust {6} filename="lib.rs"
-use futures::prelude::*;
 use napi::bindgen_prelude::*;
+use napi_derive::napi;
 use tokio::fs;
 
 #[napi]
-async fn read_file_async(path: String) -> Result<Buffer> {
-  fs::read(path)
-    .map(|r| match r {
-      Ok(content) => Ok(content.into()),
-      Err(e) => Err(Error::new(
-        Status::GenericFailure,
-        format!("failed to read file, {}", e),
-      )),
-    })
-    .await
+pub async fn read_file_async(path: String) -> Result<Buffer> {
+  let content = fs::read(path).await?;
+  Ok(content.into())
 }
 ```
 
-⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
 
 ```ts filename="index.d.ts"
 export function readFileAsync(path: string): Promise<Buffer>
 ```
+
+## Unsafe `&mut self`
+
+In some cases, you may need to use `&mut self` in an `async fn`. However, this is `unsafe` in **NAPI-RS**, because the `self` is also _owned_ by the Node.js runtime. You cannot ensure that the `self` is only owned by Rust.
+
+```rust {9} filename="lib.rs"
+use napi_derive::napi;
+
+#[napi]
+pub struct Engine {}
+
+#[napi]
+impl Engine {
+  #[napi]
+  pub async fn run(&mut self) {}
+}
+```
+
+```rust
+error: &mut self in async napi methods should be marked as unsafe
+ --> src/lib.rs:9:18
+  |
+9 |     pub async fn run(&mut self) {}
+  |                  ^^^
+```
+
+You need to mark the `fn` as `unsafe` to use `&mut self` in an `async fn`.
+
+```rust {9} filename="lib.rs"
+use napi_derive::napi;
+
+#[napi]
+pub struct Engine {}
+
+#[napi]
+impl Engine {
+  #[napi]
+  pub async unsafe fn run(&mut self) {}
+}
+```
+
+## Auto reference
+
+Usually, JavaScript values are only valid within a function call. `async fn` is not the case, the JavaScript values may be garbage collected in any `await` point.
+
+<Callout type="info">
+  See [Understanding Lifetime](/docs/concepts/understanding-lifetime) for more
+  details.
+</Callout>
+
+There are 3 kinds of parameters are automatically turned into `Reference` types:
+
+- `&self`
+- `&mut self`
+- `This<T>`
+
+Considering the following example:
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub struct NativeClass {
+  name: String,
+}
+
+#[napi]
+impl NativeClass {
+  #[napi(constructor)]
+  pub fn new(name: String) -> Self {
+    Self { name }
+  }
+
+  #[napi]
+  pub async fn sleep(&self, delay: u32) -> Result<&str> {
+    tokio::time::sleep(std::time::Duration::new(delay as u64, 0)).await;
+    Ok(&self.name)
+  }
+}
+```
+
+```ts filename="index.ts"
+const nativeClass = new NativeClass('Brooklyn')
+
+const name = await nativeClass.sleep(1)
+
+console.log(name) // Brooklyn
+```
+
+There is a implicit <NodeLink href="https://nodejs.org/api/n-api.html#napi_create_reference">`napi_create_reference`</NodeLink> call for the JavaScript `Object` value which holds the `NativeClass` before the `async fn` call; and a implicit <NodeLink href="https://nodejs.org/api/n-api.html#napi_delete_reference">`napi_delete_reference`</NodeLink> call after the `async fn` call.
+
+This strategy makes sure the `NativeClass` is alive during the `async fn` call.

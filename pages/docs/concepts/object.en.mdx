@@ -33,12 +33,12 @@ pub struct Pet {
 }
 
 #[napi]
-fn print_pet(pet: Pet) {
+pub fn print_pet(pet: Pet) {
   println!("{}", pet.name);
 }
 
 #[napi]
-fn create_cat() -> Pet {
+pub fn create_cat() -> Pet {
   Pet {
     name: "cat".to_string(),
     kind: 1,
