@@ -38,7 +38,7 @@ export class AnimalWithDefaultConstructor {
 If you want to define a custom `constructor`, you can use `#[napi(constructor)]` on your constructor `fn` in the struct `impl` block.
 
 ```rust filename="lib.rs"
-// A complex struct which cannot be exposed to JavaScript directly.
+// A complex struct that cannot be exposed to JavaScript directly.
 pub struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
@@ -71,7 +71,7 @@ export class QueryEngine {
 Besides `constructor`, you can also define factory methods on `Class` by using `#[napi(factory)]`.
 
 ```rust filename="lib.rs"
-// A complex struct which cannot be exposed to JavaScript directly.
+// A complex struct that cannot be exposed to JavaScript directly.
 pub struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
@@ -112,7 +112,7 @@ new QueryEngine() // Error: Class contains no `constructor`, cannot create it!
 You can define a JavaScript class method with `#[napi]` on a struct method in **Rust**.
 
 ```rust filename="lib.rs"
-// A complex struct which cannot be exposed to JavaScript directly.
+// A complex struct that cannot be exposed to JavaScript directly.
 pub struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
@@ -162,7 +162,7 @@ Any `fn` in `Rust` that returns `Result<T>` will be treated as `T` in JavaScript
 Define [JavaScript class `getter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/get) using `#[napi(getter)]`. The Rust `fn` must be a struct method, not an associated function.
 
 ```rust {22-25} filename="lib.rs"
-// A complex struct which cannot be exposed to JavaScript directly.
+// A complex struct that cannot be exposed to JavaScript directly.
 pub struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
@@ -203,7 +203,7 @@ export class QueryEngine {
 Define [JavaScript class `setter`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set) using `#[napi(setter)]`. The Rust `fn` must be a struct method, not an associated function.
 
 ```rust {27-30} filename="lib.rs"
-// A complex struct which cannot be exposed to JavaScript directly.
+// A complex struct that cannot be exposed to JavaScript directly.
 pub struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
@@ -247,9 +247,9 @@ export class QueryEngine {
 
 ## Class as argument
 
-`Class` is different from [`Object`](./object). `Class` can have Rust methods and associated functions on it. Every field in `Class` can mutated in JavaScript.
+`Class` is different from [`Object`](./object). `Class` can have Rust methods and associated functions on it. Every field in `Class` can be mutated in JavaScript.
 
-So the ownership of the `Class` is actually transferred to the JavaScript side while you are creating it. It is managed by the JavaScript GC, and you can only pass it back by passing its `reference`.
+So the ownership of the `Class` is actually transferred to the JavaScript side when you create it. It is managed by the JavaScript GC, and you can only pass it back by passing its `reference`.
 
 ```rust {1,5} filename="lib.rs"
 pub fn accept_class(engine: &QueryEngine) {
@@ -274,7 +274,7 @@ The default Property attributes are `writable = true`, `enumerable = true` and `
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
-// A complex struct which cannot be exposed to JavaScript directly.
+// A complex struct that cannot be exposed to JavaScript directly.
 #[napi]
 pub struct QueryEngine {
   num: i32,
@@ -308,7 +308,7 @@ qe.getNum = function () {} // TypeError: Cannot assign to read only property 'ge
 
 ## Custom Finalize logic
 
-NAPI-RS will drop the Rust struct wrapped in the JavaScript object when the JavaScript object is garbage collected. You can also specify a custom finalize logic for the Rust struct.
+**NAPI-RS** will drop the Rust struct wrapped in the JavaScript object when the JavaScript object is garbage collected. You can also specify custom finalize logic for the Rust struct.
 
 ```rust {4, 26} filename="lib.rs"
 use napi::bindgen_prelude::*;
@@ -348,7 +348,7 @@ First, you can set `custom_finalize` attribute in `#[napi]` macro, and NAPI-RS w
 
 Then, you can implement `ObjectFinalize` yourself for the Rust struct.
 
-In this case, the `CustomFinalize` struct increase external memory in the **constructor** and decrease it in `fn finalize`.
+In this case, the `CustomFinalize` struct increases external memory in the **constructor** and decreases it in `fn finalize`.
 
 ## `instance of`
 
@@ -362,8 +362,8 @@ use napi_derive::napi;
 pub struct NativeClass {}
 
 #[napi]
-pub fn is_native_class_instance(env: Env, value: Unknown) -> Result<bool> {
-  NativeClass::instance_of(env, value)
+pub fn is_native_class_instance(env: &Env, value: Unknown) -> Result<bool> {
+  NativeClass::instance_of(env, &value)
 }
 ```
 

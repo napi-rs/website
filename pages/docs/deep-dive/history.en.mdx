@@ -2,6 +2,8 @@
 description: The history of writing Node.js native addons.
 ---
 
+import NodeLink from '../../../components/node-link'
+
 # History
 
 > Some contents are borrowed from https://xcoder.in/2017/07/01/nodejs-addon-history/
@@ -131,7 +133,7 @@ In order to achieve the hidden goal above, the posture of using N-API looks like
 - All JavaScript datatypes are wrapped in the black box type `napi_value`, no longer types like `v8::Object`, `v8::Number`, and so on.
 - If the function call is unsuccessful, the `napi_get_last_error_info` function can be used to get information about the last error.
 
-For more details about functions of N-API, visit its [documentation](https://nodejs.org/api/n-api.html), but for now, let's take a look at something a little less abstract to give you an impression of N-API.
+For more details about functions of N-API, visit its <NodeLink href="https://nodejs.org/api/n-api.html">documentation</NodeLink>, but for now, let's take a look at something a little less abstract to give you an impression of N-API.
 
 ### Module initialization
 

@@ -10,12 +10,12 @@ The code styles are very different between Rust and JavaScript. The Rust communi
 
 ```rust filename="lib.rs"
 #[napi]
-fn a_function(a_arg: u32) -> u32 {
+pub fn a_function(a_arg: u32) -> u32 {
   a_arg + 1
 }
 ```
 
-⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
 
 ```ts filename="index.d.ts"
 export function aFunction(aArg: number): number
@@ -27,12 +27,12 @@ You can use the `js_name` attribute in `#[napi]` to rename the JavaScript functi
 
 ```rust {1} filename="lib.rs"
 #[napi(js_name = "coolFunction")]
-fn a_function(a_arg: u32) -> u32 {
+pub fn a_function(a_arg: u32) -> u32 {
   a_arg + 1
 }
 ```
 
-⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
 
 ```ts filename="index.d.ts"
 export function coolFunction(aArg: number): number

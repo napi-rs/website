@@ -188,26 +188,19 @@ The `new` command generated a simple `sum` function for you in the `src/lib.rs`:
 ```rust {7} filename="lib.rs"
 #![deny(clippy::all)]
 
-#[macro_use]
-extern crate napi_derive;
+use napi_derive::napi;
 
 #[napi]
-fn sum(a: i32, b: i32) -> i32 {
+pub fn sum(a: i32, b: i32) -> i32 {
   a + b
 }
 ```
 
 You can inspect the `index.d.ts` file and see the `sum` function typing that has been generated:
 
-```ts {9} filename="index.d.ts"
+```ts {3} filename="index.d.ts"
 /* eslint-disable */
 
-export class ExternalObject<T> {
-  readonly '': {
-    readonly '': unique symbol
-    [K: symbol]: T
-  }
-}
 export function sum(a: number, b: number): number
 ```
 
