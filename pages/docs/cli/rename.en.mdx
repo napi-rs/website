@@ -1,0 +1,41 @@
+---
+description: napi rename command in @napi-rs/cli.
+---
+
+# Rename
+
+import { Green, Rust } from '../../../components/chalk'
+
+Rename the **NAPI-RS** project
+
+## Usage
+
+```sh
+# CLI
+napi rename [--options]
+```
+
+```typescript
+// Programmatically
+import { NapiCli } from '@napi-rs/cli'
+
+new NapiCli().rename({
+  // options
+})
+```
+
+## Options
+
+| Options         | CLI Options         | type   | required | default                     | description                                                                                                        |
+| --------------- | ------------------- | ------ | -------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+|                 | --help,-h           |        |          |                             | get help                                                                                                           |
+| cwd             | --cwd               | string | false    | process.cwd()               | The working directory of where napi command will be executed in, all other paths options are relative to this path |
+| configPath      | --config-path,-c    | string | false    |                             | Path to <Green>napi</Green> config json file                                                                       |
+| packageJsonPath | --package-json-path | string | false    | <Green>package.json</Green> | Path to <Green>package.json</Green>                                                                                |
+| npmDir          | --npm-dir           | string | false    | <Green>npm</Green>          | Path to the folder where the npm packages put                                                                      |
+| name            | --name,-n           | string | false    |                             | The new name of the project                                                                                        |
+| binaryName      | --binary-name,-b    | string | false    |                             | The new binary name `*.node` files                                                                                 |
+| packageName     | --package-name      | string | false    |                             | The new package name of the project                                                                                |
+| manifestPath    | --manifest-path     | string | false    | <Rust>Cargo.toml</Rust>     | Path to <Rust>Cargo.toml</Rust>                                                                                    |
+| repository      | --repository        | string | false    |                             | The new repository of the project                                                                                  |
+| description     | --description       | string | false    |                             | The new description of the project                                                                                 |

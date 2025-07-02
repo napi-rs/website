@@ -308,7 +308,7 @@ qe.getNum = function () {} // TypeError: Cannot assign to read only property 'ge
 
 ## Custom Finalize logic
 
-NAPI-RS will drop the Rust struct wrapped in the JavaScript object when the JavaScript object is garbage collected. You can also specify custom finalize logic for the Rust struct.
+**NAPI-RS** will drop the Rust struct wrapped in the JavaScript object when the JavaScript object is garbage collected. You can also specify custom finalize logic for the Rust struct.
 
 ```rust {4, 26} filename="lib.rs"
 use napi::bindgen_prelude::*;

@@ -36,12 +36,12 @@ pub fn create_buffer() -> Buffer {
 <Callout type="warning">
   The `Electron` will not be able to create `Buffer` in zero copy way. See [V8
   Memory Cage](https://www.electronjs.org/blog/v8-memory-cage) for more details.
-  NAPI-RS will copy the data of the `Vec<u8>` into the underlying `Buffer` in this case.
+  **NAPI-RS** will copy the data of the `Vec<u8>` into the underlying `Buffer` in this case.
 </Callout>
 
 ## Buffer and TypedArray Types
 
-NAPI-RS provides two categories of buffer types for different use cases. For more details on how lifetimes work for these types, see [Understanding Lifetime](/docs/concepts/understanding-lifetime#lifetime-of-buffer-and-typedarray).
+**NAPI-RS** provides two categories of buffer types for different use cases. For more details on how lifetimes work for these types, see [Understanding Lifetime](/docs/concepts/understanding-lifetime#lifetime-of-buffer-and-typedarray).
 
 ### Owned Types
 

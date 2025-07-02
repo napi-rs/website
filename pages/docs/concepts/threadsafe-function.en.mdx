@@ -14,7 +14,7 @@ import NodeLink from '../../../components/node-link'
   <NodeLink href="https://nodejs.org/api/n-api.html#napi_env">`napi_env`</NodeLink>, <NodeLink href="https://nodejs.org/api/n-api.html#napi_value">`napi_value`</NodeLink>, and <NodeLink href="https://nodejs.org/api/n-api.html#napi_ref">`napi_ref`</NodeLink>
   are low level concepts in `Node-API`, which the `#[napi]` macro of **NAPI-RS**
   is built on top of. **NAPI-RS** also provides a [low level
-  API](../compat-mode/concepts/env) to access the original `Node-API`.
+  API](/docs/concepts/env) to access the original `Node-API`.
 </Callout>
 
 `Node-API` provides complex `Threadsafe Function` APIs to call JavaScript functions on other threads. It's very complex, so many developers don't understand how to use it correctly. **NAPI-RS** provides a limited version of `Threadsafe Function` APIs to make it easier to use:
@@ -269,4 +269,111 @@ pub fn call_threadsafe_function(
 export declare function callThreadsafeFunction(
   tsfn: (arg: number) => void,
 ): void
+```
+
+## `Weak` ThreadsafeFunction
+
+By default, the `ThreadsafeFunction` will cause the event loop on the thread on which it is created to remain alive until the `ThreadsafeFunction` is destroyed. See <NodeLink href="https://nodejs.org/api/n-api.html#deciding-whether-to-keep-the-process-running">**Deciding whether to keep the process running**</NodeLink>.
+
+If you don't want to keep the Node.js process/event loop alive, you can define the `Weak` parameter of `ThreadsafeFunction` to `true`:
+
+```rust {11} filename="lib.rs"
+use std::{sync::Arc, thread};
+
+use napi::{
+  bindgen_prelude::*,
+  threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode},
+};
+use napi_derive::napi;
+
+#[napi]
+pub fn call_threadsafe_function(
+  tsfn: Arc<ThreadsafeFunction<u32, u32, u32, Status, false, true>>,
+) -> Result<()> {
+  for n in 0..100 {
+    let tsfn = tsfn.clone();
+    thread::spawn(move || {
+      tsfn.call(n, ThreadsafeFunctionCallMode::Blocking);
+    });
+  }
+  Ok(())
+}
+```
+If you call this function like this:
+
+```ts filename="index.ts"
+import { callThreadsafeFunction } from './index.js'
+
+// log nothing because the event loop exit immediately
+callThreadsafeFunction((err, n) => {
+  if (err) {
+    console.error(err)
+  } else {
+    console.log(n)
+  }
+})
+```
+
+There won't be any logs in the console, because the event loop and Node.js process exit immediately.
+
+## `MaxQueueSize`
+You can set the `MaxQueueSize` parameter of `ThreadsafeFunction` to limit the number of messages in the queue.
+
+<Callout type="info">
+  If call the `ThreadsafeFunction` with the `Blocking` mode, the `MaxQueueSize` parameter will have no effect. `Blocking` mode would block the queue when the queue is full. `NonBlocking` mode would return immediately with the `Status::QueueFull` when the queue is full. See <NodeLink href="https://nodejs.org/api/n-api.html#napi_call_threadsafe_function">`napi_call_threadsafe_function`</NodeLink> for more details.
+</Callout>
+
+```rust {11,16} filename="lib.rs"
+use std::{sync::Arc, thread};
+
+use napi::{
+  bindgen_prelude::*,
+  threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode},
+};
+use napi_derive::napi;
+
+#[napi]
+pub fn call_threadsafe_function(
+  tsfn: Arc<ThreadsafeFunction<u32, (), u32, Status, false, false, 1>>,
+) -> Result<()> {
+  thread::spawn(move || {
+    for n in 0..100 {
+      let tsfn = tsfn.clone();
+      let status = tsfn.call(n, ThreadsafeFunctionCallMode::NonBlocking);
+      println!("{}", status)
+    }
+  });
+  Ok(())
+}
+```
+
+When you call this function, and add heavy work in the callback, you will see the `QueueFull` status return from the `tsfn.call`:
+
+```ts filename="index.ts"
+import { callThreadsafeFunction } from './index.js'
+
+function fib(n) {
+  if (n <= 1) return n
+  return fib(n - 1) + fib(n - 2)
+}
+
+callThreadsafeFunction(() => {
+  fib(40)
+})
+```
+
+this would produce the following output:
+
+```
+Ok
+Ok
+QueueFull
+QueueFull
+QueueFull
+QueueFull
+QueueFull
+QueueFull
+QueueFull
+QueueFull
+...
 ```

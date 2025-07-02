@@ -6,14 +6,7 @@ import NodeLink from '../../../components/node-link'
 
 # External
 
-<NodeLink href="https://nodejs.org/api/n-api.html#napi_create_external">
-  `External`
-</NodeLink>
-is very similar to
-<NodeLink href="https://nodejs.org/api/n-api.html#object-wrap">
-  `Object Wrap`
-</NodeLink>
-, which is used in [Class](./class) under the hood.
+<NodeLink href="https://nodejs.org/api/n-api.html#napi_create_external">`External`</NodeLink> is very similar to <NodeLink href="https://nodejs.org/api/n-api.html#object-wrap">`Object Wrap`</NodeLink>, which is used in [Class](./class) under the hood.
 
 `Object Wrap` attaches a native value to a JavaScript Object and can notify you when the attached JavaScript Object is recycled by GC. `External` creates an empty, blank JavaScript Object that holds the native value under the hood. It only works by passing the object back to Rust:
 
