@@ -47,7 +47,7 @@ export function ImageFormatSelector({ onSelect }) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[200px] justify-between"
+          className="w-[100px] justify-between"
           style={{ border: 'solid 1px oklch(0.922 0 0)', padding: '8px 12px' }}
         >
           {value
@@ -200,17 +200,22 @@ export default function TransformImage() {
           Original Size: {prettyBytes(imageSize)}
         </span>
       </div>
-      <div className="w-1/2 flex items-center" style={{ margin: '10px 0' }}>
+      <div
+        className="w-1/2 flex items-center flex-wrap"
+        style={{ margin: '10px 0' }}
+      >
         <ImageFormatSelector onSelect={setFormat} />
-        <span className="ml-2">Quality:</span>
-        <Input
-          className="image-quality-input"
-          type="number"
-          style={{ width: '80px', margin: '0 10px', padding: '0 10px' }}
-          placeholder="Quality (0-100)"
-          value={quality}
-          onChange={setQuality}
-        />
+        <span className="flex items-center my-2">
+          <span className="ml-2">Quality:</span>
+          <Input
+            className="image-quality-input"
+            type="number"
+            style={{ width: '80px', margin: '0 10px', padding: '0 10px' }}
+            placeholder="Quality (0-100)"
+            value={quality}
+            onChange={setQuality}
+          />
+        </span>
         <Button
           onClick={startTransform}
           style={{

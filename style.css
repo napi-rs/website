@@ -142,3 +142,25 @@ section.footnotes > h2 {
 .image-quality-input:focus-visible {
   box-shadow: none;
 }
+
+.link-preview-body {
+  -webkit-line-clamp: 4;
+  -moz-line-clamp: 4;
+  line-clamp: 4;
+}
+
+@media (max-width: 768px) {
+  .link-preview-body {
+    -webkit-line-clamp: 2;
+    -moz-line-clamp: 2;
+    line-clamp: 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .link-preview-body {
+    -webkit-line-clamp: 1;
+    -moz-line-clamp: 1;
+    line-clamp: 1;
+  }
+}
