@@ -16,7 +16,7 @@ For this scenario, **NAPI-RS** allows you to inject `Env` into your `fn` which i
 use napi::{Env, bindgen_prelude::*};
 
 #[napi]
-fn call_env(env: Env, length: u32) -> Result<External<Vec<u32>>> {
+pub fn call_env(env: Env, length: u32) -> Result<External<Vec<u32>>> {
   env.adjust_external_memory(length as i64)?;
   Ok(External::new(vec![0; length as usize]))
 }
@@ -37,7 +37,7 @@ use napi::bindgen_prelude::*;
 struct QueryEngine {}
 
 #[napi(js_name = "QueryEngine")]
-struct JsQueryEngine {
+pub struct JsQueryEngine {
   engine: QueryEngine,
 }
 

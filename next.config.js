@@ -8,7 +8,7 @@ const withNextra = nextra({
   staticImage: true,
 })
 
-export default withNextra({
+const nextConfig = withNextra({
   i18n: {
     defaultLocale: process.env.LOCALE || 'en',
     locales: ['en', 'cn', 'pt-BR'],
@@ -38,3 +38,5 @@ export default withNextra({
     return config
   },
 })
+
+export default nextConfig

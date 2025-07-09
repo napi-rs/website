@@ -6,19 +6,28 @@ description: Overwrite the argument and return TypeScript types.
 
 In most cases, **NAPI-RS** will generate the right TypeScript types for you. But in some scenarios, you may want to overwrite the arguments or return type.
 
-[ThreadsafeFunction](./threadsafe-function) is an example, because the `ThreadsafeFunction` is too complex, **NAPI-RS** can't generate the right TypeScript types for it. You always need to overwrite its argument type.
+[ThreadsafeFunction](./threadsafe-function) is an example, because the `ThreadsafeFunction` is too complex, **NAPI-RS** can't generate the right TypeScript types for it in some cases. You always need to overwrite its argument type.
 
 ## `ts_args_type`
 
 Rewrite the arguments type of the function, **NAPI-RS** will put the rewritten type into the brace of the function signature.
 
-```rust {1} filename="lib.rs"
-#[napi(ts_args_type="callback: (err: null | Error, result: number) => void")]
-pub fn call_threadsafe_function(callback: Function<u32>) -> Result<()> {
-  let tsfn: ThreadsafeFunction<u32, ErrorStrategy::CalleeHandled> = callback
-    .create_threadsafe_function(0, |ctx| {
-      ctx.env.create_uint32(ctx.value + 1).map(|v| vec![v])
-    })?;
+```rust {10} filename="lib.rs"
+use std::sync::Arc;
+use std::thread;
+
+use napi::{
+  bindgen_prelude::*,
+  threadsafe_function::{ThreadsafeCallContext, ThreadsafeFunctionCallMode},
+};
+use napi_derive::napi;
+
+#[napi(ts_args_type = "callback: (err: null | Error, result: string) => void")]
+pub fn call_threadsafe_function(callback: Function<u32, ()>) -> Result<()> {
+  let tsfn_builder = callback.build_threadsafe_function();
+  let tsfn = Arc::new(tsfn_builder.build_callback(
+    move |ctx: ThreadsafeCallContext<Result<u32>>| Ok(format!("n: {}", ctx.value?)),
+  )?);
   for n in 0..100 {
     let tsfn = tsfn.clone();
     thread::spawn(move || {
@@ -33,7 +42,7 @@ pub fn call_threadsafe_function(callback: Function<u32>) -> Result<()> {
 
 ```ts filename="index.d.ts"
 export function callThreadsafeFunction(
-  callback: (err: null | Error, result: number) => void,
+  callback: (err: null | Error, result: string) => void,
 ): void
 ```
 
@@ -46,7 +55,7 @@ signature and will auto-derive the other ones.
 #[napi]
 fn override_individual_arg_on_function(
   not_overridden: String,
-  #[napi(ts_arg_type = "() => string")] f: JsFunction,
+  #[napi(ts_arg_type = "() => string")] f: Function,
   not_overridden2: u32,
 ) {
 // code ...
