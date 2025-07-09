@@ -14,7 +14,7 @@ export function LinkPreview({ href }: { href: string }) {
       }}
     >
       <Card
-        className="w-4/5 gap-2 py-3 backdrop-blur"
+        className="w-full gap-2 py-3 backdrop-blur"
         style={{ border: 'solid 1px oklch(0.922 0 0)', marginTop: '10px' }}
       >
         <CardHeader>
@@ -39,7 +39,9 @@ export function LinkPreview({ href }: { href: string }) {
         </CardHeader>
         <CardContent className="flex justify-between">
           <div className="flex-col justify-between w-1/2 flex">
-            <p className="line-clamp-4 text-sm">{linkMeta.body}</p>
+            <p className="link-preview-body line-clamp-4 text-sm">
+              {linkMeta.body}
+            </p>
             <p className="flex text-sm align-center">
               <span className="inline-block align-middle">
                 <Github
@@ -50,7 +52,16 @@ export function LinkPreview({ href }: { href: string }) {
                   }}
                 />
               </span>
-              {linkMeta.repoUrl}
+              <span
+                style={{
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: 'inline-block',
+                }}
+              >
+                {linkMeta.repoUrl}
+              </span>
               <ExternalLink
                 style={{ marginLeft: '30px', marginTop: '2px' }}
                 size={16}
