@@ -46,7 +46,7 @@ import { Callout } from 'nextra-theme-docs'
   `JsValue` from `Output` and `Env` and call it back in JavaScript.
 </Callout>
 
-You can use the low-level API `Env::spawn` to spawn a defined `Task` in the libuv thread pool. See example in [Reference](../compat-mode/concepts/ref).
+You can use the low-level API `Env::spawn` to spawn a defined `Task` in the libuv thread pool. See example in [Reference](/docs/concepts/reference).
 
 In addition to `compute` and `resolve`, you can also provide a `reject` method to do some cleanup when `Task` runs into an error, like `unref`ing some object:
 

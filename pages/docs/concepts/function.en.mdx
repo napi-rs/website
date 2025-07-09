@@ -2,6 +2,8 @@
 description: Define and use JavaScript functions in NAPI-RS.
 ---
 
+import { Callout } from 'nextra-theme-docs'
+
 import NodeLink from '../../../components/node-link'
 
 # Function
@@ -10,7 +12,7 @@ Defining a JavaScript `function` is very simple in **NAPI-RS**. Just a plain Rus
 
 ```rust filename="lib.rs"
 #[napi]
-fn sum(a: u32, b: u32) -> u32 {
+pub fn sum(a: u32, b: u32) -> u32 {
   a + b
 }
 ```
@@ -79,3 +81,133 @@ The most important thing you should keep in mind is **_NAPI-RS fn does not suppo
 | `i64n`                                       | `BigInt`         |
 | `i128`                                       | `BigInt`         |
 | `u128`                                       | `BigInt`         |
+
+## `Function` as parameter
+
+You can pass a `Function` as a parameter to a `fn`:
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn call_function(callback: Function<u32, u32>) -> Result<u32> {
+  callback.call(1)
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+```ts filename="index.d.ts"
+export declare function callFunction(callback: (arg: number) => number): number
+```
+
+<Callout type="info">
+  You can also create a `Function` at the Rust side, see [`Env::create_function`](/docs/concepts/env#create_function)
+</Callout>
+
+## `FnArgs`
+
+When the number of parameters exceeds 1, you can use `FnArgs` to define the parameters.
+
+<Callout type="info">
+  The `tuple` type can be converted to `FnArgs` by calling `.into()`.
+</Callout>
+
+```rust {6} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn call_function_with_args(callback: Function<FnArgs<(u32, u32)>, u32>) -> Result<u32> {
+  callback.call((1, 2).into())
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+```ts filename="index.d.ts"
+export declare function callFunctionWithArgs(callback: (arg1: number, arg2: number) => number): number
+```
+
+## `apply`
+
+Like JavaScript, you can also use `apply` to call a `Function` with the `this` value.
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub struct RustClass {
+  pub name: String,
+}
+
+#[napi]
+impl RustClass {
+  #[napi(constructor)]
+  pub fn new(name: String) -> Self {
+    Self { name }
+  }
+}
+
+#[napi]
+pub fn call_function_with_apply(
+  callback: Function<(), ()>,
+  this: ClassInstance<RustClass>,
+) -> Result<()> {
+  callback.apply(this, ())
+}
+```
+
+```ts filename="index.ts"
+import { callFunctionWithApply, RustClass } from './index.js'
+
+const rustClass = new RustClass("foo")
+
+callFunctionWithApply(rustClass, function() {
+  console.log(this.name) // foo
+})
+```
+
+## `create_ref`
+
+See [**Function Reference**](/docs/concepts/reference#functionref) for more details.
+
+## `build_threadsafe_function`
+
+You can build a `ThreadsafeFunction` from a `Function` by calling `build_threadsafe_function`.
+
+The return type of the `build_threadsafe_function` is a `ThreadsafeFunctionBuilder`.
+
+By default, the `ThreadsafeFunctionBuilder` will create a `ThreadsafeFunction` with the default options:
+
+<Callout type="info">
+  See [**ThreadsafeFunction**](/docs/concepts/threadsafe-function) for the details of options
+</Callout>
+
+<Callout>
+  Since you can pass `ThreadsafeFunction` and `Arc<ThreadsafeFunction>` directly to the `#[napi] fn`, only use the `build_threadsafe_function` when you are need to create a `ThreadsafeFunction` dynamically.
+</Callout>
+
+- `max_queue_size` is `0`
+- `weak` is `false`
+- `callee_handled` is `true`
+- `error_status` is `napi::Status`
+
+```rust filename="lib.rs"
+use napi::{bindgen_prelude::*, threadsafe_function::ThreadsafeFunctionCallMode};
+use napi_derive::napi;
+
+#[napi]
+pub fn build_threadsafe_function_from_function(
+  callback: Function<FnArgs<(u32, u32)>, u32>,
+) -> Result<()> {
+  let tsfn = callback.build_threadsafe_function().build()?;
+  let jh = std::thread::spawn(move || {
+    tsfn.call((1, 2).into(), ThreadsafeFunctionCallMode::NonBlocking);
+  });
+
+  Ok(())
+}
+```
