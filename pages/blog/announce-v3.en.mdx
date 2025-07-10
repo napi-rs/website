@@ -111,11 +111,11 @@ export const getStaticProps = async () => {
 >
 > 📅 2025/07/07
 
-It has been 4 years since the release of **NAPI-RS** V2. During this time, the **NAPI-RS** community has been developing rapidly. We have identified many problems with the API design in the community. For example, `ThreadsafeFunction` has always been difficult to use. The main reason is that Node-API's ThreadsafeFunction is designed too complexly, which causes the Rust encapsulation to leak too much of the underlying complexity. However, through collaboration with the [`Rolldown`](https://github.com/rolldown/rolldown) and [`rspack`](https://github.com/web-infra-dev/rspack) teams, we have finally found a design that can balance API complexity and correctness.
+It has been 4 years since the release of **NAPI-RS** V2. During this time, the **NAPI-RS** community has been developing rapidly. We have identified many problems with the API design in the community. For example, `ThreadsafeFunction` has always been difficult to use. The main reason is that Node-API's ThreadsafeFunction is designed too complexly, which causes the Rust encapsulation to leak too much of the underlying complexity. However, through collaboration with the <img src={rolldownLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> [`Rolldown`](https://github.com/rolldown/rolldown) and <img src={rspackLogo.src} style={{ marginBottom: '3px' }} width={20} height={20} /> [`Rspack`](https://github.com/web-infra-dev/rspack) teams, we have finally found a design that can balance API complexity and correctness.
 
 `WebAssembly` is the biggest update this time. In V3, you can compile your project into `WebAssembly` with almost no code changes. If the compilation target is `wasm32-wasip1-threads` or higher, you can directly run code that uses Rust features like `std::thread` and `tokio` in the browser without any additional modifications.
 
-Cross compilation is also a big update. In previous versions, you need to use <NodeLink href="https://github.com/napi-rs/napi-rs/pkgs/container/napi-rs%2Fnodejs-rust/326314378?tag=lts-debian-aarch64">`ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian`</NodeLink> or <NodeLink href="https://github.com/napi-rs/napi-rs/pkgs/container/napi-rs%2Fnodejs-rust/326314378?tag=lts-debian-aarch64">`ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian-aarch64`</NodeLink> docker images to build your project. These images are huge, it slows down the CI build time, and it's hard to sync the tools and infrastructure with the community.
+Cross compilation is also a big update. In previous versions, you need to use <NodeLink href="https://github.com/napi-rs/napi-rs/pkgs/container/napi-rs%2Fnodejs-rust/326314378?tag=lts-debian-aarch64">`nodejs-rust:lts-debian`</NodeLink> or <NodeLink href="https://github.com/napi-rs/napi-rs/pkgs/container/napi-rs%2Fnodejs-rust/326314378?tag=lts-debian-aarch64">`nodejs-rust:lts-debian-aarch64`</NodeLink> docker images to build your project. These images are huge, it slows down the CI build time, and it's hard to sync the tools and infrastructure with the community.
 
 Now let's dive into the new features of V3.
 
@@ -155,6 +155,8 @@ With **NAPI-RS**, you can compile the codes and run them without pain.
 Another pain point is if you are using crates that written in `C` or `C++`, setup `wasm-bindgen` build process is very complex. See:
 
 <LinkPreview href="https://github.com/rustwasm/wasm-bindgen/pull/2209" />
+
+See [**WebAssembly**](/docs/concepts/webassembly) for more details.
 
 ### Sample App using **NAPI-RS** WebAssembly
 
@@ -295,6 +297,8 @@ This is the repo for the cross toolchain, we basically dump the necessary tools 
 
 <LinkPreview href="https://github.com/napi-rs/cross-toolchain" />
 
+We also integrate the `cargo-zigbuild` and `cargo-xwin` in the `@napi-rs/cli`, so you can build many different targets on a single machine, see [**Cross Compilation**](/docs/cross-build/summary) for more details.
+
 ## `Branding new pnpm package template`
 We have supported **yarn** as the package manager for the [`package-template`](https://github.com/napi-rs/package-template) project since **V2**, because yarn's [supportedArchitectures](https://yarnpkg.com/configuration/yarnrc#supportedArchitectures) feature is very friendly for cross-platform compilation and testing, and it has good Docker support.
 
@@ -312,6 +316,28 @@ The `npm` team spent several years to resolve this critical issue for native add
   From this issue, we can see that the `npm` team does not prioritize native addons scenarios, so currently the **NAPI-RS** neither supports nor recommends using `npm` as a package manager. It's hard to say whether the `npm` team will fix similar critical issues in time in the future.
 </Callout>
 
+## `@napi-rs/cli` API
+
+You can now easily integrate the **NAPI-RS** tools into your JavaScript infra:
+
+```ts
+// Programmatically
+import { NapiCli } from '@napi-rs/cli'
+
+const cli = new NapiCli()
+
+const { task, abort } = await cli.build({
+  release: true,
+  features: ['allocator-api'],
+  esm: true,
+  platform: true,
+})
+
+const outputs = await task
+```
+
+All napi commands have corresponding APIs, you can visit [`cli`](/docs/cli/build) to learn more.
+
 ## Community is growing fast!
 
 When **V2** was released, only [Next.js](https://nextjs.org/), [Parcel](https://parceljs.org/), [SWC](https://swc.rs/) were using **NAPI-RS**.
@@ -326,18 +352,18 @@ At the same time, with the rise of AI, **NAPI-RS** has also begun participating 
 
 In the frontend build field, **NAPI-RS** has been widely used. Almost all Bundler use **NAPI-RS** to improve their performance:
 
-- <a href="https://rolldown.rs/"><img src={rolldownLogo.src} style={{ marginBottom: '2px' }} width={20} height={20} /> Rolldown </a>
-- <a href="https://rollupjs.org/"><img src={rollupLogo.src} style={{ marginBottom: '2px' }} width={20} height={20} /> Rollup </a>
-- <a href="https://rspack.dev/"><img src={rspackLogo.src} style={{ marginBottom: '2px' }} width={20} height={20} /> Rspack </a>
-- <a href="https://parceljs.org/"><img src={parcelLogo.src} style={{ marginBottom: '2px' }} width={20} height={20} /> Parcel </a>
+- <a href="https://rolldown.rs/"><img src={rolldownLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> Rolldown </a>
+- <a href="https://rollupjs.org/"><img src={rollupLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> Rollup </a>
+- <a href="https://rspack.dev/"><img src={rspackLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> Rspack </a>
+- <a href="https://parceljs.org/"><img src={parcelLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> Parcel </a>
 
 **Monorepo tools:**
 - <a href="https://turbo.build/"><TurborepoLogo /></a>
-- <a href="https://nx.dev/"><NxLogo style={{ marginLeft: '2px' }} /> Nx</a>
+- <a href="https://nx.dev/"><NxLogo style={{ margin: '0 0 3px 2px' }} /> Nx</a>
 
-And <a href="https://oxc.rs/"><img src={oxcLogo.src} style={{ marginBottom: '2px' }} width={20} height={20} /> Oxc</a> provides Linter, Transformer and all kinds of apis via **NAPI-RS**.
+And <a href="https://oxc.rs/"><img src={oxcLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> Oxc</a> provides Linter, Transformer and all kinds of apis via **NAPI-RS**.
 
-<a href="https://deno.com/"><DenoLogo /></a> and <a href="https://bun.sh/"><img src={bunLogo.src} style={{ marginBottom: '2px' }} width={20} height={20} /> Bun</a> has been improved their <NodeLink href="https://nodejs.org/api/n-api.html"> **Node-API** </NodeLink> compatibility, almost all the **NAPI-RS** projects can run in **Deno** and **Bun**.
+<a href="https://deno.com/"><DenoLogo /></a> and <a href="https://bun.sh/"><img src={bunLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> Bun</a> has been improved their <NodeLink href="https://nodejs.org/api/n-api.html"> **Node-API** </NodeLink> compatibility, almost all the **NAPI-RS** projects can run in **Deno** and **Bun**.
 
 ## Calling for sponsorship
 
