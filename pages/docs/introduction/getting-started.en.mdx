@@ -9,7 +9,7 @@ import Video from '../../../public/assets/napi-rs-guide.mp4'
 
 ## Start from `@napi-rs/cli`
 
-> The recommend way.
+> The recommended way.
 
 <br />
 
@@ -50,16 +50,16 @@ Opt in for generated GitHub actions that will help publish the native package to
 
 ### Deep dive
 
-It is recommended to distribute your package under [npm scope](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) because `@napi-rs/cli` by default napi will append the different platform suffixes to the npm package name as the package name for the different platform binary distributions. Using npm scope will help reduce the chance that the package name was already taken.
+It is recommended to distribute your package under [npm scope](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) because `@napi-rs/cli` will, by default, append different platform suffixes to the npm package name for different platform binary distributions. Using npm scope will help reduce the chance that the package name was already taken.
 
 For example if you want publish package `@cool/core`, with the `macOS x64`, `Windows x64` and `Linux aarch64` supported, `@napi-rs/cli` will create and publish four packages for you:
 
-- `@cool/core` includes just `JavaScript` codes, which actually load the native binary from per platforms.
+- `@cool/core` includes just `JavaScript` code, which actually loads the native binary from each platform.
 - `@cool/core-darwin-x64` for `macOS x64` platform.
 - `@cool/core-win32-x64` for `Windows x64` platform.
 - `@cool/core-linux-arm64-gnu` for `Linux aarch64` platform.
 
-In every platform binary package, there are `cpu` and `os` fields in there `package.json`:
+In each platform binary package, there are `cpu` and `os` fields in the `package.json`:
 
 ```json filename="package.json"
 {
