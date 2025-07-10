@@ -140,7 +140,7 @@ export const getStaticProps = async () => {
 
 # Announcing NAPI-RS v3
 
-> 🦀 NAPI-RS v3 - WebAssembly! More safety API design, and new cross compilation feature.
+> 🦀 NAPI-RS v3 - WebAssembly! Safer API design and new cross compilation features.
 >
 > 📅 2025/07/07
 
@@ -154,10 +154,10 @@ Now let's dive into the new features of V3.
 
 ## `WebAssembly`
 
-Support `WebAssembly` means a a lot for the **NAPI-RS** community, there are several scenarios that only `WebAssembly` can handle:
+Supporting `WebAssembly` means a lot for the **NAPI-RS** community. There are several scenarios that only `WebAssembly` can handle:
 
 1. Provides the playground and reproducible environment in the browser, like [Rolldown repl](https://repl.rolldown.rs/) and [Oxc playground](https://playground.oxc.rs/).
-2. Provides the fallback package for the platforms that does't have pre-build binaries. For some projects, it's hard to maintain the pre-build binaries for all the possible platforms.
+2. Provides fallback packages for platforms that don't have pre-built binaries. For some projects, it's hard to maintain pre-built binaries for all possible platforms.
 3. Make the project usable in [`StackBlitz`](https://stackblitz.com/).
 
 ### Why don't use [`wasm-bindgen`](https://github.com/rustwasm/wasm-bindgen) instead
@@ -166,7 +166,7 @@ One of the main reasons is that you don't need to write 2 different bindings for
 
 For example, the [Oxc project maintained a `wasm-bindgen` binding](https://github.com/oxc-project/oxc/blob/oxlint_v0.15.0/crates/oxc_wasm/src/lib.rs) before. However, as the project grew larger, the APIs gradually increased, and the maintenance cost became higher and higher. It was often necessary to port the same logic from the Node.js binding to the `wasm-bindgen` binding.
 
-Besides that, using `wasm-bindgen` has many limitations, such as the inability to use `std::thread` and third-party libraries that use `std::thread`. For example, you may need to write code like:
+Besides that, using `wasm-bindgen` has many limitations, such as the inability to use `std::thread` and third-party libraries that depend on `std::thread`. For example, you may need to write code like:
 
 ```rust
 #[cfg(not(target_arch = "wasm32"))]
@@ -185,7 +185,7 @@ const hash = entries.iter().map(|chunk| chunk.compute_hash()).collect::<Vec<_>>(
 
 With **NAPI-RS**, you can compile the codes and run them without pain.
 
-Another pain point is if you are using crates that written in `C` or `C++`, setup `wasm-bindgen` build process is very complex. See:
+Another pain point is if you are using crates written in `C` or `C++`, setting up the `wasm-bindgen` build process is very complex. See:
 
 <LinkPreview href="https://github.com/rustwasm/wasm-bindgen/pull/2209" />
 
@@ -213,9 +213,9 @@ There are a lot of improvements in the API design, both usability and security h
 
 The lifetime is introduced in **NAPI-RS** V3, see [**Understanding Lifetime**](/docs/concepts/understanding-lifetime) for more details.
 
-In **V2**, due to the need to design complex codegen and APIs, we didn't have time to add lifetimes to the APIs, which led to some issues.
+In **V2**, due to the complexity of designing codegen and APIs, we didn't have time to add lifetimes to the APIs, which led to some issues.
 
-1. Some types have safety issues, such as the previous `JsObject`, which could escape and be used outside the scope of `#[napi] fn` calls, when in fact its underlying `napi_value` had already become invalid. We can now constrain such behaviors using Rust's lifetimes
+1. Some types have safety issues, such as the previous `JsObject`, which could escape and be used outside the scope of `#[napi] fn` calls, when in fact its underlying `napi_value` had already become invalid. We can now constrain such behavior using Rust's lifetimes
 2. `#[napi] struct` previously couldn't contain lifetimes, which caused some usability issues
 
 **For example**:
@@ -308,10 +308,10 @@ For more details you can see [**Function**](/docs/concepts/function).
 
 ## `Cross Compilation`
 
-Cross compilation is pain for the **Rust** community. There is [`rust-cross`](https://github.com/cross-rs/cross) project, but it's not easy to use:
+Cross compilation is painful for the **Rust** community. There is the [`rust-cross`](https://github.com/cross-rs/cross) project, but it's not easy to use:
 
-1. The `GLIBC` version for gnu Linux distribution is too new, for example `arm-unknown-linux-gnueabihf` is only support `GLIBC 2.31`.
-2. Configuring the lower `GLIBC 2.17` (Still a version that many enterprises need to support) compilation is very complex.
+1. The `GLIBC` version for GNU Linux distributions is too new, for example `arm-unknown-linux-gnueabihf` only supports `GLIBC 2.31`.
+2. Configuring compilation for the older `GLIBC 2.17` (still a version that many enterprises need to support) is very complex.
 3. Runs on `QEMU` and Docker, which is slow and limited.
 
 **NAPI-RS** V3 introduces a new cross compilation feature, with the `napi build --use-napi-cross` flag, this is the supports matrix for the cross compilation:
@@ -326,27 +326,27 @@ Cross compilation is pain for the **Rust** community. There is [`rust-cross`](ht
 
 All these targets are supported to **GLIBC 2.17**.
 
-This is the repo for the cross toolchain, we basically dump the necessary tools and files from the [`manylinux-cross`](https://github.com/rust-cross/manylinux-cross) project, then upload them to the `npm` registry. Then the `@napi-rs/cli` will pick the correct toolchain and inject environment variables to the build process.
+This is the repo for the cross toolchain. We basically extract the necessary tools and files from the [`manylinux-cross`](https://github.com/rust-cross/manylinux-cross) project, then upload them to the `npm` registry. The `@napi-rs/cli` will then pick the correct toolchain and inject environment variables into the build process.
 
 <LinkPreview href="https://github.com/napi-rs/cross-toolchain" />
 
-We also integrate the `cargo-zigbuild` and `cargo-xwin` in the `@napi-rs/cli`, so you can build many different targets on a single machine, see [**Cross Compilation**](/docs/cross-build) for more details.
+We also integrate `cargo-zigbuild` and `cargo-xwin` in the `@napi-rs/cli`, so you can build many different targets on a single machine. See [**Cross Compilation**](/docs/cross-build) for more details.
 
-## `Branding new pnpm package template`
-We have supported **yarn** as the package manager for the [`package-template`](https://github.com/napi-rs/package-template) project since **V2**, because yarn's [supportedArchitectures](https://yarnpkg.com/configuration/yarnrc#supportedArchitectures) feature is very friendly for cross-platform compilation and testing, and it has good Docker support.
+## `Brand new pnpm package template`
+We have supported **yarn** as the package manager for the [`package-template`](https://github.com/napi-rs/package-template) project since **V2**, because yarn's [supportedArchitectures](https://yarnpkg.com/configuration/yarnrc#supportedArchitectures) feature is very friendly to cross-platform compilation and testing, and it has good Docker support.
 
 As `pnpm` becomes popular, we also support [package-template-pnpm](https://github.com/napi-rs/package-template-pnpm) in **V3**.
 
 ### **Why there is no `npm` package template?**
 
-Because of this:
+Because of this issue:
 
 <LinkPreview href="https://github.com/npm/cli/issues/4828" />
 
-The `npm` team spent several years to resolve this critical issue for native addons, although the issue itself wasn't complex. While this issue has been fixed in `npm` 11, the Node.js team encountered other problems when upgrading to `npm` 11, resulting in both `Node.js` LTS versions and default Docker images still using `npm` 10 which contains this bug.
+The `npm` team spent several years resolving this critical issue for native addons, although the issue itself wasn't complex. While this issue has been fixed in `npm` 11, the Node.js team encountered other problems when upgrading to `npm` 11, resulting in both `Node.js` LTS versions and default Docker images still using `npm` 10, which contains this bug.
 
 <Callout type="info">
-  From this issue, we can see that the `npm` team does not prioritize native addons scenarios, so currently the **NAPI-RS** neither supports nor recommends using `npm` as a package manager. It's hard to say whether the `npm` team will fix similar critical issues in time in the future.
+  From this issue, we can see that the `npm` team does not prioritize native addon scenarios, so currently **NAPI-RS** neither supports nor recommends using `npm` as a package manager. It's hard to say whether the `npm` team will fix similar critical issues in a timely manner in the future.
 </Callout>
 
 ## `@napi-rs/cli` API
@@ -381,11 +381,11 @@ Today, **NAPI-RS** has been widely used in developing various types of applicati
 
 <a href="https://tailwindcss.com/" target="_blank"><TailwindLogo /></a> is using **NAPI-RS** to build their `oxide` high performance engine. Tailwind CSS is also one of our platinum sponsors!
 
-<a href="https://affine.pro/" target="_blank"><AffineLogo /></a> is using **NAPI-RS** to their Electron Desktop App and Node.js server high performance addons.
+<a href="https://affine.pro/" target="_blank"><AffineLogo /></a> is using **NAPI-RS** for their Electron Desktop App and Node.js server high performance addons.
 
 <a href="https://bitwarden.com/" target="_blank"><BitwardenLogo /></a> is using **NAPI-RS** to build their Electron Desktop App and Node.js server high performance addons.
 
-At the same time, with the rise of AI, **NAPI-RS** has also begun participating in the development of AI tools. For example, <a href="https://github.com/lancedb/lancedb" target="_blank"><LanceDBLogo /></a> is a vector database that uses **NAPI-RS** to provide Node.js embedded experience; <a href="https://www.trychroma.com/" target="_blank"><img src={chromaLogo.src} alt="Chroma" width={28} style={{ verticalAlign: 'text-bottom' }} /> **Chroma**</a> is the open-source search and retrieval database for AI applications. [Tokenizers](https://github.com/huggingface/tokenizers) is a tokenizer library developed by <a href="https://huggingface.co/" target="_blank"><img src={huggingfaceLogo.src} style={{ marginBottom: '2px' }} width={20} height={20} /> **Hugging Face**</a>. <a href="https://github.com/tensorzero/tensorzero" target="_blank"> <img src={tensorzeroLogo.src} style={{ marginBottom: '2px' }} width={20} height={20} /> TensorZero </a> is an open-source stack for industrial-grade LLM applications, they also use **NAPI-RS** to build their `tensorzero-node` client.
+At the same time, with the rise of AI, **NAPI-RS** has also begun participating in the development of AI tools. For example, <a href="https://github.com/lancedb/lancedb" target="_blank"><LanceDBLogo /></a> is a vector database that uses **NAPI-RS** to provide a Node.js embedded experience; <a href="https://www.trychroma.com/" target="_blank"><img src={chromaLogo.src} alt="Chroma" width={28} style={{ verticalAlign: 'text-bottom' }} /> **Chroma**</a> is an open-source search and retrieval database for AI applications. [Tokenizers](https://github.com/huggingface/tokenizers) is a tokenizer library developed by <a href="https://huggingface.co/" target="_blank"><img src={huggingfaceLogo.src} style={{ marginBottom: '2px' }} width={20} height={20} /> **Hugging Face**</a>. <a href="https://github.com/tensorzero/tensorzero" target="_blank"> <img src={tensorzeroLogo.src} style={{ marginBottom: '2px' }} width={20} height={20} /> TensorZero </a> is an open-source stack for industrial-grade LLM applications, they also use **NAPI-RS** to build their `tensorzero-node` client.
 
 In the frontend build field, **NAPI-RS** has been widely used. Almost all Bundler use **NAPI-RS** to improve their performance:
 
@@ -406,11 +406,11 @@ And <a href="https://oxc.rs/"><img src={oxcLogo.src} style={{ verticalAlign: 'te
 
 <LinkPreview href="https://github.com/microsoft/typescript-go/discussions/455" />
 
-<a href="https://deno.com/"><DenoLogo /></a> and <a href="https://bun.sh/"><img src={bunLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> Bun</a> has been improved their <NodeLink href="https://nodejs.org/api/n-api.html"> **Node-API** </NodeLink> compatibility, almost all the **NAPI-RS** projects can run in **Deno** and **Bun**.
+<a href="https://deno.com/"><DenoLogo /></a> and <a href="https://bun.sh/"><img src={bunLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> Bun</a> have improved their <NodeLink href="https://nodejs.org/api/n-api.html"> **Node-API** </NodeLink> compatibility, so almost all **NAPI-RS** projects can run in **Deno** and **Bun**.
 
 ## Calling for sponsorship
 
 **NAPI-RS** will continue to improve the development experience, and it requires more time and effort to maintain the project.
-Please consider sponsoring the project, it will help us to improve the project and make it better.
+Please consider sponsoring the project - it will help us improve the project and make it better.
 
 <Sponsor />
