@@ -2,10 +2,27 @@ import { useSSG } from 'nextra/data'
 import { ExternalLink } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import mdnLogo from '../public/assets/mdn.png'
 
 export function LinkPreview({ href }: { href: string }) {
   const { linkPreview } = useSSG()
   const { json: linkMeta, og, userAvatar } = linkPreview[href]
+  const logo = href.includes('mozilla') ? (
+    <img
+      src={mdnLogo.src}
+      style={{ verticalAlign: 'text-bottom', marginRight: '4px' }}
+      width={16}
+      height={16}
+    />
+  ) : (
+    <Github
+      style={{
+        width: '16px',
+        height: '16px',
+        display: 'inline-block',
+      }}
+    />
+  )
   return (
     <div
       className="flex justify-center w-full cursor-pointer"
@@ -43,15 +60,7 @@ export function LinkPreview({ href }: { href: string }) {
               {linkMeta.body}
             </p>
             <p className="flex text-sm align-center">
-              <span className="inline-block align-middle">
-                <Github
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    display: 'inline-block',
-                  }}
-                />
-              </span>
+              <span className="inline-block align-middle">{logo}</span>
               <span
                 style={{
                   whiteSpace: 'nowrap',

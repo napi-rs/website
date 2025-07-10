@@ -17,5 +17,6 @@
   "types-overwrite": "Types Overwrite",
   "typed-array": "Typed Array",
   "understanding-lifetime": "Understanding Lifetime",
-  "env": "Env"
+  "env": "Env",
+  "webassembly": "WebAssembly"
 }
