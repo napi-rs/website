@@ -213,7 +213,16 @@ export default function TransformImage() {
             style={{ width: '80px', margin: '0 10px', padding: '0 10px' }}
             placeholder="Quality (0-100)"
             value={quality}
-            onChange={setQuality}
+            onChange={useCallback((e) => {
+              const { value: valueString } = e.target
+              const value = parseInt(valueString)
+              if (value < 0) {
+                e.target.value = 0
+              } else if (value > 100) {
+                e.target.value = 100
+              }
+              setQuality(value)
+            }, [])}
           />
         </span>
         <Button
