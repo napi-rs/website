@@ -1,7 +1,10 @@
 {
   "index": {
     "title": "Introduction",
-    "display": "hidden"
+    "display": "hidden",
+    "theme": {
+      "layout": "raw"
+    }
   },
   "docs": {
     "title": "Docs",

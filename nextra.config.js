@@ -156,5 +156,8 @@ export default {
     { locale: 'cn', text: '简体中文' },
     { locale: 'pt-BR', text: 'Português do Brasil' },
   ],
+  nextThemes: {
+    defaultTheme: 'dark',
+  },
   useNextSeoProps: () => ({ titleTemplate: '%s \u2013 NAPI-RS' }),
 }
