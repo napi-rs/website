@@ -8,6 +8,10 @@ import TurborepoLogo from '../../components/turborepo-logo'
 import NxLogo from '../../components/nx-logo'
 import DenoLogo from '../../components/deno-logo'
 import Sponsor from '../../components/sponsor'
+import LanceDBLogo from '../../components/lancedb-logo'
+import AffineLogo from '../../components/affine-logo'
+import BitwardenLogo from '../../components/bitwarden-logo'
+import TsLogo from '../../components/ts-logo'
 
 import cursorLogo from './cursor.webp'
 import huggingfaceLogo from './huggingface.svg'
@@ -17,6 +21,8 @@ import rspackLogo from './rspack.svg'
 import parcelLogo from './parcel.png'
 import oxcLogo from './oxc.png'
 import bunLogo from './bun.svg'
+import tensorzeroLogo from '../../public/assets/tensorzero.svg'
+import chromaLogo from '../../public/assets/chroma.png'
 
 export const getStaticProps = async () => {
   const { createHash } = await import('node:crypto')
@@ -42,6 +48,15 @@ export const getStaticProps = async () => {
     },
   })
   const npmIssueResponseJson = await npmIssue.json()
+
+  const typescriptGoDiscussion = await fetch('https://api.github.com/repos/microsoft/typescript-go/discussions/455', {
+    headers: {
+      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+    },
+  })
+  const typescriptGoDiscussionResponseJson = await typescriptGoDiscussion.json()
+
+  console.log(typescriptGoDiscussionResponseJson)
 
   return {
     props: {
@@ -98,6 +113,24 @@ export const getStaticProps = async () => {
               .then((res) => res.bytes())
               .then((bytes) => Buffer.from(bytes).toString('base64')),
             userAvatar: await fetch(npmIssueResponseJson.user.avatar_url).then((res) => res.bytes()).then((bytes) => Buffer.from(bytes).toString('base64')),
+          },
+          [`https://github.com/microsoft/typescript-go/discussions/455`]: {
+            json: {
+              title: typescriptGoDiscussionResponseJson.title,
+              user: {
+                login: typescriptGoDiscussionResponseJson.user.login,
+              },
+              body: typescriptGoDiscussionResponseJson.body,
+              repoUrl: `microsoft/typescript-go`,
+            },
+            og: await fetch(
+              `https://opengraph.githubassets.com/${createHash('sha256').update(typescriptGoDiscussionResponseJson.updated_at).digest('hex')}/microsoft/typescript-go/discussions/455`,
+            )
+              .then((res) => res.bytes())
+              .then((bytes) => Buffer.from(bytes).toString('base64')),
+            userAvatar: await fetch(typescriptGoDiscussionResponseJson.user.avatar_url)
+              .then((res) => res.bytes())
+              .then((bytes) => Buffer.from(bytes).toString('base64')),
           },
         },
       },
@@ -344,11 +377,15 @@ When **V2** was released, only [Next.js](https://nextjs.org/), [Parcel](https://
 
 Today, **NAPI-RS** has been widely used in developing various types of applications.
 
-<a href="https://www.cursor.com/"><img style={{ marginBottom: '2px' }} src={cursorLogo.src} width={24} height={24} /></a> [Cursor](https://www.cursor.com/) is using **NAPI-RS** to build their Desktop and Node.js server high performance addons.
+<a href="https://www.cursor.com/" target="_blank"><img style={{ marginBottom: '2px' }} src={cursorLogo.src} width={24} height={24} /></a> [Cursor](https://www.cursor.com/) is using **NAPI-RS** to build their Desktop and Node.js server high performance addons.
 
-<a href="https://tailwindcss.com/"><TailwindLogo /></a> is using **NAPI-RS** to build their `oxide` high performance engine. Tailwind CSS is also one of our platinum sponsors!
+<a href="https://tailwindcss.com/" target="_blank"><TailwindLogo /></a> is using **NAPI-RS** to build their `oxide` high performance engine. Tailwind CSS is also one of our platinum sponsors!
 
-At the same time, with the rise of AI, **NAPI-RS** has also begun participating in the development of AI tools. For example, [LanceDB](https://github.com/lancedb/lancedb) is a vector database that uses **NAPI-RS** to provide Node.js embedded experience. [Tokenizers](https://github.com/huggingface/tokenizers) is a tokenizer library developed by <a href="https://huggingface.co/">**Hugging Face** <img src={huggingfaceLogo.src} style={{ marginBottom: '2px' }} width={20} height={20} /></a>. [TensorZero](https://github.com/tensorzero/tensorzero) is an open-source stack for industrial-grade LLM applications, they also use **NAPI-RS** to build their `tensorzero-node` client.
+<a href="https://affine.pro/" target="_blank"><AffineLogo /></a> is using **NAPI-RS** to their Electron Desktop App and Node.js server high performance addons.
+
+<a href="https://bitwarden.com/" target="_blank"><BitwardenLogo /></a> is using **NAPI-RS** to build their Electron Desktop App and Node.js server high performance addons.
+
+At the same time, with the rise of AI, **NAPI-RS** has also begun participating in the development of AI tools. For example, <a href="https://github.com/lancedb/lancedb" target="_blank"><LanceDBLogo /></a> is a vector database that uses **NAPI-RS** to provide Node.js embedded experience; <a href="https://www.trychroma.com/" target="_blank"><img src={chromaLogo.src} alt="Chroma" width={28} style={{ verticalAlign: 'text-bottom' }} /> **Chroma**</a> is the open-source search and retrieval database for AI applications. [Tokenizers](https://github.com/huggingface/tokenizers) is a tokenizer library developed by <a href="https://huggingface.co/" target="_blank"><img src={huggingfaceLogo.src} style={{ marginBottom: '2px' }} width={20} height={20} /> **Hugging Face**</a>. <a href="https://github.com/tensorzero/tensorzero" target="_blank"> <img src={tensorzeroLogo.src} style={{ marginBottom: '2px' }} width={20} height={20} /> TensorZero </a> is an open-source stack for industrial-grade LLM applications, they also use **NAPI-RS** to build their `tensorzero-node` client.
 
 In the frontend build field, **NAPI-RS** has been widely used. Almost all Bundler use **NAPI-RS** to improve their performance:
 
@@ -362,6 +399,12 @@ In the frontend build field, **NAPI-RS** has been widely used. Almost all Bundle
 - <a href="https://nx.dev/"><NxLogo style={{ margin: '0 0 3px 2px' }} /> Nx</a>
 
 And <a href="https://oxc.rs/"><img src={oxcLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> Oxc</a> provides Linter, Transformer and all kinds of apis via **NAPI-RS**.
+
+<TsLogo /> TypeScript team is exploring to use **NAPI-RS** to build API layer for the [`typescript-go`](https://github.com/microsoft/typescript-go) project.
+
+<br/>
+
+<LinkPreview href="https://github.com/microsoft/typescript-go/discussions/455" />
 
 <a href="https://deno.com/"><DenoLogo /></a> and <a href="https://bun.sh/"><img src={bunLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> Bun</a> has been improved their <NodeLink href="https://nodejs.org/api/n-api.html"> **Node-API** </NodeLink> compatibility, almost all the **NAPI-RS** projects can run in **Deno** and **Bun**.
 

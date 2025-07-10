@@ -1,7 +1,7 @@
 export default function TailwindLogo({ width = 120, height = 20 }) {
   return (
     <svg
-      style={{ display: 'inline' }}
+      style={{ display: 'inline', marginBottom: '3px' }}
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 167 21"
       fill="none"
