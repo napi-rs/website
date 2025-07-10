@@ -200,10 +200,7 @@ export default function TransformImage() {
           Original Size: {prettyBytes(imageSize)}
         </span>
       </div>
-      <div
-        className="w-1/2 flex items-center flex-wrap"
-        style={{ margin: '10px 0' }}
-      >
+      <div className="flex items-center flex-wrap" style={{ margin: '10px 0' }}>
         <ImageFormatSelector onSelect={setFormat} />
         <span className="flex items-center my-2">
           <span className="ml-2">Quality:</span>
