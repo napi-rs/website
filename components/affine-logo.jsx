@@ -8,7 +8,7 @@ export default function AffineLogo({ width = 75, height = 24 }) {
       height={height}
       style={{
         display: 'inline-block',
-        marginBottom: '2px',
+        margin: '0 0 2px -4px',
         fill: 'var(--primary)',
       }}
     >
