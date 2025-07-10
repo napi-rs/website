@@ -1,0 +1,119 @@
+---
+description: Migration guide for NAPI-RS V2 to V3.
+---
+
+## Configuration
+
+napi configuration has been changed, the `name` field is now `binaryName`.
+
+### `napi.name` -> `napi.binaryName`
+
+```diff filename="package.json"
+{
+  "name": "@napi-rs/package-template",
+  "version": "1.0.0",
+  "napi": {
+-   "name": "my-package",
++   "binaryName": "my-package",
+  }
+}
+```
+
+### `napi.triples -> napi.targets`
+
+`triples` config has been removed, and you need to set `targets` instead.
+
+The `triples.default` before are:
+
+```
+"x86_64-unknown-linux-gnu",
+"x86_64-pc-windows-msvc",
+"x86_64-apple-darwin"
+```
+
+Now you need to add them into the `targets` config.
+
+```diff filename="package.json"
+{
+  "name": "@napi-rs/package-template",
+  "version": "1.0.0",
+  "napi": {
+-   "triples": {
+-     "default": true,
+-     "additional": [
+-      "aarch64-apple-darwin",
+-      "x86_64-unknown-linux-musl",
+-      "aarch64-unknown-linux-musl"
+-    ]
+-   }
++   "targets": [
++     "x86_64-unknown-linux-gnu",
++     "x86_64-pc-windows-msvc",
++     "x86_64-apple-darwin",
++     "aarch64-apple-darwin",
++     "x86_64-unknown-linux-musl",
++     "aarch64-unknown-linux-musl"
++   ]
+  }
+}
+```
+
+## Cli breaking changes
+
+Cli has been rewritten.
+
+`--cargo-cwd` is removed, you need to use `--manifest-path` combined with the `--manifest-path` to point the `Cargo.toml` path:
+
+```diff
+- napi build --cargo-cwd ./crates/napi
++ napi build --manifest-path ./crates/napi/Cargo.toml
+```
+
+Previous, the flags in `napi build` are relative to the `--cargo-cwd || process.cwd()`, now, they are relative to the `--cwd || process.cwd()` path.
+
+### `create-npm-dir` is renamed to `create-npm-dirs`
+
+See the [**create-npm-dirs**](/docs/cli/create-npm-dirs) for more details.
+
+Besides the command name and flags changes, it's not recommended to commit all `npm/*` files anymore, you can use the `napi create-npm-dirs` to create the `npm/` files in the CI, like this: https://github.com/napi-rs/package-template/blob/main/.github/workflows/CI.yml#L358
+
+## `napi` crate
+
+### Some JsValues are now behind the `compat-mode` feature flag
+
+There is the full list of these values:
+
+- `JsObject`
+- `JsFunction`
+- `JsNull`
+- `JsBoolean`
+- `JsUndefined`
+- `JsBuffer`
+- `JsBufferView`
+- `JsArrayBuffer`
+- `JsArrayBufferView`
+- `JsTypedArray`
+- `JsBigint`
+- `Ref`
+
+These APIs are not safe; see [**Lifetime in V3**](/blog/announce-v3#lifetime) for more details.
+
+If you are using these APIs, you need to enable the `compat-mode` feature flag, but it's not recommended.
+
+You can migrate these APIs to the new APIs, See [Values](/docs/concepts/values), [Function](/docs/concepts/function), [Reference](/docs/concepts/reference) and [TypedArray](/docs/concepts/typed-array) for more details.
+
+### `ThreadsafeFunction`
+
+[`ThreadsafeFunction`](/docs/concepts/threadsafe-function) has been totally rewritten. See [**ThreadsafeFunction in V3**](/blog/announce-v3#threadsafefunction) for the background.
+
+The new API doc is here: [`ThreadsafeFunction`](/docs/concepts/threadsafe-function)
+
+### `napi::module_init` was moved into `napi_derive::module_init`
+
+This is due to the upstream [`ctor`](https://github.com/mmastrac/rust-ctor) crate breaking changes.
+
+## `napi_derive` crate
+
+### new `#[napi(module_exports)]`
+
+This is aim for replace the `#[module_exports]` macro in the `compat-mode`, now you can remove the `compat-mode` feature in `napi-derive` and only use modern `#[napi]` macros.
