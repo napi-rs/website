@@ -13,7 +13,10 @@
   "reference": "Reference",
   "async-fn": "async fn",
   "external": "External",
-  "await-promise": "Await Promise",
+  "promise": "Promise",
   "types-overwrite": "Types Overwrite",
-  "typed-array": "Typed Array"
+  "typed-array": "Typed Array",
+  "understanding-lifetime": "Understanding Lifetime",
+  "env": "Env",
+  "webassembly": "WebAssembly"
 }

@@ -1,0 +1,190 @@
+---
+description: Build WebAssembly with **NAPI-RS**.
+---
+
+import { Callout } from 'nextra-theme-docs'
+
+import TransformImage from '../../../components/transform-image'
+import { LinkPreview } from '../../../components/link-preview'
+import ViteLogo from '../../../public/assets/vite.svg'
+import WebpackLogo from '../../../public/assets/webpack.svg'
+import PnpmLogo from '../../../public/assets/pnpm.svg'
+import YarnLogo from '../../../public/assets/yarn.svg'
+import NpmLogo from '../../../public/assets/npm.png'
+
+export const getStaticProps = async () => {
+  const { createHash } = await import('node:crypto')
+
+  const wasmIssueJson = await fetch('https://api.github.com/repos/napi-rs/napi-rs/issues/1794', {
+    headers: {
+      'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+    },
+  }).then(res => res.json())
+  return {
+    props: {
+      ssg: {
+        linkPreview: {
+          [`https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/`]: {
+            json: {
+              title: 'Mitigations: Landing new class of timing attacks',
+              body: 'Several recently-published research articles have demonstrated a new class of timing attacks (Meltdown and Spectre) that work on modern CPUs.  Our internal experiments confirm that it is possible to use similar techniques from Web content to read private information between different origins.',
+              user: {
+                login: 'Luke Wagner',
+              },
+              repoUrl: 'blog.mozilla.org',
+            },
+            og: await fetch('https://blog.mozilla.org/wp-content/blogs.dir/278/files/2021/02/moz_blog_header_som_002_1200x600.jpg')
+              .then(res => res.bytes())
+              .then((bytes) => Buffer.from(bytes).toString('base64')),
+            userAvatar: await fetch('https://avatars.githubusercontent.com/u/9660325?v=4')
+              .then(res => res.bytes())
+              .then((bytes) => Buffer.from(bytes).toString('base64')),
+          },
+          [`https://github.com/napi-rs/napi-rs/issues/1794`]: {
+            json: {
+              title: wasmIssueJson.title,
+              body: wasmIssueJson.body,
+              user: {
+                login: wasmIssueJson.user.login,
+              },
+              repoUrl: `napi-rs/napi-rs`,
+            },
+            og: await fetch(`https://opengraph.githubassets.com/${createHash('sha256').update(wasmIssueJson.updated_at).digest('hex')}/napi-rs/napi-rs/issues/1794`).then(res => res.bytes()).then((bytes) => Buffer.from(bytes).toString('base64')),
+            userAvatar: await fetch(wasmIssueJson.user.avatar_url).then(res => res.bytes()).then((bytes) => Buffer.from(bytes).toString('base64')),
+          },
+        },
+      },
+    },
+  }
+}
+
+# WebAssembly
+
+<Callout type="info">
+  There is a amazing WebAssembly course developed by [@Dominic Elm](https://x.com/elmd_): <a style={{ color: 'var(--color-indigo-400)', textDecorationLine: 'underline' }} href="https://learn-wasm.dev/?via=brooklyn" target="_blank">Learn **WebAssembly**</a>
+</Callout>
+
+**NAPI-RS** supports building `WebAssembly` target and running it in the browser and Node.js. For now we only support the [`wasm32-wasip1-threads`](https://doc.rust-lang.org/rustc/platform-support/wasm32-wasip1-threads.html) target.
+
+<Callout>
+  In theory, `wasm32-unknown-unknown` and `wasm32-wasip1` targets can also be supported, but these two targets are only suitable for people who have deep understanding of `WebAssembly`. For example, you need to handle cases where `std::threads` is used in your code and dependencies yourself, which makes compilation very complex.
+  At the current stage, **NAPI-RS**'s `WebAssembly` support is targeted at users who use `WebAssembly` as a fallback in Node.js, as well as users who develop playgrounds and repro in browsers/StackBlitz. These users are not very sensitive to bundle size, so we choose to only support the `wasm32-wasip1-threads` target by default to reduce noise when this feature is in the early stage.
+</Callout>
+
+The example app below is a simple image transformer, it's using [`@napi-rs/image`](https://github.com/Brooooooklyn/Image) directly:
+
+<TransformImage />
+
+You can use the package like this:
+
+```ts
+import { Transformer } from '@napi-rs/image'
+
+export async function transform() {
+  const imageBytes = await fetch('https://images-assets.nasa.gov/image/carina_nebula/carina_nebula~orig.png')
+    .then(res => res.arrayBuffer())
+  const transformer = new Transformer(imageBytes)
+  const webp = await transformer.toWebp()
+}
+```
+
+You can build it with the <img src={ViteLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> <span className="text-violet-500">Vite</span> or <img src={WebpackLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> <span className="text-sky-500">Webpack</span> without any additional configuration.
+
+## Server configuration
+
+To enable `WebAssembly` to use features like `threads` and `Atomics`, and to allow `Rust/C/C++` source code to be compiled directly to `WebAssembly` without modifications, **NAPI-RS** uses the `SharedArrayBuffer` feature in the browser.
+
+[`SharedArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer) is disabled by default due to historical security issues related to `SharedArrayBuffer`:
+
+<LinkPreview href="https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/" />
+
+You need to configure the server response headers to enable `SharedArrayBuffer`, for example, in `Vite`:
+
+```ts filename="vite.config.ts"
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [
+    {
+      name: 'configure-response-headers',
+      enforce: 'pre',
+      configureServer: (server) => {
+        server.middlewares.use((_req, res, next) => {
+          res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
+          res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+          next()
+        })
+      },
+    },
+  ],
+})
+```
+
+## Install the `WebAssembly` package
+
+To reduce the installation size of **NAPI-RS** packages, `WebAssembly` packages are not installed by default. We achieve this by adding the `cpu: ["wasm32"]` field in the `package.json` of `WebAssembly` packages, which makes package managers automatically skip the installation of `WebAssembly` packages.
+
+<LinkPreview href="https://github.com/napi-rs/napi-rs/issues/1794" />
+
+For different package managers, there are different ways to install `WebAssembly` packages.
+
+### <img src={YarnLogo.src} style={{ verticalAlign: 'text-top' }} width={30} height={30} /> `yarn`
+
+For **yarn v4**, you can set the [`supportedArchitectures`](https://yarnpkg.com/configuration/yarnrc#supportedArchitectures) in the `.yarnrc.yml` file to install `wasm32` packages:
+
+```yaml filename=".yarnrc.yml"
+supportedArchitectures:
+  cpu:
+    - current
+    - wasm32
+```
+
+For **yarn v1**, you can use `--ignore-engines` to install `wasm32` packages, unfortunately, there is no other effective way to install `wasm32` package with **yarn v1** since it's not maintained.
+
+```bash
+yarn install --ignore-engines
+```
+
+### <img src={PnpmLogo.src} style={{ verticalAlign: 'text-top' }} width={30} height={30} /> `pnpm`
+
+`pnpm` supports the [`supportedArchitectures`](https://pnpm.io/settings#supportedarchitectures) too. You can set it in the `pnpm-workspace.yaml` file:
+
+```yaml filename="pnpm-workspace.yaml"
+supportedArchitectures:
+  cpu:
+    - current
+    - wasm32
+```
+
+### <img src={NpmLogo.src} style={{ verticalAlign: 'text-top' }} width={30} height={30} /> `npm`
+
+`npm` supports the [`--cpu`](https://docs.npmjs.com/cli/v11/commands/npm-install#cpu) flag since `v10.2.0`, you can use it to install `wasm32` arch packages manually:
+
+```bash
+npm install --cpu=wasm32
+```
+
+## Build the `C/C++` dependencies
+
+If there are `C/C++` codes in your dependencies tree, you need to config the [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) before building the `WebAssembly` package.
+
+The `@napi-rs/cli` respect the `WASI_SDK_PATH` environment variable while building the `wasm32-wasip1-threads` target, this is what `WASI_SDK_PATH` folder looks like:
+
+```
+❯ lsd --tree --depth 1 $WASI_SDK_PATH
+wasi-sdk
+├── bin
+├── lib
+├── share
+└── VERSION
+```
+
+You can download the `wasi-sdk` from the GitHub releases and set the `WASI_SDK_PATH` environment variable to the `wasi-sdk` folder:
+
+```bash
+# on macOS aarch64
+
+wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-25/wasi-sdk-25.0-arm64-macos.tar.gz
+tar -xvf wasi-sdk-25.0-arm64-macos.tar.gz
+export WASI_SDK_PATH="$(pwd)/wasi-sdk-25.0-arm64-macos"
+```

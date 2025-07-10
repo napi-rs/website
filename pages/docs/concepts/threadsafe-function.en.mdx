@@ -2,37 +2,35 @@
 description: Call a JavaScript callback in other threads.
 ---
 
-# ThreadsafeFunction
-
-[`ThreadSafe Function`](https://nodejs.org/api/n-api.html#asynchronous-thread-safe-function-calls) is a complex concept in Node.js. As we all know, Node.js is single threaded, so you can't access [`napi_env`](https://nodejs.org/api/n-api.html#napi_env), [`napi_value`](https://nodejs.org/api/n-api.html#napi_value), and [`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref) on another thread.
-
 import { Callout } from 'nextra-theme-docs'
 
+import NodeLink from '../../../components/node-link'
+
+# ThreadsafeFunction
+
+[`Threadsafe Function`](https://nodejs.org/api/n-api.html#asynchronous-thread-safe-function-calls) is a complex concept in Node.js. As we all know, Node.js is single-threaded, so you can't access <NodeLink href="https://nodejs.org/api/n-api.html#napi_env">`napi_env`</NodeLink>, <NodeLink href="https://nodejs.org/api/n-api.html#napi_value">`napi_value`</NodeLink>, and <NodeLink href="https://nodejs.org/api/n-api.html#napi_ref">`napi_ref`</NodeLink> on another thread.
+
 <Callout>
-  [`napi_env`](https://nodejs.org/api/n-api.html#napi_env),
-  [`napi_value`](https://nodejs.org/api/n-api.html#napi_value), and
-  [`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref) are low level
-  concepts in `Node-API`, which the `#[napi]` macro of **NAPI-RS** is built on
-  top of. **NAPI-RS** also provides a [low level
-  API](../compat-mode/concepts/env) to access the original `Node-API`.
+  <NodeLink href="https://nodejs.org/api/n-api.html#napi_env">`napi_env`</NodeLink>, <NodeLink href="https://nodejs.org/api/n-api.html#napi_value">`napi_value`</NodeLink>, and <NodeLink href="https://nodejs.org/api/n-api.html#napi_ref">`napi_ref`</NodeLink>
+  are low level concepts in `Node-API`, which the `#[napi]` macro of **NAPI-RS**
+  is built on top of. **NAPI-RS** also provides a [low level
+  API](/docs/concepts/env) to access the original `Node-API`.
 </Callout>
 
-`Node-API` provides the complex `Threadsafe Function` APIs to call JavaScript functions on other threads. It's very complex so many developers don't understand how to use it correctly. **NAPI-RS** provides a limited version of `Threadsafe Function` APIs to make it easier to use:
+`Node-API` provides complex `Threadsafe Function` APIs to call JavaScript functions on other threads. It's very complex, so many developers don't understand how to use it correctly. **NAPI-RS** provides a limited version of `Threadsafe Function` APIs to make it easier to use:
 
 ```rust {10} filename="lib.rs"
-use std::thread;
+use std::{sync::Arc, thread};
 
 use napi::{
-  bindgen_prelude::*,
-  threadsafe_function::{ErrorStrategy, ThreadsafeFunction, ThreadsafeFunctionCallMode},
+    bindgen_prelude::*,
+    threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode},
 };
+use napi_derive::napi;
 
 #[napi]
-pub fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
-  let tsfn: ThreadsafeFunction<u32, ErrorStrategy::CalleeHandled> = callback
-    .create_threadsafe_function(0, |ctx| {
-      ctx.env.create_uint32(ctx.value + 1).map(|v| vec![v])
-    })?;
+pub fn call_threadsafe_function(callback: ThreadsafeFunction<u32>) -> Result<()> {
+  let tsfn = Arc::new(callback);
   for n in 0..100 {
     let tsfn = tsfn.clone();
     thread::spawn(move || {
@@ -43,39 +41,7 @@ pub fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
 }
 ```
 
-⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
-
-```ts filename="index.d.ts"
-export function callThreadsafeFunction(callback: (...args: any[]) => any): void
-```
-
-`ThreadsafeFunction` is very complex so **NAPI-RS** does not provide the precise TypeScript definition generation of it. If you want to have a better TypeScript type, you can use `#[napi(ts_args_type)]` to override the type of `JsFunction` argument:
-
-```rust {8} filename="lib.rs"
-use std::thread;
-
-use napi::{
-  bindgen_prelude::*,
-  threadsafe_function::{ErrorStrategy, ThreadsafeFunction, ThreadsafeFunctionCallMode},
-};
-
-#[napi(ts_args_type = "callback: (err: null | Error, result: number) => void")]
-pub fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
-  let tsfn: ThreadsafeFunction<u32, ErrorStrategy::CalleeHandled> = callback
-    .create_threadsafe_function(0, |ctx| {
-      ctx.env.create_uint32(ctx.value + 1).map(|v| vec![v])
-    })?;
-  for n in 0..100 {
-    let tsfn = tsfn.clone();
-    thread::spawn(move || {
-      tsfn.call(Ok(n), ThreadsafeFunctionCallMode::Blocking);
-    });
-  }
-  Ok(())
-}
-```
-
-⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
 
 ```ts filename="index.d.ts"
 export function callThreadsafeFunction(
@@ -83,66 +49,210 @@ export function callThreadsafeFunction(
 ): void
 ```
 
-## ErrorStrategy
+## Return type
 
-There are two different error handling strategies for `Threadsafe Function`. The strategy can be defined in the second generic parameter of `ThreadsafeFunction`:
+The return type of the `ThreadsafeFunction` is the same as the return type of the JavaScript callback, you can define the return type in the second generic parameter of `ThreadsafeFunction`:
 
-```rust filename="lib.rs"
-let tsfn: ThreadsafeFunction<u32, ErrorStrategy::CalleeHandled> = ...
+```rust {10} filename="lib.rs"
+use std::thread;
+
+use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
+use napi_derive::napi;
+
+#[napi]
+pub fn call_threadsafe_function(callback: ThreadsafeFunction<u32, u32>) {
+  thread::spawn(move || {
+    callback.call_with_return_value(Ok(1), ThreadsafeFunctionCallMode::Blocking, |ret, _| {
+      println!("ret: {:?}", ret); // 101
+      Ok(())
+    });
+  });
+}
 ```
 
-The first argument in the generic parameter of course is the return type of the `Threadsafe Function`.
+```ts filename="index.ts"
+import { callThreadsafeFunction } from './index.js'
 
-### `ErrorStrategy::CalleeHandled`
+callThreadsafeFunction((err, result) => {
+  return result + 100
+})
+```
 
-`Err` from Rust code will be passed into the first argument of the JavaScript callback. This behaviour follows the async callback conventions from Node.js: https://nodejs.org/en/learn/asynchronous-work/javascript-asynchronous-programming-and-callbacks#handling-errors-in-callbacks. Many async APIs in Node.js are designed in this shape, like `fs.read`.
+## CallJsBackArgs
 
-With `ErrorStrategy::CalleeHandled`, you must call the `ThreadsafeFunction` with the `Result` type, so that the `Error` will be handled and passed back to the JavaScript callback:
+Sometimes the args passed to the `ThreadsafeFunction` are not the same as the args passed to the JavaScript callback. You can build the `ThreadsafeFunction` from `Function` with the `CallJsBackArgs` to achieve this:
 
-```rust {10,17} filename="lib.rs"
+```rust {17} filename="lib.rs"
 use std::thread;
 
 use napi::{
   bindgen_prelude::*,
-  threadsafe_function::{ErrorStrategy, ThreadsafeFunction, ThreadsafeFunctionCallMode},
+  threadsafe_function::{ThreadsafeCallContext, ThreadsafeFunctionCallMode},
 };
+use napi_derive::napi;
 
-#[napi(ts_args_type = "callback: (err: null | Error, result: number) => void")]
-pub fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
-  let tsfn: ThreadsafeFunction<u32, ErrorStrategy::CalleeHandled> = callback
-    .create_threadsafe_function(0, |ctx| {
-      ctx.env.create_uint32(ctx.value + 1).map(|v| vec![v])
-    })?;
+struct Data {
+  name: String,
+}
+
+#[napi]
+pub fn call_threadsafe_function(callback: Function<String, ()>) -> Result<()> {
+  let tsfn = callback
+    .build_threadsafe_function()
+    .build_callback(|ctx: ThreadsafeCallContext<Data>| Ok(format!("Hello {}", ctx.value.name)))?;
+  thread::spawn(move || {
+    tsfn.call(
+      Data {
+        name: "John".to_string(),
+      },
+      ThreadsafeFunctionCallMode::NonBlocking,
+    );
+  });
+  Ok(())
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+```ts {4} filename="index.ts"
+import { callThreadsafeFunction } from './index.js'
+
+callThreadsafeFunction((data) => {
+  console.log(data) // Hello John
+})
+```
+
+## Error Status
+
+The error status of the `ThreadsafeFunction` is the same as the error status of the JavaScript callback. You can define the error status in the fourth generic parameter of `ThreadsafeFunction`:
+
+```rust {25} filename="lib.rs"
+use std::{sync::Arc, thread};
+
+use napi::{
+  bindgen_prelude::*,
+  threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode},
+};
+use napi_derive::napi;
+
+pub struct CustomErrorStatus(String);
+
+impl AsRef<str> for CustomErrorStatus {
+  fn as_ref(&self) -> &str {
+    &self.0
+  }
+}
+
+impl From<Status> for CustomErrorStatus {
+  fn from(value: Status) -> Self {
+    CustomErrorStatus(value.to_string())
+  }
+}
+
+#[napi]
+pub fn call_threadsafe_function(
+  tsfn: Arc<ThreadsafeFunction<u32, u32, u32, CustomErrorStatus>>,
+) -> Result<()> {
   for n in 0..100 {
     let tsfn = tsfn.clone();
     thread::spawn(move || {
-      tsfn.call(Ok(n), ThreadsafeFunctionCallMode::Blocking);
+      tsfn.call(
+        Err(Error::new(
+          CustomErrorStatus("Custom".to_owned()),
+          format!("Custom error: {}", n),
+        )),
+        ThreadsafeFunctionCallMode::Blocking,
+      );
     });
   }
   Ok(())
 }
 ```
 
-### `ErrorStrategy::Fatal`
+## ErrorStrategy
 
-No `Error` will be passed back to the JavaScript side. You can use this strategy to avoid the `Ok` wrapping in the Rust side if your code will never return `Err`.
+There are two different error-handling strategies for `Threadsafe Function`. The strategy can be defined in the fifth generic parameter of `ThreadsafeFunction`:
 
-With this strategy, `ThreadsafeFunction` doesn't need to be called with `Result<T>`, and the first argument of JavaScript callback is the value from the Rust, not `Error | null`.
+```rust filename="lib.rs"
+let tsfn: ThreadsafeFunction<u32, u32, u32, false> = ...
+```
 
-```rust {10,17} filename="lib.rs"
-use std::thread;
+### `CalleeHandled: true` (default behavior)
+
+`Err` from Rust code will be passed into the first argument of the JavaScript callback. This behavior follows the async callback conventions from Node.js: https://nodejs.org/en/learn/asynchronous-work/javascript-asynchronous-programming-and-callbacks#handling-errors-in-callbacks. Many async APIs in Node.js are designed this way, like `fs.read`.
+
+With `CalleeHandled: true`, you must call the `ThreadsafeFunction` with the `Result` type, so that the `Error` will be handled and passed back to the JavaScript callback:
+
+```rust {11,16-22} filename="lib.rs"
+use std::{sync::Arc, thread};
 
 use napi::{
   bindgen_prelude::*,
-  threadsafe_function::{ErrorStrategy, ThreadsafeFunction, ThreadsafeFunctionCallMode},
+  threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode},
 };
+use napi_derive::napi;
 
-#[napi(ts_args_type = "callback: (result: number) => void")]
-pub fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
-  let tsfn: ThreadsafeFunction<u32, ErrorStrategy::Fatal> = callback
-    .create_threadsafe_function(0, |ctx| {
-      ctx.env.create_uint32(ctx.value + 1).map(|v| vec![v])
-    })?;
+#[napi]
+pub fn call_threadsafe_function(
+  tsfn: Arc<ThreadsafeFunction<u32, u32, u32, Status, true>>,
+) -> Result<()> {
+  for n in 0..100 {
+    let tsfn = tsfn.clone();
+    thread::spawn(move || {
+      tsfn.call(
+        Err(Error::new(
+          Status::GenericFailure,
+          format!("Error with: {n}"),
+        )),
+        ThreadsafeFunctionCallMode::Blocking,
+      );
+    });
+  }
+  Ok(())
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+```ts {5} filename="index.ts"
+import { callThreadsafeFunction } from './index.js'
+
+callThreadsafeFunction((err, result) => {
+  if (err) {
+    console.error(err) // [Error: Error with: 0] { code: 'GenericFailure' }
+  }
+  console.log(result)
+})
+```
+
+### `CalleeHandled: false`
+
+No `Error` will be passed back to the JavaScript side. You can use this strategy to avoid the `Ok` wrapping on the Rust side if your code will never return `Err`.
+
+With this strategy, `ThreadsafeFunction` doesn't need to be called with `Result<T>`, and the first argument of JavaScript callback is the value from the Rust, not `Error | null`.
+
+<Callout type="warning">
+  With the `CalleeHandled: false` strategy, the `ThreadsafeFunction` will not be
+  able to handle the error in the Rust threads, so you can't pass the `Error` back
+  to the JavaScript side.
+
+It's only recommended if you are sure the threads where the `ThreadsafeFunction` is called will not return `Err` or panic.
+
+</Callout>
+
+```rust {11} filename="lib.rs"
+use std::{sync::Arc, thread};
+
+use napi::{
+  bindgen_prelude::*,
+  threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode},
+};
+use napi_derive::napi;
+
+#[napi]
+pub fn call_threadsafe_function(
+  tsfn: Arc<ThreadsafeFunction<u32, (), u32, Status, false>>,
+) -> Result<()> {
   for n in 0..100 {
     let tsfn = tsfn.clone();
     thread::spawn(move || {
@@ -153,8 +263,117 @@ pub fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
 }
 ```
 
-⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
 
 ```ts {2} filename="index.d.ts"
-export function callThreadsafeFunction(callback: (result: number) => void): void
+export declare function callThreadsafeFunction(
+  tsfn: (arg: number) => void,
+): void
+```
+
+## `Weak` ThreadsafeFunction
+
+By default, the `ThreadsafeFunction` will cause the event loop on the thread on which it is created to remain alive until the `ThreadsafeFunction` is destroyed. See <NodeLink href="https://nodejs.org/api/n-api.html#deciding-whether-to-keep-the-process-running">**Deciding whether to keep the process running**</NodeLink>.
+
+If you don't want to keep the Node.js process/event loop alive, you can define the `Weak` parameter of `ThreadsafeFunction` to `true`:
+
+```rust {11} filename="lib.rs"
+use std::{sync::Arc, thread};
+
+use napi::{
+  bindgen_prelude::*,
+  threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode},
+};
+use napi_derive::napi;
+
+#[napi]
+pub fn call_threadsafe_function(
+  tsfn: Arc<ThreadsafeFunction<u32, u32, u32, Status, false, true>>,
+) -> Result<()> {
+  for n in 0..100 {
+    let tsfn = tsfn.clone();
+    thread::spawn(move || {
+      tsfn.call(n, ThreadsafeFunctionCallMode::Blocking);
+    });
+  }
+  Ok(())
+}
+```
+If you call this function like this:
+
+```ts filename="index.ts"
+import { callThreadsafeFunction } from './index.js'
+
+// log nothing because the event loop exit immediately
+callThreadsafeFunction((err, n) => {
+  if (err) {
+    console.error(err)
+  } else {
+    console.log(n)
+  }
+})
+```
+
+There won't be any logs in the console, because the event loop and Node.js process exit immediately.
+
+## `MaxQueueSize`
+You can set the `MaxQueueSize` parameter of `ThreadsafeFunction` to limit the number of messages in the queue.
+
+<Callout type="info">
+  If call the `ThreadsafeFunction` with the `Blocking` mode, the `MaxQueueSize` parameter will have no effect. `Blocking` mode would block the queue when the queue is full. `NonBlocking` mode would return immediately with the `Status::QueueFull` when the queue is full. See <NodeLink href="https://nodejs.org/api/n-api.html#napi_call_threadsafe_function">`napi_call_threadsafe_function`</NodeLink> for more details.
+</Callout>
+
+```rust {11,16} filename="lib.rs"
+use std::{sync::Arc, thread};
+
+use napi::{
+  bindgen_prelude::*,
+  threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode},
+};
+use napi_derive::napi;
+
+#[napi]
+pub fn call_threadsafe_function(
+  tsfn: Arc<ThreadsafeFunction<u32, (), u32, Status, false, false, 1>>,
+) -> Result<()> {
+  thread::spawn(move || {
+    for n in 0..100 {
+      let tsfn = tsfn.clone();
+      let status = tsfn.call(n, ThreadsafeFunctionCallMode::NonBlocking);
+      println!("{}", status)
+    }
+  });
+  Ok(())
+}
+```
+
+When you call this function, and add heavy work in the callback, you will see the `QueueFull` status return from the `tsfn.call`:
+
+```ts filename="index.ts"
+import { callThreadsafeFunction } from './index.js'
+
+function fib(n) {
+  if (n <= 1) return n
+  return fib(n - 1) + fib(n - 2)
+}
+
+callThreadsafeFunction(() => {
+  fib(40)
+})
+```
+
+this would produce the following output:
+
+```
+Ok
+Ok
+QueueFull
+QueueFull
+QueueFull
+QueueFull
+QueueFull
+QueueFull
+QueueFull
+QueueFull
+...
 ```
