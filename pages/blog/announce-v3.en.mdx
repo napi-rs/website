@@ -56,8 +56,6 @@ export const getStaticProps = async () => {
   })
   const typescriptGoDiscussionResponseJson = await typescriptGoDiscussion.json()
 
-  console.log(typescriptGoDiscussionResponseJson)
-
   return {
     props: {
       ssg: {
