@@ -1,6 +1,6 @@
 .support-matrix {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1100px;
   position: relative;
 
   &:before {
@@ -73,6 +73,8 @@
   table {
     tr {
       position: relative;
+      border-radius: 8px;
+      overflow: hidden;
 
       &:after {
         content: '';
