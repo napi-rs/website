@@ -14,12 +14,12 @@
   background:
     radial-gradient(
       24.67% 24.67% at 50% 0%,
-      hsl(var(--theme-hsl) / 0.1) 0%,
+      hsl(var(--theme-hsl) / 0.08) 0%,
       hsl(var(--theme-hsl) / 0) 100%
     ),
     radial-gradient(
       54.93% 54.93% at 50% 100%,
-      hsl(var(--theme-hsl) / 0.2) 0%,
+      hsl(var(--theme-hsl) / 0.12) 0%,
       rgb(255 198 121 / 0%) 100%
     ),
     linear-gradient(

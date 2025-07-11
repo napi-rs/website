@@ -14,3 +14,17 @@ export function SectionTitle({
     </div>
   )
 }
+
+export function SectionDesc({
+  children,
+  className,
+}: {
+  children: any
+  className?: string
+}) {
+  return (
+    <div className={cx('section-desc', className)} data-lg-reveal="text">
+      {children}
+    </div>
+  )
+}

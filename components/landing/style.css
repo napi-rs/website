@@ -1,3 +1,4 @@
+@import './support-matrix.css';
 @import './ecosystem.css';
 @import './effects.css';
 
@@ -9,11 +10,23 @@
   padding: fv(20, 40) 0;
 }
 
+.section {
+  & + & {
+    margin-top: fv(40, 80);
+  }
+}
+
 .section-title {
   position: relative;
-  font-size: 36px;
+  font-size: fv(24, 36);
   font-weight: 600;
   line-height: 111.111%;
+  margin-top: fv(24, 40);
+  margin-bottom: fv(40, 64);
+
+  & + .section-desc{
+    margin-top: -1.5em;
+  }
 
   &.blur-effect {
     margin: 0;
@@ -24,8 +37,29 @@
   }
 }
 
+.gradient-title {
+  background: var(--gradient-loud-100, linear-gradient(0deg, #fbf9f3 0, #efb598 100%));
+  background-clip: text;
+  text-shadow: 0 2px 16px rgba(242, 220, 174, 0.24);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.section-desc {
+  margin-top: fv(16, 24);
+  margin-bottom: fv(40, 64);
+  color: #969696;
+  font-size: fv(16, 20);
+  letter-spacing: -0.2%;
+  max-width: 500px;
+}
+
 footer {
   position: relative;
   z-index: 2;
   background-color: transparent !important;
+}
+
+.ScrollSmoother-wrapper {
+  pointer-events: none;
 }
