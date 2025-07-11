@@ -89,6 +89,10 @@ export const Luge = () => {
   }, [])
 
   console.log('luge', luge)
+
+  return (
+    <></>
+  )
 }
 
 export default Luge
