@@ -8,7 +8,7 @@ export function SectionTitle({
   className?: string
 }) {
   return (
-    <div className={cx('section-title', className)}>
+    <div className={cx('section-title', className)} data-lg-reveal="heading">
       {children}
       <div className="section-title blur-effect">{children}</div>
     </div>

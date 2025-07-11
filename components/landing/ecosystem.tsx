@@ -8,7 +8,7 @@ function RowOneLogos() {
       <a
         href="https://affine.pro"
         target="_blank"
-        className="nx-flex nx-items-center ml-4"
+        className="nx-flex nx-items-center ml-[3em]"
       >
         <svg
           viewBox="0 0 28 28"
@@ -314,7 +314,7 @@ function RowTwoLogos() {
       <a
         href="https://npmmirror.com/"
         target="_blank"
-        className="nx-flex nx-items-center  ml-6"
+        className="nx-flex nx-items-center ml-[3em]"
       >
         <img src="/assets/npmmirror.png" alt="npmmirror" width="160" />
       </a>
@@ -1180,7 +1180,7 @@ export function Ecosystem() {
   const { theme } = useTheme()
 
   return (
-    <div className={cx("ecosystem", `${theme || 'dark'}`)}>
+    <div className={cx("ecosystem", `${theme || 'dark'}`)} data-lg-reveal="fade-to-top">
       <Marquee>
         <p className="marquee-flex">
           <RowOneLogos />

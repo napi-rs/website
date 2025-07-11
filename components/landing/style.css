@@ -1,4 +1,5 @@
 @import './ecosystem.css';
+@import './effects.css';
 
 .page-landing {
   padding: fv(40, 80) 0;
