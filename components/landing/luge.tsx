@@ -78,6 +78,13 @@ export const Luge = () => {
       effects: true,
     })
 
+    // Setting ticker
+    luge.settings({ticker: {external: true}})
+    gsap.ticker.add(luge.ticker.tick)
+
+    // Force refresh when route change
+    luge.lifecycle.refresh()
+
     registerLugeReveal()
   }, [])
 
