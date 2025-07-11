@@ -12,6 +12,8 @@ article pre code .line.highlighted::before {
 }
 
 :root {
+  --theme-hsl: 26 100% 45%;
+  --theme: hsl(var(--theme-hsl));
   --nextra-primary-hue: 16deg;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -165,7 +167,8 @@ section.footnotes > h2 {
   }
 }
 
-.limit-container {
+.limit-container,
+.limit-narrow-container {
   --padding: 20px;
   --width: 1298px;
   padding-left: var(--padding);
@@ -173,4 +176,7 @@ section.footnotes > h2 {
   max-width: var(--width);
   width: 100%;
   margin: 0 auto;
+}
+.limit-narrow-container {
+  --width: 1200px + 180px;
 }

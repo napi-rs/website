@@ -1,0 +1,90 @@
+
+.ecosystem {
+  width: 100%;
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+  border-style: solid;
+  border-image: linear-gradient(
+      to right,
+      transparent,
+      rgba(255, 255, 255, 0.16),
+      transparent
+    )
+    1;
+  background:
+    radial-gradient(
+      24.67% 24.67% at 50% 0%,
+      hsl(var(--theme-hsl) / 0.1) 0%,
+      hsl(var(--theme-hsl) / 0) 100%
+    ),
+    radial-gradient(
+      54.93% 54.93% at 50% 100%,
+      hsl(var(--theme-hsl) / 0.2) 0%,
+      rgb(255 198 121 / 0%) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.04) 50.28%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  padding: 64px 0 50px;
+  background-clip: border-box;
+  background-origin: border-box;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4%;
+
+  .themed {
+    fill: black;
+    color: black;
+  }
+  .themed-reverse {
+    fill: white;
+  }
+  .matrix {
+    fill: #2d2d2d;
+  }
+  img,
+  svg {
+    display: inline;
+  }
+
+  &.dark {
+    .themed {
+      fill: white;
+      color: white;
+    }
+    .themed-reverse {
+      fill: black;
+    }
+    .matrix {
+      fill: white;
+    }
+  }
+
+  .marquee-flex {
+    display: flex;
+    gap: 3em;
+
+    > * {
+      display: flex;
+    }
+  }
+
+  .rfm-marquee-container {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0),
+      rgba(0, 0, 0, 1) 10%,
+      rgba(0, 0, 0, 1) 80%,
+      rgba(0, 0, 0, 0)
+    );
+    -webkit-mask-size: 100% 100%;
+
+    & + & {
+      margin-top: 40px;
+    }
+  }
+}

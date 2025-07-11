@@ -35,6 +35,7 @@ const config = {
     'postcss-functions': {
       functions: { fluidValue, 'fluid-value': fluidValue, fv: fluidValue },
     },
+    'postcss-import': {},
   },
 }
 export default config

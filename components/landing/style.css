@@ -1,0 +1,28 @@
+@import './ecosystem.css';
+
+.page-landing {
+  padding: fv(40, 80) 0;
+}
+
+.page-home {
+  padding: fv(20, 40) 0;
+}
+
+.section-title {
+  position: relative;
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 111.111%;
+
+  &.blur-effect {
+    margin: 0;
+    filter: blur(16px);
+    opacity: 0.6;
+    position: absolute;
+    top: -2px;
+  }
+}
+
+footer {
+  background-color: transparent !important;
+}

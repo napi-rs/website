@@ -1,43 +1,14 @@
-export function Ecosystem() {
+import { useTheme } from 'next-themes'
+import cx from 'classnames'
+import Marquee from 'react-fast-marquee'
+
+function RowOneLogos() {
   return (
-    <p
-      style={{
-        display: 'flex',
-        gap: '1em',
-        flexWrap: 'wrap',
-        marginTop: '20px',
-      }}
-    >
-      <style jsx>{`
-        .themed {
-          fill: black;
-          color: black;
-        }
-        :global(.dark) .themed {
-          fill: white;
-          color: white;
-        }
-        .themed-reverse {
-          fill: white;
-        }
-        :global(.dark) .themed-reverse {
-          fill: black;
-        }
-        .matrix {
-          fill: #2d2d2d;
-        }
-        :global(.dark) .matrix {
-          fill: white;
-        }
-        img,
-        svg {
-          display: inline;
-        }
-      `}</style>
+    <>
       <a
         href="https://affine.pro"
         target="_blank"
-        className="nx-flex nx-items-center"
+        className="nx-flex nx-items-center ml-4"
       >
         <svg
           viewBox="0 0 28 28"
@@ -333,10 +304,17 @@ export function Ecosystem() {
           Perfsee
         </span>
       </a>
+    </>
+  )
+}
+
+function RowTwoLogos() {
+  return (
+    <>
       <a
         href="https://npmmirror.com/"
         target="_blank"
-        className="nx-flex nx-items-center"
+        className="nx-flex nx-items-center  ml-6"
       >
         <img src="/assets/npmmirror.png" alt="npmmirror" width="160" />
       </a>
@@ -821,7 +799,6 @@ export function Ecosystem() {
           </defs>
         </svg>
         <svg
-          alt="Turborepo"
           className="w-[160px] md:w-[200px] themed"
           style={{ marginLeft: '10px' }}
           width="200"
@@ -932,7 +909,6 @@ export function Ecosystem() {
           y="0px"
           width="40"
           viewBox="0 0 1080 1016.1"
-          style={{ enableBackground: 'new 0 0 1080 1016.1' }}
           xmlSpace="preserve"
         >
           <g>
@@ -1038,7 +1014,13 @@ export function Ecosystem() {
             </g>
           </g>
         </svg>
-        <b style={{ marginLeft: '10px', lineHeight: '40px', fontSize: '28px' }}>
+        <b
+          style={{
+            marginLeft: '10px',
+            lineHeight: '40px',
+            fontSize: '28px',
+          }}
+        >
           Loro
         </b>
       </a>
@@ -1179,10 +1161,36 @@ export function Ecosystem() {
             </linearGradient>
           </defs>
         </svg>
-        <b style={{ marginLeft: '5px', lineHeight: '40px', fontSize: '26px' }}>
+        <b
+          style={{
+            marginLeft: '5px',
+            lineHeight: '40px',
+            fontSize: '26px',
+          }}
+        >
           Rollup
         </b>
       </a>
-    </p>
+    </>
+  )
+}
+
+export function Ecosystem() {
+  // @FIXME: theme 会返回 undefined
+  const { theme } = useTheme()
+
+  return (
+    <div className={cx("ecosystem", `${theme || 'dark'}`)}>
+      <Marquee>
+        <p className="marquee-flex">
+          <RowOneLogos />
+        </p>
+      </Marquee>
+      <Marquee direction="right">
+        <p className="marquee-flex">
+          <RowTwoLogos />
+        </p>
+      </Marquee>
+    </div>
   )
 }

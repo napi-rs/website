@@ -5,9 +5,10 @@ description: 'NAPI-RS is a framework for building Node.js addons in Rust.'
 
 import { Badges } from '../components/badges'
 import { Rust } from '../components/chalk'
-import { Ecosystem } from '../components/ecosystem'
 import { Sponsors } from '../components/sponsors'
 import { TitleEN } from '../components/title.en'
+
+import { HomePage } from '@/components/landing'
 
 export const getStaticProps = async () => {
   const sponsorsSVG = await fetch(`https://sponsors.napi.rs/sponsors.svg`).then(
@@ -19,6 +20,10 @@ export const getStaticProps = async () => {
     },
   }
 }
+
+<div class="page-landing">
+
+<div class="limit-container opacity-10">
 
 <TitleEN />
 
@@ -68,10 +73,6 @@ console.log(fibonacci(5))
 
 <Sponsors />
 
-## Ecosystem
-
-<Ecosystem />
-
 ## Support matrix
 
 ### Node.js
@@ -97,3 +98,9 @@ console.log(fibonacci(5))
 
 - [neon](https://www.neon-bindings.com)
 - [node-bindgen](https://github.com/infinyon/node-bindgen)
+
+</div>
+
+<HomePage />
+
+</div>
