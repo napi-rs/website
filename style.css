@@ -48,7 +48,7 @@ article pre code .line.highlighted::before {
 }
 
 .dark {
-  --nextra-primary-hue: 16deg;
+  --nextra-primary-hue: 24deg;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -163,4 +163,14 @@ section.footnotes > h2 {
     -moz-line-clamp: 1;
     line-clamp: 1;
   }
+}
+
+.limit-container {
+  --padding: 20px;
+  --width: 1298px;
+  padding-left: var(--padding);
+  padding-right: var(--padding);
+  max-width: var(--width);
+  width: 100%;
+  margin: 0 auto;
 }

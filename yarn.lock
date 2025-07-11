@@ -2439,6 +2439,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/postcss-functions@npm:^4":
+  version: 4.0.4
+  resolution: "@types/postcss-functions@npm:4.0.4"
+  dependencies:
+    postcss: "npm:^8.0.0"
+  checksum: 10c0/a1af10f45e605d412e815dde405060e27ca527638468aff656104e1fceed64f85368fe3cf5e639d8ee57e28bcdc14af9d23b30034e775fcd385737f49c9e17b2
+  languageName: node
+  linkType: hard
+
 "@types/prop-types@npm:*":
   version: 15.7.14
   resolution: "@types/prop-types@npm:15.7.14"
@@ -7522,6 +7531,7 @@ __metadata:
     "@radix-ui/react-slot": "npm:^1.2.3"
     "@tailwindcss/postcss": "npm:^4.1.11"
     "@types/node": "npm:^22.16.0"
+    "@types/postcss-functions": "npm:^4"
     "@types/react": "npm:^18.3.23"
     "@vercel/analytics": "npm:^1.5.0"
     autoprefixer: "npm:^10.4.21"
@@ -7538,6 +7548,7 @@ __metadata:
     nextra: "npm:2.13.4"
     nextra-theme-docs: "npm:2.13.4"
     postcss: "npm:^8.5.6"
+    postcss-functions: "npm:^4.0.2"
     prettier: "npm:^3.6.2"
     pretty-bytes: "npm:^7.0.0"
     react: "npm:^19"
@@ -8263,7 +8274,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss-value-parser@npm:^4.2.0":
+"postcss-functions@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "postcss-functions@npm:4.0.2"
+  dependencies:
+    postcss-value-parser: "npm:^4.0.0"
+  peerDependencies:
+    postcss: ^8.0.0
+  checksum: 10c0/1ee271a639ba08a7abdb53eddd434eb4f13574ef7d26adf4b8623fd141422713672044becb9273c9d7373ddc7f399b4ef5659afb5c1073a2a344b7cd1f460489
+  languageName: node
+  linkType: hard
+
+"postcss-value-parser@npm:^4.0.0, postcss-value-parser@npm:^4.2.0":
   version: 4.2.0
   resolution: "postcss-value-parser@npm:4.2.0"
   checksum: 10c0/f4142a4f56565f77c1831168e04e3effd9ffcc5aebaf0f538eee4b2d465adfd4b85a44257bb48418202a63806a7da7fe9f56c330aebb3cac898e46b4cbf49161
@@ -8281,7 +8303,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss@npm:^8.4.24, postcss@npm:^8.4.41, postcss@npm:^8.5.6":
+"postcss@npm:^8.0.0, postcss@npm:^8.4.24, postcss@npm:^8.4.41, postcss@npm:^8.5.6":
   version: 8.5.6
   resolution: "postcss@npm:8.5.6"
   dependencies:
