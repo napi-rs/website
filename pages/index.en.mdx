@@ -11,13 +11,25 @@ import { TitleEN } from '../components/title.en'
 import { HomePage } from '@/components/landing'
 
 export const getStaticProps = async () => {
-  const sponsorsSVG = await fetch(`https://sponsors.napi.rs/sponsors.svg`).then(
-    (res) => res.text(),
+  const sponsors = await fetch(`https://sponsors.napi.rs/sponsor.json`).then(
+    (res) => res.json(),
   )
+  const washedSponsors = {}
+  Object.keys(sponsors).map(key => {
+    const sponsorSubList = sponsors[key]
+    washedSponsors[key] = sponsorSubList.map(item => {
+      return {
+        name: item.name,
+        img: item.avatarUrl,
+        url: item.websiteUrl
+      }
+    })
+  })
+
   return {
     props: {
-      ssg: sponsorsSVG,
-    },
+      ssg: washedSponsors
+    }
   }
 }
 

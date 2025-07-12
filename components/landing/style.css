@@ -1,3 +1,4 @@
+@import './sponsors.css';
 @import './support-matrix.css';
 @import './ecosystem.css';
 @import './effects.css';
@@ -54,6 +55,14 @@
   font-size: fv(16, 20);
   letter-spacing: -0.2%;
   max-width: 500px;
+}
+
+.section-sponsors {
+  position: relative;
+  margin-top: 120px;
+  @media (min-width: 768px) {
+    margin-top: 180px;
+  }
 }
 
 .section-support-matrix {

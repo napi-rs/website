@@ -2,7 +2,7 @@ import dynamic from 'next/dynamic';
 
 import { Ecosystem } from './ecosystem'
 import { SupportMatrix } from './support-matrix'
-import { Sponsors } from './sponsors'
+import { Sponsors, BgLines } from './sponsors'
 import { SectionTitle, SectionDesc } from './section'
 import { Heart } from './icons'
 import { MagicalGradButton } from './ui'
@@ -17,12 +17,13 @@ export function HomePage() {
       <Luge />
 
       <section className="section section-sponsors">
+        <BgLines />
         <div className="limit-container flex flex-col items-center">
           <Heart />
           <SectionTitle>Sponsors</SectionTitle>
           <SectionDesc>NAPI-RS is supported by amazing sponsors</SectionDesc>
           <Sponsors />
-          <a href="https://github.com/sponsors/napi-rs" target='_blank'><MagicalGradButton>Become a Sponsor</MagicalGradButton></a>
+          <a href="https://github.com/sponsors/napi-rs" target='_blank' data-lg-reveal="fade-to-top"><MagicalGradButton>Become a Sponsor</MagicalGradButton></a>
         </div>
       </section>
 
