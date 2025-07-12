@@ -139,3 +139,16 @@ footer {
 .ScrollSmoother-wrapper {
   pointer-events: none;
 }
+
+.dark {
+  footer {
+    > *:last-child {
+      padding-top: fv(40, 80);
+      padding-bottom: fv(40, 80);
+      background-image: radial-gradient(50.75% 50.75% at 50% 0, rgb(255 169 121 / 15%) 0, rgb(255 190 121 / 0%) 100%);
+      background-size: 70% 180%;
+      background-position: center top;
+      background-repeat: no-repeat;
+    }
+  }
+}
