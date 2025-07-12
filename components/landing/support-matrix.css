@@ -48,23 +48,24 @@
 
     &.node {
       &::before {
+        -webkit-mask-composite: xor;
         border-radius: inherit;
         padding: 1px;
         border: none;
         width: 100%;
         left: -1px;
         background: linear-gradient(165deg, #47f163a1, rgba(255, 255, 255, 0.05) 30%);
-        -webkit-mask: linear-gradient(black, black) content-box content-box, linear-gradient(black, black);
-        -webkit-mask-composite: xor;
-        -webkit-mask-composite: subtract;
+        -webkit-mask-image: linear-gradient(black, black), linear-gradient(black, black);
+        -webkit-mask-clip: content-box, border-box;
+        -webkit-mask-origin: content-box, border-box;
       }
 
       .gradient-title {
         --gradient-loud-100: linear-gradient(0deg, #fbf9f3 0, #98ef9f 100%);
       }
     }
-  }
 
+  }
   .support-tips {
     font-size: 0.75em;
     color: #808080;

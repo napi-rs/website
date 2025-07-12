@@ -44,9 +44,11 @@
     border-radius: inherit;
     padding: 1px;
     background: radial-gradient(circle at var(--x) var(--y),var(--theme) 0,hsla(0,0%,100%,.5) 23%,rgba(255,255,255,calc(.1 * var(--border-opacity-scale))) 75%,rgba(255,255,255,calc(.1 * var(--border-opacity-scale))) 95%,hsla(0,0%,100%,.1) 100%);
-    -webkit-mask: linear-gradient(#000,#000) content-box content-box,linear-gradient(#000,#000);
+    -webkit-mask-image: linear-gradient(black, black), linear-gradient(black, black);
+    -webkit-mask-clip: content-box, border-box;
+    -webkit-mask-origin: content-box, border-box;
     -webkit-mask-composite: xor;
-    transition: padding 318ms
+    transition: padding 318ms;
   }
 
   &:hover {
