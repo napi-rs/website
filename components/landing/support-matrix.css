@@ -17,6 +17,7 @@
     background-color: #0f1011;
     border: 1px solid #343331;
     position: relative;
+    padding-bottom: 14px;
 
     &:before {
       background: radial-gradient(50% 100% at 50% 100%, #ffe7891a 0, #14090100);
@@ -71,13 +72,17 @@
     color: #808080;
   }
 
+  [data-slot="table-container"] {
+    padding-bottom: 10px;
+  }
+
   table {
+    /* Fixme: Safari not support relative on tr */
     tr {
       position: relative;
       border-radius: 8px;
-      overflow: hidden;
 
-      &:after {
+      &::after {
         content: '';
         position: absolute;
         left: 0;
@@ -87,6 +92,12 @@
         border-bottom-width: 1px;
         border-style: solid;
         border-image: linear-gradient(90deg, transparent ,hsla(0,0%,100%,.1),transparent) 1
+      }
+
+      &:last-child {
+        &:after {
+          display: none;
+        }
       }
 
       td:first-child {

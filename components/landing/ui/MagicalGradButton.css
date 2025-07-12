@@ -87,8 +87,7 @@
       inset: 0;
       z-index: 2;
       background: hsla(0,0%,100%,.01);
-      -webkit-backdrop-filter: blur(34.5px);
-      backdrop-filter: blur(34.5px);
+      /* backdrop-filter: blur(34px); */
     }
 
     .background-angular {
@@ -96,8 +95,8 @@
       margin-top: -50%;
       margin-left: -10%;
       aspect-ratio: 1/1;
-      background: conic-gradient(from var(--angle),#6804fd,#08f969,#100bf7,#f70ed2,#0ba2f7);
-      filter: hue-rotate(82deg);
+      background: conic-gradient(from var(--angle),#fd6304,#2008f9,#f70b0b,#f70ed2,#f77d0b);
+      filter: blur(25px);
       transform-origin: 50% 50%;
       opacity: var(--bg-opacity);
       transition: opacity 318ms;
