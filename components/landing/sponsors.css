@@ -16,7 +16,7 @@
 .sponsors {
   max-width: 100%;
   width: 100%;
-  margin-bottom: 60px;
+  margin-bottom: fv(40, 60);
   position: relative;
 
   &:before {
@@ -46,7 +46,7 @@
   .sponsor-section {
     border-radius: 12px;
     border: 1px solid hsl(var(--theme-hsl)/0.07);
-    padding: 20px 20px 30px;
+    padding: 20px fv(12, 20) fv(20, 30);
     flex: 2;
 
     @media (min-width: 768px) {
@@ -56,6 +56,10 @@
 
     &.small {
       flex: 1;
+
+      @media (max-width: 768px) {
+        min-width: 100%;
+      }
     }
 
     &.big {
@@ -68,7 +72,8 @@
     margin: 20px auto 0;
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: fv(16, 20);
+    flex-wrap: wrap;
 
     @media (max-width: 1240px) {
       width: 100%;
@@ -106,8 +111,8 @@
       align-items: center;
 
       .image-wrapper {
-        width: 100px;
-        height: 100px;
+        width: fv(70, 100);
+        height: fv(70, 100);
         border-radius: 50%;
         border: 1px solid hsl(var(--theme-hsl)/0.1);
         transition: transform 0.2s ease-in-out;
@@ -132,6 +137,7 @@
       .sponsor-grid-item-name {
         font-size: 0.75em;
         opacity: 0.7;
+        text-align: center;
       }
 
       &:hover {
