@@ -9,6 +9,7 @@
 
 .page-home {
   padding: fv(20, 40) 0;
+  overflow-x: hidden;
 }
 
 .section {

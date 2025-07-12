@@ -25,6 +25,7 @@ export function HomePage() {
           <a href="https://github.com/sponsors/napi-rs" target='_blank'><MagicalGradButton>Become a Sponsor</MagicalGradButton></a>
         </div>
       </section>
+
       <section className="section section-support-matrix" data-lg-reveal="fade">
         <div className="limit-container flex flex-col items-center">
           <div className="outline-box justify-center" data-lg-reveal="fade-to-top">

@@ -19,8 +19,8 @@
   position: relative;
   padding: 16px 28px 16px 45px;
   border-radius: var(--radius);
-  background-image: linear-gradient(85deg,rgba(104,1,254,.03) 2.96%,hsla(0,0%,85%,.03) 96.14%);
-  box-shadow: 0 16px 64px 0 rgba(104,1,255,.12);
+  background-image: linear-gradient(85deg,rgba(254, 115, 1, 0.03) 2.96%,hsla(0,0%,85%,.03) 96.14%);
+  box-shadow: 0 16px 64px 0 rgba(255, 115, 1, 0.12);
   cursor: pointer;
   overflow: hidden;
 
@@ -101,7 +101,7 @@
       transition: opacity 318ms;
       -webkit-mask-image: radial-gradient(100px,#fff,hsla(0,0%,100%,.1));
       -webkit-mask-position: var(--bound-x) var(--bound-y);
-      animation: MagicalGradButton_colorRotate__b2B2G 20s linear infinite
+      animation: colorRotate 20s linear infinite
     }
   }
 }
