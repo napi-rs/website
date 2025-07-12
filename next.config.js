@@ -13,6 +13,7 @@ const nextConfig = withNextra({
     defaultLocale: process.env.LOCALE || 'en',
     locales: ['en', 'cn', 'pt-BR'],
   },
+  transpilePackages: ['gsap', '@waaark/luge'],
   webpack(config, { dev, isServer }) {
     if (!dev && !isServer) {
       const plugin = new PerfseePlugin({

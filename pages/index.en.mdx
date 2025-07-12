@@ -5,20 +5,37 @@ description: 'NAPI-RS is a framework for building Node.js addons in Rust.'
 
 import { Badges } from '../components/badges'
 import { Rust } from '../components/chalk'
-import { Ecosystem } from '../components/ecosystem'
 import { Sponsors } from '../components/sponsors'
 import { TitleEN } from '../components/title.en'
 
+import { HomePage } from '@/components/landing'
+
 export const getStaticProps = async () => {
-  const sponsorsSVG = await fetch(`https://sponsors.napi.rs/sponsors.svg`).then(
-    (res) => res.text(),
+  const sponsors = await fetch(`https://sponsors.napi.rs/sponsor.json`).then(
+    (res) => res.json(),
   )
+  const washedSponsors = {}
+  Object.keys(sponsors).map(key => {
+    const sponsorSubList = sponsors[key]
+    washedSponsors[key] = sponsorSubList.map(item => {
+      return {
+        name: item.name,
+        img: item.avatarUrl,
+        url: item.websiteUrl
+      }
+    })
+  })
+
   return {
     props: {
-      ssg: sponsorsSVG,
-    },
+      ssg: washedSponsors
+    }
   }
 }
+
+<div class="page-landing">
+
+<div class="limit-container opacity-10">
 
 <TitleEN />
 
@@ -64,36 +81,13 @@ console.log(fibonacci(5))
 
 ⚙️ Parallelism in a few lines
 
-## Sponsors
-
-<Sponsors />
-
-## Ecosystem
-
-<Ecosystem />
-
-## Support matrix
-
-### Node.js
-
-| Node10 | Node12 | Node14 | Node16 | Node18 | Node20 |
-| ------ | ------ | ------ | ------ | ------ | ------ |
-| ✓      | ✓      | ✓      | ✓      | ✓      | ✓      |
-
-### Platform support
-
-> ✅ Means official tested in napi-rs repo. <br/> `-` Means no official Node.js release.
-
-|            | i686 | x64 | aarch64 | arm |
-| ---------- | ---- | --- | ------- | --- |
-| Windows    | ✅   | ✅  | ✅      | -   |
-| macOS      | -    | ✅  | ✅      | ✅  |
-| Linux      | -    | ✅  | ✅      | ✅  |
-| Linux musl | -    | ✅  | ✅      | -   |
-| FreeBSD    | -    | ✅  | -       | -   |
-| Android    | -    | -   | ✅      | ✅  |
-
 ## Related projects
 
 - [neon](https://www.neon-bindings.com)
 - [node-bindgen](https://github.com/infinyon/node-bindgen)
+
+</div>
+
+<HomePage />
+
+</div>

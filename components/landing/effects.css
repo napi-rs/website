@@ -1,0 +1,9 @@
+.lg-reveal--heading .line {
+  transform-origin: 0% 0%;
+  will-change: transform
+}
+
+.lg-reveal--text {
+  transform-origin: 0% 0%;
+  will-change: transform
+}
