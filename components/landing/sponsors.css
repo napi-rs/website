@@ -50,6 +50,8 @@
     padding: 20px fv(12, 20) fv(20, 30);
     flex: 2;
     position: relative;
+    background: #41220d2e;
+    backdrop-filter: blur(10px);
     --rotate: 165deg;
 
     &:nth-child(2) {
@@ -82,11 +84,6 @@
       -webkit-mask-clip: content-box, border-box;
       -webkit-mask-origin: content-box, border-box;
       -webkit-mask-composite: xor;
-    }
-
-    @media (min-width: 768px) {
-      background: hsl(var(--theme-hsl)/0.02);
-      backdrop-filter: blur(10px);
     }
 
     &.small {
@@ -155,7 +152,7 @@
         background-color: #3d1f0d;
 
         &:after {
-          background-color: #6b3703;
+          background-color: #29211D;
         }
       }
 

@@ -170,7 +170,7 @@ section.footnotes > h2 {
 .limit-container,
 .limit-narrow-container {
   --padding: 20px;
-  --width: 1298px;
+  --width: 1168px;
   padding-left: var(--padding);
   padding-right: var(--padding);
   max-width: var(--width);

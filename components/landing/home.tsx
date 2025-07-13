@@ -5,6 +5,7 @@ import { Ecosystem } from './ecosystem'
 import { SupportMatrix } from './support-matrix'
 import { Sponsors, BgLines } from './sponsors'
 import { SectionTitle, SectionDesc } from './section'
+import { LiveDemo } from './live-demo'
 import { Heart } from './icons'
 import { MagicalGradButton } from './ui'
 
@@ -18,6 +19,8 @@ export function HomePage() {
       <Luge />
 
       <Hero />
+
+      <LiveDemo />
 
       <section className="section section-sponsors">
         <BgLines />

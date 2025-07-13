@@ -1,0 +1,11 @@
+```js
+import { Transformer } from '@napi-rs/image'
+
+export async function transform() {
+  const imageBytes = await fetch('https://upload.wikimedia.org/wikipedia/commons/5/5d/ISS-45_EVA-2_%28a%29_Scott_Kelly.jpg')
+    .then(res => res.arrayBuffer())
+
+  const transformer = new Transformer(imageBytes)
+  const webp = await transformer.toWebp()
+}
+```

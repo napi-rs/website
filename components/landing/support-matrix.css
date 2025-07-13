@@ -14,10 +14,11 @@
 
   [data-slot="card"] {
     border-radius: 16px;
-    background-color: #0f1011;
+    background-color: #311c0818;
     border: 1px solid #343331;
     position: relative;
     padding-bottom: 14px;
+    /* backdrop-filter: blur(5px); */
 
     &:before {
       background: radial-gradient(50% 100% at 50% 100%, #ffe7891a 0, #14090100);

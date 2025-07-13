@@ -37,6 +37,8 @@ export interface SvgNodeProps {
    * The color of the dot.
    */
   dotColor?: string | undefined;
+
+  id?: string;
 }
 
 // SvgNode component - renders a glowing node that moves along an SVG path
@@ -48,9 +50,10 @@ export const SvgNode: React.FC<SvgNodeProps> = ({
   label = '',
   glowColor = '#41D1FF',
   dotColor = '#9fe6fd',
+  id,
 }) => {
   // Generate a unique ID for the path to avoid collisions in a single SVG
-  const pathId = useMemo(() => Math.random().toString(36), []);
+  const pathId = useMemo(() => id || Math.random().toString(36), []);
 
   // References to DOM elements
   const pathElement = useRef<SVGPathElement>(null);

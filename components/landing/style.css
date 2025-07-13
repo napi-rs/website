@@ -1,5 +1,7 @@
 @import './hero.css';
 @import './hero-diagram.css';
+@import './live-demo';
+@import './features/style.css';
 @import './sponsors.css';
 @import './support-matrix.css';
 @import './ecosystem.css';
@@ -166,10 +168,7 @@
 
 .section-sponsors {
   position: relative;
-  margin-top: 60px;
-  @media (min-width: 768px) {
-    margin-top: 80px;
-  }
+  margin-top: fv(100, 160);
 }
 
 .section-support-matrix {
@@ -183,7 +182,6 @@
   }
 
   .limit-container {
-    --width: 1180px;
     position: relative;
 
     &:after {
@@ -250,10 +248,6 @@ footer {
   position: relative;
   z-index: 2;
   background-color: transparent !important;
-}
-
-.ScrollSmoother-wrapper {
-  pointer-events: none;
 }
 
 .dark {
