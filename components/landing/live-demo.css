@@ -1,10 +1,29 @@
 .live-demo {
   margin-top: fv(20, 40) !important;
   min-height: 50vh;
+  position: relative;
 
   .feature-section__grid {
     display: block !important;
     margin: 0 !important;
+    position: relative;
+  }
+
+  @media (min-width: 1024px) {
+    .live-demo-bg {
+      position: absolute;
+      inset: -40px;
+      background-image: url('/assets/carina_nebula~orig.png');
+      background-repeat: no-repeat;
+      background-size: cover;
+      opacity: 0;
+      z-index: -1;
+      filter: blur(50px);
+
+      &.is-in {
+        opacity: 0.25;
+      }
+    }
   }
 
   .playground-wrapper {
@@ -12,7 +31,6 @@
     display: flex;
     width: 100%;
     background: #29211de0;
-    backdrop-filter: blur(5px);
     position: relative;
     border-radius: 12px;
     box-shadow: 0.5px 1px 1px hsl(var(--theme-hsl) / 0.333);
@@ -20,7 +38,7 @@
 
     .panel {
       &:after {
-        background-color: #261F1B;
+        background-color: #3A271A;
       }
     }
 

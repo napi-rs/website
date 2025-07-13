@@ -6,7 +6,7 @@ export interface SvgNodeProps {
   /**
    * The SVG path to draw the node on.
    */
-  path: string;
+  path?: string;
 
   /**
    * The position of the node along the path, represented as a percentage from 0-1.
