@@ -108,14 +108,14 @@ export default {
     text: () => {
       return (
         <div className="text-[12px] flex flex-wrap justify-between w-full items-center md:gap-3 gap-6 flex-col-reverse md:flex-row">
-          <div class="flex flex-col items-center md:items-start md:justify-start justify-center gap-1 flex-shrink-0">
+          <div className="flex flex-col items-center md:items-start md:justify-start justify-center gap-1 flex-shrink-0">
             <Logo className="mb-[5px]"></Logo>
             <p>Released under the MIT License.</p>
             <p>Copyright © {currentYear} NAPI-RS.</p>
           </div>
-          <p class="flex flex-wrap gap-2 md:gap-2 md:items-end items-center flex-col">
+          <p className="flex flex-wrap gap-2 md:gap-2 md:items-end items-center flex-col">
             <a href="https://vercel.com?utm_source=napi-rs&utm_campaign=oss">
-              <img src="/assets/powered-by-vercel.svg" class="!h-8" />
+              <img src="/assets/powered-by-vercel.svg" className="!h-8" />
             </a>
             <span>
               Website built with{' '}
@@ -127,7 +127,7 @@ export default {
                 Nextra
               </a>
             </span>
-            <span class="flex-shrink-0">
+            <span className="flex-shrink-0">
               UI inspired by&nbsp;
               <a
                 className="!text-[#c063ed] nx-decoration-from-font [text-underline-position:from-font]"

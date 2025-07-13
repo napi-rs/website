@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic';
 
+import { Hero } from './hero'
 import { Ecosystem } from './ecosystem'
 import { SupportMatrix } from './support-matrix'
 import { Sponsors, BgLines } from './sponsors'
@@ -15,6 +16,8 @@ export function HomePage() {
   return (
     <div className="page-home">
       <Luge />
+
+      <Hero />
 
       <section className="section section-sponsors">
         <BgLines />
