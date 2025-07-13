@@ -62,7 +62,7 @@ export const HeroDiagram: React.FC = () => {
     ]
   ]);
 
-  const [outputLines, setOutputLines] = useState<Partial<SvgNodeProps>[]>([
+  const [outputLines, setOutputLines] = useState<SvgNodeProps[]>([
     { position: 0, visible: false, labelVisible: false, label: 'Browser' },
     { position: 0, visible: false, labelVisible: false, label: 'Node/Bun/Deno' },
     { position: 0, visible: false, labelVisible: false, label: 'React Native' },

@@ -33,8 +33,8 @@
     background: #29211de0;
     position: relative;
     border-radius: 12px;
-    box-shadow: 0.5px 1px 1px hsl(var(--theme-hsl) / 0.333);
     border: 1px solid var(--border-color);
+    overflow: hidden;
 
     .panel {
       &:after {

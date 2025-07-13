@@ -6,6 +6,7 @@ import { SupportMatrix } from './support-matrix'
 import { Sponsors, BgLines } from './sponsors'
 import { SectionTitle, SectionDesc } from './section'
 import { LiveDemo } from './live-demo'
+import { Features } from './features'
 import { Heart } from './icons'
 import { MagicalGradButton } from './ui'
 
@@ -21,6 +22,8 @@ export function HomePage() {
       <Hero />
 
       <LiveDemo />
+
+      <Features />
 
       <section className="section section-sponsors">
         <BgLines />

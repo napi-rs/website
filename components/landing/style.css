@@ -130,11 +130,11 @@
 
 .section-title {
   position: relative;
-  font-size: fv(24, 36);
+  font-size: fv(24, 42);
   font-weight: 600;
   line-height: 111.111%;
   margin-top: fv(12, 20);
-  margin-bottom: fv(40, 64);
+  margin-bottom: fv(38, 58);
 
   & + .section-desc{
     margin-top: -2em;
