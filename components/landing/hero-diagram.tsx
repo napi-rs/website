@@ -66,6 +66,7 @@ export const HeroDiagram: React.FC = () => {
     { position: 0, visible: false, labelVisible: false, label: 'Browser' },
     { position: 0, visible: false, labelVisible: false, label: 'Node/Bun/Deno' },
     { position: 0, visible: false, labelVisible: false, label: 'React Native' },
+    { position: 0, visible: false, labelVisible: false, label: 'StackBlitz' },
   ]);
 
   const [blueIndicator, setBlueIndicator] = useState(false);
@@ -180,7 +181,7 @@ export const HeroDiagram: React.FC = () => {
   const animateSingleOutputDesktop = (lineIndex: number, index: number) => {
     const tl = gsap.timeline();
     const startPos = 0;
-    const midPos = (0.7 / 3) * (index + 1) + 0.05;
+    const midPos = (0.7 / 4) * (index + 1) + 0.05;
     const endPos = 1;
 
     tl.call( () => updateOutputLine(lineIndex, { position: startPos }), null, 0)

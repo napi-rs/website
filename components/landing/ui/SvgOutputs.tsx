@@ -1,17 +1,40 @@
 import React from 'react';
 import SvgNode, { SvgNodeProps } from './SvgNode';
+import { gsap } from 'gsap'
 
 // Define props interface for OutputLines component
 interface OutputLinesProps {
   outputLines: SvgNodeProps[];
 }
 
+function offsetPathY(pathData: string, offset: number): string {
+  const segmentRegex = /[ML][^ML]*/g;
+  const coordRegex = /[-+]?[0-9]*\.?[0-9]+/g;
+
+  return pathData.replace(segmentRegex, segment => {
+    const command = segment[0];
+    const coords = segment.slice(1).match(coordRegex) || [];
+
+    if (coords.length >= 2 && (command === 'M' || command === 'L')) {
+      const x = coords[0];
+      const y = parseFloat(coords[1]) + offset;
+
+      const separator = segment.slice(1).replace(coordRegex, ' ');
+      return `${command}${x}${separator.charAt(0)}${y}`;
+    }
+
+    return segment;
+  });
+}
 /**
  * Component for rendering output lines with animated nodes
  */
 export const SvgOutputs: React.FC<OutputLinesProps> = ({ outputLines }) => {
-  // Shared output path for all nodes
   const outputPath = "M843.463 1.3315L245.316 5.47507L0.633077 4.69725";
+  const outputPaths = [
+    offsetPathY(outputPath, 20),
+    offsetPathY(outputPath, -20)
+  ]
 
   return (
     <svg
@@ -24,17 +47,20 @@ export const SvgOutputs: React.FC<OutputLinesProps> = ({ outputLines }) => {
       style={{ opacity: 0.8 }}
     >
       {/* Base output line */}
-      <path
-        d={outputPath}
-        stroke="url(#output_gradient)"
-        strokeWidth="1.2"
-      />
+      {outputPaths.map((path, index) => (
+        <path
+          key={index}
+          d={path}
+          stroke="url(#output_gradient)"
+          strokeWidth="1.2"
+        />
+      ))}
 
       {/* Render nodes for each output line */}
       {outputLines.map((outputLine, index) => (
         <SvgNode
           key={index}
-          path={outputPath}
+          path={gsap.utils.wrap(outputPaths, index)}
           position={outputLine.position}
           visible={outputLine.visible}
           labelVisible={outputLine.labelVisible}
