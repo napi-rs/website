@@ -162,7 +162,6 @@
         border-radius: 50%;
         opacity: 0.8;
         background-color: #161616;
-        filter: grayscale(100%);
         transition: 0.2s ease-in-out;
       }
 
