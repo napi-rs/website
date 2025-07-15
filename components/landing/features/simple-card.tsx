@@ -3,6 +3,7 @@ export type FeatureCardProps = {
   description: string
   emoji: string
   lugeReveal?: string
+  Component?: React.FC
 }
 
 export function FeatureSimpleCard ({ title, description, emoji, lugeReveal }: FeatureCardProps) {

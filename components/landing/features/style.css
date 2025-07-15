@@ -1,3 +1,5 @@
+@import './optimized-performance.css';
+
 .feature-section {
   display: flex;
   flex-direction: column;
@@ -228,6 +230,7 @@
       content: "";
       background-image: radial-gradient(50% 38.81% at 50% 61.19%, rgba(250, 75, 241, 0.12) 0, rgb(11 10 5 / 0%) 100%), radial-gradient(50% 36.46% at 50% 36.46%, rgb(250 133 75 / 8%) 0, rgb(11 8 5 / 0%) 100%);
       filter: blur(20px);
+      opacity: 0.5;
       background-repeat: no-repeat;
       background-size: 1462px 1062px;
       transform: translate3d(-50%, -50%, 0);

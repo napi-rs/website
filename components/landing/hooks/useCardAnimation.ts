@@ -32,7 +32,7 @@ export function useCardAnimation(
   const [isCardActive, setIsCardActive] = useState<boolean>(false);
 
   // Ref to track if animation is currently running (prevents overlapping animations)
-  const isAnimationRunning = useRef<boolean>(false);
+  const [isAnimationRunning, setIsAnimationRunning] = useState<boolean>(false);
 
   // Refs to store GSAP timeline and ScrollTrigger instances
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
@@ -43,10 +43,10 @@ export function useCardAnimation(
    */
   const startAnimation = useCallback(() => {
     // Exit if animation is already running or no animation definition exists
-    if (isAnimationRunning.current || !animation) return;
+    if (isAnimationRunning || !animation) return;
 
     // Mark animation as running and activate card state
-    isAnimationRunning.current = true;
+    setIsAnimationRunning(true)
     setIsCardActive(true);
 
     // Clean up existing timeline if it exists
@@ -62,16 +62,15 @@ export function useCardAnimation(
           setIsCardActive(false);
           // Prevent new animations immediately after completion
           setTimeout(() => {
-            isAnimationRunning.current = false;
+            setIsAnimationRunning(false);
           }, 3000);
-        } else {
-          isAnimationRunning.current = false;
         }
       }
     });
 
     timelineRef.current.add(animation());
-  }, [animation, options?.once]);
+
+  }, [animation]);
 
   /**
    * Set up scroll trigger for mobile devices when component mounts
@@ -94,8 +93,9 @@ export function useCardAnimation(
       scrollTriggerRef.current = ScrollTrigger.create({
         trigger: targetElement,
         start: 'top 60%', // Trigger when element top reaches 60% viewport height
-        onEnter: startAnimation,
-        once: options?.once // Respect "once" option for scroll trigger
+        onEnter: () => {
+          startAnimation();
+        },
       });
     }
 
@@ -117,9 +117,9 @@ export function useCardAnimation(
       }
 
       // Reset animation state
-      isAnimationRunning.current = false;
+      setIsAnimationRunning(false);
     };
-  }, [selector, startAnimation, options?.once]);
+  }, [selector]);
 
   return {
     startAnimation,
