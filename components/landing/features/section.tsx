@@ -9,7 +9,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 // Define component props type
 interface FeatureSectionProps {
-  title: string;
+  title: string | React.ReactNode;
   description?: string;
   type?: 'orange' | 'pink';
   children?: React.ReactNode;

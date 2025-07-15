@@ -3,6 +3,24 @@
   min-height: 50vh;
   position: relative;
 
+  h2 {
+    -webkit-text-fill-color: inherit !important;
+    background: none !important;
+  }
+
+  .live-demo-title {
+    span {
+      --text-color: var(--theme);
+      background: linear-gradient(
+        to right,
+        var(--text-color) 0%,
+        #F4BC92 100%
+      );
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
   .feature-section__grid {
     display: block !important;
     margin: 0 !important;

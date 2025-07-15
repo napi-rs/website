@@ -3,11 +3,19 @@ import TransformImage from '@/components/transform-image'
 
 import LiveDemoCode from './live-demo-code.mdx'
 
+const LiveDemoTitle = () => {
+  return (
+    <div className="live-demo-title">
+      Live WASM + <span>NAPI-RS</span> Demo
+    </div>
+  )
+}
+
 export function LiveDemo () {
   return (
     <FeatureSection
       className="live-demo"
-      title="Try Live demo"
+      title={<LiveDemoTitle />}
       description="This is a sample app using NAPI-RS WebAssembly. You can transform the image to webp, jpeg or avif with different quality."
     >
 
