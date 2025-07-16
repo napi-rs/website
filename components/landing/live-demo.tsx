@@ -29,7 +29,7 @@ export function LiveDemo () {
           <TransformImage />
         </div>
         <div className="panel code-panel" data-lg-reveal="layer-to-right">
-          <div className="title-bar">Code</div>
+          <div className="title-bar">TS Code</div>
           <LiveDemoCode />
         </div>
       </div>

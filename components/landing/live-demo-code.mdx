@@ -9,3 +9,27 @@ export async function transform() {
   const webp = await transformer.toWebp()
 }
 ```
+
+<div className="title-bar mt-1" style={{ borderTop: "1px solid var(--border-color)" }}>Rust Code</div>
+
+```rust
+#[napi]
+pub struct Transformer {
+  inner: Uint8Array,
+}
+
+#[napi]
+impl Transformer {
+  #[napi(constructor)]
+  pub fn new(inner: Uint8Array) -> Self {
+    Self { inner }
+  }
+
+  #[napi]
+  pub fn webp(&self) -> Result<Uint8Array> {
+    let image = image::load_from_memory(&self.inner)?;
+    let webp = image.to_webp().map_err(|e| Error::from(e.to_string()))?;
+    Ok(webp.into())
+  }
+}
+```
