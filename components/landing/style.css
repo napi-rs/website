@@ -262,3 +262,8 @@ footer {
     }
   }
 }
+
+.light .page-home {
+  background-color: #111111;
+  color: white;
+}

@@ -1180,7 +1180,7 @@ export function Ecosystem() {
   const { theme } = useTheme()
 
   return (
-    <div className={cx("ecosystem", `${theme || 'dark'}`)} data-lg-reveal="fade-to-top">
+    <div className={cx("ecosystem", `${'dark'}`)} data-lg-reveal="fade-to-top">
       <Marquee>
         <p className="marquee-flex">
           <RowOneLogos />
