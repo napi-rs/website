@@ -1,5 +1,6 @@
 export * from './section'
 
+import { ZeroConfigBuildCard } from './zero-config-build'
 import { PowerfulCICard } from './powerful-ci'
 import { RichPlatformsCard } from './rich-platforms'
 import { OptimizedPerformanceCard } from './optimized-performance'
@@ -11,10 +12,10 @@ export function Features() {
   const featuresList: FeatureCardProps[] = [
     {
       emoji: '🚀',
-      title: 'Native Performance',
-      description: 'Bring native performance for Node.js',
+      title: 'Zero-Config Build (napi build)',
+      description: 'Simple build command, no file copy or hand writing js binding needed.',
       lugeReveal: 'fade-to-right',
-      Component: FeatureSimpleCard,
+      Component: ZeroConfigBuildCard,
     },
     {
       emoji: '👷‍♂️',

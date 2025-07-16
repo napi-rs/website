@@ -19,7 +19,7 @@
       width: 100%;
       height: 200px;
       filter: blur(50px);
-      background: radial-gradient(circle, #74e468, transparent 60%);
+      background: radial-gradient(circle, #13b351, transparent 60%);
       transition: all 3s ease;
       transform: translate3d(0, 0, 0) scaleY(0);
       opacity: 0;
@@ -46,7 +46,7 @@
       stroke-dasharray: 1.01;
       stroke-dashoffset: 1;
       opacity: 0;
-      stroke: #158c44;
+      stroke: #13b351;
     }
 
     .circle, .check {
@@ -74,16 +74,17 @@
         transition-delay: 0.2s;
         transition-duration: .5s;
         transform: translateZ(0) scaleY(1);
-        opacity: 0.4;
+        opacity: 0.5;
       }
       .circle {
-        fill: #158c44;
+        fill: #13b351;
       }
       .check {
         fill: #ddd;
       }
       .rect {
-        stroke: #158c44;
+        stroke: #13b351;
+        stroke-width: 1.5px;
         /* filter: drop-shadow(0 0 2px #e4cd02) */
       }
       .drawLine {

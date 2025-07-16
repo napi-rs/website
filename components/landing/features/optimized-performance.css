@@ -12,163 +12,162 @@
   @media (max-width: 380px) {
     height: 460px;
   }
-}
 
-.feature__visualization {
-  mask-image: linear-gradient(
-    to bottom,
-    #ffffff,
-    #ffffff 180px,
-    transparent 240px
-  );
-  position: relative;
+  .feature__visualization {
+    mask-image: linear-gradient(
+      to bottom,
+      #ffffff,
+      #ffffff 180px,
+      transparent 240px
+    );
 
-  .camera-container {
-    width: 720px;
-    left: 50%;
-    position: relative;
-    transition: transform 3s ease;
-    transform: translate3d(-50%, 80px, 0) scale(1.05);
-  }
+    .camera-container {
+      width: 720px;
+      left: 50%;
+      position: relative;
+      transition: transform 3s ease;
+      transform: translate3d(-50%, 80px, 0) scale(1.05);
+    }
 
-  .grid {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 720px;
-  }
-
-  .brand-text {
-    position: absolute;
-    top: -10px;
-    left: 319px;
-    color: #fff;
-    text-align: center;
-    font-family:
-      IBM Plex Mono,
-      sans-serif;
-    font-size: 12px;
-    font-style: normal;
-    font-weight: 500;
-    line-height: 150%;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 600;
-    border-radius: 6px;
-    border: 1px solid #2c2c2c;
-    background: #171717;
-    padding: 6px 14px;
-    z-index: 5;
-  }
-
-  .checkmark-container {
-    position: relative;
-
-    &:after {
-      content: '';
+    .grid {
       position: absolute;
-      top: 160px;
+      top: 0;
       left: 0;
-      right: 0;
-      width: 100%;
-      height: 200px;
-      background: linear-gradient(
-        to bottom,
-        transparent,
-        rgba(126, 19, 179, 0.5)
-      );
-      transition: all 3s ease;
-      transform: translate3d(0, 0, 0) scaleY(0);
-      opacity: 0;
-      will-change: transform, opacity;
-    }
-  }
-
-  .checkmark {
-    position: absolute;
-    top: 220px;
-    filter: drop-shadow(0px 0px 0px rgba(19, 179, 81, 0));
-    z-index: 5;
-
-    .checkmark-icon {
-      transform: scale(0.8) translate3d(16px, 16px, 0);
+      width: 720px;
     }
 
-    .circle-glow,
-    .checkmark-icon__glow,
-    .checkmark-icon {
-      opacity: 0;
-      transition: opacity 0.5s ease-in-out;
+    .brand-text {
+      position: absolute;
+      top: -10px;
+      left: 319px;
+      color: #fff;
+      text-align: center;
+      font-family:
+        IBM Plex Mono,
+        sans-serif;
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 150%;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid #2c2c2c;
+      background: #171717;
+      padding: 6px 14px;
+      z-index: 5;
     }
 
-    &:nth-child(1) {
-      left: 22px;
-    }
+    .checkmark-container {
+      position: relative;
 
-    &:nth-child(2) {
-      left: 180px;
-    }
-
-    &:nth-child(3) {
-      left: 338px;
-    }
-
-    &:nth-child(4) {
-      left: 497px;
-    }
-
-    &:nth-child(5) {
-      left: 655px;
-    }
-
-    &:not(:nth-child(3)) {
-      display: none;
-    }
-
-    @media (min-width: 500px) {
-      &:not(:nth-child(3)) {
-        display: block;
+      &:after {
+        content: '';
+        position: absolute;
+        top: 160px;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 200px;
+        background: linear-gradient(
+          to bottom,
+          transparent,
+          rgba(126, 19, 179, 0.5)
+        );
+        transition: all 3s ease;
+        transform: translate3d(0, 0, 0) scaleY(0);
+        opacity: 0;
+        will-change: transform, opacity;
       }
     }
 
-    @media (min-width: 640px) {
-      &:not(:nth-child(3)) {
-        display: none;
-      }
-    }
+    .checkmark {
+      position: absolute;
+      top: 220px;
+      filter: drop-shadow(0px 0px 0px rgba(19, 179, 81, 0));
+      z-index: 5;
 
-    @media (min-width: 1040px) {
-      &:not(:nth-child(3)) {
-        display: block;
+      .checkmark-icon {
+        transform: scale(0.8) translate3d(16px, 16px, 0);
       }
-    }
-
-    &.active {
-      filter: drop-shadow(0px -20px 20px rgba(152, 19, 179, 0.7));
 
       .circle-glow,
       .checkmark-icon__glow,
       .checkmark-icon {
-        transition: opacity 0.15s ease-in-out;
-        opacity: 1;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+      }
+
+      &:nth-child(1) {
+        left: 22px;
+      }
+
+      &:nth-child(2) {
+        left: 180px;
+      }
+
+      &:nth-child(3) {
+        left: 338px;
+      }
+
+      &:nth-child(4) {
+        left: 497px;
+      }
+
+      &:nth-child(5) {
+        left: 655px;
+      }
+
+      &:not(:nth-child(3)) {
+        display: none;
+      }
+
+      @media (min-width: 500px) {
+        &:not(:nth-child(3)) {
+          display: block;
+        }
+      }
+
+      @media (min-width: 640px) {
+        &:not(:nth-child(3)) {
+          display: none;
+        }
+      }
+
+      @media (min-width: 1040px) {
+        &:not(:nth-child(3)) {
+          display: block;
+        }
+      }
+
+      &.active {
+        filter: drop-shadow(0px -20px 20px rgba(152, 19, 179, 0.7));
+
+        .circle-glow,
+        .checkmark-icon__glow,
+        .checkmark-icon {
+          transition: opacity 0.15s ease-in-out;
+          opacity: 1;
+        }
       }
     }
-  }
 
-  &.active {
-    .checkmark-container {
-      &:after {
-        transition-delay: 2.5s;
-        transition-duration: 0.5s;
-        transform: translate3d(0, 0, 0) scaleY(1);
-        opacity: 1;
+    &.active {
+      .checkmark-container {
+        &:after {
+          transition-delay: 2.5s;
+          transition-duration: 0.5s;
+          transform: translate3d(0, 0, 0) scaleY(1);
+          opacity: 1;
+        }
       }
-    }
 
-    .camera-container {
-      transition: transform 1.5s ease 1s;
-      transform: translate3d(-50%, -100px, 0) scale(1.05);
+      .camera-container {
+        transition: transform 1.5s ease 1s;
+        transform: translate3d(-50%, -100px, 0) scale(1.05);
+      }
     }
   }
 }

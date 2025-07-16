@@ -74,10 +74,10 @@ export const Luge = () => {
     gsap.registerPlugin(ScrollSmoother)
     gsap.registerPlugin(CustomEase)
 
-    // ScrollSmoother.create({
-    //   smooth: 1,
-    //   effects: true,
-    // })
+    ScrollSmoother.create({
+      smooth: 1,
+      effects: true,
+    })
 
     // Setting ticker
     luge.settings({ticker: {external: true}})

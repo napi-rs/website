@@ -19,9 +19,9 @@ export function HomePage() {
     <div className="page-home">
       <Luge />
 
-      {/* <Hero />
+      <Hero />
 
-      <LiveDemo /> */}
+      <LiveDemo />
 
       <Features />
 
