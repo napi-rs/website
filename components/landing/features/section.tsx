@@ -39,12 +39,10 @@ export const FeatureSection: React.FC<FeatureSectionProps> = ({
    */
   useEffect(() => {
     const startAnimation = () => {
-      if (!sectionRef.current) return;
-
       // Create GSAP timeline with scroll trigger
       timelineRef.current = gsap.timeline({
         scrollTrigger: {
-          trigger: sectionRef.current, // Element to watch for scroll
+          trigger: `#feature_section_${type}`, // Element to watch for scroll
           start: 'top 80%', // Animation starts when section top hits 80% viewport height
           once: true,
         },
@@ -84,7 +82,7 @@ export const FeatureSection: React.FC<FeatureSectionProps> = ({
         }
       });
     };
-  }, [sectionRef.current]);
+  }, []);
 
   return (
     <section
