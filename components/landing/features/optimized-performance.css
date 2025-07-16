@@ -76,7 +76,7 @@
       background: linear-gradient(
         to bottom,
         transparent,
-        rgba(19, 179, 81, 0.5)
+        rgba(126, 19, 179, 0.5)
       );
       transition: all 3s ease;
       transform: translate3d(0, 0, 0) scaleY(0);
@@ -90,6 +90,10 @@
     top: 220px;
     filter: drop-shadow(0px 0px 0px rgba(19, 179, 81, 0));
     z-index: 5;
+
+    .checkmark-icon {
+      transform: scale(0.8) translate3d(16px, 16px, 0);
+    }
 
     .circle-glow,
     .checkmark-icon__glow,
@@ -141,7 +145,7 @@
     }
 
     &.active {
-      filter: drop-shadow(0px -20px 20px rgba(19, 179, 81, 0.7));
+      filter: drop-shadow(0px -20px 20px rgba(152, 19, 179, 0.7));
 
       .circle-glow,
       .checkmark-icon__glow,

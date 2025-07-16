@@ -1,3 +1,4 @@
+@import './powerful-ci.css';
 @import './rich-platforms.css';
 @import './optimized-performance.css';
 
@@ -114,7 +115,7 @@
         font-size: 16px;
         font-style: normal;
         font-weight: 400;
-        line-height: 150%;
+        line-height: 135%;
         letter-spacing: -0.32px;
         text-wrap: balance;
         cursor: default;
@@ -123,6 +124,16 @@
       &.meta--center {
         margin: 0 auto;
         text-align: center;
+      }
+
+      &.meta--left {
+        margin: 0 auto;
+        text-align: left;
+
+        .meta__title {
+          text-align: left;
+          padding: 0;
+        }
       }
     }
 

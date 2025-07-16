@@ -1,5 +1,6 @@
 export * from './section'
 
+import { PowerfulCICard } from './powerful-ci'
 import { RichPlatformsCard } from './rich-platforms'
 import { OptimizedPerformanceCard } from './optimized-performance'
 import { FeatureSection } from './section'
@@ -17,10 +18,10 @@ export function Features() {
     },
     {
       emoji: '👷‍♂️',
-      title: 'Memory safe',
-      description: 'Guaranteed by Rust compiler.',
+      title: 'Powerful & Flexible CI',
+      description: 'Reduce the complex CI setup, stay focus on your development.',
       lugeReveal: 'fade-to-left',
-      Component: FeatureSimpleCard,
+      Component: PowerfulCICard,
     },
     {
       emoji: '⚡️',
