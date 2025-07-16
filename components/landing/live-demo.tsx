@@ -1,5 +1,9 @@
 import { FeatureSection } from './features'
-import TransformImage from '@/components/transform-image'
+import dynamic from 'next/dynamic';
+
+const TransformImage = dynamic(() => import('@/components/transform-image'), {
+  ssr: false,
+});
 
 import LiveDemoCode from './live-demo-code.mdx'
 

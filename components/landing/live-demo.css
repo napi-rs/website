@@ -82,6 +82,7 @@
       flex-shrink: 0;
       min-width: 0;
       min-width: 50%;
+      min-height: 400px;
       border-right: 1px solid var(--border-color);
 
       > *:last-child {
