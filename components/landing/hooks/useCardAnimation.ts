@@ -42,12 +42,15 @@ export function useCardAnimation(
    * Starts the card animation, managing state and preventing concurrent animations
    */
   const startAnimation = useCallback(() => {
-    // Exit if animation is already running or no animation definition exists
-    if (isAnimationRunning || !animation) return;
+    // Exit if animation is already running exists
+    if (isAnimationRunning) return;
 
     // Mark animation as running and activate card state
     setIsAnimationRunning(true)
     setIsCardActive(true);
+
+    // Exit if no animation
+    if (!animation) return;
 
     // Clean up existing timeline if it exists
     if (timelineRef.current) {

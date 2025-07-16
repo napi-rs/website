@@ -5,6 +5,8 @@ import { useCardAnimation } from '../hooks/useCardAnimation';
 
 import { FeatureCardProps } from './simple-card'
 
+const logo = '/img/favicon.png';
+
 const SvgNode = dynamic(() => import('../ui/SvgNode'), {
   ssr: false
 });
@@ -136,7 +138,9 @@ export const OptimizedPerformanceCard: React.FC = ({ title, description, lugeRev
           </defs>
         </svg>
 
-        <span className="ci-text">NAPI-RS</span>
+        <span className="brand-text">
+          <img src={logo} width={20} height={20} /> NAPI-RS
+        </span>
 
         <div className="checkmark-container">
           {/* Render checkmarks using map instead of Vue's v-for */}

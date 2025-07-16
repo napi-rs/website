@@ -1,5 +1,6 @@
 export * from './section'
 
+import { RichPlatformsCard } from './rich-platforms'
 import { OptimizedPerformanceCard } from './optimized-performance'
 import { FeatureSection } from './section'
 import { FeatureSimpleCard, FeatureCardProps } from './simple-card'
@@ -23,11 +24,10 @@ export function Features() {
     },
     {
       emoji: '⚡️',
-      title: 'Zero Copy',
-      description:
-        'Zero copy data interactive between Rust & Node.js via Buffer and TypedArray.',
+      title: 'Rich Platform Support',
+      description: 'Supports all common Node.js runtime platforms.',
       lugeReveal: 'fade-to-right',
-      Component: FeatureSimpleCard,
+      Component: RichPlatformsCard,
     },
     {
       emoji: '⚙️',

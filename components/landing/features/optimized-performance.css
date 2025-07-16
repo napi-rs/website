@@ -38,7 +38,7 @@
     width: 720px;
   }
 
-  .ci-text {
+  .brand-text {
     position: absolute;
     top: -10px;
     left: 319px;
@@ -51,7 +51,10 @@
     font-style: normal;
     font-weight: 500;
     line-height: 150%;
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
     border-radius: 6px;
     border: 1px solid #2c2c2c;
     background: #171717;
