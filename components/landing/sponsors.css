@@ -19,19 +19,21 @@
   margin-bottom: fv(40, 60);
   position: relative;
 
-  &:before {
-    position: absolute;
-    top: 20%;
-    left: 50%;
-    width: 1462px;
-    height: 1062px;
-    content: "";
-    background-image: radial-gradient(50% 38.81% at 50% 61.19%, rgb(250 168 75 / 12%) 0, rgb(11 10 5 / 0%) 100%), radial-gradient(50% 36.46% at 50% 36.46%, rgb(250 133 75 / 8%) 0, rgb(11 8 5 / 0%) 100%);
-    filter: blur(20px);
-    background-repeat: no-repeat;
-    background-size: 1462px 1062px;
-    transform: translate3d(-50%, -50%, 0);
-    mask-image: linear-gradient(to bottom, transparent, #000 30%);
+  @media (min-width: 768px) {
+    &:before {
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      width: 1462px;
+      height: 1062px;
+      content: "";
+      background-image: radial-gradient(50% 38.81% at 50% 61.19%, rgb(250 168 75 / 12%) 0, rgb(11 10 5 / 0%) 100%), radial-gradient(50% 36.46% at 50% 36.46%, rgb(250 133 75 / 8%) 0, rgb(11 8 5 / 0%) 100%);
+      filter: blur(20px);
+      background-repeat: no-repeat;
+      background-size: 1462px 1062px;
+      transform: translate3d(-50%, -50%, 0);
+      mask-image: linear-gradient(to bottom, transparent, #000 30%);
+    }
   }
 
   .icon-heart {
@@ -51,8 +53,10 @@
     flex: 2;
     position: relative;
     background: #41220d2e;
-    backdrop-filter: blur(10px);
     --rotate: 165deg;
+    @media (min-width: 768px) {
+      backdrop-filter: blur(10px);
+    }
 
     &:nth-child(2) {
       --rotate: 50deg;

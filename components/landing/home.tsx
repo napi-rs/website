@@ -1,4 +1,5 @@
 import dynamic from 'next/dynamic';
+import { isMobile } from 'react-device-detect';
 
 import { Hero } from './hero'
 import { Ecosystem } from './ecosystem'
@@ -15,9 +16,10 @@ const Luge = dynamic(() => import('./luge'), {
 });
 
 export function HomePage() {
+
   return (
     <div className="page-home">
-      <Luge />
+      { !isMobile && <Luge /> }
 
       <Hero />
 

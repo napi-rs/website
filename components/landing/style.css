@@ -147,6 +147,12 @@
     position: absolute;
     top: -2px;
   }
+
+  @media (max-width: 768px) {
+    &.blur-effect {
+      display: none;
+    }
+  }
 }
 
 .gradient-title {

@@ -32,6 +32,7 @@
     "nextra": "2.13.4",
     "nextra-theme-docs": "2.13.4",
     "react": "^19",
+    "react-device-detect": "^2.2.3",
     "react-dom": "^19",
     "react-fast-marquee": "^1.6.5",
     "react-use": "^17.6.0",

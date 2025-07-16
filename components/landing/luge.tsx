@@ -71,16 +71,15 @@ export const Luge = () => {
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger)
     gsap.registerPlugin(SplitText)
-    gsap.registerPlugin(ScrollSmoother)
     gsap.registerPlugin(CustomEase)
 
-    // ScrollSmoother.create({
-    //   smooth: 1,
-    //   effects: true,
-    // })
-
     // Setting ticker
-    luge.settings({ticker: {external: true}})
+    luge.settings({
+      ticker: {external: true},
+      scroll: {
+        disabled: true
+      },
+    })
     gsap.ticker.add(luge.ticker.tick)
 
     // Force refresh when route change
