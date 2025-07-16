@@ -1,20 +1,6 @@
-import React, { useRef } from 'react'
 import { useSSG } from 'nextra/ssg'
 import { useSponsor } from './hooks'
 import cx from 'classnames'
-
-interface Sponsor {
-  name: string
-  img: string
-  url: string
-  hasDark?: true
-}
-
-interface SponsorTier {
-  tier: string
-  size: string
-  items: Sponsor[]
-}
 
 export function BgLines() {
   return (
@@ -59,29 +45,44 @@ export function Sponsors() {
     return null
   }
 
-  return <div className="sponsors">
-    <div className="sponsor-section-wrapper" data-lg-reveal>
-      {data.map(sponsor => {
-        return <div
-          className={cx("sponsor-section", sponsor.size)}
-          data-lg-reveal="fade-to-top"
-          key={sponsor.tier}
-        >
-          <div className="sponsor-tier">{sponsor.tier}</div>
-          <div className="sponsor-grid" data-grid={sponsor.items.length}>
-            {sponsor.items.map(sponsor => {
-              return <div className="sponsor-grid-item" key={sponsor.name}>
-                <a href={sponsor.url} target="_blank" className="sponsor-grid-link">
-                  <div className="image-wrapper" data-lg-reveal="layer-to-bottom">
-                    <img src={sponsor.img} alt={sponsor.name} />
-                  </div>
-                  <div className='sponsor-grid-item-name'>{sponsor.name}</div>
-                </a>
+  return (
+    <div className="sponsors">
+      <div className="sponsor-section-wrapper" data-lg-reveal>
+        {data.map((sponsor) => {
+          return (
+            <div
+              className={cx('sponsor-section', sponsor.size)}
+              data-lg-reveal="fade-to-top"
+              key={sponsor.tier}
+            >
+              <div className="sponsor-tier">{sponsor.tier}</div>
+              <div className="sponsor-grid" data-grid={sponsor.items.length}>
+                {sponsor.items.map((sponsor) => {
+                  return (
+                    <div className="sponsor-grid-item" key={sponsor.name}>
+                      <a
+                        href={sponsor.url}
+                        target="_blank"
+                        className="sponsor-grid-link"
+                      >
+                        <div
+                          className="image-wrapper"
+                          data-lg-reveal="layer-to-bottom"
+                        >
+                          <img src={sponsor.img} alt={sponsor.name} />
+                        </div>
+                        <div className="sponsor-grid-item-name">
+                          {sponsor.name}
+                        </div>
+                      </a>
+                    </div>
+                  )
+                })}
               </div>
-            })}
-          </div>
-        </div>
-      })}
+            </div>
+          )
+        })}
+      </div>
     </div>
-  </div>
+  )
 }

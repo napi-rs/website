@@ -147,7 +147,7 @@
 
       .terminal__ready-label {
         font-family: Inter, sans-serif;
-        font-size: 22px;
+        font-size: 16px;
         font-style: normal;
         font-weight: 600;
         line-height: normal;
@@ -161,8 +161,8 @@
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         position: absolute;
-        left: 32px;
-        top: 125px;
+        left: 62px;
+        top: 135px;
         pointer-events: none;
         transition: all 0.4s ease;
         transition-delay: 0.2s;
