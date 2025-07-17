@@ -13,14 +13,16 @@ export function Features() {
     {
       emoji: '🚀',
       title: 'Zero-Config Build (napi build)',
-      description: 'Simple build command, no file copy or hand writing js binding needed.',
+      description:
+        'Simple build command, no file copy or hand writing js binding needed.',
       lugeReveal: 'fade-to-right',
       Component: ZeroConfigBuildCard,
     },
     {
       emoji: '👷‍♂️',
       title: 'Powerful & Flexible CI',
-      description: 'Reduce the complex CI setup, stay focus on your development.',
+      description:
+        'Reduce the complex CI setup, stay focus on your development.',
       lugeReveal: 'fade-to-left',
       Component: PowerfulCICard,
     },
