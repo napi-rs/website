@@ -32,7 +32,7 @@ const platformSupport = {
   headers: ['i686', 'x64', 'aarch64', 'arm', 'riscv64', 's390x', 'ppc64le'],
   rows: [
     { name: 'Windows', support: [true, true, true, '-', '-', '-', '-'] },
-    { name: 'macOS', support: ['-', true, true, true, '-', '-', '-'] },
+    { name: 'macOS', support: ['-', true, true, '-', '-', '-', '-'] },
     { name: 'Linux', support: ['-', true, true, true, true, true, true] },
     { name: 'Linux musl', support: ['-', true, true, true, '-', '-', '-'] },
     { name: 'FreeBSD', support: ['-', true, '-', '-', '-', '-', '-'] },
