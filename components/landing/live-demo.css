@@ -1,0 +1,107 @@
+.live-demo {
+  margin-top: fv(20, 40) !important;
+  min-height: 50vh;
+  position: relative;
+
+  h2 {
+    -webkit-text-fill-color: inherit !important;
+    background: none !important;
+  }
+
+  .live-demo-title {
+    span {
+      --text-color: var(--theme);
+      background: linear-gradient(
+        to right,
+        var(--text-color) 0%,
+        #F4BC92 100%
+      );
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  .feature-section__grid {
+    display: block !important;
+    margin: 0 !important;
+    position: relative;
+  }
+
+  @media (min-width: 1024px) {
+    .live-demo-bg {
+      position: absolute;
+      inset: -40px;
+      background-image: url('/assets/carina_nebula~orig.png');
+      background-repeat: no-repeat;
+      background-size: cover;
+      opacity: 0;
+      z-index: -1;
+      filter: blur(50px);
+
+      &.is-in {
+        opacity: 0.25;
+      }
+    }
+  }
+
+  .playground-wrapper {
+    --border-color: hsl(var(--theme-hsl) / 0.15);
+    display: flex;
+    width: 100%;
+    background: #29211de0;
+    position: relative;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+
+    .panel {
+      &:after {
+        background-color: #3A271A;
+      }
+    }
+
+    .title-bar {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border-bottom: 1px solid var(--border-color);
+      padding: 0 14px;
+      font-size: 0.75rem;
+      color: #ddd;
+      background-color: hsl(var(--theme-hsl) / 0.1);
+    }
+
+    @media (max-width: 1000px) {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .demo-panel {
+      flex: 1;
+      flex-shrink: 0;
+      min-width: 0;
+      min-width: 50%;
+      min-height: 400px;
+      border-right: 1px solid var(--border-color);
+
+      > *:last-child {
+        margin-top: 0;
+        padding: 8px !important;
+      }
+    }
+
+    .code-panel {
+      flex: 1;
+
+      pre {
+        padding: 16px 0;
+
+        .line {
+          white-space: pre-wrap;
+          font-size: fv(12, 14);
+        }
+      }
+    }
+  }
+}

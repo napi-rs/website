@@ -1,0 +1,109 @@
+.support-matrix {
+  width: 100%;
+  max-width: 1100px;
+  position: relative;
+
+  &:before {
+    background: radial-gradient(50% 38.81% at 50% 61.19%, rgb(250 187 75 / 8%) 0, rgb(11 10 5 / 0%) 100%), radial-gradient(50% 36.46% at 50% 36.46%, rgb(250 139 75 / 8%) 0, rgb(11 9 5 / 0%) 100%);
+    position: absolute;
+    inset: -50%;
+    content: "";
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  [data-slot="card"] {
+    border-radius: 16px;
+    background-color: #311c0818;
+    border: 1px solid #343331;
+    position: relative;
+    padding-bottom: 14px;
+    /* backdrop-filter: blur(5px); */
+
+    &:before {
+      background: radial-gradient(50% 100% at 50% 100%, #ffe7891a 0, #14090100);
+      border-top: 1px solid;
+      border-image-slice: 1;
+      border-image-source: linear-gradient(90deg, transparent, hsl(var(--theme-hsl)/0.5) 50%, transparent);
+      top: -1px;
+      z-index: 2;
+      content: "";
+      height: 101%;
+      left: calc(50% - 250px);
+      position: absolute;
+      width: 500px;
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    &:after {
+      content: "";
+      position: absolute;
+      width: 369px;
+      height: 357px;
+      background-image: linear-gradient(90deg, transparent, hsl(var(--theme-hsl)/0.1) 50%, transparent);
+      filter: blur(100px);
+      pointer-events: none;
+      right: -50px;
+      top: -120px;
+    }
+
+    &.node {
+      &::before {
+        -webkit-mask-composite: xor;
+        border-radius: inherit;
+        padding: 1px;
+        border: none;
+        width: 100%;
+        left: -1px;
+        background: linear-gradient(165deg, #47f163a1, rgba(255, 255, 255, 0.05) 30%);
+        -webkit-mask-image: linear-gradient(black, black), linear-gradient(black, black);
+        -webkit-mask-clip: content-box, border-box;
+        -webkit-mask-origin: content-box, border-box;
+      }
+
+      .gradient-title {
+        --gradient-loud-100: linear-gradient(0deg, #fbf9f3 0, #98ef9f 100%);
+      }
+    }
+
+  }
+  .support-tips {
+    font-size: 0.75em;
+    color: #808080;
+  }
+
+  [data-slot="table-container"] {
+    padding-bottom: 10px;
+  }
+
+  table {
+    /* Fixme: Safari not support relative on tr */
+    tr {
+      position: relative;
+      border-radius: 8px;
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 1px;
+        border-bottom-width: 1px;
+        border-style: solid;
+        border-image: linear-gradient(90deg, transparent ,hsla(0,0%,100%,.1),transparent) 1
+      }
+
+      &:last-child {
+        &:after {
+          display: none;
+        }
+      }
+
+      td:first-child {
+        opacity: 0.7;
+      }
+    }
+  }
+}

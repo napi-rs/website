@@ -13,6 +13,18 @@ const PLACEHOLDER_LOCALES = {
   'pt-BR': 'Buscar documentação',
 }
 
+const currentYear = new Date().getFullYear()
+const Logo = ({ className }) => {
+  return (
+    <div className={`flex items-center ${className}`}>
+      <img src="/img/favicon.png" width={32} />
+      <span className="text-[16px] text-[var(--foreground)] nx-mx-2 nx-font-extrabold nx-md:inline nx-select-none">
+        NAPI-RS
+      </span>
+    </div>
+  )
+}
+
 export default {
   docsRepositoryBase: 'https://github.com/napi-rs/website/blob/main',
   chat: {
@@ -21,19 +33,7 @@ export default {
   project: {
     link: 'https://github.com/napi-rs/napi-rs',
   },
-  logo: () => {
-    return (
-      <>
-        <img src="/img/favicon.png" width={32} />
-        <span
-          style={{ width: 120 }}
-          className="nx-mx-2 nx-font-extrabold nx-md:inline nx-select-none"
-        >
-          NAPI-RS
-        </span>
-      </>
-    )
-  },
+  logo: Logo,
   head: (props) => {
     const { title, meta } = props
     return (
@@ -80,7 +80,7 @@ export default {
             process.env.VERCEL_URL && process.env.VERCEL_ENV !== 'production'
               ? process.env.VERCEL_URL
               : 'napi.rs'
-          }/img/og.png`}
+          }/img/og-v2.jpg`}
         />
         <meta
           property="og:description"
@@ -107,19 +107,38 @@ export default {
   footer: {
     text: () => {
       return (
-        <p>
-          <a href="https://vercel.com?utm_source=napi-rs&utm_campaign=oss">
-            <img src="/assets/powered-by-vercel.svg" />
-          </a>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Powered by{' '}
-          <a
-            href="https://nextra.vercel.app"
-            className="nx-text-primary-600 nx-underline nx-decoration-from-font [text-underline-position:from-font]"
-            target="_blank"
-          >
-            Nextra
-          </a>
-        </p>
+        <div className="text-[12px] flex flex-wrap justify-between w-full items-center md:gap-3 gap-6 flex-col-reverse md:flex-row">
+          <div className="flex flex-col items-center md:items-start md:justify-start justify-center gap-1 flex-shrink-0">
+            <Logo className="mb-[5px]"></Logo>
+            <p>Released under the MIT License.</p>
+            <p>Copyright © {currentYear} NAPI-RS.</p>
+          </div>
+          <p className="flex flex-wrap gap-2 md:gap-2 md:items-end items-center flex-col">
+            <a href="https://vercel.com?utm_source=napi-rs&utm_campaign=oss">
+              <img src="/assets/powered-by-vercel.svg" className="!h-8" />
+            </a>
+            <span>
+              Website built with{' '}
+              <a
+                href="https://nextra.vercel.app"
+                className="nx-text-primary-600  nx-decoration-from-font [text-underline-position:from-font]"
+                target="_blank"
+              >
+                Nextra
+              </a>
+            </span>
+            <span className="flex-shrink-0">
+              UI inspired by&nbsp;
+              <a
+                className="!text-[#c063ed] nx-decoration-from-font [text-underline-position:from-font]"
+                href="https://vite.dev"
+                target="_blank"
+              >
+                Vite
+              </a>
+            </span>
+          </p>
+        </div>
       )
     },
   },
@@ -156,5 +175,8 @@ export default {
     { locale: 'cn', text: '简体中文' },
     { locale: 'pt-BR', text: 'Português do Brasil' },
   ],
+  nextThemes: {
+    defaultTheme: 'dark',
+  },
   useNextSeoProps: () => ({ titleTemplate: '%s \u2013 NAPI-RS' }),
 }

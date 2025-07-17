@@ -1,0 +1,41 @@
+```js
+import { Transformer } from '@napi-rs/image'
+
+export async function transform() {
+  const imageResponse = await fetch(
+    'https://upload.wikimedia.org/wikipedia/commons/5/5d/ISS-45_EVA-2_%28a%29_Scott_Kelly.jpg'
+  )
+
+  const imageBytes = await imageResponse.arrayBuffer()
+
+  const transformer = new Transformer(imageBytes)
+  const webp = await transformer.toWebp()
+}
+```
+
+<div className="title-bar mt-1" style={{ borderTop: "1px solid var(--border-color)" }}>Rust Code</div>
+
+```rust
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub struct Transformer {
+  inner: Uint8Array,
+}
+
+#[napi]
+impl Transformer {
+  #[napi(constructor)]
+  pub fn new(inner: Uint8Array) -> Self {
+    Self { inner }
+  }
+
+  #[napi]
+  pub fn webp(&self) -> Result<Uint8Array> {
+    let image = image::load_from_memory(&self.inner)?;
+    let webp = image.to_webp().map_err(|e| Error::from(e.to_string()))?;
+    Ok(webp.into())
+  }
+}
+```

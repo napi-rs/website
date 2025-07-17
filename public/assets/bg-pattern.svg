@@ -1,0 +1,96 @@
+<svg
+  width="100%"
+  height="100%"
+  viewBox="0 0 2000 1333"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <pattern
+      id="pattern-svg"
+      x="0"
+      y="0"
+      width="170"
+      height="170"
+      patternUnits="userSpaceOnUse"
+      patternTransform="rotate(-87) translate(11.049999999999999, 11.049999999999999) skewX(0) skewY(0)"
+    >
+      <g opacity="1">
+        <g clip-path="url(#radius-clip)" transform="scale(0.5)">
+          <svg width="158.95" height="158.95" viewBox="0 0 100 100">
+            <g clip-path="url(#clip0)">
+              <g opacity="0.2">
+                <path
+                  d="M50.0416 0.0264958C50.0278 0.0148159 50.0139 0.00313002 50 -0.00854601C16.6667 28.0397 16.6667 71.943 50 99.9912C50.0139 99.9795 50.0278 99.9679 50.0416 99.9562L50.0416 0.0264958Z"
+                  fill="#444bf7"
+                />
+                <path
+                  d="M49.9583 99.9562C49.9722 99.9679 49.9861 99.9795 50 99.9912C83.3334 71.943 83.3334 28.0396 50 -0.00854601C49.9861 0.00312613 49.9722 0.0148159 49.9583 0.0264958L49.9583 99.9562Z"
+                  fill="#444bf7"
+                />
+              </g>
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M75 50C75 36.1929 63.8071 25 50 25C36.1929 25 25 36.1929 25 50C25 63.8071 36.1929 75 50 75C63.8071 75 75 63.8071 75 50ZM62 50C62 43.3726 56.6274 38 50 38C43.3726 38 38 43.3726 38 50C38 56.6274 43.3726 62 50 62C56.6274 62 62 56.6274 62 50Z"
+                fill="#444bf7"
+              />
+            </g>
+            <defs>
+              <clipPath id="clip0">
+                <rect
+                  width="100"
+                  height="100"
+                  fill="#444bf7"
+                  transform="translate(0 100) rotate(-90)"
+                />
+              </clipPath>
+            </defs>
+          </svg>
+        </g>
+        <g
+          clip-path="url(#radius-clip)"
+          transform="translate(85, 85) scale(0.5)"
+        >
+          <svg width="158.95" height="158.95" viewBox="0 0 100 100">
+            <g clip-path="url(#clip0)">
+              <g opacity="0.2">
+                <path
+                  d="M50.0416 0.0264958C50.0278 0.0148159 50.0139 0.00313002 50 -0.00854601C16.6667 28.0397 16.6667 71.943 50 99.9912C50.0139 99.9795 50.0278 99.9679 50.0416 99.9562L50.0416 0.0264958Z"
+                  fill="#444bf7"
+                />
+                <path
+                  d="M49.9583 99.9562C49.9722 99.9679 49.9861 99.9795 50 99.9912C83.3334 71.943 83.3334 28.0396 50 -0.00854601C49.9861 0.00312613 49.9722 0.0148159 49.9583 0.0264958L49.9583 99.9562Z"
+                  fill="#444bf7"
+                />
+              </g>
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M75 50C75 36.1929 63.8071 25 50 25C36.1929 25 25 36.1929 25 50C25 63.8071 36.1929 75 50 75C63.8071 75 75 63.8071 75 50ZM62 50C62 43.3726 56.6274 38 50 38C43.3726 38 38 43.3726 38 50C38 56.6274 43.3726 62 50 62C56.6274 62 62 56.6274 62 50Z"
+                fill="#444bf7"
+              />
+            </g>
+            <defs>
+              <clipPath id="clip0">
+                <rect
+                  width="100"
+                  height="100"
+                  fill="#444bf7"
+                  transform="translate(0 100) rotate(-90)"
+                />
+              </clipPath>
+            </defs>
+          </svg>
+        </g>
+      </g>
+    </pattern>
+  </defs>
+  <rect x="0" y="0" width="100%" height="100%" fill="#060a65" />
+  <g>
+    <g>
+      <g>
+        <rect x="0" y="0" width="100%" height="100%" fill="url(#pattern-svg)" />
+      </g>
+    </g>
+  </g>
+</svg>
