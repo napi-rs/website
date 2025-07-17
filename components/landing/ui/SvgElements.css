@@ -1,0 +1,126 @@
+.page-home {
+  .blue-indicator {
+    position: absolute;
+    top: 387px;
+    left: 680px;
+    opacity: 0.2;
+    transition: opacity 1s ease-in-out;
+
+    &.active {
+      transition: opacity 0.2s ease-in-out;
+      opacity: 0.6;
+    }
+  }
+
+  .blue-glow {
+    background-color: #c0cf20;
+    width: 100px;
+    aspect-ratio: 2;
+    position: absolute;
+    top: 415px;
+    left: 655px;
+    z-index: -1;
+    filter: blur(40px);
+    opacity: 0;
+    transition: all 3s ease-out;
+    will-change: opacity;
+    display: none;
+
+    @media (min-width: 768px) {
+      display: block;
+      filter: blur(60px);
+    }
+
+    &.active {
+      transition: all 0.2s ease-in-out;
+      opacity: 0.8;
+    }
+  }
+
+  .input-lines {
+    transform: translate3d(0, 0, 0);
+
+    .circle-dot {
+      display: none;
+
+      @media (min-width: 768px) {
+        display: block;
+      }
+    }
+  }
+
+  .output-line {
+    position: absolute;
+    top: 300px;
+    left: 785px;
+    transform: translate3d(0, 0, 0);
+  }
+
+  .pink-indicator {
+    position: absolute;
+    top: 202px;
+    left: 840px;
+    opacity: 0.2;
+    transition: opacity 1s ease-in-out;
+
+    &.active {
+      transition: opacity 0.2s ease-in-out;
+      opacity: 0.6;
+    }
+  }
+
+  .pink-glow {
+    background-color: #f8581d;
+    width: 100px;
+    aspect-ratio: 2;
+    position: absolute;
+    top: 202px;
+    left: 905px;
+    z-index: -1;
+    filter: blur(40px);
+    opacity: 0;
+    transition: all 3s ease-out;
+    will-change: opacity;
+    display: none;
+
+    @media (min-width: 768px) {
+      display: block;
+      filter: blur(60px);
+    }
+
+    &.active {
+      transition: all 0.2s ease-in-out;
+      opacity: 0.8;
+    }
+  }
+
+  .svg-path {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+  }
+
+  .label {
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out;
+    display: none;
+    will-change: opacity;
+
+    @media (min-width: 1180px) {
+      display: block;
+    }
+
+    &.label--visible {
+      opacity: 1;
+    }
+  }
+
+  .circle-dot {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    --dot-color: white;
+
+    @media (min-width: 768px) {
+      filter: drop-shadow(0 0 3px var(--dot-color));
+    }
+  }
+}

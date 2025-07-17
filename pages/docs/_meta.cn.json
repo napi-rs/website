@@ -1,7 +1,6 @@
 {
   "introduction": "介绍",
   "concepts": "概念",
-  "compat-mode": "Compat mode",
   "cli": "CLI",
   "deep-dive": "Deep dive",
   "cross-build": "Cross build",

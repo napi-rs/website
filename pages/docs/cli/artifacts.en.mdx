@@ -7,19 +7,35 @@ description: napi artifacts command in @napi-rs/cli.
 import { Callout } from 'nextra-theme-docs'
 import { Green } from '../../../components/chalk'
 
-GitHub Actions [artifacts](https://docs.github.com/en/actions/advanced-guides/storing-workflow-data-as-artifacts) management.
+Copy artifacts from Github Actions into npm packages and ready to publish
 
-<Callout>
-  This command is usually used in the publish step, before the `npm publish`
-  command and after the `Download artifacts` step.
-</Callout>
+## Usage
 
-## Flags List
+```sh
+# CLI
+napi artifacts [--options]
+```
 
-| Flag          | Type/Default Value   | Description                                                              |
-| ------------- | -------------------- | ------------------------------------------------------------------------ |
-| `-d` ,`--dir` | `String`/`artifacts` | The source dir which contains all the `artifacts` output in build phase. |
-| `--dist`      | `String`/`npm`       | The dist dir where the native addon will be copied into.                 |
+```typescript
+// Programatically
+import { NapiCli } from '@napi-rs/cli'
+
+new NapiCli().artifacts({
+  // options
+})
+```
+
+## Options
+
+| Options         | CLI Options         | type   | required | default        | description                                                                                                        |
+| --------------- | ------------------- | ------ | -------- | -------------- | ------------------------------------------------------------------------------------------------------------------ |
+|                 | --help,-h           |        |          |                | get help                                                                                                           |
+| cwd             | --cwd               | string | false    | process.cwd()  | The working directory of where napi command will be executed in, all other paths options are relative to this path |
+| configPath      | --config-path,-c    | string | false    |                | Path to <Green>napi</Green> config json file                                                                      |
+| packageJsonPath | --package-json-path | string | false    | 'package.json' | Path to <Green>package.json</Green>                                                                               |
+| outputDir       | --output-dir,-o,-d  | string | false    | './artifacts'  | Path to the folder where all built <Green>.node</Green> files put, same as <Green>--output-dir</Green> of build command |
+| npmDir          | --npm-dir           | string | false    | 'npm'          | Path to the folder where the npm packages put                                                                      |
+| buildOutputDir  | --build-output-dir  | string | false    |                | Path to the build output dir, only needed when targets contains <Green>wasm32-wasi-*</Green>                      |
 
 ## How does it work
 

@@ -1,0 +1,25 @@
+.PrimaryGradTitle {
+  position: relative;
+  font-size: 46px;
+  font-weight: 600;
+  line-height: 120%;
+  letter-spacing: -0.23px;
+
+  & + & {
+    margin-top: 4px;
+  }
+
+  .layer-front {
+    background: linear-gradient(180deg, #FFF 0%, #C29FE3 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .layer-blur {
+    position: absolute;
+    top: 0;
+    color: #7B2AFF;
+    opacity: 0.6;
+    filter: blur(16px);
+  }
+}

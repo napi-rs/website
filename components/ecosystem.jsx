@@ -125,16 +125,12 @@ export function Ecosystem() {
         />
       </a>
       <a href="https://parceljs.org/" target="_blank">
-        <img
-          alt="Parcel"
-          src="https://user-images.githubusercontent.com/19409/31321658-f6aed0f2-ac3d-11e7-8100-1587e676e0ec.png"
-          style={{ height: 40 }}
-        />
+        <img alt="Parcel" src="/assets/parcel.png" style={{ height: 40 }} />
       </a>
       <a href="https://nextjs.org/" target="_blank">
         <img
           alt="next.js"
-          src="https://assets.vercel.com/image/upload/v1607554385/repositories/next-js/next-logo.png"
+          src="/assets/next-logo.png"
           style={{ height: 40, marginRight: '1em' }}
         />
         <svg
@@ -406,7 +402,7 @@ export function Ecosystem() {
 		z"
             />
             <polygon
-              points="178.73,46.69 194.69,31.97 194.69,31.41 179.31,31.41 167.07,43.34 167.07,10.97 155.4,10.97 
+              points="178.73,46.69 194.69,31.97 194.69,31.41 179.31,31.41 167.07,43.34 167.07,10.97 155.4,10.97
 		155.4,64.48 167.07,64.48 167.07,51.01 179.9,64.48 195.65,64.48 195.65,63.85 	"
             />
             <path
@@ -484,7 +480,7 @@ export function Ecosystem() {
       >
         <img
           alt="rspack"
-          src="https://assets.rspack.dev/rspack/rspack-logo.svg"
+          src="/assets/rspack-logo.svg"
           style={{ height: 40, marginRight: '1em' }}
         />
         <b

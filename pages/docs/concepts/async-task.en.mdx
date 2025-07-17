@@ -33,22 +33,22 @@ impl Task for AsyncFib {
 }
 ```
 
-`fn compute` ran on the libuv thread, you can run some heavy computation here, which will not block the main JavaScript thread.
+`fn compute` runs on the libuv thread, so you can run heavy computation here without blocking the main JavaScript thread.
 
 You may notice there are two associated types on the `Task` trait. The `type Output` and the `type JsValue`. `Output` is the return type of the `compute` method. `JsValue` is the return type of the `resolve` method.
 
 import { Callout } from 'nextra-theme-docs'
 
 <Callout>
-  We need separate `type Output` and `type JsValue` because we can not call the
-  JavaScript function back in `fn compute`, it is not executed on the main
+  We need separate `type Output` and `type JsValue` because we cannot call the
+  JavaScript function back in `fn compute`, as it is not executed on the main
   thread. So we need `fn resolve`, which runs on the main thread, to create the
   `JsValue` from `Output` and `Env` and call it back in JavaScript.
 </Callout>
 
-You can use the low-level API `Env::spawn` to spawn a defined `Task` in the libuv thread pool. See example in [Reference](../compat-mode/concepts/ref).
+You can use the low-level API `Env::spawn` to spawn a defined `Task` in the libuv thread pool. See example in [Reference](/docs/concepts/reference).
 
-In addition to `compute` and `resolve`, you can also provide `reject` method to do some clean up when `Task` runs into error, like `unref` some object:
+In addition to `compute` and `resolve`, you can also provide a `reject` method to do some cleanup when `Task` runs into an error, like `unref`ing some object:
 
 ```rust {28} filename="lib.rs"
 struct CountBufferLength {
@@ -84,7 +84,7 @@ impl Task for CountBufferLength {
 }
 ```
 
-You can also provide a `finally` method to do something after `Task` is `resolved` or `rejected`:
+You can also provide a `finally` method to do something after the `Task` is `resolved` or `rejected`:
 
 ```rust {27} filename="lib.rs"
 struct CountBufferLength {
@@ -126,7 +126,7 @@ The `#[napi]` macro above the `impl Task for AsyncFib` is just for `.d.ts` gener
 
 ## `AsyncTask`
 
-The `Task` you define cannot be returned to JavaScript directly, the JavaScript engine has no idea how to run and resolve the value from your `struct`. `AsyncTask` is a wrapper of `Task` which can return to the JavaScript engine. It can be created with `Task` and an optional [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal).
+The `Task` you define cannot be returned to JavaScript directly—the JavaScript engine has no idea how to run and resolve the value from your `struct`. `AsyncTask` is a wrapper of `Task` that can be returned to the JavaScript engine. It can be created with a `Task` and an optional [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal).
 
 ```rust filename="lib.rs"
 #[napi]
@@ -135,7 +135,7 @@ fn async_fib(input: u32) -> AsyncTask<AsyncFib> {
 }
 ```
 
-⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
 
 ```ts filename="index.d.ts"
 export function asyncFib(input: number) => Promise<number>
@@ -154,7 +154,7 @@ fn async_fib(input: u32, signal: AbortSignal) -> AsyncTask<AsyncFib> {
 }
 ```
 
-⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
 
 ```ts filename="index.d.ts"
 export function asyncFib(input: number, signal: AbortSignal) => Promise<number>
@@ -185,7 +185,7 @@ fn async_fib(input: u32, signal: Option<AbortSignal>) -> AsyncTask<AsyncFib> {
 }
 ```
 
-⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
 
 ```ts filename="index.d.ts"
 export function asyncFib(

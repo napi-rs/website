@@ -21,7 +21,7 @@ Let's give the package a cool name **@napi-rs/cool**:
 import { Callout } from 'nextra-theme-docs'
 
 <Callout type="warning" emoji="⚠️">
-  It's recommend to use npm scope to name your package. Because `@napi-rs/cli`
+  It's recommended to use npm scope to name your package. Because `@napi-rs/cli`
   will create and publish many packages per platform for you. If these packages
   are not under a npm scope, it will trigger npm [**_spam
   detection_**](https://stackoverflow.com/a/54135900/5684750) while you are
@@ -34,7 +34,7 @@ napi new
 ? Dir name: (cool)
 ```
 
-Next step you need to choose the directory name for your cool package, the default value of it is the suffix of your package name. Let's just press **enter** and use the default value.
+The next step is to choose the directory name for your cool package. The default value is the suffix of your package name. Let's just press **enter** and use the default value.
 
 ```bash {4}
 napi new
@@ -52,7 +52,7 @@ and <enter> to proceed)
 (Move up and down to reveal more choices)
 ```
 
-The next step is to choose which platform you want to support. I want all of them, so press **A** to choose all targets and press **enter**.
+The next step is to choose which platforms you want to support. I want all of them, so press **A** to choose all targets and press **enter**.
 
 ```bash {8}
 napi new
@@ -65,7 +65,7 @@ c-windows-msvc, armv7-linux-androideabi
 ? Enable github actions? (Y/n)
 ```
 
-The next step you need to choose whether to enable the `GitHub CI` configuration. If your project will live on `GitHub` then you need to enable it. Let's type the **Y** and press **enter** here:
+The next step is to choose whether to enable the `GitHub CI` configuration. If your project will live on `GitHub`, then you need to enable it. Let's type the **Y** and press **enter** here:
 
 ```bash {9-16}
 napi new
@@ -177,7 +177,7 @@ tree -a -I target
     └── lib.rs
 ```
 
-Now there is three (3) more files that the `yarn build` command generated for you.
+Now there are three (3) more files that the `yarn build` command generated for you.
 
 1. `cool.darwin-x64.node` is the Node.js addon binary file
 2. `index.js` is the generated JavaScript binding file which helps you export everything in the addon to the package caller
@@ -188,26 +188,19 @@ The `new` command generated a simple `sum` function for you in the `src/lib.rs`:
 ```rust {7} filename="lib.rs"
 #![deny(clippy::all)]
 
-#[macro_use]
-extern crate napi_derive;
+use napi_derive::napi;
 
 #[napi]
-fn sum(a: i32, b: i32) -> i32 {
+pub fn sum(a: i32, b: i32) -> i32 {
   a + b
 }
 ```
 
 You can inspect the `index.d.ts` file and see the `sum` function typing that has been generated:
 
-```ts {9} filename="index.d.ts"
+```ts {3} filename="index.d.ts"
 /* eslint-disable */
 
-export class ExternalObject<T> {
-  readonly '': {
-    readonly '': unique symbol
-    [K: symbol]: T
-  }
-}
 export function sum(a: number, b: number): number
 ```
 
@@ -232,7 +225,7 @@ Congratulations! You have successfully created a native addon for `Node.js`!
 
 Unfortunately, you can't publish the `@napi-rs/cool` because you don't have permission to publish packages to the `@napi-rs` npm scope.
 
-However, you can create your own `npm scope`: https://docs.npmjs.com/creating-and-publishing-scoped-public-packages.
+However, you can create your own npm scope: https://docs.npmjs.com/creating-and-publishing-scoped-public-packages.
 
 Once you have created your own npm scope, you can use the `napi rename` command to rename the project just created.
 
@@ -249,7 +242,7 @@ napi rename
 ? napi name: (cool)
 ```
 
-You don't need change the `napi name` field in the `package.json` because the package suffix is not changed. Just type **Enter** to keep the `cool` name.
+You don't need to change the `napi name` field in the `package.json` because the package suffix is not changed. Just type **Enter** to keep the `cool` name.
 
 ```bash
 napi rename

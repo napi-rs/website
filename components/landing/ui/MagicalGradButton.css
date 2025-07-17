@@ -1,0 +1,108 @@
+@keyframes colorRotate {
+  to {
+    --angle: -360deg
+  }
+}
+
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.MagicalGradButton {
+  --mask-size: 300px;
+  --radius: 36px;
+  --bg-opacity: 0;
+  --border-opacity-scale: 2;
+  display: inline-flex;
+  position: relative;
+  padding: 16px 28px 18px 45px;
+  border-radius: var(--radius);
+  background-image: linear-gradient(85deg,rgba(254, 115, 1, 0.05) 2.96%,hsla(0, 83%, 47%, 0.05) 96.14%);
+  box-shadow: 0 16px 64px 0 rgba(255, 115, 1, 0.12);
+  cursor: pointer;
+  overflow: hidden;
+
+  &.LightBorder {
+    --border-opacity-scale: 2;
+  }
+
+  &.NoIcon {
+    padding-right: 55px;
+  }
+
+  &:before {
+    content: "";
+    pointer-events: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    position: absolute;
+    z-index: 3;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: radial-gradient(circle at var(--x) var(--y),hsl(var(--theme-hsl)/.8) 0,hsl(var(--theme-hsl)/.02) 23%,hsl(var(--theme-hsl)/calc(.1 * var(--border-opacity-scale))) 75%,hsl(var(--theme-hsl)/calc(.1 * var(--border-opacity-scale))) 95%,hsla(0,0%,100%,.1) 100%);
+    -webkit-mask-image: linear-gradient(black, black), linear-gradient(black, black);
+    -webkit-mask-clip: content-box, border-box;
+    -webkit-mask-origin: content-box, border-box;
+    -webkit-mask-composite: xor;
+    transition: padding 318ms;
+  }
+
+  &:hover {
+    --bg-opacity: 0.3;
+
+    &:before {
+      padding: 1px
+    }
+  }
+
+  .button-content {
+    position: relative;
+    z-index: 2;
+    font-size: fv(20, 32);
+    font-weight: 500;
+    line-height: 115.99%;
+    letter-spacing: -.72px;
+    text-transform: capitalize
+  }
+
+  .button-icon {
+    font-size: 1.6em;
+  }
+
+  .button-background {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+
+    > * {
+      position: absolute;
+      border-radius: var(--radius)
+    }
+
+    .background-blur {
+      inset: 0;
+      z-index: 2;
+      background: hsla(0,0%,100%,.01);
+      /* backdrop-filter: blur(34px); */
+    }
+
+    .background-angular {
+      width: 120%;
+      margin-top: -50%;
+      margin-left: -10%;
+      aspect-ratio: 1/1;
+      background: conic-gradient(from var(--angle),#fd6304,#0820f9,#f70b0b,#f70ed2,#f77d0b);
+      filter: blur(25px);
+      transform-origin: 50% 50%;
+      opacity: var(--bg-opacity);
+      transition: opacity 318ms;
+      -webkit-mask-image: radial-gradient(100px,#fff,hsla(0,0%,100%,.1));
+      -webkit-mask-position: var(--bound-x) var(--bound-y);
+      animation: colorRotate 20s linear infinite
+    }
+  }
+}
