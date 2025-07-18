@@ -80,7 +80,7 @@ export default {
             process.env.VERCEL_URL && process.env.VERCEL_ENV !== 'production'
               ? process.env.VERCEL_URL
               : 'napi.rs'
-          }/img/og-v2.jpg`}
+          }/img/og-v2.png`}
         />
         <meta
           property="og:description"
