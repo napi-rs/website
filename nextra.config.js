@@ -1,4 +1,5 @@
 import { useRouter } from 'next/router'
+import { useConfig } from 'nextra-theme-docs'
 import Script from 'next/script'
 
 const LOADING_LOCALES = {
@@ -67,14 +68,6 @@ export default {
           content="Nodejs, Rust, Node.js, neon, performance, napi-rs, napi"
         />
         <meta
-          name="description"
-          content={
-            meta?.description ||
-            'a framework for building pre-compiled Node.js addons in Rust'
-          }
-        />
-        <meta property="og:title" content={title ?? 'NAPI-RS'} />
-        <meta
           property="og:image"
           content={`https://${
             process.env.VERCEL_URL && process.env.VERCEL_ENV !== 'production'
@@ -82,14 +75,6 @@ export default {
               : 'napi.rs'
           }/img/og-v2.png`}
         />
-        <meta
-          property="og:description"
-          content={
-            meta?.description ||
-            'NAPI-RS, a framework for building pre-compiled Node.js addons in Rust'
-          }
-        />
-        <meta property="og:url" content="https://napi.rs" />
         <meta property="og:site_name" content="NAPI-RS" />
         <meta property="og:type" content="website" />
         <Script
@@ -178,5 +163,21 @@ export default {
   nextThemes: {
     defaultTheme: 'dark',
   },
-  useNextSeoProps: () => ({ titleTemplate: '%s \u2013 NAPI-RS' }),
+  useNextSeoProps: () => {
+    const { frontMatter, title } = useConfig()
+    const { pathname, locale } = useRouter()
+    const finalPathname = pathname.split('.')[0]?.replace('/index', '/') || '/'
+    const baseUrl = 'https://napi.rs'
+
+    return {
+      titleTemplate: '%s \u2013 NAPI-RS',
+      openGraph: {
+        title: frontMatter.title || title || 'NAPI-RS',
+        description:
+          frontMatter.description ||
+          'NAPI-RS, a framework for building pre-compiled Node.js addons in Rust',
+        url: `${baseUrl}/${locale}${finalPathname}`,
+      },
+    }
+  },
 }
