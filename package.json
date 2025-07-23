@@ -79,6 +79,6 @@
   },
   "packageManager": "yarn@4.9.2",
   "resolutions": {
-    "@headlessui/react": "2.2.4"
+    "@headlessui/react": "2.2.5"
   }
 }
