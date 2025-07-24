@@ -44,7 +44,7 @@
     "@tailwindcss/postcss": "^4.1.11",
     "@types/node": "^22.16.0",
     "@types/postcss-functions": "^4",
-    "@types/react": "^18.3.23",
+    "@types/react": "^19.0.0",
     "autoprefixer": "^10.4.21",
     "cross-env": "^7.0.3",
     "file-loader": "^6.2.0",
