@@ -46,7 +46,7 @@
     "@types/postcss-functions": "^4",
     "@types/react": "^19.0.0",
     "autoprefixer": "^10.4.21",
-    "cross-env": "^7.0.3",
+    "cross-env": "^10.0.0",
     "file-loader": "^6.2.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",
