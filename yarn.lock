@@ -6513,12 +6513,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lucide-react@npm:^0.526.0":
-  version: 0.526.0
-  resolution: "lucide-react@npm:0.526.0"
+"lucide-react@npm:^0.532.0":
+  version: 0.532.0
+  resolution: "lucide-react@npm:0.532.0"
   peerDependencies:
     react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
-  checksum: 10c0/1d0252bfe131c6c0b078f8da02c010826cd3431a2469ce641fcd41b0abf0f37c6042da5701b2a25974aaea25fa16228ae345cb8501aac8e676a1cf84f877e441
+  checksum: 10c0/93721323852475b299904284978de6bddb006603f0c4e1ef64cf60ac507af847c186a0c870eb4ca0d0fc24b984297b5d09dfec06b0602a845a730842de5c2c44
   languageName: node
   linkType: hard
 
@@ -7680,7 +7680,7 @@ __metadata:
     husky: "npm:^9.1.7"
     lint-staged: "npm:^16.1.2"
     lodash-es: "npm:^4.17.21"
-    lucide-react: "npm:^0.526.0"
+    lucide-react: "npm:^0.532.0"
     next: "npm:15.4.4"
     nextra: "npm:2.13.4"
     nextra-theme-docs: "npm:2.13.4"
