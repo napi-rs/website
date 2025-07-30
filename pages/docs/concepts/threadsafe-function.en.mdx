@@ -236,7 +236,9 @@ With this strategy, `ThreadsafeFunction` doesn't need to be called with `Result<
   able to handle the error in the Rust threads, so you can't pass the `Error` back
   to the JavaScript side.
 
-It's only recommended if you are sure the threads where the `ThreadsafeFunction` is called will not return `Err` or panic.
+The `ThreadsafeFunction` will also not be able to handle the synchronously thrown errors in the callback function. If you throw an synchronous error in the callback, it will cause the Node.js process to crash. Asynchronous errors (like `Promise` rejections) can be handled by the `ThreadsafeFunction`.
+
+It's only recommended if you are sure the threads where the `ThreadsafeFunction` is called will not return `Err` or panic and the callback will not throw a synchronous error.
 
 </Callout>
 
