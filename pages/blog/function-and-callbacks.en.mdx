@@ -1,0 +1,594 @@
+import { Callout } from 'nextra-theme-docs'
+import NodeLink from '../../components/node-link'
+import { LinkPreview } from '../../components/link-preview'
+
+import rolldownLogo from './rolldown.svg'
+import rspackLogo from './rspack.svg'
+import parcelLogo from './parcel.png'
+
+# Functions and Callbacks in NAPI-RS
+
+Callbacks are the heartbeat of JavaScript's ecosystem. Whether you're building a bundler like <img src={rolldownLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> [`Rolldown`](https://github.com/rolldown/rolldown) and <img src={rspackLogo.src} style={{ marginBottom: '3px' }} width={20} height={20} /> [`Rspack`](https://github.com/web-infra-dev/rspack), creating a database driver, or developing a build tool, you'll need to master the art of calling JavaScript functions from Rust. This guide takes you from basic callbacks to advanced patterns that power production-grade Node.js native addons.
+
+<Callout type="info">
+  Here is a project that you can download and play with the demo code: https://github.com/napi-rs/callback-example
+</Callout>
+
+## Why Callbacks Matter in Native Addons
+
+JavaScript's event-driven nature means callbacks are everywhere. When building native addons with NAPI-RS, you'll encounter callbacks in numerous scenarios:
+
+### Real-World Use Cases
+
+**🔧 Build Tools & Bundlers**
+Modern bundlers rely heavily on plugin systems. Each plugin registers callbacks for different build phases:
+
+```javascript
+// A typical bundler plugin API
+myBundler.plugin({
+  name: 'my-plugin',
+  setup(build) {
+    // Transform files during compilation
+    build.onLoad({ filter: /\.tsx?$/ }, async (args) => {
+      const content = await transformTypeScript(args.path);
+      return { contents: content };
+    });
+
+    // Report build progress
+    build.onProgress((percentage, message) => {
+      console.log(`${percentage}% - ${message}`);
+    });
+
+    // Handle compilation errors
+    build.onError((error) => {
+      notifyDevelopers(error);
+    });
+  }
+});
+```
+
+**📊 Data Processing Pipelines**
+Stream processing and ETL operations need callbacks for data transformation:
+
+```javascript
+// Processing large datasets with progress callbacks
+nativeProcessor.processCSV({
+  file: 'sales_data.csv',
+  onRow: (row) => validateAndTransform(row),
+  onProgress: (processed, total) => updateProgressBar(processed, total),
+  onComplete: (results) => saveToDatabase(results),
+  onError: (error) => handleProcessingError(error)
+});
+```
+
+**🗄️ Database Drivers**
+Native database drivers use callbacks for query results and connection events:
+
+```javascript
+// Database operations with callbacks
+db.query('SELECT * FROM users', (err, results) => {
+  if (err) return handleError(err);
+  processResults(results);
+});
+
+db.on('connection', () => console.log('Connected'));
+db.on('error', (err) => reconnect());
+```
+
+**🎮 Game Engines & Real-time Systems**
+Performance-critical applications need callbacks for frame updates and events:
+
+```javascript
+// Game engine callbacks
+gameEngine.onUpdate((deltaTime) => {
+  updatePhysics(deltaTime);
+  renderFrame();
+});
+
+gameEngine.onCollision((objectA, objectB) => {
+  handleCollisionPhysics(objectA, objectB);
+});
+```
+
+## The Challenge: Bridging Rust and JavaScript
+
+When building these systems in Rust for performance, you face unique challenges:
+
+1. **Lifetime Management**: JavaScript functions can be garbage collected, but Rust needs explicit lifetime guarantees
+2. **Thread Safety**: Rust's threading model differs from JavaScript's event loop
+3. **Type Safety**: Converting between Rust's strict types and JavaScript's dynamic nature
+4. **Performance**: Minimizing overhead when crossing the FFI boundary
+
+<Callout type="warning">
+  Understanding these challenges is crucial for building stable native addons. Improper callback handling can lead to crashes, memory leaks, or deadlocks in production environments.
+</Callout>
+
+## What You'll Learn
+
+This guide progressively builds your understanding:
+
+- **Part 1**: Basic synchronous callbacks - the foundation
+- **Part 2**: Function lifetimes and references - solving the GC problem
+- **Part 3**: ThreadsafeFunction - callbacks across threads
+- **Part 4**: Building and configuring ThreadsafeFunction
+- **Part 5**: Advanced patterns and error handling
+- **Part 6**: Async operations and promises
+
+By the end, you'll understand how to build robust callback systems that power applications like <img src={rolldownLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> [`Rolldown`](https://github.com/rolldown/rolldown) (the Fast Rust bundler for JavaScript/TypeScript with Rollup-compatible API.) and <a href="https://parceljs.org/"><img src={parcelLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> Parcel </a> (the zero-config bundler).
+
+Let's start with the fundamentals.
+
+## Part 1: Synchronous Function Callbacks
+
+### Basic Callbacks
+
+When you receive a JavaScript function as a parameter, you can call it synchronously within the same function scope:
+
+```rust
+use napi::bindgen_prelude::*;
+
+#[napi]
+pub fn process_user_data(
+    username: String,
+    callback: Function<String, String>
+) -> Result<String> {
+    // Transform username to uppercase
+    let processed = username.to_uppercase();
+
+    // Call the JS callback with the processed data
+    let greeting = callback.call(processed)?;
+
+    Ok(greeting)
+}
+```
+
+**Generated TypeScript:**
+```typescript
+export declare function processUserData(
+    username: string,
+    callback: (arg: string) => string
+): string
+```
+
+**Usage in JavaScript:**
+```javascript
+const result = processUserData("alice", (name) => `Hello, ${name}!`);
+console.log(result); // Output: "Hello, ALICE!"
+```
+
+### Multiple Arguments with FnArgs
+
+For callbacks with multiple arguments, use `FnArgs`:
+
+```rust
+#[napi]
+pub fn calculate_salary(
+    base_amount: f64,
+    callback: Function<FnArgs<(f64, f64, String)>, f64>
+) -> Result<f64> {
+    let tax = base_amount * 0.2;
+    let bonus = 1000.0;
+    let department = "Engineering".to_string();
+
+    // Pass multiple arguments using FnArgs
+    callback.call((base_amount, tax, department).into())
+}
+```
+
+**Generated TypeScript:**
+```typescript
+export declare function calculateSalary(
+    baseAmount: number,
+    callback: (arg0: number, arg1: number, arg2: string) => number
+): number
+```
+
+**Usage:**
+```javascript
+const total = calculateSalary(50000, (base, tax, dept) => {
+    console.log(`Department: ${dept}`);
+    return base - tax + (dept === "Engineering" ? 5000 : 0);
+});
+console.log(total); // Output: 45000
+```
+
+## Part 2: Function Lifetime and References
+
+### Understanding Function Scope
+
+JavaScript functions passed to Rust only live within the current function call scope. Once your Rust function returns, the JavaScript function becomes invalid and can't be called anymore. This is a safety mechanism - JavaScript's garbage collector needs to know when objects are still in use.
+
+<Callout type="error">
+  Never attempt to store a raw `Function` for later use without creating a proper reference. This will cause your application to crash when the function is garbage collected!
+</Callout>
+
+```rust
+// ❌ THIS WON'T WORK - Function becomes invalid after return
+#[napi]
+pub fn broken_timer(callback: Function<String, ()>) -> Result<()> {
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        // ERROR: callback is no longer valid here!
+        // The JavaScript function was cleaned up when broken_timer returned
+        callback.call("Too late!".to_string()); // This will crash!
+    });
+    Ok(())  // Function returns, callback becomes invalid
+}
+```
+
+### Function References
+
+Function references solve this by creating a persistent handle that keeps the JavaScript function alive beyond the current scope. Think of it like telling JavaScript: "Hey, I'm still using this function, don't clean it up yet!"
+
+<Callout type="info">
+  `FunctionRef` is lightweight and perfect for main-thread async operations. It's the go-to solution when you need to delay a callback but stay within the JavaScript event loop.
+</Callout>
+
+**When You Need References:**
+1. **Async operations**: When spawning futures that will complete later
+2. **Delayed callbacks**: Timer-based or event-driven callbacks
+3. **Storing for later**: Keeping functions in structs or global state
+4. **Thread boundaries**: Before passing to another thread (though ThreadsafeFunction is often better)
+
+```rust
+use napi::{Env, PromiseRaw};
+
+// ✅ THIS WORKS - Using a reference keeps the function alive
+#[napi(ts_return_type = "Promise<void>")]
+pub fn schedule_notification<'env>(
+    env: &'env Env,
+    delay_ms: u32,
+    callback: Function<'env, String, ()>
+) -> Result<PromiseRaw<'env, ()>> {
+    // Create a reference to keep the function alive
+    let callback_ref = callback.create_ref()?;
+
+    env.spawn_future_with_callback(
+        async move {
+            tokio::time::sleep(
+                std::time::Duration::from_millis(delay_ms as u64)
+            ).await;
+            Ok("Notification triggered!".to_string())
+        },
+        move |env, message| {
+            // Borrow the function back from reference
+            let callback = callback_ref.borrow_back(env)?;
+            callback.call(message)?;
+            Ok(())
+        }
+    )
+}
+```
+
+### FunctionRef Limitations
+
+`FunctionRef` has an important restriction: **you can only borrow it back in contexts where you have access to `Env`**. This means:
+
+- ✅ Works in main thread callbacks that provide `Env`
+- ✅ Works in `spawn_future_with_callback` (provides `Env` in callback)
+- ❌ Doesn't work in regular `std::thread::spawn`
+- ❌ Doesn't work in standalone async tasks without `Env`
+
+```rust
+#[napi]
+pub fn store_callback(callback: Function<String, ()>) -> Result<()> {
+    let callback_ref = callback.create_ref()?;
+
+    // ❌ THIS WON'T WORK - No Env in regular thread
+    std::thread::spawn(move || {
+        // Error: Can't borrow_back without Env!
+        // callback_ref.borrow_back(???)?;
+    });
+
+    Ok(())
+}
+```
+
+## Part 3: ThreadsafeFunction - Cross-Thread Callbacks
+
+When you need to call JavaScript from background threads, `ThreadsafeFunction` is the solution. Unlike `FunctionRef`, it's designed specifically for thread safety.
+
+### Basic ThreadsafeFunction
+
+```rust
+use std::thread;
+use napi::threadsafe_function::{
+    ThreadsafeFunction,
+    ThreadsafeFunctionCallMode
+};
+
+#[napi]
+pub fn monitor_system_resources(
+    callback: ThreadsafeFunction<f64>
+) {
+    thread::spawn(move || {
+        for i in 0..5 {
+            let cpu_usage = 40.0 + (i as f64 * 5.0);
+
+            // Call from background thread
+            callback.call(
+                Ok(cpu_usage),
+                ThreadsafeFunctionCallMode::NonBlocking
+            );
+
+            thread::sleep(std::time::Duration::from_secs(1));
+        }
+    });
+}
+```
+
+**Generated TypeScript:**
+```typescript
+export declare function monitorSystemResources(
+    callback: (err: Error | null, arg: number) => void
+): void
+```
+
+**Usage:**
+```javascript
+monitorSystemResources((err, cpuUsage) => {
+    if (err) {
+        console.error("Error:", err);
+        return;
+    }
+    console.log(`CPU Usage: ${cpuUsage}%`);
+});
+```
+
+### FunctionRef vs ThreadsafeFunction
+
+| Aspect | FunctionRef | ThreadsafeFunction |
+|--------|-------------|-------------------|
+| **Thread safety** | Not thread-safe, needs `Env` | Fully thread-safe |
+| **Use case** | Async operations on main thread | Cross-thread callbacks |
+| **Performance** | Lightweight | More overhead |
+| **Queue** | No queueing | Built-in queue |
+| **Error handling** | Simple Result | Configurable (fatal/handled) |
+| **When to use** | Delays/timers in main thread | Background threads, workers |
+
+<Callout>
+  **Rule of thumb**: Use `FunctionRef` when staying on the main thread with access to `Env`. Use `ThreadsafeFunction` when crossing thread boundaries.
+</Callout>
+
+## Part 4: Building ThreadsafeFunction from Function
+
+You can convert a regular `Function` into a `ThreadsafeFunction` using the builder pattern:
+
+```rust
+#[napi]
+pub fn start_file_watcher(
+    callback: Function<FnArgs<(String, u64)>, ()>
+) -> Result<()> {
+    // Convert to ThreadsafeFunction with configuration
+    let tsfn = callback
+        .build_threadsafe_function()
+        .max_queue_size::<10>()  // Optional: limit queue size
+        .build()?;
+
+    thread::spawn(move || {
+        let files = vec![
+            ("config.json", 1024),
+            ("data.csv", 2048),
+            ("index.html", 512)
+        ];
+
+        for (filename, size) in files {
+            tsfn.call(
+                Ok((filename.to_string(), size).into()),
+                ThreadsafeFunctionCallMode::Blocking
+            );
+            thread::sleep(std::time::Duration::from_millis(500));
+        }
+    });
+
+    Ok(())
+}
+```
+
+### Builder Options
+
+- **`max_queue_size::<N>()`**: Limit the queue to N items (0 = unlimited)
+- **`weak::<true>()`**: Create weak reference that won't keep process alive
+- **`callee_handled::<false>()`**: Make errors fatal instead of passing to callback
+- **`error_status::<CustomError>()`**: Use custom error type
+
+<Callout type="tip">
+  Set a `max_queue_size` when dealing with high-frequency events to prevent memory exhaustion. This is especially important for monitoring systems or real-time data streams.
+</Callout>
+
+## Part 5: ThreadsafeFunction Generic Parameters
+
+Understanding the generic parameters helps you use ThreadsafeFunction effectively:
+
+```rust
+ThreadsafeFunction<
+    T,           // Input type passed to call()
+    Return,      // Return type from JavaScript
+    CallJsArgs,  // Arguments for JS function (usually same as T)
+    ErrorStatus, // Error type (default: Status)
+    CalleeHandled, // true: errors go to callback, false: fatal
+    Weak,        // true: weak reference, false: strong
+    MaxQueueSize // Queue size limit (0 = unlimited)
+>
+```
+
+### Call Modes: Blocking vs NonBlocking
+
+- **NonBlocking**: Returns immediately if queue is full
+- **Blocking**: Waits until space is available in queue
+
+<Callout type="warning">
+  Be careful with `Blocking` mode in high-throughput scenarios. If the JavaScript event loop can't keep up, your Rust threads will block indefinitely. Consider using `NonBlocking` with proper backpressure handling.
+</Callout>
+
+```rust
+#[napi]
+pub fn process_events(
+    high_priority: ThreadsafeFunction<String>,
+    low_priority: ThreadsafeFunction<String>
+) {
+    thread::spawn(move || {
+        // High priority: block to ensure delivery
+        high_priority.call(
+            Ok("CRITICAL: System alert".to_string()),
+            ThreadsafeFunctionCallMode::Blocking
+        );
+
+        // Low priority: drop if queue is full
+        low_priority.call(
+            Ok("INFO: Regular update".to_string()),
+            ThreadsafeFunctionCallMode::NonBlocking
+        );
+    });
+}
+```
+
+### Custom Error Handling
+
+```rust
+// Custom error type
+pub struct NetworkError(String);
+
+impl AsRef<str> for NetworkError {
+    fn as_ref(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<Status> for NetworkError {
+    fn from(_: Status) -> Self {
+        NetworkError("Network failure".to_string())
+    }
+}
+
+#[napi]
+pub fn download_file_with_progress(
+    url: String,
+    callback: ThreadsafeFunction<u32, (), u32, NetworkError, false>
+) {
+    thread::spawn(move || {
+        for progress in (0..=100).step_by(20) {
+            if progress == 60 {
+                // Simulate network error
+                callback.call(
+                    Err(Error::new(
+                        NetworkError("Connection lost".to_string()),
+                        format!("Failed at {}%", progress)
+                    )),
+                    ThreadsafeFunctionCallMode::Blocking
+                );
+                return;
+            }
+
+            callback.call(progress, ThreadsafeFunctionCallMode::Blocking);
+            thread::sleep(std::time::Duration::from_millis(200));
+        }
+    });
+}
+```
+
+### Weak References
+
+Use weak references when the ThreadsafeFunction shouldn't keep the process alive:
+
+<Callout type="info">
+  Weak references are perfect for optional logging, monitoring, or telemetry callbacks that shouldn't prevent your application from shutting down gracefully.
+</Callout>
+
+```rust
+#[napi]
+pub fn background_logger(
+    callback: Function<String, ()>
+) -> Result<()> {
+    let tsfn = callback
+        .build_threadsafe_function()
+        .weak::<true>()  // Won't prevent process exit
+        .build()?;
+
+    thread::spawn(move || {
+        loop {
+            tsfn.call(
+                Ok("Background log entry".to_string()),
+                ThreadsafeFunctionCallMode::NonBlocking
+            );
+            thread::sleep(std::time::Duration::from_secs(10));
+        }
+    });
+
+    Ok(())
+}
+```
+
+## Part 6: Async Operations with ThreadsafeFunction
+
+ThreadsafeFunction supports async/await patterns for bidirectional async communication:
+
+```rust
+#[napi]
+pub async fn fetch_user_profile(
+    user_id: u32,
+    callback: ThreadsafeFunction<String, Promise<String>>
+) -> Result<String> {
+    // Call async and await the Promise
+    let profile_data = callback.call_async(Ok(format!("user_{}", user_id))).await?;
+    let enhanced_profile = profile_data.await?;
+
+    Ok(format!("Enhanced: {}", enhanced_profile))
+}
+```
+
+**Generated TypeScript:**
+```typescript
+export declare function fetchUserProfile(
+    userId: number,
+    callback: (err: Error | null, arg: string) => Promise<string>
+): Promise<string>
+```
+
+**Usage:**
+```javascript
+const profile = await fetchUserProfile(123, async (err, userId) => {
+    if (err) throw err;
+    // Simulate async database fetch
+    const data = await database.getUser(userId);
+    return data.name;
+});
+console.log(profile); // Output: "Enhanced: John Doe"
+```
+
+## Best Practices
+
+<Callout>
+
+1. **Choose the right type**:
+   - Use `Function` for sync callbacks within the same scope
+   - Use `FunctionRef` for async operations on the main thread
+   - Use `ThreadsafeFunction` for cross-thread calls
+
+2. **Error handling**:
+   - Set `CalleeHandled` to `false` for critical errors that should terminate
+   - Use custom error types for domain-specific error handling
+
+3. **Performance considerations**:
+   - `FunctionRef` is lightweight for main-thread operations
+   - `ThreadsafeFunction` has overhead but is necessary for thread safety
+   - Set `MaxQueueSize` to prevent memory issues with high-frequency callbacks
+
+4. **Lifecycle management**:
+   - Use weak references for optional callbacks that shouldn't block termination
+   - Strong references keep the process alive until explicitly released
+
+5. **Call modes**:
+   - Use `Blocking` for critical data that must be delivered
+   - Use `NonBlocking` for optional updates that can be dropped
+</Callout>
+
+## Further Reading
+
+- <NodeLink href="https://napi.rs/docs/concepts/function">Function API Documentation</NodeLink>
+- <NodeLink href="https://napi.rs/docs/concepts/threadsafe-function">ThreadsafeFunction Documentation</NodeLink>
+- <NodeLink href="https://napi.rs/docs/concepts/reference#functionref">FunctionRef Documentation</NodeLink>
+
+<Callout type="tip">
+  Want to see these patterns in action? Check out the source code of <img src={rolldownLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> [`Rolldown`](https://github.com/rolldown/rolldown) to see how they implement plugin callbacks and build hooks.
+</Callout>
