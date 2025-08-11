@@ -924,8 +924,8 @@ __metadata:
   linkType: hard
 
 "@modelcontextprotocol/sdk@npm:^1.10.2":
-  version: 1.17.1
-  resolution: "@modelcontextprotocol/sdk@npm:1.17.1"
+  version: 1.17.2
+  resolution: "@modelcontextprotocol/sdk@npm:1.17.2"
   dependencies:
     ajv: "npm:^6.12.6"
     content-type: "npm:^1.0.5"
@@ -939,7 +939,7 @@ __metadata:
     raw-body: "npm:^3.0.0"
     zod: "npm:^3.23.8"
     zod-to-json-schema: "npm:^3.24.1"
-  checksum: 10c0/bddee1c4a90adb2ee3f89f5598f0499841b1ad8b4d9a52b2b0afac3009918570d72240588a17178e319bdfbe70aced190f66b25e14f0a0645eacaf4776d4c15a
+  checksum: 10c0/9f0d00dc5f96a6bc78b775d2ce57d72270cf3b0fad08209f0061e30fff6e2005b7e6abbef98fbc030ba7e3aa5c78e5211f9b5c2a3d0d8f4455dfd47fef228720
   languageName: node
   linkType: hard
 
@@ -957,116 +957,116 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@napi-rs/image-android-arm64@npm:1.11.1":
-  version: 1.11.1
-  resolution: "@napi-rs/image-android-arm64@npm:1.11.1"
+"@napi-rs/image-android-arm64@npm:1.11.2":
+  version: 1.11.2
+  resolution: "@napi-rs/image-android-arm64@npm:1.11.2"
   conditions: os=android & cpu=arm64
   languageName: node
   linkType: hard
 
-"@napi-rs/image-darwin-arm64@npm:1.11.1":
-  version: 1.11.1
-  resolution: "@napi-rs/image-darwin-arm64@npm:1.11.1"
+"@napi-rs/image-darwin-arm64@npm:1.11.2":
+  version: 1.11.2
+  resolution: "@napi-rs/image-darwin-arm64@npm:1.11.2"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"@napi-rs/image-darwin-x64@npm:1.11.1":
-  version: 1.11.1
-  resolution: "@napi-rs/image-darwin-x64@npm:1.11.1"
+"@napi-rs/image-darwin-x64@npm:1.11.2":
+  version: 1.11.2
+  resolution: "@napi-rs/image-darwin-x64@npm:1.11.2"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"@napi-rs/image-freebsd-x64@npm:1.11.1":
-  version: 1.11.1
-  resolution: "@napi-rs/image-freebsd-x64@npm:1.11.1"
+"@napi-rs/image-freebsd-x64@npm:1.11.2":
+  version: 1.11.2
+  resolution: "@napi-rs/image-freebsd-x64@npm:1.11.2"
   conditions: os=freebsd & cpu=x64
   languageName: node
   linkType: hard
 
-"@napi-rs/image-linux-arm-gnueabihf@npm:1.11.1":
-  version: 1.11.1
-  resolution: "@napi-rs/image-linux-arm-gnueabihf@npm:1.11.1"
+"@napi-rs/image-linux-arm-gnueabihf@npm:1.11.2":
+  version: 1.11.2
+  resolution: "@napi-rs/image-linux-arm-gnueabihf@npm:1.11.2"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"@napi-rs/image-linux-arm64-gnu@npm:1.11.1":
-  version: 1.11.1
-  resolution: "@napi-rs/image-linux-arm64-gnu@npm:1.11.1"
+"@napi-rs/image-linux-arm64-gnu@npm:1.11.2":
+  version: 1.11.2
+  resolution: "@napi-rs/image-linux-arm64-gnu@npm:1.11.2"
   conditions: os=linux & cpu=arm64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@napi-rs/image-linux-arm64-musl@npm:1.11.1":
-  version: 1.11.1
-  resolution: "@napi-rs/image-linux-arm64-musl@npm:1.11.1"
+"@napi-rs/image-linux-arm64-musl@npm:1.11.2":
+  version: 1.11.2
+  resolution: "@napi-rs/image-linux-arm64-musl@npm:1.11.2"
   conditions: os=linux & cpu=arm64 & libc=musl
   languageName: node
   linkType: hard
 
-"@napi-rs/image-linux-x64-gnu@npm:1.11.1":
-  version: 1.11.1
-  resolution: "@napi-rs/image-linux-x64-gnu@npm:1.11.1"
+"@napi-rs/image-linux-x64-gnu@npm:1.11.2":
+  version: 1.11.2
+  resolution: "@napi-rs/image-linux-x64-gnu@npm:1.11.2"
   conditions: os=linux & cpu=x64 & libc=glibc
   languageName: node
   linkType: hard
 
-"@napi-rs/image-linux-x64-musl@npm:1.11.1":
-  version: 1.11.1
-  resolution: "@napi-rs/image-linux-x64-musl@npm:1.11.1"
+"@napi-rs/image-linux-x64-musl@npm:1.11.2":
+  version: 1.11.2
+  resolution: "@napi-rs/image-linux-x64-musl@npm:1.11.2"
   conditions: os=linux & cpu=x64 & libc=musl
   languageName: node
   linkType: hard
 
-"@napi-rs/image-wasm32-wasi@npm:1.11.1":
-  version: 1.11.1
-  resolution: "@napi-rs/image-wasm32-wasi@npm:1.11.1"
+"@napi-rs/image-wasm32-wasi@npm:1.11.2":
+  version: 1.11.2
+  resolution: "@napi-rs/image-wasm32-wasi@npm:1.11.2"
   dependencies:
-    "@napi-rs/wasm-runtime": "npm:^1.0.1"
+    "@napi-rs/wasm-runtime": "npm:^1.0.3"
   conditions: cpu=wasm32
   languageName: node
   linkType: hard
 
-"@napi-rs/image-win32-arm64-msvc@npm:1.11.1":
-  version: 1.11.1
-  resolution: "@napi-rs/image-win32-arm64-msvc@npm:1.11.1"
+"@napi-rs/image-win32-arm64-msvc@npm:1.11.2":
+  version: 1.11.2
+  resolution: "@napi-rs/image-win32-arm64-msvc@npm:1.11.2"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
-"@napi-rs/image-win32-ia32-msvc@npm:1.11.1":
-  version: 1.11.1
-  resolution: "@napi-rs/image-win32-ia32-msvc@npm:1.11.1"
+"@napi-rs/image-win32-ia32-msvc@npm:1.11.2":
+  version: 1.11.2
+  resolution: "@napi-rs/image-win32-ia32-msvc@npm:1.11.2"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"@napi-rs/image-win32-x64-msvc@npm:1.11.1":
-  version: 1.11.1
-  resolution: "@napi-rs/image-win32-x64-msvc@npm:1.11.1"
+"@napi-rs/image-win32-x64-msvc@npm:1.11.2":
+  version: 1.11.2
+  resolution: "@napi-rs/image-win32-x64-msvc@npm:1.11.2"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
 "@napi-rs/image@npm:^1.11.0":
-  version: 1.11.1
-  resolution: "@napi-rs/image@npm:1.11.1"
+  version: 1.11.2
+  resolution: "@napi-rs/image@npm:1.11.2"
   dependencies:
-    "@napi-rs/image-android-arm64": "npm:1.11.1"
-    "@napi-rs/image-darwin-arm64": "npm:1.11.1"
-    "@napi-rs/image-darwin-x64": "npm:1.11.1"
-    "@napi-rs/image-freebsd-x64": "npm:1.11.1"
-    "@napi-rs/image-linux-arm-gnueabihf": "npm:1.11.1"
-    "@napi-rs/image-linux-arm64-gnu": "npm:1.11.1"
-    "@napi-rs/image-linux-arm64-musl": "npm:1.11.1"
-    "@napi-rs/image-linux-x64-gnu": "npm:1.11.1"
-    "@napi-rs/image-linux-x64-musl": "npm:1.11.1"
-    "@napi-rs/image-wasm32-wasi": "npm:1.11.1"
-    "@napi-rs/image-win32-arm64-msvc": "npm:1.11.1"
-    "@napi-rs/image-win32-ia32-msvc": "npm:1.11.1"
-    "@napi-rs/image-win32-x64-msvc": "npm:1.11.1"
+    "@napi-rs/image-android-arm64": "npm:1.11.2"
+    "@napi-rs/image-darwin-arm64": "npm:1.11.2"
+    "@napi-rs/image-darwin-x64": "npm:1.11.2"
+    "@napi-rs/image-freebsd-x64": "npm:1.11.2"
+    "@napi-rs/image-linux-arm-gnueabihf": "npm:1.11.2"
+    "@napi-rs/image-linux-arm64-gnu": "npm:1.11.2"
+    "@napi-rs/image-linux-arm64-musl": "npm:1.11.2"
+    "@napi-rs/image-linux-x64-gnu": "npm:1.11.2"
+    "@napi-rs/image-linux-x64-musl": "npm:1.11.2"
+    "@napi-rs/image-wasm32-wasi": "npm:1.11.2"
+    "@napi-rs/image-win32-arm64-msvc": "npm:1.11.2"
+    "@napi-rs/image-win32-ia32-msvc": "npm:1.11.2"
+    "@napi-rs/image-win32-x64-msvc": "npm:1.11.2"
   dependenciesMeta:
     "@napi-rs/image-android-arm64":
       optional: true
@@ -1094,7 +1094,7 @@ __metadata:
       optional: true
     "@napi-rs/image-win32-x64-msvc":
       optional: true
-  checksum: 10c0/619f483a1a148df460955da959840938c13b8ccd7550adff7df3001ff934a5bb708b9fd69b5221c172262d179b25184b1f2c1cdddacbefbbba281650ec92a9aa
+  checksum: 10c0/be1f473a940f133ad15c65a7830c2d1b6d473a9c781f6c39b7ea3943fbb8d59c2975125471ef739eb701efe429b1b95ff98ca7ec2655f703efefcf96c4476fdc
   languageName: node
   linkType: hard
 
@@ -1268,14 +1268,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@napi-rs/wasm-runtime@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "@napi-rs/wasm-runtime@npm:1.0.1"
+"@napi-rs/wasm-runtime@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "@napi-rs/wasm-runtime@npm:1.0.3"
   dependencies:
     "@emnapi/core": "npm:^1.4.5"
     "@emnapi/runtime": "npm:^1.4.5"
     "@tybys/wasm-util": "npm:^0.10.0"
-  checksum: 10c0/3244105b75637d8d39e76782921fe46e48105bcd390db01a10dc7b596ee99af0f06b7f2b841d7632e756bd3220a5d595b9d426a5453da1ccc895900b894d098f
+  checksum: 10c0/7918d82477e75931b6e35bb003464382eb93e526362f81a98bf8610407a67b10f4d041931015ad48072c89db547deb7e471dfb91f4ab11ac63a24d8580297f75
   languageName: node
   linkType: hard
 
@@ -2471,11 +2471,11 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:^22.16.0":
-  version: 22.17.0
-  resolution: "@types/node@npm:22.17.0"
+  version: 22.17.1
+  resolution: "@types/node@npm:22.17.1"
   dependencies:
     undici-types: "npm:~6.21.0"
-  checksum: 10c0/e1c603b660d3de3243dfc02ded5d40623ff3f36315ffbdd8cdc81bc2c5a8da172035879d437b72e9fa61ca01827f28e9c2b0c32898f411a8e9ba0a5efac0b4ca
+  checksum: 10c0/b04063bdabfc4146af05d14d4fd23ee68615194473d0ef971ddef549b80b791f52c8f93abdd8d1092ee0257f3dea862fa233519244fd051e79233cdce614de14
   languageName: node
   linkType: hard
 
@@ -2637,21 +2637,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vercel/go@npm:3.2.2":
-  version: 3.2.2
-  resolution: "@vercel/go@npm:3.2.2"
-  checksum: 10c0/45a261aca504b2c1843855eab9bbf11c0ccd696fd22d5421fabeca1d6892676c3810cfb75ab53491c66d4c97aa6c68d84d6105a15f9d38a1b98507dfa0f92b0e
+"@vercel/go@npm:3.2.3":
+  version: 3.2.3
+  resolution: "@vercel/go@npm:3.2.3"
+  checksum: 10c0/f3bc35d920cffaf4ba7883701cc644027961616d3c5a753e32cc22c837a4bdce571aa908fd8603e012bc38cf1077235de4f2967ad70edf753f82cb03e49504f9
   languageName: node
   linkType: hard
 
-"@vercel/hono@npm:0.0.8":
-  version: 0.0.8
-  resolution: "@vercel/hono@npm:0.0.8"
+"@vercel/hono@npm:0.0.9":
+  version: 0.0.9
+  resolution: "@vercel/hono@npm:0.0.9"
   dependencies:
-    "@vercel/node": "npm:5.3.10"
+    "@vercel/node": "npm:5.3.11"
     "@vercel/static-config": "npm:3.1.1"
     ts-morph: "npm:12.0.0"
-  checksum: 10c0/26a1ad8f7dc44427575be1891167540a8b1df400371cb18a38ee264b32073c058d08e4049a1973081716f1e32b42b0674c6bc5544a968cc9f672a13f74cb6850
+  checksum: 10c0/8dbdb79187a6d3ec173f3efc51e2ecb339defbf93d6e2d58bc63b35693f65f7a8ec7a3e630e91b4d663b5117de7752808260ddfe8b971a3adadb3e0777b40798
   languageName: node
   linkType: hard
 
@@ -2696,9 +2696,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vercel/node@npm:5.3.10":
-  version: 5.3.10
-  resolution: "@vercel/node@npm:5.3.10"
+"@vercel/node@npm:5.3.11":
+  version: 5.3.11
+  resolution: "@vercel/node@npm:5.3.11"
   dependencies:
     "@edge-runtime/node-utils": "npm:2.3.0"
     "@edge-runtime/primitives": "npm:4.1.0"
@@ -2721,7 +2721,7 @@ __metadata:
     ts-node: "npm:10.9.1"
     typescript: "npm:4.9.5"
     undici: "npm:5.28.4"
-  checksum: 10c0/4e054cb2a4b4665aab9f7f69a069de9a0ae39050e32bf14d395aeec733cf99a9b0e4ab8a189879894586bcec3159346a7c4a0e803a3af7757d7d945b6d004968
+  checksum: 10c0/437923077cd48eca9595b1f54fae1f488c2c63e444aec32d9094095bf44686eea7c4f0e174d13a8c7449b9368f1fea222854cf47a1f9335fcfcff57da85398f7
   languageName: node
   linkType: hard
 
@@ -3181,9 +3181,9 @@ __metadata:
   linkType: hard
 
 "bowser@npm:^2.11.0":
-  version: 2.11.0
-  resolution: "bowser@npm:2.11.0"
-  checksum: 10c0/04efeecc7927a9ec33c667fa0965dea19f4ac60b3fea60793c2e6cf06c1dcd2f7ae1dbc656f450c5f50783b1c75cf9dc173ba6f3b7db2feee01f8c4b793e1bd3
+  version: 2.12.0
+  resolution: "bowser@npm:2.12.0"
+  checksum: 10c0/e6a9099906d9852326c7a5cba080dd11ebccdefcfbd72c630b2c72aa5d3df9703158d79da28f5fcd66c307e7b65b84310c2028f6517a5b8226a472dc634bd9fa
   languageName: node
   linkType: hard
 
@@ -3216,16 +3216,16 @@ __metadata:
   linkType: hard
 
 "browserslist@npm:^4.24.0, browserslist@npm:^4.24.4":
-  version: 4.25.1
-  resolution: "browserslist@npm:4.25.1"
+  version: 4.25.2
+  resolution: "browserslist@npm:4.25.2"
   dependencies:
-    caniuse-lite: "npm:^1.0.30001726"
-    electron-to-chromium: "npm:^1.5.173"
+    caniuse-lite: "npm:^1.0.30001733"
+    electron-to-chromium: "npm:^1.5.199"
     node-releases: "npm:^2.0.19"
     update-browserslist-db: "npm:^1.1.3"
   bin:
     browserslist: cli.js
-  checksum: 10c0/acba5f0bdbd5e72dafae1e6ec79235b7bad305ed104e082ed07c34c38c7cb8ea1bc0f6be1496958c40482e40166084458fc3aee15111f15faa79212ad9081b2a
+  checksum: 10c0/3fd27c6d569125e08b476d0ded78232c756bffeb79f29cfa548961dfd62fa560f8bf60fdb52d496ba276aea0c843968dd38ed4138a724277715be3b41dac8861
   languageName: node
   linkType: hard
 
@@ -3287,10 +3287,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"caniuse-lite@npm:^1.0.30001579, caniuse-lite@npm:^1.0.30001702, caniuse-lite@npm:^1.0.30001726":
-  version: 1.0.30001731
-  resolution: "caniuse-lite@npm:1.0.30001731"
-  checksum: 10c0/d8cddf817d5bec8e7c2106affdbf1bfc3923463ca16697c992b2efeb043e6a5d9dcb70cda913bc6acf9112fd66f9e80279316c08e7800359116925066a63fdfa
+"caniuse-lite@npm:^1.0.30001579, caniuse-lite@npm:^1.0.30001702, caniuse-lite@npm:^1.0.30001733":
+  version: 1.0.30001733
+  resolution: "caniuse-lite@npm:1.0.30001733"
+  checksum: 10c0/2c03ad3362be7c93c09537f3853156ade5c70fb131888971dd538631971873ba27b83c5aad48dd06b6cde005fe57caae2db5d0f467d0c63a315391add70f01f5
   languageName: node
   linkType: hard
 
@@ -3322,7 +3322,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chalk@npm:^5.0.0, chalk@npm:^5.4.1":
+"chalk@npm:^5.0.0, chalk@npm:^5.5.0":
   version: 5.5.0
   resolution: "chalk@npm:5.5.0"
   checksum: 10c0/23063b544f7c2fe57d25ff814807de561f8adfff72e4f0051051eaa606f772586470507ccd38d89166300eeaadb0164acde8bb8a0716a0f2d56ccdf3761d5e4f
@@ -4416,10 +4416,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-to-chromium@npm:^1.5.173":
-  version: 1.5.194
-  resolution: "electron-to-chromium@npm:1.5.194"
-  checksum: 10c0/7d72617857055d54552380b34be411933966fa1156dc8653e321d14e82e2af84114bac607e9e2926f885d560b2697a324981e4204d3da4e0f9604d4a468eeba1
+"electron-to-chromium@npm:^1.5.199":
+  version: 1.5.199
+  resolution: "electron-to-chromium@npm:1.5.199"
+  checksum: 10c0/5586d20455407edc583e33422e370bbdc07913d8f5c73da2ae1c6adcc79c3be7384ecaf893978027cb26a410c1354f199a05edb99b1ab03dd0346e2201525148
   languageName: node
   linkType: hard
 
@@ -4475,12 +4475,12 @@ __metadata:
   linkType: hard
 
 "enhanced-resolve@npm:^5.18.1":
-  version: 5.18.2
-  resolution: "enhanced-resolve@npm:5.18.2"
+  version: 5.18.3
+  resolution: "enhanced-resolve@npm:5.18.3"
   dependencies:
     graceful-fs: "npm:^4.2.4"
     tapable: "npm:^2.2.0"
-  checksum: 10c0/2a45105daded694304b0298d1c0351a981842249a9867513d55e41321a4ccf37dfd35b0c1e9ceae290eab73654b09aa7a910d618ea6f9441e97c52bc424a2372
+  checksum: 10c0/d413c23c2d494e4c1c9c9ac7d60b812083dc6d446699ed495e69c920988af0a3c66bf3f8d0e7a45cb1686c2d4c1df9f4e7352d973f5b56fe63d8d711dd0ccc54
   languageName: node
   linkType: hard
 
@@ -5251,13 +5251,13 @@ __metadata:
   linkType: hard
 
 "fs-extra@npm:^11.1.0":
-  version: 11.3.0
-  resolution: "fs-extra@npm:11.3.0"
+  version: 11.3.1
+  resolution: "fs-extra@npm:11.3.1"
   dependencies:
     graceful-fs: "npm:^4.2.0"
     jsonfile: "npm:^6.0.1"
     universalify: "npm:^2.0.0"
-  checksum: 10c0/5f95e996186ff45463059feb115a22fb048bdaf7e487ecee8a8646c78ed8fdca63630e3077d4c16ce677051f5e60d3355a06f3cd61f3ca43f48cc58822a44d0a
+  checksum: 10c0/61e5b7285b1ca72c68dfe1058b2514294a922683afac2a80aa90540f9bd85370763d675e3b408ef500077d355956fece3bd24b546790e261c3d3015967e2b2d9
   languageName: node
   linkType: hard
 
@@ -6407,10 +6407,10 @@ __metadata:
   linkType: hard
 
 "lint-staged@npm:^16.1.2":
-  version: 16.1.4
-  resolution: "lint-staged@npm:16.1.4"
+  version: 16.1.5
+  resolution: "lint-staged@npm:16.1.5"
   dependencies:
-    chalk: "npm:^5.4.1"
+    chalk: "npm:^5.5.0"
     commander: "npm:^14.0.0"
     debug: "npm:^4.4.1"
     lilconfig: "npm:^3.1.3"
@@ -6419,10 +6419,10 @@ __metadata:
     nano-spawn: "npm:^1.0.2"
     pidtree: "npm:^0.6.0"
     string-argv: "npm:^0.3.2"
-    yaml: "npm:^2.8.0"
+    yaml: "npm:^2.8.1"
   bin:
     lint-staged: bin/lint-staged.js
-  checksum: 10c0/dd1caa079a37598e1a8e25661f0ab387c584b83f06364e112d73fcfea3896ea920bbadbe89a7150de1bf02130efd16ce0cc8cd217e1db94570fddc93e77878ac
+  checksum: 10c0/771e7be871f1d74ed09ef4e4eae5f835ed962965db7709be26cccf71bef8fed34f8d5d92f193b2a6fad32c12d955850aa74008e6180fabea8a7a6666cba2ac39
   languageName: node
   linkType: hard
 
@@ -10660,17 +10660,17 @@ __metadata:
   linkType: hard
 
 "vercel@npm:^44.2.8":
-  version: 44.7.0
-  resolution: "vercel@npm:44.7.0"
+  version: 44.7.3
+  resolution: "vercel@npm:44.7.3"
   dependencies:
     "@vercel/blob": "npm:1.0.2"
     "@vercel/build-utils": "npm:11.0.0"
     "@vercel/fun": "npm:1.1.6"
-    "@vercel/go": "npm:3.2.2"
-    "@vercel/hono": "npm:0.0.8"
+    "@vercel/go": "npm:3.2.3"
+    "@vercel/hono": "npm:0.0.9"
     "@vercel/hydrogen": "npm:1.2.3"
     "@vercel/next": "npm:4.11.0"
-    "@vercel/node": "npm:5.3.10"
+    "@vercel/node": "npm:5.3.11"
     "@vercel/python": "npm:5.0.0"
     "@vercel/redwood": "npm:2.3.4"
     "@vercel/remix-builder": "npm:5.4.10"
@@ -10681,7 +10681,7 @@ __metadata:
   bin:
     vc: dist/vc.js
     vercel: dist/vc.js
-  checksum: 10c0/aefa4486b302c9e6a9b492448275d5c5f20d574995133a41d7d135ed7bbf6be1bda0a1031c7b1a638c9a6b23e97544b05f0ed36cddf1942f01aeb5b4f164e638
+  checksum: 10c0/78460aced3ebf1f4c5c69f7c891536038bfe1d606b3c21aa00c6db40e0104fe88bea3d6125c0a670b9ee9d3031543ca26bbe6f3bcad0ac4e6f972b69d22affd5
   languageName: node
   linkType: hard
 
@@ -10958,12 +10958,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yaml@npm:^2.8.0":
-  version: 2.8.0
-  resolution: "yaml@npm:2.8.0"
+"yaml@npm:^2.8.1":
+  version: 2.8.1
+  resolution: "yaml@npm:2.8.1"
   bin:
     yaml: bin.mjs
-  checksum: 10c0/f6f7310cf7264a8107e72c1376f4de37389945d2fb4656f8060eca83f01d2d703f9d1b925dd8f39852a57034fafefde6225409ddd9f22aebfda16c6141b71858
+  checksum: 10c0/7c587be00d9303d2ae1566e03bc5bc7fe978ba0d9bf39cc418c3139d37929dfcb93a230d9749f2cb578b6aa5d9ebebc322415e4b653cb83acd8bc0bc321707f3
   languageName: node
   linkType: hard
 
