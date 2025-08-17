@@ -65,10 +65,13 @@
   "scripts": {
     "dev": "next",
     "start": "next start",
-    "build": "next build",
+    "build": "next build && yarn sitemap && yarn test:sitemap",
     "build:en": "next build",
     "build:cn": "cross-env LOCALE=cn next build",
     "build:pt-BR": "cross-env LOCALE=pt-BR next build",
+    "postbuild": "node scripts/generate-sitemap.js",
+    "sitemap": "node scripts/generate-sitemap.js",
+    "test:sitemap": "node scripts/test-sitemap.js",
     "format": "prettier -w .",
     "postinstall": "husky install"
   },
