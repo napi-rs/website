@@ -60,6 +60,16 @@ new NapiCli().build({
 | allFeatures       | --all-features        | boolean  | false    |         | Activate all available features                                                                                           |
 | noDefaultFeatures | --no-default-features | boolean  | false    |         | Do not activate the <Green>default</Green> feature                                                                       |
 
+## Passing flags to Cargo
+
+Flags after `--` will be passed through to the cargo build command. For example:
+
+```sh
+napi build -- --locked
+```
+
+This will pass the `--locked` flag to `cargo build`, resulting in `cargo build --locked`.
+
 ## Note for `--js-package-name`
 
 In the [Deep dive section](../introduction/getting-started#deep-dive), we recommended you publish your package under [`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/). But if you are migrating an existed package which is not under the [`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) or you just don't want your package under an [`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) , you may trigger the [_npm spam detection_](https://stackoverflow.com/questions/48668389/npm-publish-failed-with-package-name-triggered-spam-detection/54135900#54135900) while publishing the native platform packages. Like `snappy-darwin-x64` `snappy-darwin-arm64` etc...

@@ -71,6 +71,17 @@ Cli has been rewritten.
 
 Previous, the flags in `napi build` are relative to the `--cargo-cwd || process.cwd()`, now, they are relative to the `--cwd || process.cwd()` path.
 
+### `--cargo-flags` removed
+
+The `--cargo-flags` option has been removed. Now flags after `--` will be passed through to the cargo build command:
+
+```diff
+- napi build --cargo-flags="--locked"
++ napi build -- --locked
+```
+
+The `--locked` flag will be passed to `cargo build`, resulting in `cargo build --locked`.
+
 ### `create-npm-dir` is renamed to `create-npm-dirs`
 
 See the [**create-npm-dirs**](/docs/cli/create-npm-dirs) for more details.
