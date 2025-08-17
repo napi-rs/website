@@ -8,8 +8,9 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const EXPORT_DIR = path.join(__dirname, '../.next/server/pages')
-const SITEMAP_PATH = path.join(EXPORT_DIR, 'sitemap.xml')
-const ROBOTS_PATH = path.join(EXPORT_DIR, 'robots.txt')
+const DIST_DIR = path.join(__dirname, '../public')
+const SITEMAP_PATH = path.join(DIST_DIR, 'sitemap.xml')
+const ROBOTS_PATH = path.join(DIST_DIR, 'robots.txt')
 
 async function testSitemap() {
   console.log('🧪 Testing sitemap generation...')

@@ -14,6 +14,7 @@ const writeFile = promisify(fs.writeFile)
 
 const BASE_URL = 'https://napi.rs'
 const EXPORT_DIR = path.join(__dirname, '../.next/server/pages')
+const DIST_DIR = path.join(__dirname, '../public')
 
 async function getAllHtmlFiles(dir) {
   const files = []
@@ -122,7 +123,7 @@ async function generateSitemap() {
   sitemap += '</urlset>\n'
 
   // Write sitemap to export directory
-  const sitemapPath = path.join(EXPORT_DIR, 'sitemap.xml')
+  const sitemapPath = path.join(DIST_DIR, 'sitemap.xml')
   await writeFile(sitemapPath, sitemap, 'utf8')
 
   console.log(`✅ Sitemap generated successfully: ${sitemapPath}`)
@@ -130,7 +131,7 @@ async function generateSitemap() {
   console.log(`🌐 Base URL: ${BASE_URL}`)
 
   // Also create a robots.txt if it doesn't exist
-  const robotsPath = path.join(EXPORT_DIR, 'robots.txt')
+  const robotsPath = path.join(DIST_DIR, 'robots.txt')
   if (!fs.existsSync(robotsPath)) {
     const robotsContent = `User-agent: *
 Allow: /
