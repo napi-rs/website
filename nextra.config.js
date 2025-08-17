@@ -35,8 +35,7 @@ export default {
     link: 'https://github.com/napi-rs/napi-rs',
   },
   logo: Logo,
-  head: (props) => {
-    const { title, meta } = props
+  head: () => {
     return (
       <>
         {/* Favicons, meta */}

@@ -13,7 +13,7 @@ const stat = promisify(fs.stat)
 const writeFile = promisify(fs.writeFile)
 
 const BASE_URL = 'https://napi.rs'
-const EXPORT_DIR = path.join(__dirname, '../.next/export')
+const EXPORT_DIR = path.join(__dirname, '../.next/server/pages')
 
 async function getAllHtmlFiles(dir) {
   const files = []
@@ -64,7 +64,7 @@ async function getLastModified(filePath) {
   try {
     const stats = await stat(filePath)
     return stats.mtime.toISOString()
-  } catch (error) {
+  } catch {
     return new Date().toISOString()
   }
 }
