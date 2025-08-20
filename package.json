@@ -80,7 +80,7 @@
       "prettier --write"
     ]
   },
-  "packageManager": "yarn@4.9.2",
+  "packageManager": "yarn@4.9.3",
   "resolutions": {
     "@headlessui/react": "2.2.7"
   }
