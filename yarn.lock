@@ -6565,12 +6565,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lucide-react@npm:^0.540.0":
-  version: 0.540.0
-  resolution: "lucide-react@npm:0.540.0"
+"lucide-react@npm:^0.541.0":
+  version: 0.541.0
+  resolution: "lucide-react@npm:0.541.0"
   peerDependencies:
     react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
-  checksum: 10c0/f4dc8a540b1b079958fdf7a1804dfb3f9093a9393f0c0a4b32a7e839869df5e29946c4fe226f06edd3056f6eccfa77b53e44be89f42379e7fe31c4e59caee3fa
+  checksum: 10c0/ffa23a9c9ead0832c7e0bb1eb7ed44e9f38bbf083d94b4d36a66eb23fa2099d4a52e1677c91eb7e8ea922621fa98e730f5d513bc56b3111b14b835bd8ab823ab
   languageName: node
   linkType: hard
 
@@ -7732,7 +7732,7 @@ __metadata:
     husky: "npm:^9.1.7"
     lint-staged: "npm:^16.1.2"
     lodash-es: "npm:^4.17.21"
-    lucide-react: "npm:^0.540.0"
+    lucide-react: "npm:^0.541.0"
     next: "npm:15.5.0"
     nextra: "npm:2.13.4"
     nextra-theme-docs: "npm:2.13.4"
