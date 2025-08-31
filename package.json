@@ -55,7 +55,7 @@
     "postcss-import": "^16.1.1",
     "prettier": "^3.6.2",
     "pretty-bytes": "^7.0.0",
-    "shadcn": "^2.8.0",
+    "shadcn": "^3.0.0",
     "sharp": "^0.34.2",
     "tailwindcss": "^4.1.11",
     "tw-animate-css": "^1.3.5",
