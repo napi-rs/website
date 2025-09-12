@@ -2745,10 +2745,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vercel/python@npm:5.0.2":
-  version: 5.0.2
-  resolution: "@vercel/python@npm:5.0.2"
-  checksum: 10c0/61d0314360da67e85e90793d797f9ec16df698c7c956e24d5099292d277c108aeb0a994959a9f802f46522291dd484ba3bc7e201547006ec201f41e2783e8ed7
+"@vercel/python@npm:5.0.4":
+  version: 5.0.4
+  resolution: "@vercel/python@npm:5.0.4"
+  checksum: 10c0/b9e5732d58d2652077ece23457236a5b368a02f04eaf6c7e7c5bff5efc060461cde4a41361e7c2e0ecccba386fdbe0ef1728c77f72dba93ade8850f7b4d45262
   languageName: node
   linkType: hard
 
@@ -7776,7 +7776,7 @@ __metadata:
     tailwindcss: "npm:^4.1.11"
     tw-animate-css: "npm:^1.3.5"
     typescript: "npm:^5.8.3"
-    vercel: "npm:^47.0.0"
+    vercel: "npm:^48.0.0"
   languageName: unknown
   linkType: soft
 
@@ -10695,9 +10695,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vercel@npm:^47.0.0":
-  version: 47.1.3
-  resolution: "vercel@npm:47.1.3"
+"vercel@npm:^48.0.0":
+  version: 48.0.0
+  resolution: "vercel@npm:48.0.0"
   dependencies:
     "@vercel/blob": "npm:1.0.2"
     "@vercel/build-utils": "npm:12.1.0"
@@ -10709,7 +10709,7 @@ __metadata:
     "@vercel/hydrogen": "npm:1.2.4"
     "@vercel/next": "npm:4.12.4"
     "@vercel/node": "npm:5.3.22"
-    "@vercel/python": "npm:5.0.2"
+    "@vercel/python": "npm:5.0.4"
     "@vercel/redwood": "npm:2.3.6"
     "@vercel/remix-builder": "npm:5.4.12"
     "@vercel/ruby": "npm:2.2.1"
@@ -10719,7 +10719,7 @@ __metadata:
   bin:
     vc: dist/vc.js
     vercel: dist/vc.js
-  checksum: 10c0/2051e9cf8f490a1a1698b4b33d06ac123adeb5ccbff3631f541669333577bdd862c4c881ac0ddd11bccd2bf1fea812a59a087766764f23195460678560466172
+  checksum: 10c0/ff1314f65f035db7e77894657c70b598e482b506a550bbf4d4ecb1187f1d3e9bf592226279fe28c2cabd9a07dacd34d7e3fd4b0c73a1052eb146cb9190721395
   languageName: node
   linkType: hard
 
