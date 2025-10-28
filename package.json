@@ -42,7 +42,7 @@
     "@napi-rs/image": "^1.11.0",
     "@perfsee/webpack": "^1.14.2",
     "@tailwindcss/postcss": "^4.1.11",
-    "@types/node": "^22.16.0",
+    "@types/node": "^24.0.0",
     "@types/postcss-functions": "^4",
     "@types/react": "^19.0.0",
     "autoprefixer": "^10.4.21",
