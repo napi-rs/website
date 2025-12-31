@@ -191,7 +191,7 @@ For simple additions, use an inline string in your config:
 }
 ```
 
-This adds your types after the default header comments.
+This completely replaces the default header. Include the auto-generated comment and eslint directive in the string if you want to keep them.
 
 ### CLI Options
 
