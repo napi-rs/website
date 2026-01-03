@@ -1,0 +1,345 @@
+---
+description: Use @napi-rs/cli programmatic APIs to customize your build workflow.
+---
+
+# Programmatic API
+
+import { Green, Rust, Warning } from '../../../components/chalk'
+import { Callout } from 'nextra-theme-docs'
+
+The `@napi-rs/cli` package exports programmatic APIs that allow you to customize your build workflow beyond what the CLI commands offer. This is useful when you need to:
+
+- Post-process build outputs (format, transform, or validate generated files)
+- Integrate with custom build systems like Bazel
+- Generate TypeScript definitions separately from the Rust compilation
+- Build automation scripts with full control over the build process
+
+## Post-Processing Build Outputs
+
+The most common use case is running custom post-processing on the generated JavaScript and TypeScript files. Here's an example using <Green>oxfmt</Green> to format the output files:
+
+```ts filename="build.ts"
+import { readFile, writeFile } from 'node:fs/promises'
+
+import { NapiCli, createBuildCommand } from '@napi-rs/cli'
+import { format, type FormatOptions } from 'oxfmt'
+
+import oxfmtConfig from './.oxfmtrc.json' with { type: 'json' }
+
+const buildCommand = createBuildCommand(process.argv.slice(2))
+const cli = new NapiCli()
+const buildOptions = buildCommand.getOptions()
+const { task } = await cli.build(buildOptions)
+const outputs = await task
+
+for (const output of outputs) {
+  if (output.kind !== 'node') {
+    const { code } = await format(output.path, await readFile(output.path, 'utf-8'), oxfmtConfig as FormatOptions)
+    await writeFile(output.path, code)
+  }
+}
+```
+
+Run this script with the same arguments you would pass to <Green>napi build</Green>:
+
+```sh
+node ./build.ts --release --platform
+```
+
+### How It Works
+
+1. `createBuildCommand(args)` parses CLI arguments and returns a `BuildCommand` instance
+2. `buildCommand.getOptions()` extracts the parsed options as a plain object
+3. `cli.build(options)` starts the build and returns `{ task, abort }`
+4. `await task` waits for completion and returns an array of `Output` objects
+
+### Output Types
+
+Each item in the outputs array has this structure:
+
+```ts
+type OutputKind = 'js' | 'dts' | 'node' | 'exe' | 'wasm'
+
+type Output = {
+  kind: OutputKind
+  path: string  // Absolute path to the output file
+}
+```
+
+| Kind | Description |
+|------|-------------|
+| <Green>node</Green> | Native Node.js addon (<Green>.node</Green> file) |
+| <Green>js</Green> | JavaScript binding file |
+| <Green>dts</Green> | TypeScript definition file |
+| <Green>exe</Green> | Executable binary |
+| <Green>wasm</Green> | WebAssembly module |
+
+## Standalone Types/JS Generation
+
+<Callout type="info">
+This is useful for build systems like Bazel that handle Rust compilation separately and only need the TypeScript type generation step.
+</Callout>
+
+If you compile Rust code outside of `@napi-rs/cli` (e.g., using Bazel's `rust_shared_library`), you can still generate TypeScript definitions using the `generateTypeDef` and `writeJsBinding` APIs:
+
+```ts filename="generate-types.ts"
+import { spawn } from 'node:child_process'
+import { mkdir, writeFile, copyFile, rm } from 'node:fs/promises'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+import { generateTypeDef, writeJsBinding, parseTriple } from '@napi-rs/cli'
+
+import pkg from './package.json' with { type: 'json' }
+
+const currentTarget = 'x86_64-unknown-linux-gnu'
+
+const currentDir = dirname(fileURLToPath(import.meta.url))
+const typeDefDir = join(currentDir, 'target', 'napi-rs', 'YOUR_PKG_NAME')
+const triple = parseTriple(currentTarget)
+const bindingName = `customized.${triple.platformArchABI}.node`
+
+await mkdir(typeDefDir, { recursive: true })
+
+const childProcess = spawn('cargo', ['build', '--release'], {
+  stdio: 'pipe',
+  env: {
+    NAPI_TYPE_DEF_TMP_FOLDER: typeDefDir,
+    ...process.env,
+  },
+})
+
+// Remove old binding file, this is necessary on some platforms like macOS
+// copy the new binding file without removing the old one will cause weird segmentation fault
+await rm(join(currentDir, bindingName)).catch(() => {
+  // ignore error
+})
+
+await copyFile(join(currentDir, 'target', currentTarget, 'release', 'libfoo.so'), join(currentDir, bindingName))
+
+childProcess.stdout.on('data', (data) => {
+  console.log(data.toString())
+})
+
+childProcess.stderr.on('data', (data) => {
+  console.error(data.toString())
+})
+
+await new Promise((resolve, reject) => {
+  childProcess.on('error', (error) => {
+    reject(error)
+  })
+  childProcess.on('close', (code) => {
+    if (code === 0) {
+      resolve(true)
+    } else {
+      reject(new Error(`cargo build --release failed with code ${code}`))
+    }
+  })
+})
+
+const { dts, exports } = await generateTypeDef({
+  typeDefDir,
+  cwd: process.cwd(),
+})
+
+await writeFile(join(currentDir, 'customized.d.ts'), dts)
+
+await writeJsBinding({
+  jsBinding: 'customized.js',
+  platform: true,
+  binaryName: pkg.napi.binaryName,
+  packageName: pkg.name,
+  version: pkg.version,
+  outputDir: currentDir,
+  idents: exports
+})
+```
+
+<Callout type="warning">
+The `typeDefDir` must contain the intermediate type definition files generated by the `napi-derive` proc macro when the `type-def` feature is enabled. These files are normally created in a temporary directory during `napi build`.
+</Callout>
+
+### Control Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           SETUP PHASE                                   │
+├─────────────────────────────────────────────────────────────────────────┤
+│  1. Read package.json for napi config                                   │
+│  2. Get target triple (from cli flag) (e.g.,'x86_64-unknown-linux-gnu') │
+│  3. parseTriple() → get platformArchABI for binding filename            │
+│  4. mkdir(typeDefDir) → create directory for type definitions           │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           BUILD PHASE                                   │
+├─────────────────────────────────────────────────────────────────────────┤
+│  5. spawn('cargo', ['build', '--release'])                              │
+│     └─ env: { NAPI_TYPE_DEF_TMP_FOLDER: typeDefDir }                    │
+│        ▲                                                                │
+│        └─ This env var tells napi-derive where to write type defs       │
+│                                                                         │
+│  6. rm(old binding) → Remove old .node file (prevents macOS segfault)   │
+│  7. copyFile(libfoo.so → customized.{platform}.node)                    │
+│  8. Stream stdout/stderr from cargo                                     │
+│  9. await cargo completion                                              │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      TYPE GENERATION PHASE                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│ 10. generateTypeDef({ typeDefDir, cwd })                                │
+│     └─ Reads intermediate .json files from typeDefDir                   │
+│     └─ Returns { dts: string, exports: string[] }                       │
+│                                                                         │
+│ 11. writeFile('customized.d.ts', dts)                                   │
+│                                                                         │
+│ 12. writeJsBinding({ platform, binaryName, idents: exports, ... })      │
+│     └─ Generates JS loader that imports the .node file                  │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+                              ┌───────────┐
+                              │   DONE    │
+                              │           │
+                              │ Output:   │
+                              │ • .node   │
+                              │ • .d.ts   │
+                              │ • .js     │
+                              └───────────┘
+```
+
+### Key Concepts
+
+#### The `NAPI_TYPE_DEF_TMP_FOLDER` Environment Variable
+
+When you run `cargo build` with `NAPI_TYPE_DEF_TMP_FOLDER` set, the `napi-derive` proc macro writes intermediate type definition files (JSON format) to that directory. This is how type information flows from Rust to TypeScript:
+
+```
+Rust Code → napi-derive macro → JSON files → generateTypeDef() → .d.ts
+```
+
+#### Platform-Specific Binding Names
+
+The `parseTriple()` function extracts platform information from a target triple:
+
+```ts
+const triple = parseTriple('x86_64-unknown-linux-gnu')
+// Returns: { platform: 'linux', arch: 'x64', abi: 'gnu', platformArchABI: 'linux-x64-gnu', ... }
+
+const bindingName = `mylib.${triple.platformArchABI}.node`
+// Result: 'mylib.linux-x64-gnu.node'
+```
+
+#### Removing Old Binding Files
+
+On macOS/Linux, copying a new `.node` file over an existing one without first removing it can cause segmentation faults. Always remove the old file first:
+
+```ts
+await rm(join(currentDir, bindingName)).catch(() => {
+  // ignore error if file doesn't exist
+})
+await copyFile(sourceLib, join(currentDir, bindingName))
+```
+
+### GenerateTypeDefOptions
+
+| Option | Type | Required | Default | Description |
+|--------|------|----------|---------|-------------|
+| typeDefDir | string | Yes | | Directory containing intermediate type def files |
+| cwd | string | Yes | | Working directory for resolving relative paths |
+| noDtsHeader | boolean | No | false | Skip the default file header |
+| dtsHeader | string | No | | Custom header string for the <Green>.d.ts</Green> file |
+| dtsHeaderFile | string | No | | Path to a file containing the header content |
+| configDtsHeader | string | No | | Header from config (lower priority than dtsHeader) |
+| configDtsHeaderFile | string | No | | Header file from config (highest priority) |
+| constEnum | boolean | No | true | Generate <Green>const enum</Green> instead of regular enum |
+
+### WriteJsBindingOptions
+
+| Option | Type | Required | Default | Description |
+|--------|------|----------|---------|-------------|
+| platform | boolean | No | false | Required to generate JS binding; adds platform triple |
+| noJsBinding | boolean | No | false | Skip JS binding generation |
+| idents | string[] | Yes | | Exported identifiers from <Green>generateTypeDef</Green> |
+| jsBinding | string | No | 'index.js' | Custom filename for the JS binding |
+| esm | boolean | No | false | Generate ESM format instead of CommonJS |
+| binaryName | string | Yes | | Name of the native binary |
+| packageName | string | Yes | | Package name for require/import statements |
+| version | string | Yes | | Package version |
+| outputDir | string | Yes | | Directory to write the JS binding file |
+
+## Other Exported APIs
+
+### NapiCli Class
+
+The main class for programmatic access to all CLI commands:
+
+```ts
+import { NapiCli } from '@napi-rs/cli'
+
+const cli = new NapiCli()
+
+// Available methods:
+cli.build(options)        // Build the project
+cli.artifacts(options)    // Collect artifacts from CI
+cli.new(options)          // Create new project
+cli.createNpmDirs(options)// Create npm package directories
+cli.prePublish(options)   // Prepare for publishing
+cli.rename(options)       // Rename project
+cli.universalize(options) // Create universal binaries
+cli.version(options)      // Update versions
+```
+
+### Command Creators
+
+Parse CLI arguments into command option objects:
+
+```ts
+import {
+  createBuildCommand,
+  createArtifactsCommand,
+  createCreateNpmDirsCommand,
+  createPrePublishCommand,
+  createRenameCommand,
+  createUniversalizeCommand,
+  createVersionCommand,
+  createNewCommand,
+} from '@napi-rs/cli'
+
+// Parse arguments as if running `napi build --release --platform`
+const buildCmd = createBuildCommand(['--release', '--platform'])
+const options = buildCmd.getOptions()
+```
+
+### Utility Functions
+
+```ts
+import { parseTriple, readNapiConfig } from '@napi-rs/cli'
+
+// Parse target triple string
+const triple = parseTriple('x86_64-unknown-linux-gnu')
+// { platform: 'linux', arch: 'x64', abi: 'gnu', ... }
+
+// Read napi config from package.json or napi.json
+const config = await readNapiConfig('/path/to/project')
+```
+
+## Aborting a Build
+
+The `build()` method returns an `abort` function to cancel the build:
+
+```ts
+const { task, abort } = await cli.build(options)
+
+// Handle SIGINT to abort cleanly
+process.on('SIGINT', () => {
+  abort()
+  process.exit(1)
+})
+
+const outputs = await task
+```
