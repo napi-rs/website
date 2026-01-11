@@ -1,0 +1,228 @@
+# Module Initialization
+
+import { Callout } from 'nextra-theme-docs'
+
+NAPI-RS provides two APIs for module initialization: `#[napi_derive::module_init]` and `#[napi(module_exports)]`. While they may seem similar, they serve different purposes and execute at different times.
+
+## Execution Timeline
+
+Understanding when each API executes is crucial for using them correctly:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Node.js loads .node file                     │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  1. #[napi_derive::module_init] runs                            │
+│     (via ctor - runs at dynamic library load time)              │
+│     Runs ONCE per process, regardless of threads                │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  2. napi_register_module_v1 called by Node.js                   │
+│     - Registers all #[napi] exports (functions, classes, etc.)  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  3. #[napi(module_exports)] runs                                │
+│     Receives the exports object, can customize it               │
+│     Runs ONCE per Node.js thread/context                        │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  4. Module is ready for use in JavaScript                       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## `#[napi_derive::module_init]`
+
+This macro marks a function to run **once** when the native module (`.node` file) is first loaded into the process. It uses the [`ctor`](https://crates.io/crates/ctor) crate internally to execute before any JavaScript code runs.
+
+### Timing
+
+- Runs at **dynamic library load time** (before `napi_register_module_v1`)
+- Executes **exactly once per process**, even with worker threads
+- No access to Node.js environment or exports object
+
+### Signature
+
+```rust
+#[napi_derive::module_init]
+fn init() {
+  // initialization code
+}
+```
+
+The function must have no parameters and no return value.
+
+### When to Use
+
+Use `#[napi_derive::module_init]` for:
+
+- **Setting up async runtimes** (e.g., tokio)
+- **Initializing global state** that should be shared across all threads
+- **One-time setup** that must happen before any exports are registered
+- **Configuring logging or tracing**
+
+### Example: Custom Tokio Runtime
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::create_custom_tokio_runtime;
+
+#[napi_derive::module_init]
+fn init() {
+  let rt = tokio::runtime::Builder::new_multi_thread()
+    .enable_all()
+    .thread_name("my-native-module")
+    .build()
+    .unwrap();
+  create_custom_tokio_runtime(rt);
+}
+```
+
+<Callout type="warning">
+`#[napi_derive::module_init]` is not available for WebAssembly targets. Use `#[cfg(not(target_family = "wasm"))]` to conditionally compile.
+</Callout>
+
+## `#[napi(module_exports)]`
+
+This macro marks a function that receives the module's `exports` object, allowing you to customize it before the module is returned to JavaScript.
+
+### Timing
+
+- Runs **after** all `#[napi]` exports are registered
+- Runs **during** `napi_register_module_v1` (Node.js module registration)
+- Executes **once per Node.js context** (main thread + each worker thread)
+
+### Signature
+
+The function can have one of two signatures:
+
+```rust
+// With just the exports object
+#[napi(module_exports)]
+pub fn init(mut exports: Object) -> Result<()> {
+  // customize exports
+  Ok(())
+}
+
+// With exports and Env
+#[napi(module_exports)]
+pub fn init(mut exports: Object, env: Env) -> Result<()> {
+  // customize exports with access to Env
+  Ok(())
+}
+```
+
+### When to Use
+
+Use `#[napi(module_exports)]` for:
+
+- **Adding custom properties** to the exports object
+- **Creating symbols** that should be exported
+- **Registering exports programmatically** (not via `#[napi]`)
+- **Per-thread initialization** that needs the Node.js environment
+
+### Example: Adding a Symbol
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+
+#[napi(module_exports)]
+pub fn init(mut exports: Object) -> Result<()> {
+  // Add a well-known symbol to exports
+  let symbol = Symbol::for_desc("MY_MODULE_SYMBOL");
+  exports.set_named_property("MY_SYMBOL", symbol)?;
+
+  // Add a version string
+  exports.set_named_property("VERSION", "1.0.0")?;
+
+  Ok(())
+}
+```
+
+```js filename="index.js"
+const native = require('./index.node')
+
+console.log(native.MY_SYMBOL) // Symbol(MY_MODULE_SYMBOL)
+console.log(native.MY_SYMBOL === Symbol.for('MY_MODULE_SYMBOL')) // true
+console.log(native.VERSION) // "1.0.0"
+```
+
+## Key Differences
+
+| Aspect | `#[napi_derive::module_init]` | `#[napi(module_exports)]` |
+|--------|-------------------------------|---------------------------|
+| **Execution time** | At `.node` file load | During module registration |
+| **Runs per** | Process (once) | Thread/context (each) |
+| **Receives exports** | No | Yes |
+| **Can modify exports** | No | Yes |
+| **Access to Env** | No | Yes (Optional) |
+| **WebAssembly support** | Yes (Via our js binding) | Yes |
+
+## Using Both Together
+
+These APIs are complementary and can be used together:
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+
+// Runs once at module load - setup tokio runtime
+#[cfg(not(target_family = "wasm"))]
+#[napi_derive::module_init]
+fn setup_runtime() {
+  let rt = tokio::runtime::Builder::new_multi_thread()
+    .enable_all()
+    .build()
+    .unwrap();
+  create_custom_tokio_runtime(rt);
+}
+
+// Runs per thread - customize exports
+#[napi(module_exports)]
+pub fn customize_exports(mut exports: Object) -> Result<()> {
+  exports.set_named_property("THREAD_SAFE_SYMBOL", Symbol::for_desc("THREAD_SAFE"))?;
+  Ok(())
+}
+
+// Regular export via #[napi]
+#[napi]
+pub async fn do_async_work() -> String {
+  // This uses the tokio runtime set up in module_init
+  tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+  "done".to_string()
+}
+```
+
+## Worker Thread Behavior
+
+When using worker threads in Node.js, the behavior differs between the two APIs:
+
+```js filename="main.js"
+const { Worker } = require('worker_threads')
+
+// Main thread loads module
+const native = require('./index.node')
+// -> module_init runs (first time)
+// -> module_exports runs (main thread)
+
+// Worker thread loads same module
+new Worker(`
+  const native = require('./index.node')
+  // -> module_init does NOT run again (already ran)
+  // -> module_exports DOES run again (new thread context)
+`, { eval: true })
+```
+
+This means:
+- Global resources (like tokio runtime) are initialized once and shared
+- Per-thread state can be set up in `module_exports` for each context
+
+<Callout type="info">
+The `#[napi_derive::module_init]` function runs via the `ctor` crate, which uses platform-specific mechanisms (`.init_array` on Unix, special constructor functions on Windows) to execute at dynamic library load time.
+</Callout>

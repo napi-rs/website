@@ -1,5 +1,6 @@
 {
   "exports": "Exports",
+  "module-init": "Module Initialization",
   "naming-conventions": "Naming conventions",
   "values": "Values",
   "class": "Class",
