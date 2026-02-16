@@ -14,7 +14,7 @@
     "arrowParens": "always"
   },
   "dependencies": {
-    "@mdx-js/react": "^2.3.0",
+    "@mdx-js/react": "^3.0.0",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-popover": "^1.1.14",
     "@radix-ui/react-progress": "^1.1.7",
@@ -84,6 +84,6 @@
   "resolutions": {
     "@headlessui/react": "2.2.9",
     "next-mdx-remote": "6.0.0",
-    "@mdx-js/react": "2.3.0"
+    "@mdx-js/react": "^3.0.0"
   }
 }
