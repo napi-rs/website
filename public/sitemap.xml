@@ -2,1427 +2,1457 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://napi.rs/cn/blog/announce-v2.cn</loc>
-    <lastmod>2025-08-17T03:59:27.983Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.456Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/blog/announce-v2.en</loc>
-    <lastmod>2025-08-17T03:59:28.063Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.297Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/blog/announce-v3.en</loc>
-    <lastmod>2025-08-17T03:59:32.300Z</lastmod>
+    <lastmod>2026-02-16T16:06:44.910Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/blog/function-and-callbacks.en</loc>
-    <lastmod>2025-08-17T03:59:27.902Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.550Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/changelog/napi_build.en</loc>
-    <lastmod>2025-08-17T03:59:29.848Z</lastmod>
+    <lastmod>2026-02-16T16:06:42.203Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/changelog/napi_derive.en</loc>
-    <lastmod>2025-08-17T03:59:33.774Z</lastmod>
+    <lastmod>2026-02-16T16:06:41.977Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/changelog/napi_sys.en</loc>
-    <lastmod>2025-08-17T03:59:33.774Z</lastmod>
+    <lastmod>2026-02-16T16:06:39.176Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/changelog/napi-cli.en</loc>
-    <lastmod>2025-08-17T03:59:29.848Z</lastmod>
+    <lastmod>2026-02-16T16:06:41.096Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/changelog/napi.en</loc>
-    <lastmod>2025-08-17T03:59:29.848Z</lastmod>
+    <lastmod>2026-02-16T16:06:37.932Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/cli/artifacts.en</loc>
-    <lastmod>2025-08-17T03:59:27.983Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.364Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/cli/artifacts.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.043Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.484Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/cli/build.en</loc>
-    <lastmod>2025-08-17T03:59:28.049Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.273Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/cli/build.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.000Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.453Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/cli/create-npm-dirs.en</loc>
-    <lastmod>2025-08-17T03:59:27.837Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.433Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/cli/napi-config.en</loc>
-    <lastmod>2025-08-17T03:59:28.079Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.453Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/cli/napi-config.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.079Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.192Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/cli/new.en</loc>
-    <lastmod>2025-08-17T03:59:28.049Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.493Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/cli/pre-publish.en</loc>
-    <lastmod>2025-08-17T03:59:28.086Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.533Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/cli/pre-publish.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.878Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.493Z</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://napi.rs/cn/docs/cli/programmatic-api.en</loc>
+    <lastmod>2026-02-16T16:06:35.183Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/cli/rename.en</loc>
-    <lastmod>2025-08-17T03:59:28.079Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.182Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/cli/universalize.en</loc>
-    <lastmod>2025-08-17T03:59:27.940Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.285Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/cli/version.en</loc>
-    <lastmod>2025-08-17T03:59:27.878Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.364Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/async-fn.cn</loc>
-    <lastmod>2025-08-17T03:59:27.940Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.285Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/async-fn.en</loc>
-    <lastmod>2025-08-17T03:59:28.025Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.303Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/async-fn.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.942Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.364Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/async-task.cn</loc>
-    <lastmod>2025-08-17T03:59:28.025Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.433Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/async-task.en</loc>
-    <lastmod>2025-08-17T03:59:28.025Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.303Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/async-task.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.761Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.433Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/class.cn</loc>
-    <lastmod>2025-08-17T03:59:27.801Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.509Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/class.en</loc>
-    <lastmod>2025-08-17T03:59:27.825Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.139Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/class.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.915Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.442Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/enum.cn</loc>
-    <lastmod>2025-08-17T03:59:27.825Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.509Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/enum.en</loc>
-    <lastmod>2025-08-17T03:59:27.801Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.509Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/enum.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.915Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.296Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/env.en</loc>
-    <lastmod>2025-08-17T03:59:27.994Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.296Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/exports.cn</loc>
-    <lastmod>2025-08-17T03:59:27.994Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.296Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/exports.en</loc>
-    <lastmod>2025-08-17T03:59:27.825Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.140Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/exports.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.009Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.141Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/external.cn</loc>
-    <lastmod>2025-08-17T03:59:27.915Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.456Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/external.en</loc>
-    <lastmod>2025-08-17T03:59:27.876Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.432Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/external.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.903Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.277Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/function.cn</loc>
-    <lastmod>2025-08-17T03:59:27.903Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.413Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/function.en</loc>
-    <lastmod>2025-08-17T03:59:28.008Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.501Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/function.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.008Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.277Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/inject-env.cn</loc>
-    <lastmod>2025-08-17T03:59:28.008Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.432Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/inject-env.en</loc>
-    <lastmod>2025-08-17T03:59:28.020Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.500Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/inject-env.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.789Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.277Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/inject-this.cn</loc>
-    <lastmod>2025-08-17T03:59:27.789Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.500Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/inject-this.en</loc>
-    <lastmod>2025-08-17T03:59:27.876Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.529Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/inject-this.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.876Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.273Z</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://napi.rs/cn/docs/concepts/module-init.en</loc>
+    <lastmod>2026-02-16T16:06:35.413Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/naming-conventions.cn</loc>
-    <lastmod>2025-08-17T03:59:27.929Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.413Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/naming-conventions.en</loc>
-    <lastmod>2025-08-17T03:59:27.929Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.459Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/naming-conventions.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.811Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.459Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/object.cn</loc>
-    <lastmod>2025-08-17T03:59:27.929Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.459Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/object.en</loc>
-    <lastmod>2025-08-17T03:59:27.920Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.298Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/object.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.811Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.298Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/promise.cn</loc>
-    <lastmod>2025-08-17T03:59:27.920Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.446Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/promise.en</loc>
-    <lastmod>2025-08-17T03:59:27.917Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.446Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/promise.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.811Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.314Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/reference.cn</loc>
-    <lastmod>2025-08-17T03:59:28.028Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.447Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/reference.en</loc>
-    <lastmod>2025-08-17T03:59:27.837Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.378Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/reference.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.028Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.514Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/threadsafe-function.cn</loc>
-    <lastmod>2025-08-17T03:59:28.044Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.561Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/threadsafe-function.en</loc>
-    <lastmod>2025-08-17T03:59:27.961Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.418Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/threadsafe-function.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.838Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.378Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/typed-array.cn</loc>
-    <lastmod>2025-08-17T03:59:28.004Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.514Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/typed-array.en</loc>
-    <lastmod>2025-08-17T03:59:28.003Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.603Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/typed-array.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.961Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.589Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/types-overwrite.cn</loc>
-    <lastmod>2025-08-17T03:59:28.004Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.230Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/types-overwrite.en</loc>
-    <lastmod>2025-08-17T03:59:28.000Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.589Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/types-overwrite.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.022Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.379Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/understanding-lifetime.en</loc>
-    <lastmod>2025-08-17T03:59:27.904Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.589Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/values.cn</loc>
-    <lastmod>2025-08-17T03:59:27.904Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.414Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/values.en</loc>
-    <lastmod>2025-08-17T03:59:28.000Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.536Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/values.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.072Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.230Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/concepts/webassembly.en</loc>
-    <lastmod>2025-08-17T03:59:30.516Z</lastmod>
+    <lastmod>2026-02-16T16:06:47.501Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/cross-build.en</loc>
-    <lastmod>2025-08-17T03:59:27.891Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.550Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/deep-dive/history.en</loc>
-    <lastmod>2025-08-17T03:59:28.072Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.280Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/deep-dive/history.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.072Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.531Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/deep-dive/native-module.en</loc>
-    <lastmod>2025-08-17T03:59:27.891Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.531Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/deep-dive/native-module.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.891Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.531Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/deep-dive/release.en</loc>
-    <lastmod>2025-08-17T03:59:27.895Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.413Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/deep-dive/release.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.983Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.314Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/introduction/getting-started.cn</loc>
-    <lastmod>2025-08-17T03:59:28.044Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.456Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/introduction/getting-started.en</loc>
-    <lastmod>2025-08-17T03:59:28.036Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.456Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/introduction/getting-started.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.036Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.536Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/introduction/simple-package.cn</loc>
-    <lastmod>2025-08-17T03:59:27.961Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.314Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/introduction/simple-package.en</loc>
-    <lastmod>2025-08-17T03:59:28.044Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.280Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/introduction/simple-package.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.897Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.551Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/more/faq.en</loc>
-    <lastmod>2025-08-17T03:59:28.043Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.456Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/more/faq.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.897Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.550Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/docs/more/v2-v3-migration-guide.en</loc>
-    <lastmod>2025-08-17T03:59:27.962Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.278Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/index.cn</loc>
-    <lastmod>2025-08-17T03:59:28.618Z</lastmod>
+    <lastmod>2026-02-16T16:06:45.609Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/index.en</loc>
-    <lastmod>2025-08-17T03:59:32.672Z</lastmod>
+    <lastmod>2026-02-16T16:06:48.003Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/cn/index.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.555Z</lastmod>
+    <lastmod>2026-02-16T16:06:45.460Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/blog/announce-v2.cn</loc>
-    <lastmod>2025-08-17T03:59:27.983Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.456Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/blog/announce-v2.en</loc>
-    <lastmod>2025-08-17T03:59:28.063Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.477Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/blog/announce-v3.en</loc>
-    <lastmod>2025-08-17T03:59:32.300Z</lastmod>
+    <lastmod>2026-02-16T16:06:44.700Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/blog/function-and-callbacks.en</loc>
-    <lastmod>2025-08-17T03:59:27.902Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.550Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/changelog/napi_build.en</loc>
-    <lastmod>2025-08-17T03:59:34.950Z</lastmod>
+    <lastmod>2026-02-16T16:06:42.179Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/changelog/napi_derive.en</loc>
-    <lastmod>2025-08-17T03:59:33.774Z</lastmod>
+    <lastmod>2026-02-16T16:06:39.421Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/changelog/napi_sys.en</loc>
-    <lastmod>2025-08-17T03:59:33.774Z</lastmod>
+    <lastmod>2026-02-16T16:06:38.315Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/changelog/napi-cli.en</loc>
-    <lastmod>2025-08-17T03:59:29.848Z</lastmod>
+    <lastmod>2026-02-16T16:06:41.473Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/changelog/napi.en</loc>
-    <lastmod>2025-08-17T03:59:29.848Z</lastmod>
+    <lastmod>2026-02-16T16:06:38.504Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/cli/artifacts.en</loc>
-    <lastmod>2025-08-17T03:59:27.983Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.364Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/cli/artifacts.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.962Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.456Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/cli/build.en</loc>
-    <lastmod>2025-08-17T03:59:28.049Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.273Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/cli/build.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.000Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.453Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/cli/create-npm-dirs.en</loc>
-    <lastmod>2025-08-17T03:59:27.837Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.433Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/cli/napi-config.en</loc>
-    <lastmod>2025-08-17T03:59:28.049Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.453Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/cli/napi-config.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.079Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.192Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/cli/new.en</loc>
-    <lastmod>2025-08-17T03:59:28.049Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.493Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/cli/pre-publish.en</loc>
-    <lastmod>2025-08-17T03:59:28.086Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.493Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/cli/pre-publish.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.878Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.493Z</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://napi.rs/en/docs/cli/programmatic-api.en</loc>
+    <lastmod>2026-02-16T16:06:35.183Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/cli/rename.en</loc>
-    <lastmod>2025-08-17T03:59:28.079Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.182Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/cli/universalize.en</loc>
-    <lastmod>2025-08-17T03:59:27.878Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.285Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/cli/version.en</loc>
-    <lastmod>2025-08-17T03:59:27.878Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.364Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/async-fn.cn</loc>
-    <lastmod>2025-08-17T03:59:27.940Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.285Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/async-fn.en</loc>
-    <lastmod>2025-08-17T03:59:28.025Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.303Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/async-fn.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.940Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.285Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/async-task.cn</loc>
-    <lastmod>2025-08-17T03:59:28.025Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.433Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/async-task.en</loc>
-    <lastmod>2025-08-17T03:59:28.025Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.303Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/async-task.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.048Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.303Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/class.cn</loc>
-    <lastmod>2025-08-17T03:59:27.723Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.523Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/class.en</loc>
-    <lastmod>2025-08-17T03:59:27.825Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.558Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/class.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.915Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.442Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/enum.cn</loc>
-    <lastmod>2025-08-17T03:59:27.825Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.509Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/enum.en</loc>
-    <lastmod>2025-08-17T03:59:27.801Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.509Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/enum.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.915Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.296Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/env.en</loc>
-    <lastmod>2025-08-17T03:59:27.994Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.302Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/exports.cn</loc>
-    <lastmod>2025-08-17T03:59:27.994Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.296Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/exports.en</loc>
-    <lastmod>2025-08-17T03:59:27.825Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.139Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/exports.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.994Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.140Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/external.cn</loc>
-    <lastmod>2025-08-17T03:59:27.915Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.469Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/external.en</loc>
-    <lastmod>2025-08-17T03:59:27.876Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.432Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/external.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.903Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.277Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/function.cn</loc>
-    <lastmod>2025-08-17T03:59:27.903Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.273Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/function.en</loc>
-    <lastmod>2025-08-17T03:59:28.008Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.500Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/function.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.903Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.277Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/inject-env.cn</loc>
-    <lastmod>2025-08-17T03:59:28.008Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.432Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/inject-env.en</loc>
-    <lastmod>2025-08-17T03:59:28.019Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.432Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/inject-env.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.789Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.277Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/inject-this.cn</loc>
-    <lastmod>2025-08-17T03:59:27.789Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.504Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/inject-this.en</loc>
-    <lastmod>2025-08-17T03:59:27.789Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.529Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/inject-this.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.876Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.273Z</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://napi.rs/en/docs/concepts/module-init.en</loc>
+    <lastmod>2026-02-16T16:06:35.413Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/naming-conventions.cn</loc>
-    <lastmod>2025-08-17T03:59:27.929Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.413Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/naming-conventions.en</loc>
-    <lastmod>2025-08-17T03:59:27.929Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.459Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/naming-conventions.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.939Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.459Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/object.cn</loc>
-    <lastmod>2025-08-17T03:59:27.929Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.459Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/object.en</loc>
-    <lastmod>2025-08-17T03:59:27.917Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.298Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/object.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.811Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.298Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/promise.cn</loc>
-    <lastmod>2025-08-17T03:59:27.917Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.447Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/promise.en</loc>
-    <lastmod>2025-08-17T03:59:27.917Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.446Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/promise.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.811Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.549Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/reference.cn</loc>
-    <lastmod>2025-08-17T03:59:28.028Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.446Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/reference.en</loc>
-    <lastmod>2025-08-17T03:59:27.837Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.378Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/reference.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.028Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.514Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/threadsafe-function.cn</loc>
-    <lastmod>2025-08-17T03:59:28.029Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.514Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/threadsafe-function.en</loc>
-    <lastmod>2025-08-17T03:59:27.961Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.414Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/threadsafe-function.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.837Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.378Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/typed-array.cn</loc>
-    <lastmod>2025-08-17T03:59:28.004Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.514Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/typed-array.en</loc>
-    <lastmod>2025-08-17T03:59:27.961Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.603Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/typed-array.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.961Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.550Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/types-overwrite.cn</loc>
-    <lastmod>2025-08-17T03:59:28.004Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.230Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/types-overwrite.en</loc>
-    <lastmod>2025-08-17T03:59:27.904Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.589Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/types-overwrite.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.022Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.378Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/understanding-lifetime.en</loc>
-    <lastmod>2025-08-17T03:59:27.904Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.589Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/values.cn</loc>
-    <lastmod>2025-08-17T03:59:27.904Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.414Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/values.en</loc>
-    <lastmod>2025-08-17T03:59:28.001Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.536Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/values.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.072Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.230Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/concepts/webassembly.en</loc>
-    <lastmod>2025-08-17T03:59:30.516Z</lastmod>
+    <lastmod>2026-02-16T16:06:47.340Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/cross-build.en</loc>
-    <lastmod>2025-08-17T03:59:28.083Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.550Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/deep-dive/history.en</loc>
-    <lastmod>2025-08-17T03:59:28.072Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.280Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/deep-dive/history.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.072Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.531Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/deep-dive/native-module.en</loc>
-    <lastmod>2025-08-17T03:59:27.891Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.531Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/deep-dive/native-module.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.891Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.531Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/deep-dive/release.en</loc>
-    <lastmod>2025-08-17T03:59:27.895Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.230Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/deep-dive/release.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.983Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.314Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/introduction/getting-started.cn</loc>
-    <lastmod>2025-08-17T03:59:28.036Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.456Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/introduction/getting-started.en</loc>
-    <lastmod>2025-08-17T03:59:28.036Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.456Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/introduction/getting-started.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.036Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.536Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/introduction/simple-package.cn</loc>
-    <lastmod>2025-08-17T03:59:27.962Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.314Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/introduction/simple-package.en</loc>
-    <lastmod>2025-08-17T03:59:28.043Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.280Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/introduction/simple-package.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.895Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.551Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/more/faq.en</loc>
-    <lastmod>2025-08-17T03:59:28.043Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.456Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/more/faq.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.895Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.537Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/docs/more/v2-v3-migration-guide.en</loc>
-    <lastmod>2025-08-17T03:59:27.962Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.278Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/index.cn</loc>
-    <lastmod>2025-08-17T03:59:28.556Z</lastmod>
+    <lastmod>2026-02-16T16:06:36.005Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/index.en</loc>
-    <lastmod>2025-08-17T03:59:32.665Z</lastmod>
+    <lastmod>2026-02-16T16:06:48.397Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/en/index.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.542Z</lastmod>
+    <lastmod>2026-02-16T16:06:45.382Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/blog/announce-v2.cn</loc>
-    <lastmod>2025-08-17T03:59:28.036Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.456Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/blog/announce-v2.en</loc>
-    <lastmod>2025-08-17T03:59:27.901Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.298Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/blog/announce-v3.en</loc>
-    <lastmod>2025-08-17T03:59:32.300Z</lastmod>
+    <lastmod>2026-02-16T16:06:44.910Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/blog/function-and-callbacks.en</loc>
-    <lastmod>2025-08-17T03:59:27.902Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.550Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/changelog/napi_build.en</loc>
-    <lastmod>2025-08-17T03:59:29.848Z</lastmod>
+    <lastmod>2026-02-16T16:06:41.568Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/changelog/napi_derive.en</loc>
-    <lastmod>2025-08-17T03:59:33.774Z</lastmod>
+    <lastmod>2026-02-16T16:06:41.904Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/changelog/napi_sys.en</loc>
-    <lastmod>2025-08-17T03:59:34.771Z</lastmod>
+    <lastmod>2026-02-16T16:06:37.932Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/changelog/napi-cli.en</loc>
-    <lastmod>2025-08-17T03:59:29.848Z</lastmod>
+    <lastmod>2026-02-16T16:06:41.504Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/changelog/napi.en</loc>
-    <lastmod>2025-08-17T03:59:29.848Z</lastmod>
+    <lastmod>2026-02-16T16:06:38.249Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/cli/artifacts.en</loc>
-    <lastmod>2025-08-17T03:59:27.983Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.364Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/cli/artifacts.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.043Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.484Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/cli/build.en</loc>
-    <lastmod>2025-08-17T03:59:28.049Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.273Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/cli/build.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.000Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.493Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/cli/create-npm-dirs.en</loc>
-    <lastmod>2025-08-17T03:59:27.837Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.433Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/cli/napi-config.en</loc>
-    <lastmod>2025-08-17T03:59:28.079Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.453Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/cli/napi-config.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.079Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.285Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/cli/new.en</loc>
-    <lastmod>2025-08-17T03:59:28.049Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.493Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/cli/pre-publish.en</loc>
-    <lastmod>2025-08-17T03:59:27.878Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.525Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/cli/pre-publish.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.878Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.493Z</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://napi.rs/pt-BR/docs/cli/programmatic-api.en</loc>
+    <lastmod>2026-02-16T16:06:35.183Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/cli/rename.en</loc>
-    <lastmod>2025-08-17T03:59:28.079Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.182Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/cli/universalize.en</loc>
-    <lastmod>2025-08-17T03:59:27.940Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.285Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/cli/version.en</loc>
-    <lastmod>2025-08-17T03:59:27.878Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.364Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/async-fn.cn</loc>
-    <lastmod>2025-08-17T03:59:27.940Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.285Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/async-fn.en</loc>
-    <lastmod>2025-08-17T03:59:28.029Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.303Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/async-fn.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.940Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.364Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/async-task.cn</loc>
-    <lastmod>2025-08-17T03:59:28.025Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.433Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/async-task.en</loc>
-    <lastmod>2025-08-17T03:59:28.048Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.303Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/async-task.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.723Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.433Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/class.cn</loc>
-    <lastmod>2025-08-17T03:59:27.801Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.556Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/class.en</loc>
-    <lastmod>2025-08-17T03:59:27.903Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.139Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/class.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.915Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.303Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/enum.cn</loc>
-    <lastmod>2025-08-17T03:59:27.825Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.509Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/enum.en</loc>
-    <lastmod>2025-08-17T03:59:27.801Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.509Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/enum.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.915Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.296Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/env.en</loc>
-    <lastmod>2025-08-17T03:59:27.994Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.456Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/exports.cn</loc>
-    <lastmod>2025-08-17T03:59:27.994Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.296Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/exports.en</loc>
-    <lastmod>2025-08-17T03:59:27.825Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.141Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/exports.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.009Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.141Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/external.cn</loc>
-    <lastmod>2025-08-17T03:59:27.994Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.456Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/external.en</loc>
-    <lastmod>2025-08-17T03:59:27.876Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.432Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/external.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.903Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.277Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/function.cn</loc>
-    <lastmod>2025-08-17T03:59:27.903Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.413Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/function.en</loc>
-    <lastmod>2025-08-17T03:59:28.008Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.501Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/function.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.008Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.277Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/inject-env.cn</loc>
-    <lastmod>2025-08-17T03:59:28.008Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.432Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/inject-env.en</loc>
-    <lastmod>2025-08-17T03:59:27.789Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.500Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/inject-env.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.789Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.432Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/inject-this.cn</loc>
-    <lastmod>2025-08-17T03:59:27.789Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.501Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/inject-this.en</loc>
-    <lastmod>2025-08-17T03:59:27.876Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.273Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/inject-this.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.876Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.273Z</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://napi.rs/pt-BR/docs/concepts/module-init.en</loc>
+    <lastmod>2026-02-16T16:06:35.418Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/naming-conventions.cn</loc>
-    <lastmod>2025-08-17T03:59:27.939Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.413Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/naming-conventions.en</loc>
-    <lastmod>2025-08-17T03:59:27.929Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.477Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/naming-conventions.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.811Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.459Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/object.cn</loc>
-    <lastmod>2025-08-17T03:59:27.929Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.459Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/object.en</loc>
-    <lastmod>2025-08-17T03:59:27.920Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.298Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/object.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.811Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.298Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/promise.cn</loc>
-    <lastmod>2025-08-17T03:59:28.028Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.446Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/promise.en</loc>
-    <lastmod>2025-08-17T03:59:27.917Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.446Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/promise.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.811Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.314Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/reference.cn</loc>
-    <lastmod>2025-08-17T03:59:28.028Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.514Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/reference.en</loc>
-    <lastmod>2025-08-17T03:59:27.837Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.378Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/reference.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.028Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.514Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/threadsafe-function.cn</loc>
-    <lastmod>2025-08-17T03:59:28.044Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.560Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/threadsafe-function.en</loc>
-    <lastmod>2025-08-17T03:59:27.961Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.414Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/threadsafe-function.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.961Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.379Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/typed-array.cn</loc>
-    <lastmod>2025-08-17T03:59:28.004Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.514Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/typed-array.en</loc>
-    <lastmod>2025-08-17T03:59:28.003Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.230Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/typed-array.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.961Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.589Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/types-overwrite.cn</loc>
-    <lastmod>2025-08-17T03:59:28.004Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.230Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/types-overwrite.en</loc>
-    <lastmod>2025-08-17T03:59:28.000Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.589Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/types-overwrite.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.904Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.550Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/understanding-lifetime.en</loc>
-    <lastmod>2025-08-17T03:59:27.904Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.589Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/values.cn</loc>
-    <lastmod>2025-08-17T03:59:27.904Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.414Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/values.en</loc>
-    <lastmod>2025-08-17T03:59:28.000Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.536Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/values.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.072Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.230Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/concepts/webassembly.en</loc>
-    <lastmod>2025-08-17T03:59:30.516Z</lastmod>
+    <lastmod>2026-02-16T16:06:47.340Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/cross-build.en</loc>
-    <lastmod>2025-08-17T03:59:27.891Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.550Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/deep-dive/history.en</loc>
-    <lastmod>2025-08-17T03:59:28.083Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.551Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/deep-dive/history.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.072Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.531Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/deep-dive/native-module.en</loc>
-    <lastmod>2025-08-17T03:59:27.891Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.549Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/deep-dive/native-module.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.891Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.531Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/deep-dive/release.en</loc>
-    <lastmod>2025-08-17T03:59:27.895Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.413Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/deep-dive/release.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.983Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.314Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/introduction/getting-started.cn</loc>
-    <lastmod>2025-08-17T03:59:28.044Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.456Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/introduction/getting-started.en</loc>
-    <lastmod>2025-08-17T03:59:28.036Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.456Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/introduction/getting-started.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.036Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.536Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/introduction/simple-package.cn</loc>
-    <lastmod>2025-08-17T03:59:27.962Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.314Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/introduction/simple-package.en</loc>
-    <lastmod>2025-08-17T03:59:28.043Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.280Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/introduction/simple-package.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.897Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.551Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/more/faq.en</loc>
-    <lastmod>2025-08-17T03:59:28.044Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.536Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/more/faq.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:27.961Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.549Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/docs/more/v2-v3-migration-guide.en</loc>
-    <lastmod>2025-08-17T03:59:27.961Z</lastmod>
+    <lastmod>2026-02-16T16:06:35.280Z</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/index.cn</loc>
-    <lastmod>2025-08-17T03:59:28.789Z</lastmod>
+    <lastmod>2026-02-16T16:06:45.480Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/index.en</loc>
-    <lastmod>2025-08-17T03:59:32.665Z</lastmod>
+    <lastmod>2026-02-16T16:06:36.048Z</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://napi.rs/pt-BR/index.pt-BR</loc>
-    <lastmod>2025-08-17T03:59:28.542Z</lastmod>
+    <lastmod>2026-02-16T16:06:45.623Z</lastmod>
     <priority>0.5</priority>
   </url>
 </urlset>
