@@ -1142,15 +1142,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mdx-js/react@npm:2.3.0":
-  version: 2.3.0
-  resolution: "@mdx-js/react@npm:2.3.0"
+"@mdx-js/react@npm:^3.0.0":
+  version: 3.1.1
+  resolution: "@mdx-js/react@npm:3.1.1"
   dependencies:
     "@types/mdx": "npm:^2.0.0"
-    "@types/react": "npm:>=16"
   peerDependencies:
+    "@types/react": ">=16"
     react: ">=16"
-  checksum: 10c0/6d647115703dbe258f7fe372499fa8c6fe17a053ff0f2a208111c9973a71ae738a0ed376770445d39194d217e00e1a015644b24f32c2f7cb4f57988de0649b15
+  checksum: 10c0/34ca98bc2a0f969894ea144dc5c8a5294690505458cd24965cd9be854d779c193ad9192bf9143c4c18438fafd1902e100d99067e045c69319288562d497558c6
   languageName: node
   linkType: hard
 
@@ -2716,7 +2716,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:>=16, @types/react@npm:^19.0.0":
+"@types/react@npm:^19.0.0":
   version: 19.2.14
   resolution: "@types/react@npm:19.2.14"
   dependencies:
@@ -8327,7 +8327,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "napi-rs-docs@workspace:."
   dependencies:
-    "@mdx-js/react": "npm:^2.3.0"
+    "@mdx-js/react": "npm:^3.0.0"
     "@napi-rs/image": "npm:^1.11.0"
     "@perfsee/webpack": "npm:^1.14.2"
     "@radix-ui/react-dialog": "npm:^1.1.14"
