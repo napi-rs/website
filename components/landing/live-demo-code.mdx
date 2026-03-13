@@ -32,7 +32,7 @@ impl Transformer {
   }
 
   #[napi]
-  pub fn webp(&self) -> Result<Uint8Array> {
+  pub fn to_webp(&self) -> Result<Uint8Array> {
     let image = image::load_from_memory(&self.inner)?;
     let webp = image.to_webp().map_err(|e| Error::from(e.to_string()))?;
     Ok(webp.into())
