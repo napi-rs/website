@@ -14,6 +14,23 @@ const nextConfig = withNextra({
     locales: ['en', 'cn', 'pt-BR'],
   },
   transpilePackages: ['gsap', '@waaark/luge'],
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+          { key: 'Cross-Origin-Embedder-Policy', value: 'require-corp' },
+        ],
+      },
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
+        ],
+      },
+    ]
+  },
   webpack(config, { dev, isServer }) {
     if (!dev && !isServer) {
       const plugin = new PerfseePlugin({
