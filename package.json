@@ -84,6 +84,8 @@
   "resolutions": {
     "@headlessui/react": "2.2.10",
     "next-mdx-remote": "6.0.0",
-    "@mdx-js/react": "^3.0.0"
+    "@mdx-js/react": "^3.0.0",
+    "@emnapi/core": "1.8.1",
+    "@emnapi/runtime": "1.8.1"
   }
 }
