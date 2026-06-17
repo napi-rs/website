@@ -34,6 +34,12 @@ function isolationMiddleware(
   next()
 }
 
+// Vitest drives this same config; the Void plugins register a custom "void_worker"
+// Vite environment that the vite-plus test runner cannot introspect (ReferenceError:
+// module is not defined). Our unit tests are pure-data and need none of the Void
+// pipeline, so skip those plugins under Vitest.
+const isVitest = !!process.env.VITEST
+
 export default defineConfig({
   // BOTH worker layers (our demo worker + the wasm package's nested wasi-worker) must be
   // ES modules — the wasm browser build is a top-level-await ESM and the default 'iife'
@@ -49,37 +55,45 @@ export default defineConfig({
     },
   },
 
-  plugins: [
-    {
-      name: 'napi-rs-isolation-dev',
-      apply: 'serve',
-      configureServer(server) {
-        server.middlewares.use(isolationMiddleware)
-      },
-      configurePreviewServer(server) {
-        server.middlewares.use(isolationMiddleware)
-      },
-    },
-    voidPlugin(),
-    voidReact(),
-    // enforce:'pre', auto-detects React → MUST come after voidReact()
-    voidMarkdown({
-      shiki: {
-        langs: [
-          'rust',
-          'toml',
-          'bash',
-          'json',
-          'js',
-          'jsx',
-          'ts',
-          'tsx',
-          'diff',
-          'yaml',
-        ],
-      },
-    }),
-  ],
+  plugins: isVitest
+    ? []
+    : [
+        {
+          name: 'napi-rs-isolation-dev',
+          apply: 'serve',
+          configureServer(server) {
+            server.middlewares.use(isolationMiddleware)
+          },
+          configurePreviewServer(server) {
+            server.middlewares.use(isolationMiddleware)
+          },
+        },
+        voidPlugin(),
+        voidReact(),
+        // enforce:'pre', auto-detects React → MUST come after voidReact()
+        voidMarkdown({
+          shiki: {
+            langs: [
+              'rust',
+              'toml',
+              'bash',
+              'json',
+              'js',
+              'jsx',
+              'ts',
+              'tsx',
+              'diff',
+              'yaml',
+            ],
+          },
+        }),
+      ],
+
+  // --- Vitest: use Node pool/environment for lib/nav data-only tests ---
+  test: {
+    pool: 'forks',
+    environment: 'node',
+  },
 
   // --- Vite+ toolchain blocks (consumed by vp fmt / vp lint / vp check / vp staged) ---
   // Mirror the project's previous Prettier config.
