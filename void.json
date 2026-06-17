@@ -2,6 +2,14 @@
   "$schema": "./node_modules/void/schema.json",
   "output": "server",
   "routing": {
+    "rewrites": {
+      "/docs": "/en/docs",
+      "/docs/*": "/en/docs/:splat",
+      "/blog": "/en/blog",
+      "/blog/*": "/en/blog/:splat",
+      "/changelog": "/en/changelog",
+      "/changelog/*": "/en/changelog/:splat"
+    },
     "headers": {
       "/": [
         "Cross-Origin-Opener-Policy: same-origin",
