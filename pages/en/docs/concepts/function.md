@@ -105,8 +105,7 @@ export declare function callFunction(callback: (arg: number) => number): number
 ```
 
 ::: info
-You can also create a `Function` at the Rust side, see
-[`Env::create_function`](/docs/concepts/env#create_function)
+You can also create a `Function` at the Rust side, see [`Env::create_function`](/docs/concepts/env#create_function)
 :::
 
 ## `FnArgs`
@@ -196,8 +195,7 @@ The return type of the `build_threadsafe_function` is a `ThreadsafeFunctionBuild
 By default, the `ThreadsafeFunctionBuilder` will create a `ThreadsafeFunction` with the default options:
 
 ::: info
-See [**ThreadsafeFunction**](/docs/concepts/threadsafe-function) for the
-details of options
+See [**ThreadsafeFunction**](/docs/concepts/threadsafe-function) for the details of options
 :::
 
 ::: info

@@ -35,8 +35,7 @@ pub fn create_string_from_std<'env>(&self, s: String) -> Result<JsString<'env>>
 Creates a JavaScript string from a C-style string pointer. This is used for C FFI scenarios.
 
 ::: info
-You can pass `NAPI_AUTO_LENGTH` as the `len` parameter if the C string is
-null-terminated.
+You can pass `NAPI_AUTO_LENGTH` as the `len` parameter if the C string is null-terminated.
 :::
 
 ```rust
@@ -178,9 +177,8 @@ pub fn create_function<Args: JsValuesTupleIntoVec, Return>(
 **Example:**
 
 ::: info
-You can access the **`C`** Callback by adding the `_c_callback` suffix to the
-function name. In the example below, the `custom_function_c_callback` is the
-`C` callback for the `custom_function`.
+You can access the **`C`** Callback by adding the `_c_callback` suffix to the function name.
+In the example below, the `custom_function_c_callback` is the `C` callback for the `custom_function`.
 :::
 
 **lib.rs**
@@ -201,8 +199,7 @@ fn custom_function(input: u32) -> u32 {
 ```
 
 ::: info
-The `no_export` attribute is used to prevent the function from being exported
-to the JavaScript side.
+The `no_export` attribute is used to prevent the function from being exported to the JavaScript side.
 :::
 
 The `custom_function` is not exported, so it's not visible in the JavaScript side. But the `C` callback is used for creating `Function` in `fn create_function`. You can use it like this:

@@ -286,7 +286,6 @@ git push
 为了在 `GitHub Actions` 中发布你的包, 你需要在你的 GitHub 仓库中配置 `NPM_TOKEN` 环境变量.
 
 在项目的 **Settings -> Secrets** 中新建 **_NPM_TOKEN_** 环境变量。
-
 :::
 
 如果所有步骤都完成了，你可以在 GitHub 上看到如下的 CI 流程:

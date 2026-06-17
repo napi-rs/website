@@ -108,7 +108,7 @@ export default defineConfig({
       '.wrangler/**',
       'public/**',
       '.yarn/**',
-      'legacy/**',
+      'legacy_pages/**',
     ],
   },
   // Oxlint — advisory for now (no type-aware path on this JS-heavy codebase yet).
@@ -118,7 +118,7 @@ export default defineConfig({
       '.void/**',
       '.wrangler/**',
       '.yarn/**',
-      'legacy/**',
+      'legacy_pages/**',
       'public/**',
     ],
   },

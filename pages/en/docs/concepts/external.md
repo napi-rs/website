@@ -4,10 +4,7 @@ description: External Object holds the native value in a JavaScript Object.
 
 # External
 
-[`External`](https://nodejs.org/api/n-api.html#napi_create_external)
-is very similar to
-[`Object Wrap`](https://nodejs.org/api/n-api.html#object-wrap)
-, which is used in [Class](./class) under the hood.
+[`External`](https://nodejs.org/api/n-api.html#napi_create_external) is very similar to [`Object Wrap`](https://nodejs.org/api/n-api.html#object-wrap), which is used in [Class](./class) under the hood.
 
 `Object Wrap` attaches a native value to a JavaScript Object and can notify you when the attached JavaScript Object is recycled by GC. `External` creates an empty, blank JavaScript Object that holds the native value under the hood. It only works by passing the object back to Rust:
 

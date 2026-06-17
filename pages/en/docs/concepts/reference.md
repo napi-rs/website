@@ -18,14 +18,7 @@ created.
 `Reference` is a wrapper of the [`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref).
 
 ::: info
-NAPI-RS calls the
-[`napi_wrap`](https://nodejs.org/api/n-api.html#napi_wrap)
-function to wrap the Rust `struct` with the class instance object when
-creating the class instance. There is a
-[`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref)
-that is created by the `napi_wrap`. `Reference` holds the `napi_ref` so you
-can always access the underlying `struct` reference before the underlying
-`napi_ref` is deleted.
+NAPI-RS calls the [`napi_wrap`](https://nodejs.org/api/n-api.html#napi_wrap) function to wrap the Rust `struct` with the class instance object when creating the class instance. There is a [`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref) that is created by the `napi_wrap`. `Reference` holds the `napi_ref` so you can always access the underlying `struct` reference before the underlying `napi_ref` is deleted.
 :::
 
 For example:
