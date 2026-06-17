@@ -1,0 +1,327 @@
+---
+description: Run a task in the libuv thread pool and abort it with AbortSignal.
+---
+
+# AsyncTask
+
+We need to talk about `Task` before talking about `AsyncTask`.
+
+## `Task`
+
+Addon modules often need to leverage async helpers from libuv as part of their implementation. This allows them to schedule work to be executed asynchronously so that their methods can return in advance of the work being completed. This allows them to avoid blocking the overall execution of the Node.js application.
+
+The `Task` trait provides a way to define such an asynchronous task that needs to run in the libuv thread. You can implement the `compute` method, which will be called in the libuv thread.
+
+**lib.rs**
+
+```rust {20-22}
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+fn fib(n: u32) -> u32 {
+  if n <= 1 {
+    return n;
+  }
+  fib(n - 1) + fib(n - 2)
+}
+
+pub struct AsyncFib {
+  input: u32,
+}
+
+#[napi]
+impl Task for AsyncFib {
+  type Output = u32;
+  type JsValue = u32;
+
+  fn compute(&mut self) -> Result<Self::Output> {
+    Ok(fib(self.input))
+  }
+
+  fn resolve(&mut self, _: Env, output: u32) -> Result<Self::JsValue> {
+    Ok(output)
+  }
+}
+
+#[napi]
+pub fn async_fib(input: u32) -> AsyncTask<AsyncFib> {
+  AsyncTask::new(AsyncFib { input })
+}
+```
+
+`fn compute` runs on the libuv thread, so you can run heavy computation here without blocking the main JavaScript thread.
+
+You may notice there are two associated types on the `Task` trait. The `type Output` and the `type JsValue`. `Output` is the return type of the `compute` method. `JsValue` is the return type of the `resolve` method.
+
+::: info
+We need separate `type Output` and `type JsValue` because we cannot call the
+JavaScript function back in `fn compute`, as it is not executed on the main
+thread. So we need `fn resolve`, which runs on the main thread, to create the
+`JsValue` from `Output` and `Env` and call it back in JavaScript.
+:::
+
+You can use the low-level API `Env::spawn` to spawn a defined `Task` in the libuv thread pool. See example in [Reference](/docs/concepts/reference).
+
+In addition to `compute` and `resolve`, you can also provide a `reject` method to do some cleanup when `Task` runs into an error, like `unref`ing some object:
+
+**lib.rs**
+
+```rust {32}
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+pub struct CountBufferLength {
+  data: Buffer,
+}
+
+impl CountBufferLength {
+  pub fn new(data: Buffer) -> Self {
+    Self { data }
+  }
+}
+
+impl Task for CountBufferLength {
+  type Output = usize;
+  type JsValue = u32;
+
+  fn compute(&mut self) -> Result<Self::Output> {
+    if self.data.len() == 10 {
+      return Err(Error::new(
+        Status::GenericFailure,
+        "Random fatal error".to_string(),
+      ));
+    }
+    Ok((&self.data).len())
+  }
+
+  fn resolve(&mut self, _: Env, output: Self::Output) -> Result<Self::JsValue> {
+    Ok(output as u32)
+  }
+
+  fn reject(&mut self, _: Env, err: Error) -> Result<Self::JsValue> {
+    // catch the error
+    if err.status == Status::GenericFailure {
+      Ok(0)
+    } else {
+      Ok(1)
+    }
+  }
+}
+
+#[napi]
+pub fn async_count_buffer_length(data: Buffer) -> AsyncTask<CountBufferLength> {
+  AsyncTask::new(CountBufferLength { data })
+}
+```
+
+You can also provide a `finally` method to do something after the `Task` is `resolved` or `rejected`:
+
+**lib.rs**
+
+```rust {41}
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+pub struct CountBufferLength {
+  data: Buffer,
+}
+
+impl CountBufferLength {
+  pub fn new(data: Buffer) -> Self {
+    Self { data }
+  }
+}
+
+impl Task for CountBufferLength {
+  type Output = usize;
+  type JsValue = u32;
+
+  fn compute(&mut self) -> Result<Self::Output> {
+    if self.data.len() == 10 {
+      return Err(Error::new(
+        Status::GenericFailure,
+        "Random fatal error".to_string(),
+      ));
+    }
+    Ok((&self.data).len())
+  }
+
+  fn resolve(&mut self, _: Env, output: Self::Output) -> Result<Self::JsValue> {
+    Ok(output as u32)
+  }
+
+  fn reject(&mut self, _: Env, err: Error) -> Result<Self::JsValue> {
+    // catch the error
+    if err.status == Status::GenericFailure {
+      Ok(0)
+    } else {
+      Ok(1)
+    }
+  }
+
+  fn finally(self, _: Env) -> Result<()> {
+    println!("finally");
+    drop(self.data);
+    Ok(())
+  }
+}
+
+#[napi]
+pub fn async_count_buffer_length(data: Buffer) -> AsyncTask<CountBufferLength> {
+  AsyncTask::new(CountBufferLength { data })
+}
+```
+
+::: info
+The `#[napi]` macro above the `impl Task for AsyncFib` is just for `.d.ts` generation. If no `#[napi]` is defined here, the generated TypeScript type of returned `AsyncTask` will be `Promise<unknown>`.
+:::
+
+## `AsyncTask`
+
+The `Task` you define cannot be returned to JavaScript directly—the JavaScript engine has no idea how to run and resolve the value from your `struct`. `AsyncTask` is a wrapper of `Task` that can be returned to the JavaScript engine. It can be created with a `Task` and an optional [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal).
+
+**lib.rs**
+
+```rust
+#[napi]
+fn async_fib(input: u32) -> AsyncTask<AsyncFib> {
+  AsyncTask::new(AsyncFib { input })
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+**index.d.ts**
+
+```ts
+export function asyncFib(input: number) => Promise<number>
+```
+
+### Create `AsyncTask` With `AbortSignal`
+
+In some scenarios, you may want to abort the queued `AsyncTask`, for example, using `debounce` on some compute tasks. You can provide `AbortSignal` to `AsyncTask`, so that you can abort the `AsyncTask` if it has not been started.
+
+**lib.rs**
+
+```rust {4}
+use napi::bindgen_prelude::AbortSignal;
+
+#[napi]
+fn async_fib(input: u32, signal: AbortSignal) -> AsyncTask<AsyncFib> {
+  AsyncTask::with_signal(AsyncFib { input }, signal)
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+**index.d.ts**
+
+```ts
+export function asyncFib(input: number, signal: AbortSignal) => Promise<number>
+```
+
+If you invoke `AbortController.abort` in the JavaScript code and the `AsyncTask` has not been started yet, the `AsyncTask` will be aborted immediately, and reject with `AbortError`.
+
+**test.mjs**
+
+```js {6}
+import { asyncFib } from './index.js'
+
+const controller = new AbortController()
+
+asyncFib(20, controller.signal).catch((e) => {
+  console.error(e) // Error: AbortError
+})
+
+controller.abort()
+```
+
+You can also provide `Option<AbortSignal>` to `AsyncTask` if you don't know if the `AsyncTask` needs to be aborted:
+
+**lib.rs**
+
+```rust
+use napi::bindgen_prelude::AbortSignal;
+
+#[napi]
+fn async_fib(input: u32, signal: Option<AbortSignal>) -> AsyncTask<AsyncFib> {
+  AsyncTask::with_optional_signal(AsyncFib { input }, signal)
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+**index.d.ts**
+
+```ts
+export function asyncFib(
+  input: number,
+  signal?: AbortSignal | undefined | null,
+): Promise<number>
+```
+
+::: info
+If `AsyncTask` has already been started or completed, the
+`AbortController.abort` will have no effect.
+:::
+
+## `ScopedTask`
+
+`ScopedTask` is mostly equal to `Task`, but it pass `&'env Env` to the `resolve` and `reject` method, so that you can create a `JsValue` with lifetime from the `&'env Env`.
+
+For example:
+
+**lib.rs**
+
+```rust {14,16}
+use napi::{JsString, ScopedTask, bindgen_prelude::*};
+use napi_derive::napi;
+
+pub struct CountBufferLength {
+  data: Buffer,
+}
+
+impl CountBufferLength {
+  pub fn new(data: Buffer) -> Self {
+    Self { data }
+  }
+}
+
+impl<'env> ScopedTask<'env> for CountBufferLength {
+  type Output = usize;
+  type JsValue = JsString<'env>;
+
+  fn compute(&mut self) -> Result<Self::Output> {
+    if self.data.len() == 10 {
+      return Err(Error::new(
+        Status::GenericFailure,
+        "Random fatal error".to_string(),
+      ));
+    }
+    Ok((&self.data).len())
+  }
+
+  fn resolve(&mut self, env: &'env Env, output: Self::Output) -> Result<Self::JsValue> {
+    env.create_string(format!("{output}"))
+  }
+
+  fn reject(&mut self, env: &'env Env, err: Error) -> Result<Self::JsValue> {
+    // catch the error
+    if err.status == Status::GenericFailure {
+      env.create_string("Random fatal error".to_string())
+    } else {
+      env.create_string("Random error".to_string())
+    }
+  }
+
+  fn finally(self, _: Env) -> Result<()> {
+    drop(self.data);
+    Ok(())
+  }
+}
+
+#[napi]
+pub fn async_count_buffer_length(data: Buffer) -> AsyncTask<CountBufferLength> {
+  AsyncTask::new(CountBufferLength { data })
+}
+```
