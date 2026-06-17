@@ -1,24 +1,39 @@
 {
+  "extends": "./.void/tsconfig.json",
   "compilerOptions": {
-    "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ESNext", "WebWorker"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
     "allowJs": true,
-    "skipLibCheck": true,
+    "checkJs": false,
     "strict": false,
-    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
     "noEmit": true,
-    "incremental": true,
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "verbatimModuleSyntax": true,
+    "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
-    }
+      "@/*": ["./*"],
+      "void/routes": ["./.void/routes.d.ts"]
+    },
+    "types": ["void/env"]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "pages",
+    "components",
+    "lib",
+    "routes",
+    "middleware",
+    "scripts",
+    "types",
+    "env.ts",
+    "vite.config.ts",
+    ".void"
+  ],
+  "exclude": ["node_modules", "dist", ".wrangler", "legacy_pages"]
 }

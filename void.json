@@ -1,0 +1,46 @@
+{
+  "$schema": "./node_modules/void/schema.json",
+  "output": "server",
+  "routing": {
+    "headers": {
+      "/": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/en": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/cn": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/pt-BR": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/assets/*": [
+        "Cross-Origin-Embedder-Policy: require-corp",
+        "Cross-Origin-Resource-Policy: same-origin"
+      ]
+    }
+  },
+  "inference": {
+    "bindings": {
+      "db": false,
+      "kv": false,
+      "storage": false,
+      "ai": false
+    }
+  },
+  "head": {
+    "titleTemplate": "%s – NAPI-RS",
+    "htmlAttrs": {
+      "lang": "en",
+      "data-theme": "dark"
+    }
+  },
+  "worker": {
+    "compatibility_date": "2026-02-24"
+  }
+}

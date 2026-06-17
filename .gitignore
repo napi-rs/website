@@ -53,6 +53,7 @@ typings/
 
 # dotenv environment variable files
 .env*
+!.env.example
 
 # gatsby files
 .cache/
@@ -83,3 +84,12 @@ src/pages/index.mdx
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+node_modules
+dist
+.void
+.wrangler
+*.tsbuildinfo
+
+# Vite+ generated commit-hook helpers (keep .vite-hooks/* hook scripts, ignore the generated _ dir)
+.vite-hooks/_
+.dev.vars
