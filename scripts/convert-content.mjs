@@ -140,7 +140,7 @@ function phaseABlocks(src) {
   }
 
   for (; i < lines.length; i++) {
-    const line = lines[i]
+    let line = lines[i]
     fenceClosed = false
 
     if (FENCE_RE.test(line)) {
@@ -168,6 +168,49 @@ function phaseABlocks(src) {
     }
 
     // --- outside fences, outside frontmatter ---
+
+    // Strip MDX comments `{/* ... */}`. In MDX these are invisible when rendered,
+    // but @void/md is plain markdown, so a leaked comment renders as visible text
+    // (and `vp fmt` even mangles the `*` into emphasis -> `{/_ ..._/}`). We only do
+    // this OUTSIDE code fences (handled by the fence checks above), so `/* */` that
+    // is legitimate code inside a ``` block is never touched.
+    //   - whole-line `{/* ... */}`            -> drop the line
+    //   - multi-line `{/*` ... later `*/}`    -> drop every line in the span
+    //   - inline mid-line `{/* ... */}`       -> strip just the comment substring
+    // Only engage when this line actually opens an MDX comment; otherwise leave
+    // the line (including ordinary blank lines) completely untouched.
+    if (line.includes('{/*')) {
+      // Remove any complete `{/* ... */}` occurrences on this single line.
+      let stripped = line.replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+      // If an opening `{/*` remains with no matching close on this line, it is a
+      // multi-line comment: consume following lines until the closing `*/}`.
+      const openIdx = stripped.indexOf('{/*')
+      if (openIdx !== -1) {
+        let before = stripped.slice(0, openIdx)
+        let j = i + 1
+        let closed = false
+        for (; j < lines.length; j++) {
+          const closeIdx = lines[j].indexOf('*/}')
+          if (closeIdx !== -1) {
+            before += lines[j].slice(closeIdx + 3)
+            closed = true
+            break
+          }
+        }
+        // Advance the outer loop past the consumed lines (the for-loop's i++ then
+        // lands on the line after the close, or after the file if unterminated).
+        i = closed ? j : lines.length
+        stripped = before
+      }
+      // If only whitespace survives (the common whole-line comment case), drop the
+      // line entirely; the surrounding blank lines are preserved by the normal flow
+      // and `convert()`/`vp fmt` normalize blank runs afterward. Otherwise keep the
+      // surviving inline-stripped text and fall through to the handling below.
+      if (stripped.trim() === '') {
+        continue
+      }
+      line = stripped
+    }
 
     // Drop top-level MDX import lines (Callout / chalk / NodeLink / etc.).
     if (/^import\s/.test(line)) {

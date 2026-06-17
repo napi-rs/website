@@ -124,6 +124,23 @@ describe('converted content tree', () => {
     }
   })
 
+  it('no emitted page contains a leaked or mangled MDX comment', () => {
+    // MDX comments `{/* ... */}` are invisible when rendered by Nextra/MDX, but
+    // @void/md is plain markdown: a leaked comment renders as visible text, and
+    // `vp fmt` mangles its `*` into emphasis -> `{/_ ... _/}`. Legitimate markdown
+    // never contains these substrings, so a whole-file scan is a safe guard.
+    const MARKERS = ['{/*', '*/}', '{/_', '_/}']
+    for (const file of emittedPages()) {
+      const content = readFileSync(file, 'utf8')
+      for (const marker of MARKERS) {
+        expect(
+          content.includes(marker),
+          `leaked MDX comment marker ${JSON.stringify(marker)} in ${relative(root, file)}`,
+        ).toBe(false)
+      }
+    }
+  })
+
   it('no emitted fence meta retains filename=', () => {
     for (const file of emittedPages()) {
       const content = readFileSync(file, 'utf8')

@@ -4,11 +4,7 @@ description: The history of how to release native packages.
 
 # Release native packages
 
-{/_ 从前面部分的介绍可以窥见，目前社区上主流的分发方式是直接分发 `C/C++` 源码。但这种方式对于使用 Rust 编写 Node.js native addon 的开发者来说，并不是一种可以接受的分发方案，因为 Rust 工具链的复杂性和编译耗时等问题，分直接发源码对使用这些 native addon 的开发者来说会是一种巨大的折磨。 _/}
-
 As you can see from the previous section, the dominant distribution method on the community is **_distribute `C/C++` source code directly_**. However, this approach is not an acceptable distribution solution for developers using `Rust` to write Node.js native addons, because the complexity and compilation time of the Rust toolchain makes distributing the source code directly a huge ordeal for developers using these native addons.
-
-{/\* 下面我将介绍包括***分发源码***在内的 native addon 的几种分发方式，在介绍完之后相信你能找到最适合 `Rust` 的 native addon 分发方式。 \*/}
 
 Next I will describe several ways of distributing native addon including **_distribute source code directly_**. After this introduction, I believe you can find the most suitable native addon distribution for `Rust`.
 
@@ -86,5 +82,3 @@ These tools need to manage the entire addon flow through the development -> loca
 The native addon with the 3rd distribution method (**distribution of native addons for different platforms via different npm packages**) is the easiest to use and the least mentally taxing for the developers who use it, but this distribution method imposes additional maintenance costs on the native addon authors.
 
 Later we will describe how `napi-rs` can help native addon developers solve the problem of high CI/CD maintenance costs with this distribution.
-
-{/_ 采用第 3 种分发方式(**不同平台的 native addon 通过不同的 npm package 分发**)的 native addon 是最易用的，对于使用这个 native addon 的开发者来说他们的心智负担最小，但这种分发方式会给 native addon 的作者带来额外的维护成本。后面的内容我们会介绍 `napi-rs` 如何在这种分发方式下帮 native addon 的开发者们解决 CI/CD 维护成本比较高的问题。 _/}
