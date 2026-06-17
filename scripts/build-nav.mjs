@@ -3,6 +3,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { join, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { execSync } from 'node:child_process'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
@@ -22,8 +23,14 @@ function readMeta(dir, locale) {
   return JSON.parse(readFileSync(file, 'utf8'))
 }
 
-function buildLeaf(group, slug, title) {
-  return { title, path: group ? `${group}/${slug}` : slug }
+/** Returns true if a content file (.mdx or .md) exists for the given route path and locale.
+ *  routePath is relative to legacy_pages, e.g. "docs/cross-build" or "docs/concepts/class".
+ */
+function contentExists(routePath, locale) {
+  const base = join(legacyPages, routePath)
+  return (
+    existsSync(`${base}.${locale}.mdx`) || existsSync(`${base}.${locale}.md`)
+  )
 }
 
 // Build docs sidebar groups for a locale
@@ -33,20 +40,31 @@ function buildDocsSidebar(locale) {
 
   const groups = []
   for (const [key, value] of Object.entries(docsMeta)) {
+    // Skip display:hidden entries
+    if (typeof value === 'object' && value.display === 'hidden') continue
     const title = typeof value === 'string' ? value : value.title
     const subDir = join(legacyPages, 'docs', key)
     const subMeta = readMeta(subDir, locale)
 
     if (subMeta) {
-      // It's a group with sub-items
-      const items = Object.entries(subMeta).map(([slug, v]) => ({
-        title: typeof v === 'string' ? v : v.title,
-        path: `docs/${key}/${slug}`,
-      }))
-      groups.push({ group: key, title, items })
+      // It's a group with sub-items — filter to only items with content files
+      const items = []
+      for (const [slug, v] of Object.entries(subMeta)) {
+        // Skip display:hidden entries in sub-sections
+        if (typeof v === 'object' && v.display === 'hidden') continue
+        if (!contentExists(`docs/${key}/${slug}`, locale)) continue
+        items.push({
+          title: typeof v === 'string' ? v : v.title,
+          path: `docs/${key}/${slug}`,
+        })
+      }
+      // Omit the group entirely if it has no items for this locale
+      if (items.length > 0) {
+        groups.push({ group: key, title, items })
+      }
     } else {
-      // It's a direct leaf page - treat as a single-item group OR add to a "flat" group
-      // Use group key = key, with single item whose path = `docs/${key}`
+      // It's a direct leaf page — only include if the content file exists
+      if (!contentExists(`docs/${key}`, locale)) continue
       groups.push({
         group: key,
         title,
@@ -60,20 +78,32 @@ function buildDocsSidebar(locale) {
 function buildBlogSidebar(locale) {
   const meta = readMeta(join(legacyPages, 'blog'), locale)
   if (!meta) return []
-  const items = Object.entries(meta).map(([slug, v]) => ({
-    title: typeof v === 'string' ? v : v.title,
-    path: `blog/${slug}`,
-  }))
+  const items = []
+  for (const [slug, v] of Object.entries(meta)) {
+    if (typeof v === 'object' && v.display === 'hidden') continue
+    if (!contentExists(`blog/${slug}`, locale)) continue
+    items.push({
+      title: typeof v === 'string' ? v : v.title,
+      path: `blog/${slug}`,
+    })
+  }
+  if (items.length === 0) return []
   return [{ group: 'blog', title: 'Blog', items }]
 }
 
 function buildChangelogSidebar(locale) {
   const meta = readMeta(join(legacyPages, 'changelog'), locale)
   if (!meta) return []
-  const items = Object.entries(meta).map(([slug, v]) => ({
-    title: typeof v === 'string' ? v : v.title,
-    path: `changelog/${slug}`,
-  }))
+  const items = []
+  for (const [slug, v] of Object.entries(meta)) {
+    if (typeof v === 'object' && v.display === 'hidden') continue
+    if (!contentExists(`changelog/${slug}`, locale)) continue
+    items.push({
+      title: typeof v === 'string' ? v : v.title,
+      path: `changelog/${slug}`,
+    })
+  }
+  if (items.length === 0) return []
   return [{ group: 'changelog', title: 'Changelog', items }]
 }
 
@@ -139,4 +169,10 @@ export const locales: { locale: Locale; text: string }[] = ${JSON.stringify(loca
 `
 
 writeFileSync(outFile, ts, 'utf8')
+// Auto-format so the committed file matches what `vp fmt` would produce (uses oxfmt).
+try {
+  execSync(`vp fmt "${outFile}" --write`, { cwd: root, stdio: 'pipe' })
+} catch {
+  // vp not on PATH; file will be formatted by pre-commit hook
+}
 console.log(`Written ${outFile}`)

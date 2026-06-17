@@ -1,6 +1,12 @@
 // @vitest-environment node
+import { existsSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vite-plus/test'
 import { nav, locales } from './index.ts'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const legacyPages = join(__dirname, '..', '..', 'legacy_pages')
 
 describe('nav manifest', () => {
   it('has all three locales with non-empty tabs and docs sidebar', () => {
@@ -64,13 +70,37 @@ describe('nav manifest', () => {
     }
   })
 
-  it('docs sidebar preserves group order from _meta (introduction first, more last)', () => {
+  it('docs sidebar preserves group order from _meta (introduction first)', () => {
     // introduction should always be the first docs group across all locales
     for (const locale of ['en', 'cn', 'pt-BR'] as const) {
       const docsGroups = nav[locale].sidebar.docs
-      expect(docsGroups[0].group).toBe('introduction')
-      // 'more' should be the last group
-      expect(docsGroups[docsGroups.length - 1].group).toBe('more')
+      expect(docsGroups[0].group, `${locale} first group`).toBe('introduction')
+    }
+    // en and pt-BR have 'more' as the last group (cn omits it — no cn content files in more/)
+    expect(nav.en.sidebar.docs[nav.en.sidebar.docs.length - 1].group).toBe(
+      'more',
+    )
+    expect(
+      nav['pt-BR'].sidebar.docs[nav['pt-BR'].sidebar.docs.length - 1].group,
+    ).toBe('more')
+  })
+
+  it('no dangling leaves — every leaf has a content file in legacy_pages for its locale', () => {
+    for (const [locale, localeNav] of Object.entries(nav)) {
+      for (const [_section, groups] of Object.entries(localeNav.sidebar)) {
+        for (const group of groups) {
+          for (const leaf of group.items) {
+            const base = join(legacyPages, leaf.path)
+            const exists =
+              existsSync(`${base}.${locale}.mdx`) ||
+              existsSync(`${base}.${locale}.md`)
+            expect(
+              exists,
+              `dangling leaf: legacy_pages/${leaf.path}.${locale}.{mdx,md} not found`,
+            ).toBe(true)
+          }
+        }
+      }
     }
   })
 })

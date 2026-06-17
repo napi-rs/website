@@ -359,10 +359,6 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/external',
             },
             {
-              title: 'Await Promise',
-              path: 'docs/concepts/await-promise',
-            },
-            {
               title: '重写类型',
               path: 'docs/concepts/types-overwrite',
             },
@@ -372,106 +368,9 @@ export const nav: Record<Locale, LocaleNav> = {
             },
           ],
         },
-        {
-          group: 'cli',
-          title: 'CLI',
-          items: [
-            {
-              title: 'Build',
-              path: 'docs/cli/build',
-            },
-            {
-              title: 'Artifacts',
-              path: 'docs/cli/artifacts',
-            },
-            {
-              title: 'Prepublish',
-              path: 'docs/cli/pre-publish',
-            },
-            {
-              title: 'NAPI Config',
-              path: 'docs/cli/napi-config',
-            },
-          ],
-        },
-        {
-          group: 'deep-dive',
-          title: 'Deep dive',
-          items: [
-            {
-              title: 'Native module',
-              path: 'docs/deep-dive/native-module',
-            },
-            {
-              title: 'History',
-              path: 'docs/deep-dive/history',
-            },
-            {
-              title: 'Release native packages',
-              path: 'docs/deep-dive/release',
-            },
-          ],
-        },
-        {
-          group: 'cross-build',
-          title: 'Cross build',
-          items: [
-            {
-              title: 'Cross build',
-              path: 'docs/cross-build',
-            },
-          ],
-        },
-        {
-          group: 'ecosystem',
-          title: 'Ecosystem',
-          items: [
-            {
-              title: 'Ecosystem',
-              path: 'docs/ecosystem',
-            },
-          ],
-        },
-        {
-          group: 'more',
-          title: 'More',
-          items: [
-            {
-              title: 'Frequently Asked Questions',
-              path: 'docs/more/faq',
-            },
-          ],
-        },
       ],
       blog: [],
-      changelog: [
-        {
-          group: 'changelog',
-          title: 'Changelog',
-          items: [
-            {
-              title: 'napi',
-              path: 'changelog/napi',
-            },
-            {
-              title: 'napi-derive',
-              path: 'changelog/napi_derive',
-            },
-            {
-              title: 'napi-sys',
-              path: 'changelog/napi_sys',
-            },
-            {
-              title: 'napi-build',
-              path: 'changelog/napi_build',
-            },
-            {
-              title: '@napi-rs/cli',
-              path: 'changelog/napi-cli',
-            },
-          ],
-        },
-      ],
+      changelog: [],
     },
   },
   'pt-BR': {
@@ -566,10 +465,6 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/external',
             },
             {
-              title: 'Await Promise',
-              path: 'docs/concepts/await-promise',
-            },
-            {
               title: 'Sobrescrita de Tipos',
               path: 'docs/concepts/types-overwrite',
             },
@@ -616,26 +511,6 @@ export const nav: Record<Locale, LocaleNav> = {
             {
               title: 'Release de pacotes nativos',
               path: 'docs/deep-dive/release',
-            },
-          ],
-        },
-        {
-          group: 'cross-build',
-          title: 'Compilação cruzada',
-          items: [
-            {
-              title: 'Compilação cruzada',
-              path: 'docs/cross-build',
-            },
-          ],
-        },
-        {
-          group: 'ecosystem',
-          title: 'Ecossistema',
-          items: [
-            {
-              title: 'Ecossistema',
-              path: 'docs/ecosystem',
             },
           ],
         },
