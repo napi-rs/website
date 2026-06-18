@@ -6,12 +6,18 @@
       "/docs/": { "to": "/docs", "status": 301 },
       "/docs/*/": { "to": "/docs/:splat", "status": 301 },
       "/blog/": { "to": "/blog", "status": 301 },
-      "/blog/*/": { "to": "/blog/:splat", "status": 301 }
+      "/blog/*/": { "to": "/blog/:splat", "status": 301 },
+      "/changelog/": { "to": "/changelog", "status": 301 },
+      "/changelog/*/": { "to": "/changelog/:splat", "status": 301 }
     },
     "rewrites": {
       "/": "/en",
       "/docs/*": "/en/docs/:splat",
-      "/blog/*": "/en/blog/:splat"
+      "/blog/*": "/en/blog/:splat",
+      "/changelog/*": "/en/changelog/:splat"
+    },
+    "revalidate": {
+      "/changelog/*": 300
     },
     "headers": {
       "/": [

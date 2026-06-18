@@ -31,6 +31,7 @@
     "gsap": "^3.13.0",
     "lodash-es": "^4.17.21",
     "lucide-react": "^0.577.0",
+    "markdown-exit": "1.0.0-beta.9",
     "react": "^19",
     "react-device-detect": "^2.2.3",
     "react-dom": "^19",

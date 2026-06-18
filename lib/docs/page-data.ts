@@ -70,12 +70,44 @@ export function leafSection(leafPath: string): string {
 // the nav existence sets, or we'd link tabs at 404s.
 
 /**
+ * ISLAND routes that exist as PAGES but are NOT `@void/md/pages` entries (they
+ * are loader-driven `*.island.tsx`, not markdown), keyed by locale and listing
+ * UNPREFIXED, section-qualified leaf paths.
+ *
+ * `@void/md/pages` is markdown-only, so a loader-driven island route is invisible
+ * to the docs chrome (tab visibility, breadcrumb tab href, lang-switch section
+ * fallback all key off page existence) and would be treated as a 404 link. This
+ * static supplement is merged into `buildPageExistenceSets` so those routes
+ * count as reachable. It is the single hook for any future island route — add
+ * the leaf here and the chrome picks it up everywhere.
+ *
+ * Changelog is EN-ONLY (only `.en.mdx` ever existed; cn/pt-BR changelog: []), so
+ * the 5 leaves live under `en` and `firstSectionLeafHref` will surface them for
+ * the en route AND for the cn/pt-BR routes via the existing en-fallback rule.
+ */
+export const ISLAND_PAGES: Record<Locale, ReadonlyArray<string>> = {
+  en: [
+    'changelog/napi',
+    'changelog/napi_derive',
+    'changelog/napi_sys',
+    'changelog/napi_build',
+    'changelog/napi-cli',
+  ],
+  cn: [],
+  'pt-BR': [],
+}
+
+/**
  * Build a per-locale Set of UNPREFIXED leaf paths that have an actual emitted
  * page, derived from `@void/md/pages` (whose `path` is locale-prefixed, e.g.
- * `/en/docs/cli/build` -> bucket `en`, leaf `docs/cli/build`).
+ * `/en/docs/cli/build` -> bucket `en`, leaf `docs/cli/build`) PLUS the static
+ * `ISLAND_PAGES` supplement (loader-driven `*.island.tsx` routes that have no
+ * markdown entry). The supplement is injectable so tests can pass `{}`-empty
+ * islands; it defaults to the real `ISLAND_PAGES`.
  */
 export function buildPageExistenceSets(
   pages: ReadonlyArray<MdPageLike>,
+  islandPages: Record<Locale, ReadonlyArray<string>> = ISLAND_PAGES,
 ): Record<Locale, ReadonlySet<string>> {
   const result: Record<Locale, Set<string>> = {
     en: new Set(),
@@ -91,6 +123,12 @@ export function buildPageExistenceSets(
     const leaf = stripped.slice(slash + 1)
     if (locale === 'en' || locale === 'cn' || locale === 'pt-BR') {
       result[locale].add(leaf)
+    }
+  }
+  // Merge in island routes (markdown-less pages) so the chrome counts them.
+  for (const locale of Object.keys(result) as Locale[]) {
+    for (const leaf of islandPages[locale] ?? []) {
+      result[locale].add(leaf.replace(/^\/+/, ''))
     }
   }
   return result

@@ -330,12 +330,32 @@ describe('buildExistenceSets', () => {
 
 describe('buildPageExistenceSets', () => {
   it('buckets unprefixed leaves by the md path locale segment', () => {
-    const sets = buildPageExistenceSets(pages)
+    // Pass empty island pages so this asserts ONLY the md-derived buckets.
+    const sets = buildPageExistenceSets(pages, { en: [], cn: [], 'pt-BR': [] })
     expect(sets.en.has('docs/concepts/class')).toBe(true)
     expect(sets.en.has('docs/introduction/simple-package')).toBe(true)
     expect(sets.cn.has('docs/concepts/class')).toBe(true)
     // No blog page was emitted -> not present in any bucket.
     expect(sets.en.has('blog/announce-v3')).toBe(false)
+  })
+
+  it('merges the ISLAND_PAGES supplement (markdown-less changelog routes)', () => {
+    // The real default supplement adds the 5 en changelog island leaves.
+    const sets = buildPageExistenceSets(pages)
+    expect(sets.en.has('changelog/napi')).toBe(true)
+    expect(sets.en.has('changelog/napi-cli')).toBe(true)
+    // EN-only: cn/pt-BR get no changelog leaves of their own.
+    expect(sets.cn.has('changelog/napi')).toBe(false)
+  })
+
+  it('accepts an injected island-page supplement', () => {
+    const sets = buildPageExistenceSets(pages, {
+      en: ['/changelog/foo'],
+      cn: [],
+      'pt-BR': [],
+    })
+    // Leading slash is normalised away to match the unprefixed leaf form.
+    expect(sets.en.has('changelog/foo')).toBe(true)
   })
 })
 
