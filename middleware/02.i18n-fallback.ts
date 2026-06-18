@@ -33,10 +33,14 @@ import { defineMiddleware } from 'void'
 import mdPages from '@void/md/pages'
 import { decideFallback, isFallbackOriginal } from '../lib/i18n/fallback.ts'
 
-// Flag surfaced to pages/layouts via `useShared()` from the framework adapter.
+// Shared data surfaced to pages/layouts via `useShared()` from the framework
+// adapter. `i18nFallback` is set here; `path` (the public route path) is set by
+// 03.page-path.ts. This augmentation is the single source of truth for the
+// `shared` shape — both middlewares must agree on it (TS merges declarations and
+// errors on a divergent re-declaration).
 declare module 'void' {
   interface CloudContextVariables {
-    shared: { i18nFallback?: boolean }
+    shared: { i18nFallback?: boolean; path?: string }
   }
 }
 

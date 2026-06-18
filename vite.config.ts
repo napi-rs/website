@@ -1,7 +1,13 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite-plus'
 import { voidPlugin } from 'void'
 import { voidReact } from '@void/react/plugin'
 import { voidMarkdown } from '@void/md/plugin'
+
+// Project root, used to wire the `@/*` -> `./*` path alias (mirrors tsconfig
+// compilerOptions.paths) so runtime imports like `@/lib/utils` /
+// `@/components/ui/*` resolve under Vite the same way TypeScript resolves them.
+const projectRoot = fileURLToPath(new URL('.', import.meta.url))
 
 // Dev/preview cross-origin isolation. The landing page runs the @napi-rs/image
 // WASM transcoder, which needs SharedArrayBuffer + threads. `self.crossOriginIsolated`
@@ -50,9 +56,14 @@ export default defineConfig({
     // The browser build of @napi-rs/image is `@napi-rs/image-wasm32-wasi`. The public
     // wrapper's `main` is the native loader that require()s a platform .node binary, which
     // Vite/rolldown cannot parse. Alias straight to the wasm build everywhere Vite bundles.
-    alias: {
-      '@napi-rs/image': '@napi-rs/image-wasm32-wasi',
-    },
+    // Array form so the `@/` alias is matched precisely (a bare `@` key would
+    // also swallow `@napi-rs/*` etc.). `@/` -> project root mirrors tsconfig
+    // `@/*`: `./*`, so runtime imports (`@/lib/utils`, `@/components/ui/*`)
+    // resolve under Vite exactly as TypeScript resolves them.
+    alias: [
+      { find: '@napi-rs/image', replacement: '@napi-rs/image-wasm32-wasi' },
+      { find: /^@\//, replacement: `${projectRoot.replace(/\/$/, '')}/` },
+    ],
   },
 
   plugins: isVitest
