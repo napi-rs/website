@@ -11,6 +11,7 @@ import {
   splitLocale,
   localizeHref,
   localeSectionIndex,
+  htmlLang,
   DEFAULT_LOCALE,
 } from './locale.ts'
 
@@ -87,5 +88,13 @@ describe('localeSectionIndex', () => {
     expect(localeSectionIndex('docs', 'en')).toBe('/docs')
     expect(localeSectionIndex('docs', 'cn')).toBe('/cn/docs')
     expect(localeSectionIndex('docs', 'pt-BR')).toBe('/pt-BR/docs')
+  })
+})
+
+describe('htmlLang — BCP-47 <html lang> per locale', () => {
+  it('maps cn to zh-CN, others to their literal tag', () => {
+    expect(htmlLang('en')).toBe('en')
+    expect(htmlLang('cn')).toBe('zh-CN')
+    expect(htmlLang('pt-BR')).toBe('pt-BR')
   })
 })

@@ -5,10 +5,13 @@
 // Layout:
 //   [ Logo ]  [ tab tab tab ] ............ [ GitHub Discord | Search Lang Theme ]
 //
-// Tabs come from nav[locale].tabs (which carry NO href — we derive it via
-// localizeHref(tabKey, locale)). The active tab is the one whose key matches the
-// first path segment after the locale (the "section"). We read the live route
-// from useRouter().path so the highlight follows client-side navigation.
+// Tabs come from nav[locale].tabs (which carry NO href). A section has no index
+// page, so each tab links to the FIRST REACHABLE leaf of its section
+// (firstSectionLeafHref) — and a tab is only rendered when its section actually
+// has a reachable page (blog/changelog have no migrated content yet → hidden).
+// The active tab is the one whose key matches the first path segment after the
+// locale (the "section"). We read the live route from useRouter().path so the
+// highlight follows client-side navigation.
 //
 // Island rules: navigate with plain <a> (no <Link>); the GitHub/Discord links
 // are external <a target="_blank">.
@@ -19,6 +22,11 @@ import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { nav, type Locale } from '@/lib/nav/index.ts'
 import { localizeHref, splitLocale } from '@/lib/docs/locale.ts'
+import {
+  buildPageExistenceSets,
+  firstSectionLeafHref,
+} from '@/lib/docs/page-data.ts'
+import pages from '@void/md/pages'
 
 import Logo from './Logo'
 import LangSwitcher from './LangSwitcher'
@@ -27,6 +35,12 @@ import ThemeToggle from './ThemeToggle'
 
 const GITHUB_URL = 'https://github.com/napi-rs/napi-rs'
 const DISCORD_URL = 'https://discord.gg/SpWzYHsKHs'
+
+// Built once: per-locale set of leaves with an actual emitted @void/md page.
+// Tab visibility + the tab's link target both key off REAL pages, never the nav
+// existence sets (the nav lists blog/changelog leaves but no content exists yet,
+// so those tabs stay hidden until their markdown lands).
+const PAGE_EXISTENCE = buildPageExistenceSets(pages)
 
 // lucide-react has no Discord glyph; inline the official mark (currentColor).
 function DiscordIcon({ className }: { className?: string }) {
@@ -62,7 +76,19 @@ export default function Navbar({ locale, currentPath }: NavbarProps) {
   const [, rest] = splitLocale(path)
   const activeSection = rest.split('/')[0] // '' | 'docs' | 'blog' | 'changelog'
 
-  const tabs = nav[locale]?.tabs ?? []
+  const localeNav = nav[locale]
+  // Only render tabs whose section currently has ≥1 reachable page, and point
+  // each tab at the first such leaf (sections have no index page → /docs 404s).
+  const tabs = (localeNav?.tabs ?? [])
+    .map((tab) => ({
+      tab,
+      href: localeNav
+        ? firstSectionLeafHref(tab.key, locale, localeNav, PAGE_EXISTENCE)
+        : null,
+    }))
+    .filter(
+      (t): t is { tab: (typeof t)['tab']; href: string } => t.href !== null,
+    )
 
   return (
     <nav className="mx-auto flex h-14 w-full max-w-[1400px] items-center gap-4 px-4">
@@ -77,12 +103,12 @@ export default function Navbar({ locale, currentPath }: NavbarProps) {
 
       {/* Primary tabs */}
       <ul className="hidden items-center gap-1 md:flex">
-        {tabs.map((tab) => {
+        {tabs.map(({ tab, href }) => {
           const isActive = tab.key === activeSection
           return (
             <li key={tab.key}>
               <a
-                href={localizeHref(tab.key, locale)}
+                href={href}
                 aria-current={isActive ? 'page' : undefined}
                 className={cn(
                   'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',

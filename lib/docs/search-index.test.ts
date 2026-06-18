@@ -5,7 +5,12 @@
 //
 // Run: GITHUB_TOKEN=dummy vp test run lib/docs/search-index.test.ts
 import { describe, it, expect } from 'vite-plus/test'
-import { buildSearchIndexCore, pageLocale } from './search-index.ts'
+import {
+  buildSearchIndexCore,
+  pageLocale,
+  pageLeaf,
+  pageHref,
+} from './search-index.ts'
 import type { MdPageLike } from './page-data.ts'
 
 const pages: MdPageLike[] = [
@@ -40,6 +45,24 @@ describe('pageLocale', () => {
   })
 })
 
+describe('pageLeaf', () => {
+  it('strips the leading locale segment', () => {
+    expect(pageLeaf('/en/docs/concepts/enum')).toBe('docs/concepts/enum')
+    expect(pageLeaf('/cn/docs/concepts/class')).toBe('docs/concepts/class')
+    expect(pageLeaf('/pt-BR/docs/cli/build')).toBe('docs/cli/build')
+  })
+})
+
+describe('pageHref — PUBLIC navigable href (not the internal /en/… md path)', () => {
+  it('drops the en prefix to the canonical root path', () => {
+    expect(pageHref('/en/docs/concepts/enum')).toBe('/docs/concepts/enum')
+  })
+  it('keeps the prefix for cn / pt-BR', () => {
+    expect(pageHref('/cn/docs/concepts/class')).toBe('/cn/docs/concepts/class')
+    expect(pageHref('/pt-BR/docs/cli/build')).toBe('/pt-BR/docs/cli/build')
+  })
+})
+
 describe('buildSearchIndexCore', () => {
   const index = buildSearchIndexCore(pages)
 
@@ -48,13 +71,17 @@ describe('buildSearchIndexCore', () => {
     expect(index.cn).toHaveLength(1)
     expect(index['pt-BR']).toHaveLength(1)
   })
-  it('captures title, heading texts, and description', () => {
+  it('captures path, PUBLIC href, title, heading texts, and description', () => {
     expect(index.en[0]).toEqual({
       path: '/en/docs/concepts/enum',
+      href: '/docs/concepts/enum',
       title: 'Enum',
       headings: ['Enum', 'String enum'],
       description: 'Enums in napi-rs',
     })
+  })
+  it('a cn entry keeps its /cn/… public href', () => {
+    expect(index.cn[0].href).toBe('/cn/docs/concepts/class')
   })
   it('omits description when frontmatter lacks one', () => {
     expect(index.cn[0].description).toBeUndefined()

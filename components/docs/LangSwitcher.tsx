@@ -22,11 +22,16 @@ import { locales, nav, type Locale } from '@/lib/nav/index.ts'
 import { splitLocale } from '@/lib/docs/locale.ts'
 import {
   buildExistenceSets,
+  buildPageExistenceSets,
   computeLangSwitchUrl,
 } from '@/lib/docs/page-data.ts'
+import pages from '@void/md/pages'
 
-// Built once: per-locale set of leaf paths that exist in that locale.
+// Built once: per-locale set of nav leaf paths that exist in that locale, and
+// the per-locale set of leaves with an actual emitted @void/md page (used to
+// resolve a reachable section-fallback leaf when the target lacks the page).
 const EXISTENCE = buildExistenceSets(nav)
+const PAGE_EXISTENCE = buildPageExistenceSets(pages)
 
 export interface LangSwitcherProps {
   /** Active locale (the per-locale layout.island passes its own literal). */
@@ -105,6 +110,8 @@ export default function LangSwitcher({ locale, className }: LangSwitcherProps) {
                     target,
                     EXISTENCE,
                     splitLocale,
+                    nav[target],
+                    PAGE_EXISTENCE,
                   )}
                   className={cn(
                     'flex items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-sm',

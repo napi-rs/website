@@ -95,3 +95,15 @@ export function localizeHref(unprefixedPath: string, locale: Locale): string {
 export function localeSectionIndex(section: string, locale: Locale): string {
   return localizeHref(section, locale)
 }
+
+/**
+ * The BCP-47 `<html lang>` value for a locale. Used by middleware/01.head.ts to
+ * override the void.json `lang` default per ROUTE locale.
+ *
+ *   htmlLang('en')    === 'en'
+ *   htmlLang('cn')    === 'zh-CN'   (cn is our internal key for Simplified Chinese)
+ *   htmlLang('pt-BR') === 'pt-BR'
+ */
+export function htmlLang(locale: Locale): string {
+  return locale === 'cn' ? 'zh-CN' : locale
+}

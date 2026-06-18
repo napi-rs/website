@@ -15,6 +15,10 @@ import {
   flattenSection,
   getPagerLinksCore,
   buildExistenceSets,
+  buildPageExistenceSets,
+  isLeafReachable,
+  firstSectionLeafHref,
+  sectionHasReachablePage,
   computeLangSwitchUrl,
   tocHeadings,
   type MdPageLike,
@@ -49,7 +53,15 @@ const enNav: LocaleNav = {
         ],
       },
     ],
-    blog: [],
+    // 'blog' has a nav leaf but (mirroring reality) NO emitted page, so the tab
+    // must stay hidden and have no section-leaf href.
+    blog: [
+      {
+        group: 'blog',
+        title: 'Blog',
+        items: [{ title: 'Announce V3', path: 'blog/announce-v3' }],
+      },
+    ],
     changelog: [],
   },
 }
@@ -93,6 +105,21 @@ const pages: MdPageLike[] = [
     frontmatter: {},
     headings: [{ depth: 2, slug: 'gou-zao', text: '构造' }],
   },
+  // First-in-order docs leaf (introduction) has an EN page only — used to test
+  // that the EN section tab + the cn fallback resolve to it.
+  {
+    path: '/en/docs/introduction/simple-package',
+    title: 'A simple package',
+    frontmatter: {},
+    headings: [],
+  },
+  {
+    path: '/en/docs/concepts/exports',
+    title: 'Exports',
+    frontmatter: {},
+    headings: [],
+  },
+  // NOTE: no /en/blog/* page exists, mirroring the un-migrated blog content.
 ]
 
 // --- mdPagePath / leafSection ---------------------------------------------
@@ -211,6 +238,7 @@ describe('getPagerLinksCore', () => {
 
 describe('computeLangSwitchUrl', () => {
   const existence = buildExistenceSets(nav)
+  const existsByPage = buildPageExistenceSets(pages)
 
   it('links to the same page when the target locale has it', () => {
     // en /docs/concepts/class -> cn has it -> /cn/docs/concepts/class
@@ -220,6 +248,8 @@ describe('computeLangSwitchUrl', () => {
         'cn',
         existence,
         splitLocale,
+        cnNav,
+        existsByPage,
       ),
     ).toBe('/cn/docs/concepts/class')
   })
@@ -230,20 +260,46 @@ describe('computeLangSwitchUrl', () => {
         'en',
         existence,
         splitLocale,
+        enNav,
+        existsByPage,
       ),
     ).toBe('/docs/concepts/class')
   })
-  it('falls back to the target section index when the page is absent there', () => {
-    // en /docs/concepts/enum -> cn lacks it -> cn docs index
+  it('falls back to the first reachable section leaf (NOT the index) when the page is absent there', () => {
+    // en /docs/concepts/enum -> cn nav lacks it -> first reachable cn docs leaf.
+    // cn docs sidebar's first leaf is concepts/class, which has a cn page.
     expect(
-      computeLangSwitchUrl('/docs/concepts/enum', 'cn', existence, splitLocale),
-    ).toBe('/cn/docs')
+      computeLangSwitchUrl(
+        '/docs/concepts/enum',
+        'cn',
+        existence,
+        splitLocale,
+        cnNav,
+        existsByPage,
+      ),
+    ).toBe('/cn/docs/concepts/class')
   })
   it('falls back to target root when the path has no section', () => {
-    expect(computeLangSwitchUrl('/cn', 'pt-BR', existence, splitLocale)).toBe(
-      '/pt-BR',
-    )
-    expect(computeLangSwitchUrl('/', 'cn', existence, splitLocale)).toBe('/cn')
+    expect(
+      computeLangSwitchUrl(
+        '/cn',
+        'pt-BR',
+        existence,
+        splitLocale,
+        nav['pt-BR'],
+        existsByPage,
+      ),
+    ).toBe('/pt-BR')
+    expect(
+      computeLangSwitchUrl(
+        '/',
+        'cn',
+        existence,
+        splitLocale,
+        cnNav,
+        existsByPage,
+      ),
+    ).toBe('/cn')
   })
 })
 
@@ -253,6 +309,68 @@ describe('buildExistenceSets', () => {
     expect(sets.en.has('docs/concepts/enum')).toBe(true)
     expect(sets.cn.has('docs/concepts/class')).toBe(true)
     expect(sets.cn.has('docs/concepts/enum')).toBe(false)
+  })
+})
+
+// --- page existence / reachability (from @void/md/pages) -------------------
+
+describe('buildPageExistenceSets', () => {
+  it('buckets unprefixed leaves by the md path locale segment', () => {
+    const sets = buildPageExistenceSets(pages)
+    expect(sets.en.has('docs/concepts/class')).toBe(true)
+    expect(sets.en.has('docs/introduction/simple-package')).toBe(true)
+    expect(sets.cn.has('docs/concepts/class')).toBe(true)
+    // No blog page was emitted -> not present in any bucket.
+    expect(sets.en.has('blog/announce-v3')).toBe(false)
+  })
+})
+
+describe('isLeafReachable', () => {
+  const existsByPage = buildPageExistenceSets(pages)
+  it('true when the locale has its own page', () => {
+    expect(isLeafReachable('docs/concepts/class', 'cn', existsByPage)).toBe(
+      true,
+    )
+  })
+  it('true for a non-default locale via en fallback', () => {
+    // cn has no exports page, but en does -> i18n fallback makes it reachable.
+    expect(isLeafReachable('docs/concepts/exports', 'cn', existsByPage)).toBe(
+      true,
+    )
+  })
+  it('false when neither the locale nor en has a page (e.g. blog)', () => {
+    expect(isLeafReachable('blog/announce-v3', 'en', existsByPage)).toBe(false)
+    expect(isLeafReachable('blog/announce-v3', 'cn', existsByPage)).toBe(false)
+  })
+})
+
+describe('firstSectionLeafHref', () => {
+  const existsByPage = buildPageExistenceSets(pages)
+  it('returns the first reachable leaf href for the docs section (en at root)', () => {
+    // sidebar order: introduction/simple-package first, and it has an en page.
+    expect(firstSectionLeafHref('docs', 'en', enNav, existsByPage)).toBe(
+      '/docs/introduction/simple-package',
+    )
+  })
+  it('prefixes the leaf for cn (first reachable cn-or-en page)', () => {
+    expect(firstSectionLeafHref('docs', 'cn', cnNav, existsByPage)).toBe(
+      '/cn/docs/concepts/class',
+    )
+  })
+  it('returns null for a section with no emitted page (blog)', () => {
+    expect(firstSectionLeafHref('blog', 'en', enNav, existsByPage)).toBeNull()
+  })
+})
+
+describe('sectionHasReachablePage', () => {
+  const existsByPage = buildPageExistenceSets(pages)
+  it('true for docs, false for blog (no migrated content)', () => {
+    expect(sectionHasReachablePage('docs', 'en', enNav, existsByPage)).toBe(
+      true,
+    )
+    expect(sectionHasReachablePage('blog', 'en', enNav, existsByPage)).toBe(
+      false,
+    )
   })
 })
 

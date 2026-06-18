@@ -14,7 +14,7 @@
 // alongside; tests target the *Core functions.
 
 import type { Locale, LocaleNav, NavGroup } from '../nav/index.ts'
-import { localizeHref, localeSectionIndex } from './locale.ts'
+import { localizeHref, DEFAULT_LOCALE } from './locale.ts'
 
 /** Minimal shape we need from a `@void/md/pages` entry (structural typing). */
 export interface MdPageLike {
@@ -57,6 +57,95 @@ export function mdPagePath(leafPath: string, locale: Locale): string {
 /** The tab key a leaf belongs to (`docs/concepts/class` -> `docs`). */
 export function leafSection(leafPath: string): string {
   return leafPath.replace(/^\/+/, '').split('/')[0]
+}
+
+// ---------------------------------------------------------------------------
+// Page existence (from @void/md/pages) — distinct from nav existence
+// ---------------------------------------------------------------------------
+//
+// IMPORTANT: nav leaves and EMITTED pages diverge. The nav manifest lists
+// blog/changelog leaves, but no blog/changelog markdown has been migrated yet —
+// so those sections have ZERO @void/md/pages entries. Tab visibility + the
+// "first real leaf" target must key off ACTUAL pages (`@void/md/pages`), never
+// the nav existence sets, or we'd link tabs at 404s.
+
+/**
+ * Build a per-locale Set of UNPREFIXED leaf paths that have an actual emitted
+ * page, derived from `@void/md/pages` (whose `path` is locale-prefixed, e.g.
+ * `/en/docs/cli/build` -> bucket `en`, leaf `docs/cli/build`).
+ */
+export function buildPageExistenceSets(
+  pages: ReadonlyArray<MdPageLike>,
+): Record<Locale, ReadonlySet<string>> {
+  const result: Record<Locale, Set<string>> = {
+    en: new Set(),
+    cn: new Set(),
+    'pt-BR': new Set(),
+  }
+  for (const page of pages) {
+    // page.path is `/<locale>/<leaf>`; split once on the first segment.
+    const stripped = page.path.replace(/^\/+/, '')
+    const slash = stripped.indexOf('/')
+    if (slash === -1) continue
+    const locale = stripped.slice(0, slash)
+    const leaf = stripped.slice(slash + 1)
+    if (locale === 'en' || locale === 'cn' || locale === 'pt-BR') {
+      result[locale].add(leaf)
+    }
+  }
+  return result
+}
+
+/**
+ * Whether a nav leaf is REACHABLE in `locale`: it has a page in that locale, or
+ * (for non-default locales) the en page exists and the i18n fallback will serve
+ * it. Mirrors middleware/02.i18n-fallback's rule so chrome never links a 404.
+ */
+export function isLeafReachable(
+  leafPath: string,
+  locale: Locale,
+  existsByPage: Record<Locale, ReadonlySet<string>>,
+): boolean {
+  const leaf = leafPath.replace(/^\/+/, '')
+  if (existsByPage[locale]?.has(leaf)) return true
+  if (locale !== DEFAULT_LOCALE && existsByPage[DEFAULT_LOCALE]?.has(leaf)) {
+    return true
+  }
+  return false
+}
+
+/**
+ * The localized href of the FIRST reachable leaf of a section (in sidebar
+ * order). This is the real target for a section tab (`/docs` has no index page)
+ * and the lang-switch fallback. Returns null when the section has no reachable
+ * page in this locale (e.g. blog/changelog have no migrated pages yet).
+ */
+export function firstSectionLeafHref(
+  section: string,
+  locale: Locale,
+  localeNav: LocaleNav,
+  existsByPage: Record<Locale, ReadonlySet<string>>,
+): string | null {
+  const flat = flattenSection(localeNav.sidebar[section] ?? [])
+  for (const item of flat) {
+    if (isLeafReachable(item.path, locale, existsByPage)) {
+      return localizeHref(item.path, locale)
+    }
+  }
+  return null
+}
+
+/**
+ * Whether a section has at least one reachable page in `locale`. Drives tab
+ * visibility: only tabs whose section currently has migrated content show.
+ */
+export function sectionHasReachablePage(
+  section: string,
+  locale: Locale,
+  localeNav: LocaleNav,
+  existsByPage: Record<Locale, ReadonlySet<string>>,
+): boolean {
+  return firstSectionLeafHref(section, locale, localeNav, existsByPage) !== null
 }
 
 // ---------------------------------------------------------------------------
@@ -201,17 +290,24 @@ export function buildExistenceSets(
  * from `currentPath`.
  *
  * - If the same page exists in the target locale, link to it there.
- * - Otherwise fall back to the target locale's section index (`/docs`,
- *   `/cn/docs`), or the target locale root if the path has no section.
+ * - Otherwise fall back to the FIRST reachable leaf of the same section in the
+ *   target locale (`/docs` itself has no index page — see firstSectionLeafHref),
+ *   then to the target locale root.
  *
  * `currentPath` is the live ROUTE path (`useRouter().path`); we derive the
  * source locale + unprefixed remainder from it.
+ *
+ * `existence` is the NAV-derived per-locale leaf set (the target locale's nav
+ * actually lists the page); `existsByPage` is the @void/md page set used to find
+ * a reachable section-fallback leaf and is passed to firstSectionLeafHref.
  */
 export function computeLangSwitchUrl(
   currentPath: string,
   targetLocale: Locale,
   existence: Record<Locale, ReadonlySet<string>>,
   splitLocaleFn: (p: string) => [Locale, string],
+  navForTarget: LocaleNav,
+  existsByPage: Record<Locale, ReadonlySet<string>>,
 ): string {
   const [, rest] = splitLocaleFn(currentPath)
   if (!rest) return localizeHref('', targetLocale)
@@ -220,9 +316,18 @@ export function computeLangSwitchUrl(
     return localizeHref(rest, targetLocale)
   }
 
-  // Fall back to the section index of the target locale, or its root.
+  // Fall back to the first reachable leaf of the same section (the section has
+  // no index page), or the target locale root if there is none.
   const section = leafSection(rest)
-  if (section) return localeSectionIndex(section, targetLocale)
+  if (section) {
+    const leafHref = firstSectionLeafHref(
+      section,
+      targetLocale,
+      navForTarget,
+      existsByPage,
+    )
+    if (leafHref) return leafHref
+  }
   return localizeHref('', targetLocale)
 }
 

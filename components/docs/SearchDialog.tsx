@@ -172,7 +172,7 @@ export default function SearchDialog({ locale, className }: SearchDialogProps) {
                   <CommandItem
                     key={entry.path}
                     value={value}
-                    onSelect={() => go(entry.path)}
+                    onSelect={() => go(entry.href)}
                     className="flex flex-col items-start gap-0.5"
                   >
                     <span className="text-sm font-medium">{entry.title}</span>
