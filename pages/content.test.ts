@@ -11,7 +11,11 @@ import { join, dirname, relative } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { describe, it, expect } from 'vite-plus/test'
 import { nav } from '../lib/nav/index.ts'
-import { convert } from '../scripts/convert-content.mjs'
+import {
+  convert,
+  WEBASSEMBLY_ROUTE,
+  assertLinkPreviewEntry,
+} from '../scripts/convert-content.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = join(__dirname, '..')
@@ -20,10 +24,34 @@ const pagesDir = join(root, 'pages')
 
 const LOCALES = ['en', 'cn', 'pt-BR'] as const
 
-// Must mirror the EXCLUDED_ROUTES in scripts/convert-content.mjs.
-const EXCLUDED_ROUTES = new Set(['concepts/webassembly'])
+// Must mirror the EXCLUDED_ROUTES in scripts/convert-content.mjs (now empty:
+// concepts/webassembly is converted with route-gated island rewrites).
+const EXCLUDED_ROUTES = new Set<string>([])
 
 const FENCE_RE = /^\s*(```+|~~~+)/
+
+// @void/md island pages lead with a `<script>...</script>` block at byte 0 (it
+// MUST precede the frontmatter so the plugin's start-anchored extractScript
+// strips it). Mirror that strip here so the frontmatter/import scanners below see
+// the same `---\ntitle...` body the @void/md compiler does. Returns { script,
+// body }: `body` is the post-script remainder, `scriptLineCount` is how many
+// lines the script block (plus its trailing blank) occupied (for line-number
+// reporting).
+const SCRIPT_RE = /^<script\b[^>]*>([\s\S]*?)<\/script>\s*\n?/
+function stripLeadingScript(content: string): {
+  script: string | null
+  body: string
+  scriptLineCount: number
+} {
+  const m = content.match(SCRIPT_RE)
+  if (!m) return { script: null, body: content, scriptLineCount: 0 }
+  const consumed = m[0]
+  return {
+    script: m[1].trim(),
+    body: content.slice(consumed.length),
+    scriptLineCount: consumed.split('\n').length - 1,
+  }
+}
 
 function walk(dir: string): string[] {
   const out: string[] = []
@@ -90,7 +118,13 @@ describe('converted content tree', () => {
     const FORBIDDEN =
       /<Callout\b|<\/Callout>|<NodeLink\b|<\/NodeLink>|<Green>|<\/Green>|<Rust>|<\/Rust>|<Warning>|<\/Warning>/
     for (const file of emittedPages()) {
-      const lines = readFileSync(file, 'utf8').split('\n')
+      // Strip the leading <script> island block (its `import ... with { island }`
+      // line is intentional, not a leak) before scanning the markdown body.
+      const { body, scriptLineCount } = stripLeadingScript(
+        readFileSync(file, 'utf8'),
+      )
+      const lineOffset = scriptLineCount
+      const lines = body.split('\n')
       let inFence = false
       let fm = false
       let fmDone = false
@@ -113,11 +147,11 @@ describe('converted content tree', () => {
         if (inFence) continue
         expect(
           /^import\s/.test(line),
-          `top-level import leaked in ${relative(root, file)}:${i + 1}`,
+          `top-level import leaked in ${relative(root, file)}:${i + 1 + lineOffset}`,
         ).toBe(false)
         expect(
           FORBIDDEN.test(line),
-          `island tag leaked in ${relative(root, file)}:${i + 1}: ${t.slice(0, 60)}`,
+          `island tag leaked in ${relative(root, file)}:${i + 1 + lineOffset}: ${t.slice(0, 60)}`,
         ).toBe(false)
       }
     }
@@ -202,7 +236,7 @@ describe('converted content tree', () => {
       for (const group of nav[locale as keyof typeof nav].sidebar.docs) {
         for (const leaf of group.items) {
           const routePath = leaf.path.replace(/^docs\//, '') // concepts/class
-          if (EXCLUDED_ROUTES.has(routePath)) continue // getting-started/webassembly: later task
+          if (EXCLUDED_ROUTES.has(routePath)) continue // none currently excluded
           const out = join(pagesDir, locale, 'docs', `${routePath}.md`)
           expect(
             existsSync(out),
@@ -219,8 +253,10 @@ describe('converted content tree', () => {
     // injects a title (first H1, else the legacy _meta title, else the first
     // heading) so this can never silently regress.
     for (const file of emittedPages()) {
-      const content = readFileSync(file, 'utf8')
-      const lines = content.split('\n')
+      // Island pages lead with a <script> block before the frontmatter; strip it
+      // so the `---` is the first body line, matching what @void/md parses.
+      const { body } = stripLeadingScript(readFileSync(file, 'utf8'))
+      const lines = body.split('\n')
       expect(
         lines[0]?.trim() === '---',
         `no frontmatter block in ${relative(root, file)}`,
@@ -451,6 +487,301 @@ describe('converter media rewrites are route-scoped', () => {
   })
 })
 
+describe('webassembly slice', () => {
+  const wasmMd = readFileSync(
+    join(pagesDir, 'en', 'docs', 'concepts', 'webassembly.md'),
+    'utf8',
+  )
+
+  it('leads with exactly one <script> default-island import of LinkPreview', () => {
+    // The block MUST be at byte 0 (before the frontmatter): @void/md's
+    // extractScript anchors its SCRIPT_RE at the file start (no /m flag), so a
+    // script-after-frontmatter layout never registers the island.
+    const opens = wasmMd.match(/<script\b/g) ?? []
+    const closes = wasmMd.match(/<\/script>/g) ?? []
+    expect(opens.length, 'exactly one <script> open').toBe(1)
+    expect(closes.length, 'exactly one </script> close').toBe(1)
+    expect(wasmMd.startsWith('<script>')).toBe(true)
+
+    const { script, body } = stripLeadingScript(wasmMd)
+    expect(script).not.toBe(null)
+    // Default import (no braces), relative specifier, island strategy "visible".
+    expect(script).toMatch(
+      /^import\s+LinkPreview\s+from\s+"\.\.\/\.\.\/\.\.\/\.\.\/components\/link-preview\.tsx"\s+with\s*\{\s*island\s*:\s*"visible"\s*\}$/,
+    )
+    // The frontmatter survives intact as the start of the post-script body.
+    expect(body.startsWith('---\ntitle: ')).toBe(true)
+  })
+
+  it('emits exactly two LinkPreview island tags whose data deserializes', () => {
+    // Parse each tag the way the @void/md runtime will: pull the single-quoted
+    // `data` attribute value and JSON.parse it (the `'` escapes round-trip).
+    const re = /<LinkPreview\s+href="([^"]*)"\s+data='([\s\S]*?)'\s*\/>/g
+    const found: string[] = []
+    let m: RegExpExecArray | null
+    while ((m = re.exec(wasmMd)) !== null) {
+      const href = m[1]
+      const data = m[2]
+      // The single-quoted attribute must contain no raw apostrophe (it would
+      // terminate the attribute early); all `'` are escaped to `'`.
+      expect(
+        data.includes("'"),
+        `raw apostrophe in data attr for ${href}`,
+      ).toBe(false)
+      const parsed = JSON.parse(data) as Record<string, unknown>
+      expect(Object.keys(parsed).sort()).toEqual(['json', 'og', 'userAvatar'])
+      expect(typeof parsed.og).toBe('string')
+      expect((parsed.og as string).length).toBeGreaterThan(0)
+      expect(typeof parsed.userAvatar).toBe('string')
+      expect((parsed.userAvatar as string).length).toBeGreaterThan(0)
+      found.push(href)
+    }
+    expect(found.length, 'exactly two LinkPreview island tags').toBe(2)
+    expect(found.sort()).toEqual([
+      'https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/',
+      'https://github.com/napi-rs/napi-rs/issues/1794',
+    ])
+  })
+
+  it('rewrites all five logo imgs to static /assets paths (no {X.src} left)', () => {
+    expect(wasmMd).toContain('<img src="/assets/vite.svg"')
+    expect(wasmMd).toContain('<img src="/assets/webpack.svg"')
+    expect(wasmMd).toContain('<img src="/assets/yarn.svg"')
+    expect(wasmMd).toContain('<img src="/assets/pnpm.svg"')
+    expect(wasmMd).toContain('<img src="/assets/npm.png"')
+    // No leftover JSX `src={X.src}` expressions anywhere.
+    expect(wasmMd).not.toMatch(/\.src\}/)
+    expect(wasmMd).not.toMatch(/src=\{[A-Za-z]/)
+  })
+
+  it('converts inline JSX-isms (style={{}} -> style="", className -> class)', () => {
+    // @void/md renders plain-markdown HTML: markdown-it ESCAPES any tag whose
+    // attributes use a JSX `style={{ ... }}` object (the whole <a> would leak as
+    // visible text), and `className=` is inert in real HTML (the Tailwind color
+    // class never applies). Assert no such JSX-ism survives outside code fences.
+    const { body } = stripLeadingScript(wasmMd)
+    let inFence = false
+    for (const line of body.split('\n')) {
+      if (FENCE_RE.test(line)) {
+        inFence = !inFence
+        continue
+      }
+      if (inFence) continue
+      expect(
+        line.includes('style={{'),
+        `JSX style object leaked: ${line.trim().slice(0, 80)}`,
+      ).toBe(false)
+      expect(
+        line.includes('className='),
+        `className leaked: ${line.trim().slice(0, 80)}`,
+      ).toBe(false)
+    }
+    // Positive: the course-link <a> kept its styling as a CSS string (so the tag
+    // is valid HTML and renders as a real anchor), and the bundler labels kept
+    // their color class.
+    expect(wasmMd).toContain(
+      '<a style="color: var(--color-indigo-400); text-decoration-line: underline" href="https://learn-wasm.dev/?via=brooklyn" target="_blank">',
+    )
+    expect(wasmMd).toContain('<span class="text-violet-500">Vite</span>')
+    expect(wasmMd).toContain('<span class="text-sky-500">Webpack</span>')
+  })
+
+  it('drops getStaticProps / top-level imports / TransformImage from the body', () => {
+    const { body } = stripLeadingScript(wasmMd)
+    expect(body).not.toContain('getStaticProps')
+    // No `export const` (the getStaticProps loader) anywhere in the body.
+    expect(body).not.toMatch(/^\s*export const\b/m)
+    expect(body).not.toContain('<TransformImage')
+    // No top-level `import ` leak outside code fences (the only import is in the
+    // leading <script>, already stripped from `body`).
+    const lines = body.split('\n')
+    let inFence = false
+    let fmDone = false
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+      const t = line.trim()
+      if (i === 0 && t === '---') continue
+      if (!fmDone && t === '---') {
+        fmDone = true
+        continue
+      }
+      if (!fmDone) continue
+      if (FENCE_RE.test(line)) {
+        inFence = !inFence
+        continue
+      }
+      if (inFence) continue
+      expect(
+        /^import\s/.test(line),
+        `top-level import leaked at body line ${i + 1}: ${t.slice(0, 60)}`,
+      ).toBe(false)
+    }
+  })
+
+  it('replaces the demo with the ::: info Interactive demo fallback', () => {
+    expect(wasmMd).toContain('::: info Interactive demo')
+    expect(wasmMd).toContain(
+      'runs on cross-origin-isolated pages — see [Server configuration](#server-configuration) below',
+    )
+  })
+
+  it('throws on a LinkPreview href absent from the fixture (before any write)', () => {
+    // A WebAssembly source that references an href the fixture does not cover
+    // must fail the conversion (so main()'s preflight catches it before the
+    // destructive clean) rather than silently emit a broken island.
+    const src = [
+      '# Heading',
+      '',
+      '<LinkPreview href="https://example.test/not-in-fixture" />',
+      '',
+    ].join('\n')
+    expect(() => convert(src, 'Heading', WEBASSEMBLY_ROUTE)).toThrow(
+      /fixture entry for href .* is missing or malformed/,
+    )
+  })
+
+  it('assertLinkPreviewEntry rejects missing/malformed entries, accepts a complete one', () => {
+    const complete = {
+      json: {
+        title: 't',
+        body: 'b',
+        user: { login: 'l' },
+        repoUrl: 'r',
+      },
+      og: 'AAAA',
+      userAvatar: 'BBBB',
+    }
+    expect(() => assertLinkPreviewEntry('h', complete)).not.toThrow()
+    // Each of these is a "truthy but malformed" entry that a laxer guard would
+    // have waved through into a broken island.
+    expect(() => assertLinkPreviewEntry('h', undefined)).toThrow()
+    expect(() => assertLinkPreviewEntry('h', {})).toThrow()
+    expect(() => assertLinkPreviewEntry('h', { ...complete, og: '' })).toThrow()
+    expect(() =>
+      assertLinkPreviewEntry('h', { ...complete, userAvatar: undefined }),
+    ).toThrow()
+    expect(() =>
+      assertLinkPreviewEntry('h', {
+        ...complete,
+        json: { ...complete.json, user: {} },
+      }),
+    ).toThrow()
+    // Whitespace-only fields are NOT usable (blank card / invalid image URL).
+    expect(() =>
+      assertLinkPreviewEntry('h', { ...complete, og: '   ' }),
+    ).toThrow()
+    expect(() =>
+      assertLinkPreviewEntry('h', {
+        ...complete,
+        json: { ...complete.json, title: '  \t ' },
+      }),
+    ).toThrow()
+    // Arrays and inherited (non-own) fields must not satisfy the shape check.
+    expect(() => assertLinkPreviewEntry('h', [])).toThrow()
+    expect(() =>
+      assertLinkPreviewEntry('h', { ...complete, json: [] }),
+    ).toThrow()
+    expect(() => assertLinkPreviewEntry('h', Object.create(complete))).toThrow()
+  })
+
+  it('convert() is self-idempotent on the WebAssembly route (no duplicate script/frontmatter)', () => {
+    // The emitted island page begins with a `<script>` block (which a legacy
+    // .mdx source never does). Feeding converted output back through convert()
+    // must NOT strip the island import, re-add frontmatter, or prepend a second
+    // <script>. Guards the function-level idempotency the byte-0 injection
+    // depends on (the workflow re-reads pristine source, but this is the strict
+    // invariant).
+    const src = readFileSync(
+      join(legacyDocs, 'concepts', 'webassembly.en.mdx'),
+      'utf8',
+    )
+    const once = convert(src, 'WebAssembly', WEBASSEMBLY_ROUTE)
+    const twice = convert(once, 'WebAssembly', WEBASSEMBLY_ROUTE)
+    expect(twice).toBe(once)
+    // Exactly one leading island <script> and one frontmatter delimiter pair.
+    expect(twice.startsWith('<script>')).toBe(true)
+    expect((twice.match(/<script\b/g) ?? []).length).toBe(1)
+    expect((twice.match(/^---$/gm) ?? []).length).toBe(2)
+  })
+})
+
+describe('converter webassembly rewrites are route-scoped', () => {
+  // Synthetic source carrying the three WebAssembly-only JSX constructs.
+  const OFF_ROUTE_SRC = [
+    'export const getStaticProps = async () => {',
+    '  return { props: { ssg: {} } }',
+    '}',
+    '',
+    '# Heading',
+    '',
+    "<img src={ViteLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} />",
+    '',
+    '<a style={{ color: \'red\' }} href="https://x.test">link</a>',
+    '<span className="text-violet-500">Vite</span>',
+    '',
+    '<LinkPreview href="https://github.com/napi-rs/napi-rs/issues/1794" />',
+    '',
+  ].join('\n')
+
+  it('off-route: getStaticProps, logo img, JSX-isms, and LinkPreview pass through untouched', () => {
+    // A non-webassembly route must NOT trigger any of the island rewrites. (The
+    // generic top-level-import stripper does not touch `export const` or these
+    // JSX tags, so they survive verbatim.)
+    const out = convert(OFF_ROUTE_SRC, 'Heading', 'concepts/foo')
+    expect(out).toContain('export const getStaticProps')
+    expect(out).toContain('<img src={ViteLogo.src}')
+    expect(out).not.toContain('/assets/vite.svg')
+    // JSX style object and className survive untouched off-route.
+    expect(out).toContain("<a style={{ color: 'red' }}")
+    expect(out).toContain('<span className="text-violet-500">')
+    // LinkPreview is left as the bare tag — no baked `data=` attribute injected.
+    expect(out).toContain(
+      '<LinkPreview href="https://github.com/napi-rs/napi-rs/issues/1794" />',
+    )
+    expect(out).not.toContain("data='")
+    // No island <script> block injected off-route.
+    expect(out.startsWith('<script>')).toBe(false)
+  })
+
+  it('on-route: the same source is fully rewritten', () => {
+    const out = convert(OFF_ROUTE_SRC, 'Heading', WEBASSEMBLY_ROUTE)
+    expect(out).not.toContain('getStaticProps')
+    expect(out).toContain('<img src="/assets/vite.svg"')
+    expect(out).not.toContain('{ViteLogo.src}')
+    // JSX-isms converted to valid HTML.
+    expect(out).toContain('<a style="color: red" href="https://x.test">')
+    expect(out).toContain('<span class="text-violet-500">')
+    expect(out).not.toContain('style={{')
+    expect(out).not.toContain('className=')
+    expect(out).toContain(
+      '<LinkPreview href="https://github.com/napi-rs/napi-rs/issues/1794" data=\'',
+    )
+    expect(out.startsWith('<script>')).toBe(true)
+  })
+
+  it('on-route: fenced logo img / LinkPreview / getStaticProps stay literal', () => {
+    const src = [
+      '# Heading',
+      '',
+      '```tsx',
+      '<img src={ViteLogo.src} width={20} height={20} />',
+      '<LinkPreview href="https://github.com/napi-rs/napi-rs/issues/1794" />',
+      'export const getStaticProps = () => {}',
+      '```',
+      '',
+    ].join('\n')
+    const out = convert(src, 'Heading', WEBASSEMBLY_ROUTE)
+    // Untouched inside the fence.
+    expect(out).toContain('<img src={ViteLogo.src} width={20} height={20} />')
+    expect(out).toContain(
+      '<LinkPreview href="https://github.com/napi-rs/napi-rs/issues/1794" />',
+    )
+    expect(out).toContain('export const getStaticProps = () => {}')
+    expect(out).not.toContain('/assets/vite.svg')
+    expect(out).not.toContain("data='")
+  })
+})
+
 describe('converter is side-effect-free to import', () => {
   it('imports cleanly via a bare dynamic import (no argv[1]) and does NOT run the CLI', () => {
     // Regression: the CLI main-guard must guard `process.argv[1]` before calling
@@ -461,7 +792,7 @@ describe('converter is side-effect-free to import', () => {
     const scriptUrl = pathToFileURL(
       join(root, 'scripts', 'convert-content.mjs'),
     ).href
-    const code = `import(${JSON.stringify(scriptUrl)}).then((m) => { if (typeof m.convert !== 'function' || typeof m.GETTING_STARTED_ROUTE !== 'string') { console.error('missing exports'); process.exit(2) } process.stdout.write('ok') }).catch((e) => { console.error(e); process.exit(3) })`
+    const code = `import(${JSON.stringify(scriptUrl)}).then((m) => { if (typeof m.convert !== 'function' || typeof m.GETTING_STARTED_ROUTE !== 'string' || typeof m.WEBASSEMBLY_ROUTE !== 'string') { console.error('missing exports'); process.exit(2) } process.stdout.write('ok') }).catch((e) => { console.error(e); process.exit(3) })`
     // execFileSync throws on a non-zero exit; an undefined-argv crash would exit 3.
     const stdout = execFileSync('node', ['--input-type=module', '-e', code], {
       stdio: ['ignore', 'pipe', 'pipe'],

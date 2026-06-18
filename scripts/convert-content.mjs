@@ -39,14 +39,36 @@ const root = resolve(__dirname, '..')
 const legacyDocs = join(root, 'legacy_pages', 'docs')
 const pagesDir = join(root, 'pages')
 
+// LinkPreview metadata fixture, baked from the legacy getStaticProps by
+// scripts/fetch-link-previews.mjs. Loaded lazily (and cached) so importing this
+// module for tests never touches the filesystem; only the route-gated
+// WebAssembly LinkPreview rewrite below actually reads it.
+const LINK_PREVIEW_DATA_PATH = join(
+  root,
+  'lib',
+  'docs',
+  'link-preview-data.json',
+)
+let _linkPreviewData
+function linkPreviewFixture() {
+  if (_linkPreviewData === undefined) {
+    if (!existsSync(LINK_PREVIEW_DATA_PATH)) {
+      throw new Error(
+        `Missing LinkPreview fixture ${relative(root, LINK_PREVIEW_DATA_PATH)} — run \`node scripts/fetch-link-previews.mjs\` first.`,
+      )
+    }
+    _linkPreviewData = JSON.parse(readFileSync(LINK_PREVIEW_DATA_PATH, 'utf8'))
+  }
+  return _linkPreviewData
+}
+
 const LOCALES = ['en', 'cn', 'pt-BR']
 
 // Hard exclusions — handled by later island/dynamic tasks. Matched against the
 // legacy route path (relative to legacy_pages/docs, no locale/ext), so all three
-// locales of each are excluded.
-const EXCLUDED_ROUTES = new Set([
-  'concepts/webassembly', // getStaticProps + TransformImage/LinkPreview
-])
+// locales of each are excluded. (Currently empty: concepts/webassembly is now
+// converted with route-gated island rewrites below.)
+const EXCLUDED_ROUTES = new Set([])
 
 // The single legacy route whose prose carries page-specific media (a JSX
 // <video> element and a co-located ./package-template.png image). The two media
@@ -54,6 +76,15 @@ const EXCLUDED_ROUTES = new Set([
 // tool: a <video> or ./package-template.png on any OTHER page passes through
 // untouched rather than being silently rewritten to getting-started's assets.
 const GETTING_STARTED_ROUTE = 'introduction/getting-started'
+
+// The legacy WebAssembly page carries page-specific JSX that @void/md cannot
+// evaluate: a getStaticProps data loader, inline logo <img src={X.src} ...>
+// elements, two <LinkPreview href=.../> previews (fed by getStaticProps), and a
+// <TransformImage /> interactive demo. The rewrites below (strip getStaticProps,
+// static-ify logos, bake LinkPreview metadata from the fixture, fall back the
+// demo, inject the LinkPreview island <script>) are ALL gated to this exact
+// route so the converter stays a general tool.
+const WEBASSEMBLY_ROUTE = 'concepts/webassembly'
 
 // ----------------------------------------------------------------------------
 // File discovery
@@ -127,6 +158,7 @@ function calloutMarker(openTag) {
  */
 function phaseABlocks(src, routePath) {
   const isGettingStarted = routePath === GETTING_STARTED_ROUTE
+  const isWebAssembly = routePath === WEBASSEMBLY_ROUTE
   const lines = src.split('\n')
   const out = []
   let inFence = false
@@ -217,6 +249,46 @@ function phaseABlocks(src, routePath) {
         /\]\(\.\/package-template\.png\)/g,
         '](/assets/package-template.png)',
       )
+    }
+
+    // WebAssembly page (route-gated, outside fences). All three rewrites here are
+    // idempotent and never fire on any other route.
+    if (isWebAssembly) {
+      // <TransformImage /> -> static "Interactive demo" fallback container.
+      // (The interactive WASM demo island is deferred to a later task.)
+      if (/^\s*<TransformImage\s*\/>\s*$/.test(line)) {
+        for (const c of TRANSFORM_IMAGE_FALLBACK.split('\n'))
+          out.push({ text: c, code: false })
+        continue
+      }
+      // Inline logo <img src={NAME.src} ...> (incl. inside `### ` headings, and
+      // multiple per line) -> static /assets/ raw HTML.
+      if (/<img\b[^>]*\bsrc\s*=\s*\{[A-Za-z]/.test(line)) {
+        line = rewriteWasmLogoImgs(line)
+      }
+      // Remaining inline JSX-isms in raw HTML (the course-link <a> in the first
+      // Callout, and the colored <span>s next to the bundler logos). @void/md
+      // emits plain markdown: markdown-it ESCAPES any tag whose attributes use a
+      // JSX `style={{ ... }}` object (the whole <a> would leak as visible text),
+      // and `className=` is an inert attribute in real HTML (the Tailwind color
+      // class never applies). Convert JSX style objects to CSS strings and
+      // `className` -> `class`. The logo <img>s are already rewritten above (no
+      // `style={{` remains on their line), so this runs AFTER them; it runs
+      // BEFORE the LinkPreview rewrite so the baked `data='...'` JSON blob is
+      // never scanned for these substrings. Both are idempotent and fence-gated.
+      if (line.includes('style={{')) {
+        line = line.replace(
+          /style=\{\{([^}]*)\}\}/g,
+          (_, inner) => `style="${jsxStyleObjectToCss(inner)}"`,
+        )
+      }
+      if (line.includes('className=')) {
+        line = line.replace(/\bclassName=/g, 'class=')
+      }
+      // <LinkPreview href="..." /> -> add the baked `data='...'` metadata prop.
+      if (/<LinkPreview\b/.test(line)) {
+        line = rewriteLinkPreview(line)
+      }
     }
 
     // Strip MDX comments `{/* ... */}`. In MDX these are invisible when rendered,
@@ -320,6 +392,208 @@ function jsxStyleObjectToCss(objLiteral) {
   }
   return decls.join('; ')
 }
+
+// ----------------------------------------------------------------------------
+// WebAssembly-page-specific rewrites (route-gated to WEBASSEMBLY_ROUTE).
+// ----------------------------------------------------------------------------
+
+/**
+ * Remove the top-level `export const getStaticProps = ...` block from the raw
+ * source via brace-balancing. Locates the `export const getStaticProps` marker
+ * line OUTSIDE any code fence (so a `getStaticProps` inside a ``` block is left
+ * literal), then scans from its first `{` counting `{`/`}` to balance and removes
+ * through the closing `}` plus one trailing newline. In the real page the block
+ * sits before the first heading/fence; the fence-awareness keeps the transform a
+ * correct general tool. No-op (idempotent) when the marker is absent or outside a
+ * fence cannot be found. Pure + deterministic.
+ */
+function stripGetStaticProps(src) {
+  const marker = 'export const getStaticProps'
+  // Find the marker's byte offset, but only on a line that is OUTSIDE a fence.
+  const lines = src.split('\n')
+  let inFence = false
+  let offset = 0
+  let start = -1
+  for (const line of lines) {
+    if (FENCE_RE.test(line)) {
+      inFence = !inFence
+    } else if (!inFence) {
+      const idx = line.indexOf(marker)
+      if (idx !== -1) {
+        start = offset + idx
+        break
+      }
+    }
+    offset += line.length + 1 // +1 for the '\n' removed by split
+  }
+  if (start === -1) return src
+  // Find the first `{` at/after the marker, then brace-balance to its close.
+  const firstBrace = src.indexOf('{', start)
+  if (firstBrace === -1) return src
+  let depth = 0
+  let end = -1
+  for (let i = firstBrace; i < src.length; i++) {
+    const ch = src[i]
+    if (ch === '{') depth++
+    else if (ch === '}') {
+      depth--
+      if (depth === 0) {
+        end = i
+        break
+      }
+    }
+  }
+  if (end === -1) return src // unbalanced — leave untouched
+  // Consume one trailing newline after the closing brace (and any spaces).
+  let after = end + 1
+  while (after < src.length && (src[after] === ' ' || src[after] === '\t'))
+    after++
+  if (src[after] === '\n') after++
+  return src.slice(0, start) + src.slice(after)
+}
+
+// Logo import-identifier -> served asset filename (all under public/assets/).
+const WASM_LOGO_ASSETS = {
+  ViteLogo: 'vite.svg',
+  WebpackLogo: 'webpack.svg',
+  YarnLogo: 'yarn.svg',
+  PnpmLogo: 'pnpm.svg',
+  NpmLogo: 'npm.png',
+}
+
+/**
+ * Rewrite every inline JSX logo `<img src={NAME.src} style={{...}} width={N}
+ * height={N} />` on a line to static raw HTML pointing at the served asset:
+ *   <img src="/assets/FILE" width="N" height="N" style="<css>" /> (className dropped)
+ * Handles multiple imgs on one line and imgs embedded in heading lines. The
+ * `src={NAME.src}` expression maps via WASM_LOGO_ASSETS; the JSX style object is
+ * converted to a CSS string with the existing jsxStyleObjectToCss. Pure +
+ * deterministic; lines without a matching logo img pass through unchanged.
+ */
+function rewriteWasmLogoImgs(line) {
+  // Match a self-closing <img ... /> whose src is `{NAME.src}` for a known logo.
+  // Attributes are order-tolerant: capture style/width/height wherever they sit.
+  const imgRe = /<img\b([^>]*?)\/>/g
+  return line.replace(imgRe, (whole, attrs) => {
+    const srcMatch = attrs.match(
+      /\bsrc\s*=\s*\{\s*([A-Za-z][A-Za-z0-9]*)\.src\s*\}/,
+    )
+    if (!srcMatch) return whole // not a logo img — leave untouched
+    const file = WASM_LOGO_ASSETS[srcMatch[1]]
+    if (!file) return whole // unknown identifier — leave untouched
+    const styleMatch = attrs.match(/\bstyle\s*=\s*\{\{([\s\S]*?)\}\}/)
+    const css = styleMatch ? jsxStyleObjectToCss(styleMatch[1]) : ''
+    const widthMatch = attrs.match(/\bwidth\s*=\s*\{?\s*(\d+)\s*\}?/)
+    const heightMatch = attrs.match(/\bheight\s*=\s*\{?\s*(\d+)\s*\}?/)
+    const parts = [`<img src="/assets/${file}"`]
+    if (widthMatch) parts.push(`width="${widthMatch[1]}"`)
+    if (heightMatch) parts.push(`height="${heightMatch[1]}"`)
+    if (css) parts.push(`style="${css}"`)
+    return parts.join(' ') + ' />'
+  })
+}
+
+/**
+ * Encode the fixture metadata for a single-quoted HTML `data` attribute. Only
+ * apostrophes are escaped (to `'`) — that is the one character that could
+ * terminate the single-quoted attribute early; base64's `/ + =` and JSON's `"`
+ * are all safe inside single quotes. The `'` sequence round-trips back to
+ * `'` through JSON.parse at runtime. Pure + deterministic.
+ */
+function encodeLinkPreviewData(entry) {
+  return JSON.stringify(entry).replace(/'/g, '\\u0027')
+}
+
+// Matches a bare `<LinkPreview href="..." />` tag (no data attribute yet).
+// Shared by rewriteLinkPreview() and main()'s preflight so both see exactly the
+// same set of hrefs.
+const LINK_PREVIEW_TAG_RE = /<LinkPreview\s+href\s*=\s*"([^"]*)"\s*\/>/g
+
+/**
+ * Validate that a fixture entry for `href` has the exact shape the island
+ * component (components/link-preview.tsx) reads: `json.{title,body,user.login,
+ * repoUrl}` plus `og` and `userAvatar`, all non-empty strings. Throws a clear,
+ * actionable error otherwise. Used BOTH per-tag in rewriteLinkPreview() and in
+ * main()'s preflight (before any destructive cleanup), so a missing OR malformed
+ * entry fails fast — it never half-deletes the emitted tree, and a syntactically
+ * valid but incomplete fixture (e.g. `{}`) can never serialize a broken island.
+ */
+function assertLinkPreviewEntry(href, entry) {
+  // Plain object = own (not inherited) value that is a non-null, non-array
+  // object. JSON.parse only ever yields own enumerable properties, so this also
+  // rejects any inherited-field/array shapes a hand-crafted object might carry.
+  const ownObj = (o, k) =>
+    o != null &&
+    Object.hasOwn(o, k) &&
+    typeof o[k] === 'object' &&
+    o[k] !== null &&
+    !Array.isArray(o[k])
+  // Non-empty = own string property with at least one non-whitespace char (a
+  // whitespace-only "title"/"og" would render a blank card or an invalid image
+  // data URL, so it is just as unusable as an empty string).
+  const ownStr = (o, k) =>
+    o != null &&
+    Object.hasOwn(o, k) &&
+    typeof o[k] === 'string' &&
+    o[k].trim().length > 0
+  const ok =
+    entry != null &&
+    typeof entry === 'object' &&
+    !Array.isArray(entry) &&
+    ownObj(entry, 'json') &&
+    ownStr(entry.json, 'title') &&
+    ownStr(entry.json, 'body') &&
+    ownObj(entry.json, 'user') &&
+    ownStr(entry.json.user, 'login') &&
+    ownStr(entry.json, 'repoUrl') &&
+    ownStr(entry, 'og') &&
+    ownStr(entry, 'userAvatar')
+  if (!ok) {
+    throw new Error(
+      `LinkPreview fixture entry for href ${JSON.stringify(href)} is missing or malformed ` +
+        '(need json.{title,body,user.login,repoUrl} + og + userAvatar as non-empty strings) — ' +
+        're-run `node scripts/fetch-link-previews.mjs`.',
+    )
+  }
+  return entry
+}
+
+/**
+ * Validate every LinkPreview href referenced by `src` against the fixture, with
+ * the full required shape. Pure (no writes); throws on the first bad entry. Used
+ * by main()'s preflight to fail BEFORE the destructive clean.
+ */
+function assertLinkPreviewFixtureFor(src) {
+  const fixture = linkPreviewFixture()
+  for (const m of src.matchAll(LINK_PREVIEW_TAG_RE)) {
+    assertLinkPreviewEntry(m[1], fixture[m[1]])
+  }
+}
+
+/**
+ * Rewrite `<LinkPreview href="HREF" />` to `<LinkPreview href="HREF" data='ENC' />`
+ * where ENC is the fixture metadata for HREF, single-quote-encoded. Throws a
+ * clear error if the fixture has no entry for HREF or the entry is malformed
+ * (assertLinkPreviewEntry). Idempotent: a tag that already carries a `data=`
+ * attribute is left unchanged. Pure given the fixture.
+ */
+function rewriteLinkPreview(line) {
+  return line.replace(LINK_PREVIEW_TAG_RE, (_m, href) => {
+    const entry = assertLinkPreviewEntry(href, linkPreviewFixture()[href])
+    return `<LinkPreview href="${href}" data='${encodeLinkPreviewData(entry)}' />`
+  })
+}
+
+// Static fallback for the legacy <TransformImage /> interactive WASM demo. The
+// demo is deferred (not yet ported as an island); this markdown container keeps
+// the page coherent and points readers at the headers section they need.
+const TRANSFORM_IMAGE_FALLBACK = [
+  '::: info Interactive demo',
+  '',
+  'The in-browser image transformer (powered by [`@napi-rs/image`](https://github.com/Brooooooklyn/Image) compiled to WebAssembly) runs on cross-origin-isolated pages — see [Server configuration](#server-configuration) below for the required `SharedArrayBuffer` response headers.',
+  '',
+  ':::',
+].join('\n')
 
 /**
  * Rewrite a JSX <video>...</video> block into a single line of plain raw HTML
@@ -570,13 +844,43 @@ function ensureFrontmatterTitle(md, fallbackTitle) {
   return `---\n${titleLine}\n---\n\n${md}`
 }
 
+// The @void/md island <script> block for the WebAssembly page. NOTE: @void/md's
+// extractScript() anchors its SCRIPT_RE at the START of the file (`/^<script.../`,
+// no `m` flag — verified against node_modules/@void/md/dist/plugin.mjs:398), so
+// the block MUST precede the frontmatter or the island is never extracted and the
+// raw `<script>` leaks as visible text. We inject it at byte 0 accordingly; the
+// trailing frontmatter survives because extractScript() slices the script off and
+// hands the remaining `---\ntitle...\n---\n...` body to gray-matter.
+const WEBASSEMBLY_SCRIPT_BLOCK = [
+  '<script>',
+  'import LinkPreview from "../../../../components/link-preview.tsx" with { island: "visible" }',
+  '</script>',
+].join('\n')
+
 /**
  * Run the full conversion on a source string. Returns the converted markdown.
  * `fallbackTitle` (the legacy `_meta` leaf title) is used only when the page has
  * no H1 to derive a frontmatter `title` from. `routePath` (the legacy route)
- * gates the page-specific media rewrites to GETTING_STARTED_ROUTE.
+ * gates the page-specific media rewrites to GETTING_STARTED_ROUTE and the island
+ * rewrites to WEBASSEMBLY_ROUTE.
  */
 function convert(src, fallbackTitle, routePath) {
+  // Self-idempotency: a legacy .mdx source never begins with an island
+  // `<script>` block, so a leading one means `src` is already-converted output
+  // being fed back through convert() (e.g. a stricter `convert(convert(x))`
+  // check, or a future caller that re-reads emitted pages). Strip it here; the
+  // byte-0 injection at the end re-adds the canonical block, so
+  // convert(convert(x)) === convert(x). Uses the same start-anchored pattern as
+  // @void/md's extractScript (node_modules/@void/md/dist/plugin.mjs:398).
+  src = src.replace(/^<script\b[^>]*>[\s\S]*?<\/script>\s*\n?/, '')
+
+  // WebAssembly pre-pass: strip the top-level getStaticProps data loader before
+  // the line-based scan (it spans many lines with nested braces and sits before
+  // the first heading/fence). Route-gated + idempotent.
+  if (routePath === WEBASSEMBLY_ROUTE) {
+    src = stripGetStaticProps(src)
+  }
+
   const records = phaseABlocks(src, routePath)
 
   // Reassemble, applying the inline phase to contiguous non-code regions only.
@@ -614,6 +918,13 @@ function convert(src, fallbackTitle, routePath) {
   // renders a non-empty <title> under titleTemplate. Runs LAST so it sees the
   // fully-normalized output (and stays idempotent on re-run).
   result = ensureFrontmatterTitle(result, fallbackTitle)
+
+  // WebAssembly: prepend the LinkPreview island <script> block at byte 0 (see
+  // WEBASSEMBLY_SCRIPT_BLOCK — it MUST precede the frontmatter). Idempotent: a
+  // re-run sees the block already present and skips it.
+  if (routePath === WEBASSEMBLY_ROUTE && !result.startsWith('<script>')) {
+    result = `${WEBASSEMBLY_SCRIPT_BLOCK}\n\n${result}`
+  }
 
   return result
 }
@@ -674,6 +985,28 @@ function cleanEmittedMarkdown(dir) {
 }
 
 function main() {
+  const allFiles = walk(legacyDocs).sort()
+
+  // Preflight required generated inputs BEFORE any destructive cleanup, so a
+  // missing/corrupt/incomplete fixture fails fast instead of wiping the emitted
+  // docs tree and aborting mid-conversion (leaving a partially-empty tree) — or
+  // worse, serializing a broken island. The only such input today is the
+  // LinkPreview fixture, needed by the in-scope WebAssembly source(s). Validate
+  // EVERY href those sources reference, with the full required entry shape (not
+  // just that the JSON file exists and parses), up front.
+  for (const f of allFiles) {
+    const p = parseLegacy(f)
+    if (
+      !p ||
+      p.routePath !== WEBASSEMBLY_ROUTE ||
+      !LOCALES.includes(p.locale)
+    ) {
+      continue
+    }
+    if (EXCLUDED_ROUTES.has(p.routePath)) continue
+    assertLinkPreviewFixtureFor(readFileSync(f, 'utf8'))
+  }
+
   // Clean stale emitted markdown so removed source files don't leave orphans.
   // Only ever delete `.md` files under pages/<locale>/docs — never the layout
   // islands living in the same tree, nor pages/index.md or other pages.
@@ -681,7 +1014,6 @@ function main() {
     cleanEmittedMarkdown(join(pagesDir, locale, 'docs'))
   }
 
-  const allFiles = walk(legacyDocs).sort()
   const converted = []
   const skipped = []
 
@@ -698,8 +1030,15 @@ function main() {
     const outPath = join(pagesDir, locale, 'docs', `${routePath}.md`)
     mkdirSync(dirname(outPath), { recursive: true })
     writeFileSync(outPath, output, 'utf8')
-    converted.push({ routePath, locale, outPath })
+    converted.push({ routePath, locale, outPath, output })
   }
+
+  // Island pages lead with a `<script>` block (it MUST precede the frontmatter so
+  // @void/md's start-anchored extractScript picks it up). `vp fmt` then no longer
+  // recognizes the trailing `---` as frontmatter and reflows it into a thematic
+  // break — so we exempt those pages from formatting and restore the converter's
+  // own already-normalized output verbatim after `vp fmt` runs over the tree.
+  const islandPages = converted.filter((c) => c.output.startsWith('<script>'))
 
   // Format the emitted tree so committed output matches `vp fmt` and re-runs are
   // stable. Verified that vp fmt does not reflow containers / fences / captions.
@@ -715,6 +1054,11 @@ function main() {
     }
   } catch {
     // vp not on PATH; pre-commit hook will format.
+  }
+
+  // Restore island pages to their pre-fmt bytes (see above).
+  for (const page of islandPages) {
+    writeFileSync(page.outPath, page.output, 'utf8')
   }
 
   // Report
@@ -745,4 +1089,9 @@ if (cliEntry && import.meta.url === pathToFileURL(cliEntry).href) {
   main()
 }
 
-export { convert, GETTING_STARTED_ROUTE }
+export {
+  convert,
+  GETTING_STARTED_ROUTE,
+  WEBASSEMBLY_ROUTE,
+  assertLinkPreviewEntry,
+}
