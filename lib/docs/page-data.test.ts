@@ -162,26 +162,40 @@ describe('getPageDataCore', () => {
 // --- getBreadcrumbCore -----------------------------------------------------
 
 describe('getBreadcrumbCore', () => {
-  it('builds Home > tab > group > leaf for en (unprefixed hrefs)', () => {
-    const crumb = getBreadcrumbCore('docs/concepts/class', 'en', enNav)
+  const existence = buildPageExistenceSets(pages)
+  it('builds Home > tab > group > leaf for en; tab crumb points at the first reachable leaf, NOT the bare /docs index (404)', () => {
+    const crumb = getBreadcrumbCore(
+      'docs/concepts/class',
+      'en',
+      enNav,
+      existence,
+    )
     expect(crumb).toEqual([
       { label: 'Home', href: '/' },
-      { label: 'Docs', href: '/docs' },
+      // first reachable leaf of `docs`, same target as the navbar tab — NOT `/docs`
+      { label: 'Docs', href: '/docs/introduction/simple-package' },
       { label: 'Concepts', href: '' },
       { label: 'Class', href: '/docs/concepts/class' },
     ])
   })
-  it('uses prefixed hrefs + localized Home for cn', () => {
-    const crumb = getBreadcrumbCore('docs/concepts/class', 'cn', cnNav)
+  it('uses prefixed hrefs + localized Home for cn; tab crumb is the first reachable cn leaf', () => {
+    const crumb = getBreadcrumbCore(
+      'docs/concepts/class',
+      'cn',
+      cnNav,
+      existence,
+    )
     expect(crumb).toEqual([
       { label: '首页', href: '/cn' },
-      { label: '文档', href: '/cn/docs' },
+      { label: '文档', href: '/cn/docs/concepts/class' },
       { label: '概念', href: '' },
       { label: '类', href: '/cn/docs/concepts/class' },
     ])
   })
   it('returns [] when the leaf is not in the locale nav', () => {
-    expect(getBreadcrumbCore('docs/concepts/missing', 'en', enNav)).toEqual([])
+    expect(
+      getBreadcrumbCore('docs/concepts/missing', 'en', enNav, existence),
+    ).toEqual([])
   })
 })
 

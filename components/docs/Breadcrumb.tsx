@@ -4,17 +4,28 @@
 // `useRouter().path` at SSR to derive the current leaf, but it uses plain <a>
 // anchors (no <Link>) so it works without hydration.
 //
-// Data comes from getBreadcrumbCore(leaf, locale, nav[locale]); the group entry
-// has an empty href and is rendered as plain (non-link) text per the helper's
-// contract.
+// Data comes from getBreadcrumbCore(leaf, locale, nav[locale], PAGE_EXISTENCE);
+// the group entry has an empty href and is rendered as plain (non-link) text per
+// the helper's contract, and the tab crumb links to the first reachable leaf of
+// its section (the bare `/docs` index 404s).
 import { ChevronRight } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { nav } from '@/lib/nav/index.ts'
 import type { Locale } from '@/lib/nav/index.ts'
 import { splitLocale } from '@/lib/docs/locale.ts'
-import { getBreadcrumbCore } from '@/lib/docs/page-data.ts'
+import {
+  getBreadcrumbCore,
+  buildPageExistenceSets,
+} from '@/lib/docs/page-data.ts'
+import pages from '@void/md/pages'
 import { useRouter } from '@void/react'
+
+// Per-locale set of leaves with a real emitted @void/md page. The tab crumb
+// links to the first reachable leaf of its section, so it must key off the same
+// real-page existence the navbar tab uses (never the nav existence sets, which
+// list blog/changelog leaves that have no content yet).
+const PAGE_EXISTENCE = buildPageExistenceSets(pages)
 
 export interface BreadcrumbProps {
   /** Active locale. The per-locale layout knows this literally. */
@@ -36,7 +47,7 @@ export default function Breadcrumb({
   const router = useRouter()
   const path = currentPath ?? router.path
   const [, rest] = splitLocale(path)
-  const items = getBreadcrumbCore(rest, locale, nav[locale])
+  const items = getBreadcrumbCore(rest, locale, nav[locale], PAGE_EXISTENCE)
 
   if (items.length === 0) return null
 

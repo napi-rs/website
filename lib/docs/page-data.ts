@@ -190,7 +190,11 @@ function findGroupAndLeaf(
  * Build the breadcrumb trail for a leaf: Home > <tab> > <group> > <leaf>.
  *
  * - Home links to the locale root (`/`, `/cn`, `/pt-BR`).
- * - The tab links to the section index (`/docs`, `/cn/docs`).
+ * - The tab links to the FIRST reachable leaf of the section, NOT the bare
+ *   section index — `/docs` (and `/cn/docs`, …) has no index page and 404s.
+ *   This is the same target as the navbar tab (firstSectionLeafHref). If the
+ *   section has no reachable page it degrades to a non-link (empty href); the
+ *   current leaf guarantees at least one, so that is defensive only.
  * - The group is a non-link label (it has no own page) — represented with an
  *   empty href; the renderer should style it as plain text.
  * - The leaf is the current page (also emitted as a link to itself for
@@ -202,6 +206,7 @@ export function getBreadcrumbCore(
   leafPath: string,
   locale: Locale,
   localeNav: LocaleNav,
+  existsByPage: Record<Locale, ReadonlySet<string>>,
 ): BreadcrumbItem[] {
   const section = leafSection(leafPath)
   const tab = localeNav.tabs.find((t) => t.key === section)
@@ -214,7 +219,11 @@ export function getBreadcrumbCore(
 
   return [
     { label: homeLabel, href: localizeHref('', locale) },
-    { label: tab.title, href: localizeHref(section, locale) },
+    {
+      label: tab.title,
+      href:
+        firstSectionLeafHref(section, locale, localeNav, existsByPage) ?? '',
+    },
     { label: found.group.title, href: '' },
     { label: found.leafTitle, href: localizeHref(leafPath, locale) },
   ]
