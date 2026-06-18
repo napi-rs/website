@@ -28,14 +28,6 @@
         "Cross-Origin-Opener-Policy: same-origin",
         "Cross-Origin-Embedder-Policy: require-corp"
       ],
-      "/cn": [
-        "Cross-Origin-Opener-Policy: same-origin",
-        "Cross-Origin-Embedder-Policy: require-corp"
-      ],
-      "/pt-BR": [
-        "Cross-Origin-Opener-Policy: same-origin",
-        "Cross-Origin-Embedder-Policy: require-corp"
-      ],
       "/assets/*": [
         "Cross-Origin-Embedder-Policy: require-corp",
         "Cross-Origin-Resource-Policy: same-origin"
@@ -82,7 +74,8 @@
     "script": [
       {
         "src": "https://www.googletagmanager.com/gtag/js?id=G-38WMNQBW8F",
-        "async": ""
+        "async": "",
+        "crossorigin": "anonymous"
       },
       {
         "innerHTML": "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-38WMNQBW8F');"
