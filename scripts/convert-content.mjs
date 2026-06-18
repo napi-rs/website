@@ -37,6 +37,7 @@ import { execSync } from 'node:child_process'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
 const legacyDocs = join(root, 'legacy_pages', 'docs')
+const legacyBlog = join(root, 'legacy_pages', 'blog')
 const pagesDir = join(root, 'pages')
 
 // LinkPreview metadata fixture, baked from the legacy getStaticProps by
@@ -87,6 +88,90 @@ const GETTING_STARTED_ROUTE = 'introduction/getting-started'
 const WEBASSEMBLY_ROUTE = 'concepts/webassembly'
 
 // ----------------------------------------------------------------------------
+// Blog section (legacy_pages/blog -> pages/<locale>/blog/<leaf>.md)
+// ----------------------------------------------------------------------------
+//
+// Blog pages share the prose machinery with docs (Callouts, NodeLink, fences,
+// MDX comments, title injection) but carry their own page-specific JSX:
+//   - function-and-callbacks: prose + inline logo <img src={X.src}> + Callouts +
+//     NodeLink. NO LinkPreview, NO custom-React island -> NO <script> block.
+//   - announce-v2 (en + cn): prose + <Diff/> + <Contributors/> islands.
+//   - announce-v3 (en): getStaticProps loader, 4 <LinkPreview/> cards, SVG-
+//     component logo islands, file-logo <img src={X.src}>, <TransformImage/>,
+//     <Sponsor/>, and inline JSX-isms (style={{}} / className).
+//
+// All blog rewrites are gated to the BLOG section AND to the specific leaf via
+// the sets below, so the converter stays a general tool.
+const BLOG_ANNOUNCE_V2_ROUTE = 'announce-v2'
+const BLOG_ANNOUNCE_V3_ROUTE = 'announce-v3'
+
+// Blog leaves whose page begins with an inline-island `<script>` block (byte 0).
+// function-and-callbacks is intentionally NOT here (it has no island).
+const BLOG_ISLAND_ROUTES = new Set([
+  BLOG_ANNOUNCE_V2_ROUTE,
+  BLOG_ANNOUNCE_V3_ROUTE,
+])
+
+// The leaf carrying a getStaticProps loader + LinkPreview cards + the broad set
+// of logo/JSX rewrites (announce-v3). Mirrors WEBASSEMBLY_ROUTE for the blog.
+const BLOG_LINKPREVIEW_ROUTE = BLOG_ANNOUNCE_V3_ROUTE
+
+// Island components, keyed by tag name. Each value is the module specifier
+// RELATIVE to an emitted blog page (pages/<locale>/blog/<leaf>.md is 3 dirs deep
+// to the repo root, so `../../../`). The `<script>` block injected at byte 0
+// imports exactly the components whose tags appear on a given page, in the
+// deterministic order below. NOTE: the blog island components are `.jsx`
+// (LinkPreview is the lone `.tsx`); the specifier MUST carry the real extension.
+const BLOG_ISLAND_COMPONENTS = {
+  // announce-v2
+  Diff: '../../../components/v2-diff.jsx',
+  Contributors: '../../../components/contributors.jsx',
+  // announce-v3
+  LinkPreview: '../../../components/link-preview.tsx',
+  TailwindLogo: '../../../components/tailwind-logo.jsx',
+  TurborepoLogo: '../../../components/turborepo-logo.jsx',
+  NxLogo: '../../../components/nx-logo.jsx',
+  DenoLogo: '../../../components/deno-logo.jsx',
+  Sponsor: '../../../components/sponsor.jsx',
+  LanceDBLogo: '../../../components/lancedb-logo.jsx',
+  AffineLogo: '../../../components/affine-logo.jsx',
+  BitwardenLogo: '../../../components/bitwarden-logo.jsx',
+  TsLogo: '../../../components/ts-logo.jsx',
+}
+
+// Deterministic emit order for the import lines in the island <script> block.
+const BLOG_ISLAND_ORDER = [
+  'Diff',
+  'Contributors',
+  'LinkPreview',
+  'TailwindLogo',
+  'TurborepoLogo',
+  'NxLogo',
+  'DenoLogo',
+  'Sponsor',
+  'LanceDBLogo',
+  'AffineLogo',
+  'BitwardenLogo',
+  'TsLogo',
+]
+
+// File-logo import identifiers (used as `<img src={NAME.src} ...>`) -> served
+// asset filename under public/assets/. These are the FILE logos (static <img>);
+// the SVG-COMPONENT logos above stay as island tags instead.
+const BLOG_LOGO_ASSETS = {
+  rolldownLogo: 'rolldown.svg',
+  rspackLogo: 'rspack.svg',
+  parcelLogo: 'parcel.png',
+  rollupLogo: 'rollup.svg',
+  oxcLogo: 'oxc.png',
+  bunLogo: 'bun.svg',
+  huggingfaceLogo: 'huggingface.svg',
+  cursorLogo: 'cursor.webp',
+  tensorzeroLogo: 'tensorzero.svg',
+  chromaLogo: 'chroma.png',
+}
+
+// ----------------------------------------------------------------------------
 // File discovery
 // ----------------------------------------------------------------------------
 
@@ -105,12 +190,15 @@ function walk(dir) {
 }
 
 /**
- * Parse a legacy doc filename into { routePath, locale }.
- * legacy_pages/docs/<routePath>.<locale>.{mdx,md}
+ * Parse a legacy filename into { routePath, locale }, relative to `baseDir`
+ * (legacy_pages/docs by default; pass legacyBlog for the blog section).
+ *   legacy_pages/<section>/<routePath>.<locale>.{mdx,md}
  * Returns null if the filename does not match the <name>.<locale>.<ext> shape.
+ * For blog, `routePath` is the bare leaf (e.g. `announce-v3`) — there is no
+ * `docs/` prefix and no nested directories.
  */
-function parseLegacy(fullPath) {
-  const rel = relative(legacyDocs, fullPath).replace(/\\/g, '/') // e.g. concepts/class.en.mdx
+function parseLegacy(fullPath, baseDir = legacyDocs) {
+  const rel = relative(baseDir, fullPath).replace(/\\/g, '/') // e.g. concepts/class.en.mdx
   const m = rel.match(/^(.+)\.(en|cn|pt-BR)\.(mdx|md)$/)
   if (!m) return null
   return { routePath: m[1], locale: m[2] }
@@ -155,10 +243,21 @@ function calloutMarker(openTag) {
  *
  * `routePath` is the legacy route (e.g. 'introduction/getting-started'); it gates
  * the page-specific media rewrites so they only fire on GETTING_STARTED_ROUTE.
+ * `section` ('docs' | 'blog') selects which page-specific gate set applies:
+ * docs gates (getting-started / webassembly) NEVER fire for blog and vice versa.
  */
-function phaseABlocks(src, routePath) {
-  const isGettingStarted = routePath === GETTING_STARTED_ROUTE
-  const isWebAssembly = routePath === WEBASSEMBLY_ROUTE
+function phaseABlocks(src, routePath, section = 'docs') {
+  const isDocs = section === 'docs'
+  const isBlog = section === 'blog'
+  const isGettingStarted = isDocs && routePath === GETTING_STARTED_ROUTE
+  const isWebAssembly = isDocs && routePath === WEBASSEMBLY_ROUTE
+  // Blog leaves that carry the broad logo/JSX/LinkPreview rewrite set
+  // (announce-v3) vs the inline-island prose pages (announce-v2: only the
+  // Diff/Contributors island tags survive — no logo/LinkPreview rewrites).
+  const isBlogLinkPreview = isBlog && routePath === BLOG_LINKPREVIEW_ROUTE
+  // function-and-callbacks: inline logo <img>, Callouts, NodeLink, JSX-isms —
+  // but NO island, NO LinkPreview, NO getStaticProps, NO TransformImage.
+  const isBlogProse = isBlog && routePath === 'function-and-callbacks'
   const lines = src.split('\n')
   const out = []
   let inFence = false
@@ -287,6 +386,50 @@ function phaseABlocks(src, routePath) {
       }
       // <LinkPreview href="..." /> -> add the baked `data='...'` metadata prop.
       if (/<LinkPreview\b/.test(line)) {
+        line = rewriteLinkPreview(line)
+      }
+    }
+
+    // Blog pages (section-gated, outside fences). Mirrors the WebAssembly block:
+    // every rewrite is idempotent and fires only on the gated blog leaf. The
+    // SVG-component logo island tags (<TailwindLogo />, <NxLogo .../>, …),
+    // <Diff/>, <Contributors/>, and <Sponsor/> are NOT rewritten here — they pass
+    // through as uppercase tags and hydrate via the byte-0 island <script>.
+    if (isBlog) {
+      // <TransformImage /> -> static "Interactive demo" fallback (announce-v3
+      // only). The blog is NOT cross-origin-isolated, so the live demo cannot
+      // run here; the same fallback the WebAssembly page uses keeps it coherent.
+      if (isBlogLinkPreview && /^\s*<TransformImage\s*\/>\s*$/.test(line)) {
+        for (const c of TRANSFORM_IMAGE_FALLBACK.split('\n'))
+          out.push({ text: c, code: false })
+        continue
+      }
+      // Inline file-logo <img src={NAME.src} ...> -> static /assets/ raw HTML
+      // (announce-v3 + function-and-callbacks). Uses the blog logo asset map.
+      if (
+        (isBlogLinkPreview || isBlogProse) &&
+        /<img\b[^>]*\bsrc\s*=\s*\{[A-Za-z]/.test(line)
+      ) {
+        line = rewriteLogoImgs(line, BLOG_LOGO_ASSETS)
+      }
+      // Inline JSX-isms (every blog page): convert `style={{ ... }}` objects to
+      // CSS strings and `className` -> `class`. markdown-it would otherwise
+      // ESCAPE a tag bearing a JSX style object (leaking it as visible text), and
+      // `className` is inert in real HTML. Runs AFTER the logo rewrite (so logo
+      // <img> styles are already CSS strings) and BEFORE the LinkPreview rewrite
+      // (so the baked `data='...'` JSON blob is never scanned). Also normalizes
+      // the SVG-component logo island tags that carry a JSX `style={{}}`.
+      if (line.includes('style={{')) {
+        line = line.replace(
+          /style=\{\{([^}]*)\}\}/g,
+          (_, inner) => `style="${jsxStyleObjectToCss(inner)}"`,
+        )
+      }
+      if (line.includes('className=')) {
+        line = line.replace(/\bclassName=/g, 'class=')
+      }
+      // <LinkPreview href="..." /> -> baked `data='...'` (announce-v3 only).
+      if (isBlogLinkPreview && /<LinkPreview\b/.test(line)) {
         line = rewriteLinkPreview(line)
       }
     }
@@ -464,13 +607,15 @@ const WASM_LOGO_ASSETS = {
 /**
  * Rewrite every inline JSX logo `<img src={NAME.src} style={{...}} width={N}
  * height={N} />` on a line to static raw HTML pointing at the served asset:
- *   <img src="/assets/FILE" width="N" height="N" style="<css>" /> (className dropped)
+ *   <img src="/assets/FILE" width="N" height="N" style="<css>" /> (className /
+ *   alt dropped)
  * Handles multiple imgs on one line and imgs embedded in heading lines. The
- * `src={NAME.src}` expression maps via WASM_LOGO_ASSETS; the JSX style object is
- * converted to a CSS string with the existing jsxStyleObjectToCss. Pure +
- * deterministic; lines without a matching logo img pass through unchanged.
+ * `src={NAME.src}` expression maps via `assetMap` (import identifier -> served
+ * filename); the JSX style object is converted to a CSS string with the existing
+ * jsxStyleObjectToCss. Pure + deterministic; lines without a matching logo img
+ * pass through unchanged.
  */
-function rewriteWasmLogoImgs(line) {
+function rewriteLogoImgs(line, assetMap) {
   // Match a self-closing <img ... /> whose src is `{NAME.src}` for a known logo.
   // Attributes are order-tolerant: capture style/width/height wherever they sit.
   const imgRe = /<img\b([^>]*?)\/>/g
@@ -479,7 +624,7 @@ function rewriteWasmLogoImgs(line) {
       /\bsrc\s*=\s*\{\s*([A-Za-z][A-Za-z0-9]*)\.src\s*\}/,
     )
     if (!srcMatch) return whole // not a logo img — leave untouched
-    const file = WASM_LOGO_ASSETS[srcMatch[1]]
+    const file = assetMap[srcMatch[1]]
     if (!file) return whole // unknown identifier — leave untouched
     const styleMatch = attrs.match(/\bstyle\s*=\s*\{\{([\s\S]*?)\}\}/)
     const css = styleMatch ? jsxStyleObjectToCss(styleMatch[1]) : ''
@@ -491,6 +636,12 @@ function rewriteWasmLogoImgs(line) {
     if (css) parts.push(`style="${css}"`)
     return parts.join(' ') + ' />'
   })
+}
+
+/** WebAssembly logo rewrite — thin wrapper over rewriteLogoImgs (preserves the
+ * exact docs output byte-for-byte). */
+function rewriteWasmLogoImgs(line) {
+  return rewriteLogoImgs(line, WASM_LOGO_ASSETS)
 }
 
 /**
@@ -858,13 +1009,44 @@ const WEBASSEMBLY_SCRIPT_BLOCK = [
 ].join('\n')
 
 /**
+ * Build the byte-0 island `<script>` block for a blog page, importing exactly the
+ * island components whose UPPERCASE tags appear in `body` (the converted, post-
+ * normalization markdown). Imports are emitted in the fixed BLOG_ISLAND_ORDER for
+ * determinism. Returns null when the page uses no island components (then no
+ * block is injected and the page stays frontmatter-first).
+ *
+ * Like @void/md's own findIslandTags, a tag counts whether it is self-closing
+ * (`<Name .../>`) or has children (`<Name ...>…</Name>`). The specifiers are
+ * RELATIVE to pages/<locale>/blog/<leaf>.md (3 dirs deep -> `../../../`) and each
+ * uses the `with { island: "visible" }` attribute, mirroring the WebAssembly
+ * precedent.
+ */
+function buildBlogIslandScript(body) {
+  const present = new Set()
+  for (const name of BLOG_ISLAND_ORDER) {
+    // Match `<Name/>`, `<Name .../>`, or `<Name ...>` as a word-boundary tag.
+    const re = new RegExp(`<${name}(?=[\\s/>])`)
+    if (re.test(body)) present.add(name)
+  }
+  if (present.size === 0) return null
+  const imports = BLOG_ISLAND_ORDER.filter((name) => present.has(name)).map(
+    (name) =>
+      `import ${name} from "${BLOG_ISLAND_COMPONENTS[name]}" with { island: "visible" }`,
+  )
+  return ['<script>', ...imports, '</script>'].join('\n')
+}
+
+/**
  * Run the full conversion on a source string. Returns the converted markdown.
  * `fallbackTitle` (the legacy `_meta` leaf title) is used only when the page has
  * no H1 to derive a frontmatter `title` from. `routePath` (the legacy route)
  * gates the page-specific media rewrites to GETTING_STARTED_ROUTE and the island
- * rewrites to WEBASSEMBLY_ROUTE.
+ * rewrites to WEBASSEMBLY_ROUTE. `section` ('docs' | 'blog') selects the gate
+ * set: blog pages get blog-specific logo/island/LinkPreview handling and a
+ * dynamically-built byte-0 island `<script>` block; docs pages are unaffected by
+ * any blog logic (and vice versa), keeping docs output byte-identical.
  */
-function convert(src, fallbackTitle, routePath) {
+function convert(src, fallbackTitle, routePath, section = 'docs') {
   // Self-idempotency: a legacy .mdx source never begins with an island
   // `<script>` block, so a leading one means `src` is already-converted output
   // being fed back through convert() (e.g. a stricter `convert(convert(x))`
@@ -874,14 +1056,18 @@ function convert(src, fallbackTitle, routePath) {
   // @void/md's extractScript (node_modules/@void/md/dist/plugin.mjs:398).
   src = src.replace(/^<script\b[^>]*>[\s\S]*?<\/script>\s*\n?/, '')
 
-  // WebAssembly pre-pass: strip the top-level getStaticProps data loader before
-  // the line-based scan (it spans many lines with nested braces and sits before
-  // the first heading/fence). Route-gated + idempotent.
-  if (routePath === WEBASSEMBLY_ROUTE) {
+  // getStaticProps pre-pass: strip the top-level data loader before the line-
+  // based scan (it spans many lines with nested braces and sits before the first
+  // heading/fence). Fires on the WebAssembly doc page AND the announce-v3 blog
+  // page (both carry one). Route/section-gated + idempotent.
+  if (
+    (section === 'docs' && routePath === WEBASSEMBLY_ROUTE) ||
+    (section === 'blog' && routePath === BLOG_LINKPREVIEW_ROUTE)
+  ) {
     src = stripGetStaticProps(src)
   }
 
-  const records = phaseABlocks(src, routePath)
+  const records = phaseABlocks(src, routePath, section)
 
   // Reassemble, applying the inline phase to contiguous non-code regions only.
   const pieces = []
@@ -922,8 +1108,25 @@ function convert(src, fallbackTitle, routePath) {
   // WebAssembly: prepend the LinkPreview island <script> block at byte 0 (see
   // WEBASSEMBLY_SCRIPT_BLOCK — it MUST precede the frontmatter). Idempotent: a
   // re-run sees the block already present and skips it.
-  if (routePath === WEBASSEMBLY_ROUTE && !result.startsWith('<script>')) {
+  if (
+    section === 'docs' &&
+    routePath === WEBASSEMBLY_ROUTE &&
+    !result.startsWith('<script>')
+  ) {
     result = `${WEBASSEMBLY_SCRIPT_BLOCK}\n\n${result}`
+  }
+
+  // Blog island pages: prepend a byte-0 island <script> importing exactly the
+  // island components whose tags appear on the page (Diff/Contributors for
+  // announce-v2; LinkPreview + SVG-logo components + Sponsor for announce-v3).
+  // function-and-callbacks uses no islands -> no block, stays frontmatter-first.
+  // Idempotent: the leading <script> was already stripped above, so we always
+  // rebuild from the current body and re-prepend.
+  if (section === 'blog' && BLOG_ISLAND_ROUTES.has(routePath)) {
+    const block = buildBlogIslandScript(result)
+    if (block && !result.startsWith('<script>')) {
+      result = `${block}\n\n${result}`
+    }
   }
 
   return result
@@ -937,14 +1140,16 @@ function convert(src, fallbackTitle, routePath) {
  * Resolve the human title for a legacy route leaf from its directory's
  * `_meta.<locale>.json`, e.g. routePath `more/v2-v3-migration-guide`, locale
  * `en` -> legacy_pages/docs/more/_meta.en.json["v2-v3-migration-guide"].
+ * `baseDir` is the section root (legacyDocs by default; legacyBlog for blog,
+ * where routePath is a bare leaf -> legacy_pages/blog/_meta.<locale>.json[leaf]).
  * Returns null when no meta entry exists. Cached per (dir, locale).
  */
 const metaCache = new Map()
-function legacyMetaTitle(routePath, locale) {
+function legacyMetaTitle(routePath, locale, baseDir = legacyDocs) {
   const slashIdx = routePath.lastIndexOf('/')
   const dirRel = slashIdx === -1 ? '' : routePath.slice(0, slashIdx)
   const leaf = slashIdx === -1 ? routePath : routePath.slice(slashIdx + 1)
-  const metaPath = join(legacyDocs, dirRel, `_meta.${locale}.json`)
+  const metaPath = join(baseDir, dirRel, `_meta.${locale}.json`)
   const cacheKey = metaPath
   let meta = metaCache.get(cacheKey)
   if (meta === undefined) {
@@ -984,53 +1189,67 @@ function cleanEmittedMarkdown(dir) {
   }
 }
 
-function main() {
-  const allFiles = walk(legacyDocs).sort()
+// Content sections walked by the converter. Each maps a legacy source tree to
+// its emitted `pages/<locale>/<outSubdir>` tree. Adding `blog` here is the entire
+// "blog walking" wiring; the docs entry is byte-for-byte the original behavior.
+const SECTIONS = [
+  { section: 'docs', baseDir: legacyDocs, outSubdir: 'docs' },
+  { section: 'blog', baseDir: legacyBlog, outSubdir: 'blog' },
+]
 
+function main() {
   // Preflight required generated inputs BEFORE any destructive cleanup, so a
-  // missing/corrupt/incomplete fixture fails fast instead of wiping the emitted
-  // docs tree and aborting mid-conversion (leaving a partially-empty tree) — or
-  // worse, serializing a broken island. The only such input today is the
-  // LinkPreview fixture, needed by the in-scope WebAssembly source(s). Validate
-  // EVERY href those sources reference, with the full required entry shape (not
-  // just that the JSON file exists and parses), up front.
-  for (const f of allFiles) {
-    const p = parseLegacy(f)
-    if (
-      !p ||
-      p.routePath !== WEBASSEMBLY_ROUTE ||
-      !LOCALES.includes(p.locale)
-    ) {
-      continue
+  // missing/corrupt/incomplete fixture fails fast instead of wiping an emitted
+  // tree and aborting mid-conversion (leaving a partially-empty tree) — or worse,
+  // serializing a broken island. The only such input today is the LinkPreview
+  // fixture, referenced by the WebAssembly doc page AND the announce-v3 blog page.
+  // Validate EVERY href those sources reference, with the full required entry
+  // shape (not just that the JSON file exists and parses), up front.
+  for (const { section, baseDir } of SECTIONS) {
+    const linkPreviewRoute =
+      section === 'docs' ? WEBASSEMBLY_ROUTE : BLOG_LINKPREVIEW_ROUTE
+    for (const f of walk(baseDir).sort()) {
+      const p = parseLegacy(f, baseDir)
+      if (!p || p.routePath !== linkPreviewRoute || !LOCALES.includes(p.locale))
+        continue
+      if (EXCLUDED_ROUTES.has(p.routePath)) continue
+      assertLinkPreviewFixtureFor(readFileSync(f, 'utf8'))
     }
-    if (EXCLUDED_ROUTES.has(p.routePath)) continue
-    assertLinkPreviewFixtureFor(readFileSync(f, 'utf8'))
   }
 
   // Clean stale emitted markdown so removed source files don't leave orphans.
-  // Only ever delete `.md` files under pages/<locale>/docs — never the layout
-  // islands living in the same tree, nor pages/index.md or other pages.
-  for (const locale of LOCALES) {
-    cleanEmittedMarkdown(join(pagesDir, locale, 'docs'))
+  // Only ever delete `.md` files under pages/<locale>/{docs,blog} — never the
+  // layout islands living in the same tree, nor pages/index.md or other pages.
+  for (const { outSubdir } of SECTIONS) {
+    for (const locale of LOCALES) {
+      cleanEmittedMarkdown(join(pagesDir, locale, outSubdir))
+    }
   }
 
   const converted = []
   const skipped = []
 
-  for (const fullPath of allFiles) {
-    const parsed = parseLegacy(fullPath)
-    if (!parsed) continue // not a <name>.<locale>.<ext> file (e.g. _meta.*.json)
-    const { routePath, locale } = parsed
-    if (!LOCALES.includes(locale)) continue
-    if (EXCLUDED_ROUTES.has(routePath)) continue
+  for (const { section, baseDir, outSubdir } of SECTIONS) {
+    for (const fullPath of walk(baseDir).sort()) {
+      const parsed = parseLegacy(fullPath, baseDir)
+      if (!parsed) continue // not a <name>.<locale>.<ext> file (e.g. _meta.*.json)
+      const { routePath, locale } = parsed
+      if (!LOCALES.includes(locale)) continue
+      if (EXCLUDED_ROUTES.has(routePath)) continue
 
-    const src = readFileSync(fullPath, 'utf8')
-    const output = convert(src, legacyMetaTitle(routePath, locale), routePath)
+      const src = readFileSync(fullPath, 'utf8')
+      const output = convert(
+        src,
+        legacyMetaTitle(routePath, locale, baseDir),
+        routePath,
+        section,
+      )
 
-    const outPath = join(pagesDir, locale, 'docs', `${routePath}.md`)
-    mkdirSync(dirname(outPath), { recursive: true })
-    writeFileSync(outPath, output, 'utf8')
-    converted.push({ routePath, locale, outPath, output })
+      const outPath = join(pagesDir, locale, outSubdir, `${routePath}.md`)
+      mkdirSync(dirname(outPath), { recursive: true })
+      writeFileSync(outPath, output, 'utf8')
+      converted.push({ section, routePath, locale, outPath, output })
+    }
   }
 
   // Island pages lead with a `<script>` block (it MUST precede the frontmatter so
@@ -1043,9 +1262,9 @@ function main() {
   // Format the emitted tree so committed output matches `vp fmt` and re-runs are
   // stable. Verified that vp fmt does not reflow containers / fences / captions.
   try {
-    const targets = LOCALES.map((l) => join(pagesDir, l, 'docs')).filter(
-      existsSync,
-    )
+    const targets = SECTIONS.flatMap(({ outSubdir }) =>
+      LOCALES.map((l) => join(pagesDir, l, outSubdir)),
+    ).filter(existsSync)
     if (targets.length) {
       execSync(`vp fmt ${targets.map((t) => `"${t}"`).join(' ')} --write`, {
         cwd: root,
@@ -1064,10 +1283,13 @@ function main() {
   // Report
   const perSection = {}
   for (const c of converted) {
-    const section = c.routePath.includes('/')
-      ? c.routePath.split('/')[0]
-      : '(root)'
-    const key = `${section}/${c.locale}`
+    const sub =
+      c.section === 'docs'
+        ? c.routePath.includes('/')
+          ? c.routePath.split('/')[0]
+          : '(root)'
+        : 'blog'
+    const key = `${sub}/${c.locale}`
     perSection[key] = (perSection[key] || 0) + 1
   }
   console.log(`Converted ${converted.length} files.`)
@@ -1093,5 +1315,8 @@ export {
   convert,
   GETTING_STARTED_ROUTE,
   WEBASSEMBLY_ROUTE,
+  BLOG_ANNOUNCE_V2_ROUTE,
+  BLOG_ANNOUNCE_V3_ROUTE,
+  BLOG_LINKPREVIEW_ROUTE,
   assertLinkPreviewEntry,
 }

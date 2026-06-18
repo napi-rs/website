@@ -4,11 +4,14 @@
   "routing": {
     "redirects": {
       "/docs/": { "to": "/docs", "status": 301 },
-      "/docs/*/": { "to": "/docs/:splat", "status": 301 }
+      "/docs/*/": { "to": "/docs/:splat", "status": 301 },
+      "/blog/": { "to": "/blog", "status": 301 },
+      "/blog/*/": { "to": "/blog/:splat", "status": 301 }
     },
     "rewrites": {
       "/": "/en",
-      "/docs/*": "/en/docs/:splat"
+      "/docs/*": "/en/docs/:splat",
+      "/blog/*": "/en/blog/:splat"
     },
     "headers": {
       "/": [

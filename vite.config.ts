@@ -137,6 +137,17 @@ export default defineConfig({
       // scripts/convert-content.mjs (the sole formatter of record for them);
       // exempt them from `vp fmt`. Append future inline-island .md pages here.
       'pages/en/docs/concepts/webassembly.md',
+      // Blog inline-island pages (byte-0 <script>). announce-v2 (en + cn) imports
+      // Diff + Contributors; announce-v3 (en) imports LinkPreview + the SVG-logo
+      // components + Sponsor. function-and-callbacks.md has NO island (it stays
+      // frontmatter-first) so it is intentionally NOT exempted.
+      'pages/en/blog/announce-v2.md',
+      'pages/cn/blog/announce-v2.md',
+      'pages/en/blog/announce-v3.md',
+      // Baked LinkPreview fixture — generated wholesale by
+      // scripts/fetch-link-previews.mjs (its formatter of record). Exempt so
+      // `vp fmt` doesn't reflow it out of sync with a future rebake.
+      'lib/docs/link-preview-data.json',
     ],
   },
   // Oxlint — advisory for now (no type-aware path on this JS-heavy codebase yet).

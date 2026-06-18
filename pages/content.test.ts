@@ -14,6 +14,8 @@ import { nav } from '../lib/nav/index.ts'
 import {
   convert,
   WEBASSEMBLY_ROUTE,
+  BLOG_ANNOUNCE_V2_ROUTE,
+  BLOG_ANNOUNCE_V3_ROUTE,
   assertLinkPreviewEntry,
 } from '../scripts/convert-content.mjs'
 
@@ -702,6 +704,364 @@ describe('webassembly slice', () => {
     expect(twice.startsWith('<script>')).toBe(true)
     expect((twice.match(/<script\b/g) ?? []).length).toBe(1)
     expect((twice.match(/^---$/gm) ?? []).length).toBe(2)
+  })
+})
+
+describe('blog slice', () => {
+  const legacyBlog = join(root, 'legacy_pages', 'blog')
+  const blogPage = (locale: string, leaf: string) =>
+    readFileSync(join(pagesDir, locale, 'blog', `${leaf}.md`), 'utf8')
+
+  it('emits the expected blog pages per locale (en x3, cn announce-v2 only)', () => {
+    // en: all three; cn: only announce-v2 (the lone cn blog source); pt-BR: none
+    // (every other /cn|/pt-BR blog URL i18n-falls-back to /en).
+    expect(
+      existsSync(join(pagesDir, 'en', 'blog', 'function-and-callbacks.md')),
+    ).toBe(true)
+    expect(existsSync(join(pagesDir, 'en', 'blog', 'announce-v2.md'))).toBe(
+      true,
+    )
+    expect(existsSync(join(pagesDir, 'en', 'blog', 'announce-v3.md'))).toBe(
+      true,
+    )
+    expect(existsSync(join(pagesDir, 'cn', 'blog', 'announce-v2.md'))).toBe(
+      true,
+    )
+    expect(existsSync(join(pagesDir, 'cn', 'blog', 'announce-v3.md'))).toBe(
+      false,
+    )
+    expect(existsSync(join(pagesDir, 'pt-BR', 'blog', 'announce-v2.md'))).toBe(
+      false,
+    )
+  })
+
+  it('preserves each locale blog layout island (not pruned by the converter)', () => {
+    for (const locale of LOCALES) {
+      expect(
+        existsSync(join(pagesDir, locale, 'blog', 'layout.island.tsx')),
+        `missing ${locale}/blog/layout.island.tsx`,
+      ).toBe(true)
+    }
+  })
+
+  it('function-and-callbacks is frontmatter-first with NO island <script>', () => {
+    const md = blogPage('en', 'function-and-callbacks')
+    expect(md.startsWith('<script>')).toBe(false)
+    expect(md.startsWith('---\ntitle: ')).toBe(true)
+    // Prose-island handling: logos -> static /assets, Callouts -> :::, NodeLink
+    // -> markdown links; no leftover JSX-isms / island tags.
+    expect(md).toContain('<img src="/assets/rolldown.svg"')
+    expect(md).toContain('<img src="/assets/parcel.png"')
+    expect(md).toContain('::: info')
+    expect(md).not.toContain('<Callout')
+    expect(md).not.toContain('<NodeLink')
+    expect(md).toContain(
+      '[Function API Documentation](https://napi.rs/docs/concepts/function)',
+    )
+    // No leaked JSX outside fences.
+    const { body } = stripLeadingScript(md)
+    let inFence = false
+    for (const line of body.split('\n')) {
+      if (FENCE_RE.test(line)) {
+        inFence = !inFence
+        continue
+      }
+      if (inFence) continue
+      expect(line.includes('style={{')).toBe(false)
+      expect(line.includes('className=')).toBe(false)
+      expect(line).not.toMatch(/src=\{[A-Za-z]/)
+      expect(line).not.toMatch(/\.src\}/)
+    }
+  })
+
+  it('announce-v2 (en) leads with a byte-0 <script> importing Diff + Contributors', () => {
+    const md = blogPage('en', 'announce-v2')
+    expect(md.startsWith('<script>')).toBe(true)
+    const { script, body } = stripLeadingScript(md)
+    expect(script).not.toBe(null)
+    // 3-deep RELATIVE specifiers, .jsx extension, default imports, visible island.
+    expect(script).toContain(
+      'import Diff from "../../../components/v2-diff.jsx" with { island: "visible" }',
+    )
+    expect(script).toContain(
+      'import Contributors from "../../../components/contributors.jsx" with { island: "visible" }',
+    )
+    // Frontmatter survives intact after the script.
+    expect(body.startsWith('---\ntitle: ')).toBe(true)
+    // The island tags are preserved (they hydrate via the script).
+    expect(md).toContain('<Diff />')
+    expect(md).toContain('<Contributors />')
+  })
+
+  it('announce-v2 (cn) imports ONLY Contributors (its source has no <Diff/>)', () => {
+    // The island <script> is built from the tags actually present on the page, so
+    // the cn page (which uses only <Contributors/>) must not import Diff.
+    const md = blogPage('cn', 'announce-v2')
+    const { script } = stripLeadingScript(md)
+    expect(script).toContain(
+      'import Contributors from "../../../components/contributors.jsx" with { island: "visible" }',
+    )
+    expect(script).not.toContain('import Diff ')
+    expect(md).toContain('<Contributors />')
+    expect(md).not.toContain('<Diff')
+  })
+
+  it('announce-v3 leads with a byte-0 <script> importing LinkPreview + SVG logos + Sponsor', () => {
+    const md = blogPage('en', 'announce-v3')
+    expect(md.startsWith('<script>')).toBe(true)
+    const { script, body } = stripLeadingScript(md)
+    expect(script).not.toBe(null)
+    // LinkPreview is the lone .tsx; the rest are .jsx; all 3-deep + visible.
+    expect(script).toContain(
+      'import LinkPreview from "../../../components/link-preview.tsx" with { island: "visible" }',
+    )
+    const expectedJsxIslands: Record<string, string> = {
+      TailwindLogo: 'tailwind-logo',
+      TurborepoLogo: 'turborepo-logo',
+      NxLogo: 'nx-logo',
+      DenoLogo: 'deno-logo',
+      Sponsor: 'sponsor',
+      LanceDBLogo: 'lancedb-logo',
+      AffineLogo: 'affine-logo',
+      BitwardenLogo: 'bitwarden-logo',
+      TsLogo: 'ts-logo',
+    }
+    for (const [name, file] of Object.entries(expectedJsxIslands)) {
+      expect(
+        script!.includes(
+          `import ${name} from "../../../components/${file}.jsx" with { island: "visible" }`,
+        ),
+        `missing island import for ${name}`,
+      ).toBe(true)
+    }
+    expect(body.startsWith('---\ntitle: ')).toBe(true)
+  })
+
+  it('announce-v3 bakes all four LinkPreview cards (data round-trips)', () => {
+    const md = blogPage('en', 'announce-v3')
+    const re = /<LinkPreview\s+href="([^"]*)"\s+data='([\s\S]*?)'\s*\/>/g
+    const found: string[] = []
+    let m: RegExpExecArray | null
+    while ((m = re.exec(md)) !== null) {
+      const href = m[1]
+      const data = m[2]
+      // No raw apostrophe (it would terminate the single-quoted attribute early).
+      expect(data.includes("'"), `raw apostrophe in data for ${href}`).toBe(
+        false,
+      )
+      const parsed = JSON.parse(data) as Record<string, unknown>
+      expect(Object.keys(parsed).sort()).toEqual(['json', 'og', 'userAvatar'])
+      expect(typeof parsed.og).toBe('string')
+      expect((parsed.og as string).length).toBeGreaterThan(0)
+      expect(typeof parsed.userAvatar).toBe('string')
+      expect((parsed.userAvatar as string).length).toBeGreaterThan(0)
+      const json = parsed.json as Record<string, unknown>
+      expect((json.title as string).length).toBeGreaterThan(0)
+      found.push(href)
+    }
+    expect(found.sort()).toEqual([
+      'https://github.com/microsoft/typescript-go/discussions/455',
+      'https://github.com/napi-rs/cross-toolchain',
+      'https://github.com/npm/cli/issues/4828',
+      'https://github.com/rustwasm/wasm-bindgen/pull/2209',
+    ])
+  })
+
+  it('announce-v3 drops getStaticProps, static-ifies file logos, falls back TransformImage', () => {
+    const md = blogPage('en', 'announce-v3')
+    expect(md).not.toContain('getStaticProps')
+    expect(md).not.toContain('<TransformImage')
+    expect(md).toContain('::: info Interactive demo')
+    // File logos -> static /assets/.
+    for (const file of [
+      'rolldown.svg',
+      'rollup.svg',
+      'rspack.svg',
+      'parcel.png',
+      'oxc.png',
+      'bun.svg',
+      'huggingface.svg',
+      'cursor.webp',
+      'tensorzero.svg',
+      'chroma.png',
+    ]) {
+      expect(
+        md.includes(`<img src="/assets/${file}"`),
+        `missing static img for ${file}`,
+      ).toBe(true)
+    }
+    // SVG-component logos stay as island tags (NOT static <img>).
+    expect(md).toContain('<TailwindLogo />')
+    expect(md).toContain('<Sponsor />')
+    // No leftover JSX expression src / .src / style object / className.
+    expect(md).not.toMatch(/src=\{[A-Za-z]/)
+    expect(md).not.toMatch(/\.src\}/)
+    const { body } = stripLeadingScript(md)
+    let inFence = false
+    for (const line of body.split('\n')) {
+      if (FENCE_RE.test(line)) {
+        inFence = !inFence
+        continue
+      }
+      if (inFence) continue
+      expect(line.includes('style={{')).toBe(false)
+      expect(line.includes('className=')).toBe(false)
+    }
+  })
+
+  it('blog pages have non-empty frontmatter titles', () => {
+    for (const [locale, leaf] of [
+      ['en', 'function-and-callbacks'],
+      ['en', 'announce-v2'],
+      ['en', 'announce-v3'],
+      ['cn', 'announce-v2'],
+    ] as const) {
+      const { body } = stripLeadingScript(blogPage(locale, leaf))
+      const lines = body.split('\n')
+      expect(lines[0]?.trim()).toBe('---')
+      let title: string | null = null
+      for (let i = 1; i < lines.length; i++) {
+        if (lines[i].trim() === '---') break
+        const m = lines[i].match(/^title\s*:\s*(.+?)\s*$/)
+        if (m) {
+          let v = m[1]
+          if (
+            (v.startsWith("'") && v.endsWith("'")) ||
+            (v.startsWith('"') && v.endsWith('"'))
+          ) {
+            v = v.slice(1, -1)
+          }
+          title = v.trim()
+          break
+        }
+      }
+      expect(
+        (title ?? '').length,
+        `empty title ${locale}/${leaf}`,
+      ).toBeGreaterThan(0)
+    }
+  })
+
+  it('convert() is self-idempotent on each blog leaf', () => {
+    const cases: Array<[string, string, string]> = [
+      ['function-and-callbacks', 'Functions and Callbacks in NAPI-RS', '.en'],
+      ['announce-v2', 'Announce V2', '.en'],
+      ['announce-v3', 'Announce V3', '.en'],
+      ['announce-v2', 'Announce V2', '.cn'],
+    ]
+    for (const [leaf, title, suffix] of cases) {
+      const src = readFileSync(join(legacyBlog, `${leaf}${suffix}.mdx`), 'utf8')
+      const once = convert(src, title, leaf, 'blog')
+      const twice = convert(once, title, leaf, 'blog')
+      expect(twice, `not idempotent: ${leaf}${suffix}`).toBe(once)
+    }
+  })
+})
+
+describe('converter blog rewrites are route-scoped', () => {
+  // announce-v3-shaped source: getStaticProps, file-logo img, SVG-logo island
+  // tag, LinkPreview, JSX-isms.
+  const OFF_ROUTE_SRC = [
+    'export const getStaticProps = async () => {',
+    '  return { props: { ssg: {} } }',
+    '}',
+    '',
+    '# Heading',
+    '',
+    "<img src={rolldownLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} />",
+    '',
+    '<TransformImage />',
+    '',
+    '<LinkPreview href="https://github.com/napi-rs/cross-toolchain" />',
+    '',
+  ].join('\n')
+
+  it('docs section: blog rewrites do NOT fire (announce-v3 route is inert under docs)', () => {
+    // The same leaf name under section "docs" must not trigger any blog handling.
+    const out = convert(
+      OFF_ROUTE_SRC,
+      'Heading',
+      BLOG_ANNOUNCE_V3_ROUTE,
+      'docs',
+    )
+    expect(out).toContain('export const getStaticProps')
+    expect(out).toContain('<img src={rolldownLogo.src}')
+    expect(out).not.toContain('/assets/rolldown.svg')
+    expect(out).toContain('<TransformImage />')
+    expect(out).not.toContain('Interactive demo')
+    expect(out).not.toContain("data='")
+    expect(out.startsWith('<script>')).toBe(false)
+  })
+
+  it('blog section, announce-v2 leaf: Diff/Contributors islands; logo/LinkPreview baking does NOT fire', () => {
+    const src = [
+      '# Heading',
+      '',
+      '<Diff />',
+      '',
+      '<img src={rolldownLogo.src} width={20} height={20} />',
+      '',
+      '<LinkPreview href="https://github.com/napi-rs/cross-toolchain" />',
+      '',
+      '<Contributors />',
+      '',
+    ].join('\n')
+    const out = convert(src, 'Heading', BLOG_ANNOUNCE_V2_ROUTE, 'blog')
+    // announce-v2 is NOT the LinkPreview/logo BAKING route: the file logo passes
+    // through untouched and the LinkPreview gets no `data=` injected.
+    expect(out).toContain('<img src={rolldownLogo.src}')
+    expect(out).not.toContain('/assets/rolldown.svg')
+    expect(out).not.toContain("data='")
+    // The island <script> is built from whatever island tags ARE present —
+    // here Diff + Contributors. (A stray <LinkPreview> would also be imported,
+    // but the real announce-v2 sources carry only Diff/Contributors.)
+    expect(out.startsWith('<script>')).toBe(true)
+    const { script } = stripLeadingScript(out)
+    expect(script).toContain('import Diff from')
+    expect(script).toContain('import Contributors from')
+  })
+
+  it('blog section, announce-v3 leaf: the full rewrite set fires', () => {
+    const out = convert(
+      OFF_ROUTE_SRC,
+      'Heading',
+      BLOG_ANNOUNCE_V3_ROUTE,
+      'blog',
+    )
+    expect(out).not.toContain('getStaticProps')
+    expect(out).toContain('<img src="/assets/rolldown.svg"')
+    expect(out).not.toContain('{rolldownLogo.src}')
+    expect(out).toContain('::: info Interactive demo')
+    expect(out).toContain(
+      '<LinkPreview href="https://github.com/napi-rs/cross-toolchain" data=\'',
+    )
+    expect(out.startsWith('<script>')).toBe(true)
+    // The island <script> imports LinkPreview (the only island tag here).
+    const { script } = stripLeadingScript(out)
+    expect(script).toContain('import LinkPreview from')
+  })
+
+  it('blog section: fenced logo img / LinkPreview / getStaticProps stay literal', () => {
+    const src = [
+      '# Heading',
+      '',
+      '```tsx',
+      '<img src={rolldownLogo.src} width={20} height={20} />',
+      '<LinkPreview href="https://github.com/napi-rs/cross-toolchain" />',
+      'export const getStaticProps = () => {}',
+      '```',
+      '',
+    ].join('\n')
+    const out = convert(src, 'Heading', BLOG_ANNOUNCE_V3_ROUTE, 'blog')
+    expect(out).toContain(
+      '<img src={rolldownLogo.src} width={20} height={20} />',
+    )
+    expect(out).toContain(
+      '<LinkPreview href="https://github.com/napi-rs/cross-toolchain" />',
+    )
+    expect(out).toContain('export const getStaticProps = () => {}')
+    expect(out).not.toContain('/assets/rolldown.svg')
+    expect(out).not.toContain("data='")
   })
 })
 
