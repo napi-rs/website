@@ -20,7 +20,7 @@ import Luge from '../../components/landing/luge' with {
   island: 'media:(min-width:769px)',
 }
 import TransformImage from '../../components/transform-image/_Demo' with {
-  island: 'visible',
+  island: 'idle',
 }
 import { HomePage } from '@/components/landing'
 import type { Props } from './index.server'

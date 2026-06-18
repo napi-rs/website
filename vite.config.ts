@@ -52,6 +52,23 @@ export default defineConfig({
   // worker format cannot handle top-level await, which fails the build.
   worker: { format: 'es' },
 
+  // Force the demo worker's deps into the optimizer's STARTUP pass. The worker
+  // (`components/transform-image/worker.ts`) statically imports `buffer` and
+  // dynamically imports `@napi-rs/image` (aliased below to the wasm build). The
+  // worker sits behind a `with { island: 'idle' }` boundary, so Vite's dep
+  // scanner never crawls into it at boot — both deps are otherwise discovered
+  // LATE, on the first transform click. That late discovery triggers a
+  // re-optimization which churns EVERY `.vite/deps/…?v=<hash>` URL; a
+  // worker-context dynamic import that 404s on the now-stale hash does NOT trip
+  // Vite's auto full-reload, so the transcode silently fails. Both must be
+  // listed — pinning only the codec still lets `buffer` leak in late and re-bump
+  // the codec's hash. Pre-including both pins their hashes from boot so the
+  // worker's imports always resolve. Dev/preview-only: `vite build` bundles the
+  // worker + wasm and never touches the optimizer.
+  optimizeDeps: {
+    include: ['@napi-rs/image', 'buffer'],
+  },
+
   ssr: {
     // `@waaark/luge` reads window/document/requestAnimationFrame at module load,
     // so it crashes if it is evaluated during worker SSR. components/landing/luge.tsx
