@@ -1,6 +1,6 @@
-import { useSSG } from 'nextra/ssg'
 import { useSponsor } from './hooks'
 import cx from 'classnames'
+import type { WashedSponsors } from '@/lib/landing/sponsors'
 
 export function BgLines() {
   return (
@@ -37,9 +37,12 @@ export function BgLines() {
   )
 }
 
-export function Sponsors() {
-  const ssg = useSSG()
-  const { data } = useSponsor(ssg)
+// Sponsors now arrive as a prop from the page loader (the washed
+// specialThanks/platinum/gold/sliver/backers shape), replacing the Nextra
+// `useSSG()` data channel. `useSponsor` maps + dark-logo-swaps them; its
+// `document`/MutationObserver work runs only in effects, so this is SSR-safe.
+export function Sponsors({ sponsors }: { sponsors: WashedSponsors }) {
+  const { data } = useSponsor(sponsors)
 
   if (!data) {
     return null

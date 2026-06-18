@@ -1,5 +1,22 @@
+import type { ComponentType } from 'react'
 import cx from 'classnames'
-import Marquee from 'react-fast-marquee'
+import MarqueeModule from 'react-fast-marquee'
+
+// react-fast-marquee@1.6.5 is a CJS-only package (`exports.default = Marquee`).
+// Under the Void worker SSR transform the default import comes back wrapped in
+// one or more interop layers (`{ default: { default: Component } }`) instead of
+// the component function itself, which makes React throw
+// "Element type is invalid ... got: object". Peel the `.default` chain until we
+// reach the actual component function.
+function unwrapDefault(mod: unknown): ComponentType<any> {
+  let current: any = mod
+  while (current && typeof current !== 'function' && 'default' in current) {
+    current = current.default
+  }
+  return current as ComponentType<any>
+}
+
+const Marquee = unwrapDefault(MarqueeModule)
 
 function RowOneLogos() {
   return (

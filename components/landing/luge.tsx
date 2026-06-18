@@ -1,16 +1,17 @@
-'use client'
-
 import { useEffect } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SplitText } from 'gsap/SplitText'
-import { ScrollSmoother } from 'gsap/ScrollSmoother'
 import { CustomEase } from 'gsap/CustomEase'
 
-import luge from '@waaark/luge'
+// CSS-only side-effect import — safe at module scope (Vite handles it, no JS
+// runs). The @waaark/luge JS itself reads `window` / `document` /
+// `requestAnimationFrame` at IMPORT time and crashes the worker SSR, so it is
+// loaded lazily inside the effect below (which only runs on the client) rather
+// than as a top-level `import luge from '@waaark/luge'`.
 import '@waaark/luge/dist/css/luge.css'
 
-function registerLugeReveal() {
+function registerLugeReveal(luge: typeof import('@waaark/luge').default) {
   // Heading
   luge.reveal.add('in', 'heading', (element: HTMLDivElement) => {
     const split = new SplitText(element, {
@@ -69,30 +70,42 @@ function registerLugeReveal() {
 
 export const Luge = () => {
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger)
-    gsap.registerPlugin(SplitText)
-    gsap.registerPlugin(CustomEase)
+    let cancelled = false
+    let tick: (() => void) | undefined
+    // Lazy-import the browser-only @waaark/luge here so the module is never
+    // evaluated during SSR.
+    import('@waaark/luge').then(({ default: luge }) => {
+      if (cancelled) return
 
-    // Setting ticker
-    luge.settings({
-      ticker: {external: true},
-      scroll: {
-        disabled: true
-      },
+      gsap.registerPlugin(ScrollTrigger)
+      gsap.registerPlugin(SplitText)
+      gsap.registerPlugin(CustomEase)
+
+      // Setting ticker
+      luge.settings({
+        ticker: { external: true },
+        scroll: {
+          disabled: true,
+        },
+      })
+      tick = luge.ticker.tick
+      gsap.ticker.add(tick)
+
+      // Force refresh when route change
+      luge.lifecycle.refresh()
+
+      registerLugeReveal(luge)
     })
-    gsap.ticker.add(luge.ticker.tick)
 
-    // Force refresh when route change
-    luge.lifecycle.refresh()
-
-    registerLugeReveal()
+    return () => {
+      cancelled = true
+      if (tick) {
+        gsap.ticker.remove(tick)
+      }
+    }
   }, [])
 
-  console.log('luge', luge)
-
-  return (
-    <></>
-  )
+  return <></>
 }
 
 export default Luge

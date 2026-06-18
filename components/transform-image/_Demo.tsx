@@ -243,6 +243,23 @@ export default function TransformImage() {
     }
   }, [transformedUrl])
 
+  // Hoisted to the top level so the hook is called unconditionally on every
+  // render. It used to be declared inline in the post-mount JSX
+  // (`onChange={useCallback(...)}`), but the component returns an early
+  // `<Shell />` before mount, so that inline hook changed the hook count between
+  // renders and tripped React's "Rendered more hooks than during the previous
+  // render." Rules-of-Hooks error.
+  const handleQualityChange = useCallback((e) => {
+    const { value: valueString } = e.target
+    const value = parseInt(valueString)
+    if (value < 0) {
+      e.target.value = 0
+    } else if (value > 100) {
+      e.target.value = 100
+    }
+    setQuality(value)
+  }, [])
+
   // Before mount: render the identical shell so SSR and the first client paint
   // match. After mount: if the page is not cross-origin isolated, the wasm
   // transcoder can't run, so show a non-interactive fallback in the same shell.
@@ -274,16 +291,7 @@ export default function TransformImage() {
             style={{ width: '80px', margin: '0 10px', padding: '0 10px' }}
             placeholder="Quality (0-100)"
             value={quality}
-            onChange={useCallback((e) => {
-              const { value: valueString } = e.target
-              const value = parseInt(valueString)
-              if (value < 0) {
-                e.target.value = 0
-              } else if (value > 100) {
-                e.target.value = 100
-              }
-              setQuality(value)
-            }, [])}
+            onChange={handleQualityChange}
           />
         </span>
         <Button

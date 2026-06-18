@@ -52,6 +52,15 @@ export default defineConfig({
   // worker format cannot handle top-level await, which fails the build.
   worker: { format: 'es' },
 
+  ssr: {
+    // `@waaark/luge` reads window/document/requestAnimationFrame at module load,
+    // so it crashes if it is evaluated during worker SSR. components/landing/luge.tsx
+    // only ever `import()`s it lazily inside a client effect, so it should never be
+    // pulled into the SSR graph — but bundle it (don't externalize) so that path is
+    // transformed through Vite and any stray CSS side-effects resolve correctly.
+    noExternal: ['@waaark/luge'],
+  },
+
   resolve: {
     // The browser build of @napi-rs/image is `@napi-rs/image-wasm32-wasi`. The public
     // wrapper's `main` is the native loader that require()s a platform .node binary, which
