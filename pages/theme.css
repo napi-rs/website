@@ -1,0 +1,47 @@
+/*
+ * Docs-content extras layered on top of @void/md/theme-content.css.
+ *
+ * Everything here is scoped under `.void-md` (the wrapper DocsLayout puts around
+ * markdown bodies) so it cannot leak into the chrome (navbar, sidebar, TOC) or
+ * the landing page. We deliberately do NOT import @void/md/theme.css (the full
+ * theme with reset + baseline) — DocsLayout imports @void/md/theme-content.css
+ * (scoped, no reset) and the app's own Tailwind reset in style.css owns the
+ * baseline.
+ *
+ * Dark handling: @void/md drives dark via the [data-theme="dark"] attribute on
+ * the root element, while the app's Tailwind uses the `.dark` class. The
+ * no-FOUC bootstrap (middleware/01.head.ts) sets BOTH, so we match either
+ * signal here.
+ */
+
+/* `<Chalk>`-style inline colored spans used in the prose (ported from the old
+ * components/chalk.jsx). Light defaults; dark overrides for legibility. */
+.void-md .chalk-green {
+  color: #255d00;
+}
+.void-md .chalk-rust {
+  color: #b7410e;
+}
+.void-md .chalk-warning {
+  color: #ff7043;
+}
+
+/* Dark mode: triggered by an explicit toggle (`[data-theme="dark"]`) OR by the
+ * Tailwind `.dark` class on any ancestor. */
+[data-theme='dark'] .void-md .chalk-green,
+.dark .void-md .chalk-green {
+  color: #d7ffd9;
+}
+[data-theme='dark'] .void-md .chalk-warning,
+.dark .void-md .chalk-warning {
+  color: #fbc02d;
+}
+
+/* Caption shown under figures / framed media blocks in docs content. */
+.void-md .container-caption {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--vmd-text-muted, #64748b);
+}

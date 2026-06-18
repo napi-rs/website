@@ -45,7 +45,38 @@
     "htmlAttrs": {
       "lang": "en",
       "data-theme": "dark"
-    }
+    },
+    "meta": [
+      { "name": "og:site_name", "content": "NAPI-RS" },
+      { "property": "og:type", "content": "website" },
+      { "property": "og:image", "content": "https://napi.rs/img/og-v2.png" },
+      { "name": "twitter:card", "content": "summary_large_image" },
+      { "name": "twitter:image", "content": "https://napi.rs/img/og-v2.png" }
+    ],
+    "link": [
+      {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "32x32",
+        "href": "/img/favicon-32x32.png"
+      },
+      {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "16x16",
+        "href": "/img/favicon-16x16.png"
+      },
+      { "rel": "shortcut icon", "href": "/img/favicon.png" }
+    ],
+    "script": [
+      {
+        "src": "https://www.googletagmanager.com/gtag/js?id=G-38WMNQBW8F",
+        "async": ""
+      },
+      {
+        "innerHTML": "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-38WMNQBW8F');"
+      }
+    ]
   },
   "worker": {
     "compatibility_date": "2026-02-24"
