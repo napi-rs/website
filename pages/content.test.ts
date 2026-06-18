@@ -19,10 +19,7 @@ const pagesDir = join(root, 'pages')
 const LOCALES = ['en', 'cn', 'pt-BR'] as const
 
 // Must mirror the EXCLUDED_ROUTES in scripts/convert-content.mjs.
-const EXCLUDED_ROUTES = new Set([
-  'introduction/getting-started',
-  'concepts/webassembly',
-])
+const EXCLUDED_ROUTES = new Set(['concepts/webassembly'])
 
 const FENCE_RE = /^\s*(```+|~~~+)/
 
@@ -305,5 +302,78 @@ describe('converted content tree', () => {
     )
     expect(buildMd).not.toContain('<Green>')
     expect(buildMd).toContain('<span class="chalk-green">')
+  })
+
+  it('regression: introduction/getting-started exists per locale with a video and title', () => {
+    // The legacy MDX imported a .mp4 and embedded a JSX <video> with an inline
+    // style object + `src={Video}` expression. The converter drops the import,
+    // collapses the JSX <video> into raw HTML pointing at the statically-served
+    // asset, and rewrites the co-located ./package-template.png to /assets/.
+    for (const locale of LOCALES) {
+      const file = join(
+        pagesDir,
+        locale,
+        'docs',
+        'introduction',
+        'getting-started.md',
+      )
+      expect(existsSync(file), `missing getting-started.md for ${locale}`).toBe(
+        true,
+      )
+      const content = readFileSync(file, 'utf8')
+
+      // Raw-HTML <video> pointing at the served asset; no leftover JSX.
+      expect(content).toContain(
+        '<video controls style="width: 100%"><source src="/assets/napi-rs-guide.mp4" type="video/mp4" /></video>',
+      )
+      expect(content).not.toContain('src={Video}')
+      expect(content).not.toContain('import Video')
+      expect(content).not.toContain('<track')
+
+      // Co-located image rewritten to the served /assets/ path (no ./ relative).
+      expect(content).toContain(
+        '![package-template](/assets/package-template.png)',
+      )
+      expect(content).not.toContain('./package-template.png')
+
+      // Non-empty frontmatter title.
+      const lines = content.split('\n')
+      expect(lines[0]?.trim()).toBe('---')
+      let title: string | null = null
+      for (let i = 1; i < lines.length; i++) {
+        if (lines[i].trim() === '---') break
+        const m = lines[i].match(/^title\s*:\s*(.+?)\s*$/)
+        if (m) {
+          let v = m[1]
+          if (
+            (v.startsWith("'") && v.endsWith("'")) ||
+            (v.startsWith('"') && v.endsWith('"'))
+          ) {
+            v = v.slice(1, -1)
+          }
+          title = v.trim()
+          break
+        }
+      }
+      expect(
+        (title ?? '').length > 0,
+        `empty getting-started title for ${locale}`,
+      ).toBe(true)
+    }
+
+    // The served video asset actually exists in public/assets.
+    expect(
+      existsSync(join(root, 'public', 'assets', 'napi-rs-guide.mp4')),
+    ).toBe(true)
+    expect(
+      existsSync(join(root, 'public', 'assets', 'package-template.png')),
+    ).toBe(true)
+
+    // pt-BR carries the extra IDE-support section that en/cn lack.
+    const ptbr = readFileSync(
+      join(pagesDir, 'pt-BR', 'docs', 'introduction', 'getting-started.md'),
+      'utf8',
+    )
+    expect(ptbr).toContain('#### Problema de suporte ao IDE')
   })
 })

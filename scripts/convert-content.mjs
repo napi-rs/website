@@ -45,7 +45,6 @@ const LOCALES = ['en', 'cn', 'pt-BR']
 // legacy route path (relative to legacy_pages/docs, no locale/ext), so all three
 // locales of each are excluded.
 const EXCLUDED_ROUTES = new Set([
-  'introduction/getting-started', // imports a .mp4 Video + inline styles
   'concepts/webassembly', // getStaticProps + TransformImage/LinkPreview
 ])
 
@@ -169,6 +168,44 @@ function phaseABlocks(src) {
 
     // --- outside fences, outside frontmatter ---
 
+    // JSX <video> block (introduction/getting-started). @void/md is plain
+    // markdown, so it passes through lowercase raw HTML verbatim but cannot
+    // evaluate a JSX `src={Video}` expression or a `style={{ ... }}` object.
+    // The accompanying `import Video from '...mp4'` line is already dropped by
+    // the generic top-level `import` stripper below; here we collapse the
+    // multi-line JSX <video> element into one self-contained raw-HTML line that
+    // points at the statically-served asset (`public/assets/napi-rs-guide.mp4`
+    // -> `/assets/napi-rs-guide.mp4`). Scoped narrowly to the .mp4 Video case
+    // (the only JSX media element in the prose corpus) rather than a general
+    // JSX-video transform, which would be riskier to get right for every shape.
+    if (/^\s*<video\b/.test(line)) {
+      // Consume lines until the closing </video> (inclusive). The block is
+      // always outside a fence here, so no fence-state juggling is needed.
+      let j = i
+      let block = lines[j]
+      while (!/<\/video>/.test(lines[j]) && j < lines.length - 1) {
+        j++
+        block += '\n' + lines[j]
+      }
+      const html = rewriteVideoBlock(block)
+      out.push({ text: html, code: false })
+      i = j
+      continue
+    }
+
+    // Rewrite the docs-relative package-template image reference to the
+    // statically-served asset path. Legacy ref is `./package-template.png`
+    // (co-located in legacy_pages/, which is read-only and NOT served); the
+    // asset is committed to `public/assets/package-template.png` so it resolves
+    // at `/assets/package-template.png`, matching the same `/assets/...`
+    // convention the video uses. Markdown image syntax only, outside fences.
+    if (line.includes('./package-template.png')) {
+      line = line.replace(
+        /\.\/package-template\.png/g,
+        '/assets/package-template.png',
+      )
+    }
+
     // Strip MDX comments `{/* ... */}`. In MDX these are invisible when rendered,
     // but @void/md is plain markdown, so a leaked comment renders as visible text
     // (and `vp fmt` even mangles the `*` into emphasis -> `{/_ ..._/}`). We only do
@@ -250,6 +287,56 @@ function rewriteFenceOpen(line) {
   // Collapse any double space left behind and trim trailing space.
   fenceLine = fenceLine.replace(/[ \t]+$/, '')
   return { fenceLine, caption: `**${filename}**` }
+}
+
+/**
+ * Convert a JSX `style={{ key: 'val', ... }}` object literal to a CSS string,
+ * e.g. `{{ width: '100%' }}` -> `width: 100%`. Keeps declaration order, lowers
+ * camelCase keys to kebab-case (none in this corpus, but correct in general),
+ * and strips the quotes around values. Pure + deterministic.
+ */
+function jsxStyleObjectToCss(objLiteral) {
+  // objLiteral is the inner text of the double braces, e.g. ` width: '100%' `.
+  const decls = []
+  const re = /([A-Za-z][A-Za-z0-9]*)\s*:\s*(?:'([^']*)'|"([^"]*)"|([^,]+))/g
+  let m
+  while ((m = re.exec(objLiteral)) !== null) {
+    const key = m[1].replace(/[A-Z]/g, (c) => '-' + c.toLowerCase())
+    const value = (m[2] ?? m[3] ?? m[4] ?? '').trim()
+    decls.push(`${key}: ${value}`)
+  }
+  return decls.join('; ')
+}
+
+/**
+ * Rewrite a JSX <video>...</video> block (introduction/getting-started) into a
+ * single line of plain raw HTML that @void/md emits verbatim:
+ *
+ *   <video controls style={{ width: '100%' }}>
+ *     <source src={Video} type="video/mp4" />
+ *     <track kind="captions" srcLang="en" />
+ *   </video>
+ *     ->
+ *   <video controls style="width: 100%"><source src="/assets/napi-rs-guide.mp4" type="video/mp4" /></video>
+ *
+ * The JSX `style` object becomes a CSS string; the `src={Video}` expression is
+ * resolved to the static asset path (the dropped `import Video from
+ * '../../../public/assets/napi-rs-guide.mp4'` maps `public/assets/...` ->
+ * `/assets/...`). The captions `<track>` (no real caption file) is dropped, to
+ * match the agreed target markup. Locale-agnostic: the block is identical in
+ * en/cn/pt-BR. Pure + deterministic.
+ */
+function rewriteVideoBlock(block) {
+  // Preserve `controls` and convert the JSX style object to a CSS string.
+  const styleMatch = block.match(/style\s*=\s*\{\{([\s\S]*?)\}\}/)
+  const css = styleMatch ? jsxStyleObjectToCss(styleMatch[1]) : ''
+  // Resolve <source src={Video} ...> to the statically-served asset path.
+  // `Video` is the dropped `import ... .mp4` under public/assets, served at
+  // /assets/. type comes straight from the source attribute.
+  const typeMatch = block.match(/<source\b[^>]*\btype\s*=\s*"([^"]*)"/)
+  const type = typeMatch ? typeMatch[1] : 'video/mp4'
+  const styleAttr = css ? ` style="${css}"` : ''
+  return `<video controls${styleAttr}><source src="/assets/napi-rs-guide.mp4" type="${type}" /></video>`
 }
 
 /**
