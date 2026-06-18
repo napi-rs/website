@@ -1,0 +1,106 @@
+name: CI / Deploy
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancel any in-flight run for the same ref (PR or branch) when a new push lands.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # PR gate: tests + formatting are blocking; lint + typecheck are advisory.
+  # ---------------------------------------------------------------------------
+  check:
+    name: Check (tests, fmt, lint, typecheck)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # setup-vp is the canonical Void/Vite+ CI action (see
+      # node_modules/void/skills/void/docs/guide/deployment.md). It installs the
+      # `vp` toolchain, selects Node via `vp env use`, auto-detects the Yarn
+      # lockfile, and runs an immutable `vp install` (run-install defaults to
+      # true). `vp install` is frozen-lockfile in CI, satisfying the
+      # immutable-install requirement.
+      - name: Setup Vite+ toolchain (Node 24 + Yarn install)
+        uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: '24'
+          cache: true
+
+      # `void prepare` generates .void/*.d.ts (routes, db, queues, env) WITHOUT
+      # booting Vite. This MUST run before typecheck, otherwise `tsc` cannot
+      # resolve the `void/*` and `@schema` virtual modules and the typecheck
+      # fails on missing generated types.
+      - name: Generate Void types
+        run: yarn prepare
+
+      # Tests are BLOCKING. VITEST=1 mirrors the local convention for enabling
+      # the test environment.
+      - name: Run tests
+        env:
+          VITEST: '1'
+        run: npx vitest run
+
+      # Formatting is BLOCKING: `vp fmt --check` fails the job if anything is
+      # unformatted.
+      - name: Check formatting (blocking)
+        run: npx vp fmt --check
+
+      # Lint is ADVISORY: surfaced in logs but does not fail the job.
+      - name: Lint (advisory)
+        continue-on-error: true
+        run: npx vp lint
+
+      # Typecheck is ADVISORY. Depends on the `yarn prepare` step above for the
+      # generated .void types. `tsc --noEmit` is type-only (no output).
+      - name: Typecheck (advisory)
+        continue-on-error: true
+        run: npx tsc --noEmit
+
+  # ---------------------------------------------------------------------------
+  # Deploy: only on push to main. Build -> sitemap -> deploy (skip rebuild).
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: Deploy to Void
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Vite+ toolchain (Node 24 + Yarn install)
+        uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: '24'
+          cache: true
+
+      # Generate .void types before build so the production build resolves
+      # generated virtual modules cleanly.
+      - name: Generate Void types
+        run: yarn prepare
+
+      # Build first: `vite build` writes the client bundle to dist/client/ and
+      # the worker bundle to dist/.
+      - name: Build
+        run: yarn build
+
+      # Sitemap MUST run AFTER build: scripts/generate-sitemap.mjs emits
+      # sitemap.xml and the raw .md files INTO dist/client/. If it ran before
+      # build, `vite build` would wipe dist/client and discard these files.
+      - name: Generate sitemap (post-build, writes into dist/client)
+        run: yarn sitemap
+
+      # Deploy with --skip-build so `void deploy` ships the existing dist/
+      # output instead of triggering its own `vite build`, which would clobber
+      # dist/client and drop the sitemap.xml + raw .md emitted above.
+      # (`void deploy --skip-build` is documented in `void deploy --help`.)
+      - name: Deploy
+        env:
+          VOID_TOKEN: ${{ secrets.VOID_TOKEN }}
+          VOID_PROJECT: napi-rs-website
+        run: npx void deploy --skip-build

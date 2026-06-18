@@ -39,7 +39,8 @@
       "/assets/*": [
         "Cross-Origin-Embedder-Policy: require-corp",
         "Cross-Origin-Resource-Policy: same-origin"
-      ]
+      ],
+      "/*.md": ["Content-Type: text/markdown; charset=utf-8"]
     }
   },
   "inference": {

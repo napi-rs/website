@@ -11,7 +11,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "deploy": "void deploy",
-    "prepare": "void prepare"
+    "prepare": "void prepare",
+    "sitemap": "node scripts/generate-sitemap.mjs"
   },
   "dependencies": {
     "@napi-rs/image": "1.12.0",
