@@ -1,4 +1,5 @@
 ---
+title: 'Inject This'
 description: Inject This Object into functions and methods.
 ---
 

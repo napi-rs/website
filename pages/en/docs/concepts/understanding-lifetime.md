@@ -1,4 +1,5 @@
 ---
+title: 'Understanding Lifetime'
 description: Understand the lifetime of the JavaScript values.
 ---
 

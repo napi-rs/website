@@ -1,4 +1,5 @@
 ---
+title: '编写发布一个简单的包'
 description: 使用 NAPI-RS 编写并发布一个简单的包.
 ---
 

@@ -1,4 +1,5 @@
 ---
+title: 'Await Promise'
 description: Await a JavaScript Promise in Rust.
 ---
 

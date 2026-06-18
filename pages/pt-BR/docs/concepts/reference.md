@@ -1,4 +1,5 @@
 ---
+title: 'Reference / WeakReference'
 description: Create and use Object References.
 ---
 

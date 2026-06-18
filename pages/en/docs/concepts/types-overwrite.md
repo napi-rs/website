@@ -1,4 +1,5 @@
 ---
+title: 'Types Overwrite'
 description: Overwrite the argument and return TypeScript types.
 ---
 

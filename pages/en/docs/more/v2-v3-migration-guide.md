@@ -1,4 +1,5 @@
 ---
+title: 'V2 to V3 Migration Guide'
 description: Migration guide for NAPI-RS V2 to V3.
 ---
 

@@ -1,4 +1,5 @@
 ---
+title: 'New'
 description: napi new command in @napi-rs/cli.
 ---
 

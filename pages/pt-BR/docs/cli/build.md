@@ -1,4 +1,5 @@
 ---
+title: 'Build'
 description: napi build command in @napi-rs/cli.
 ---
 

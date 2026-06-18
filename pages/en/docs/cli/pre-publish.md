@@ -1,4 +1,5 @@
 ---
+title: 'Pre Publish'
 description: napi pre-publish command in @napi-rs/cli.
 ---
 

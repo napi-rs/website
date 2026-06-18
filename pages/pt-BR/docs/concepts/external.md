@@ -1,4 +1,5 @@
 ---
+title: 'External'
 description: External Object holds the native value in a JavaScript Object.
 ---
 

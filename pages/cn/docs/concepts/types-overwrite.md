@@ -1,4 +1,5 @@
 ---
+title: '重写类型'
 description: Overwrite the argument and return TypeScript types.
 ---
 

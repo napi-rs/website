@@ -1,4 +1,5 @@
 ---
+title: 'Rename'
 description: napi rename command in @napi-rs/cli.
 ---
 

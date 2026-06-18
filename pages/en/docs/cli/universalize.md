@@ -1,4 +1,5 @@
 ---
+title: 'Universalize'
 description: napi universalize command in @napi-rs/cli.
 ---
 

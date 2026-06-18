@@ -1,4 +1,5 @@
 ---
+title: 'Version'
 description: napi version command in @napi-rs/cli.
 ---
 

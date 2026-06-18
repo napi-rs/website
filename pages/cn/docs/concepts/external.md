@@ -1,4 +1,5 @@
 ---
+title: 'External'
 description: External 对象保存原生值到 JavaScript 对象中。
 ---
 

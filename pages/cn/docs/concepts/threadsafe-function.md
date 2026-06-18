@@ -1,4 +1,5 @@
 ---
+title: '线程安全函数'
 description: Call a JavaScript callback in other threads.
 ---
 

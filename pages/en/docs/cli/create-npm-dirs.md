@@ -1,4 +1,5 @@
 ---
+title: 'Create Npm Dirs'
 description: napi create-npm-dirs command in @napi-rs/cli.
 ---
 

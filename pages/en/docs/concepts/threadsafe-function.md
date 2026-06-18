@@ -1,4 +1,5 @@
 ---
+title: 'ThreadsafeFunction'
 description: Call a JavaScript callback in other threads.
 ---
 

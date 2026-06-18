@@ -1,4 +1,5 @@
 ---
+title: 'Cross compilation your NAPI-RS package'
 description: Summary of cross build NAPI-RS packages.
 ---
 

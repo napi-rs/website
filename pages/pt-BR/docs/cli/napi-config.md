@@ -1,4 +1,5 @@
 ---
+title: 'NAPI Config'
 description: Config schema of NAPI-RS.
 ---
 

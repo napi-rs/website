@@ -214,6 +214,70 @@ describe('converted content tree', () => {
     }
   })
 
+  it('every emitted page has a non-empty frontmatter title', () => {
+    // void.json's titleTemplate "%s – NAPI-RS" leaves an EMPTY <title> when a
+    // page has no frontmatter `title` (no %s substitution). The converter
+    // injects a title (first H1, else the legacy _meta title, else the first
+    // heading) so this can never silently regress.
+    for (const file of emittedPages()) {
+      const content = readFileSync(file, 'utf8')
+      const lines = content.split('\n')
+      expect(
+        lines[0]?.trim() === '---',
+        `no frontmatter block in ${relative(root, file)}`,
+      ).toBe(true)
+      let title: string | null = null
+      for (let i = 1; i < lines.length; i++) {
+        if (lines[i].trim() === '---') break
+        const m = lines[i].match(/^title\s*:\s*(.+?)\s*$/)
+        if (m) {
+          // Unwrap a single/double-quoted scalar to check the inner value.
+          let v = m[1]
+          if (
+            (v.startsWith("'") && v.endsWith("'")) ||
+            (v.startsWith('"') && v.endsWith('"'))
+          ) {
+            v = v.slice(1, -1)
+          }
+          title = v.trim()
+          break
+        }
+      }
+      expect(title, `no frontmatter title in ${relative(root, file)}`).not.toBe(
+        null,
+      )
+      expect(
+        (title ?? '').length > 0,
+        `empty frontmatter title in ${relative(root, file)}`,
+      ).toBe(true)
+    }
+  })
+
+  it('spot-check: H1-less pages get a title from the legacy _meta', () => {
+    // concepts/env and more/v2-v3-migration-guide start at H2 (no H1); their
+    // titles must come from the legacy _meta.<locale>.json.
+    const env = readFileSync(
+      join(pagesDir, 'en', 'docs', 'concepts', 'env.md'),
+      'utf8',
+    )
+    expect(env).toMatch(/^---\ntitle: 'Env'\n/)
+    const mig = readFileSync(
+      join(pagesDir, 'en', 'docs', 'more', 'v2-v3-migration-guide.md'),
+      'utf8',
+    )
+    expect(mig).toMatch(/^---\ntitle: 'V2 to V3 Migration Guide'\n/)
+  })
+
+  it('spot-check: a title derived from an H1 strips inline markdown', () => {
+    // concepts/reference keeps its legacy `title: Reference`; cli/build derives
+    // `Build` from its `# Build` H1 (no title in legacy frontmatter).
+    const build = readFileSync(
+      join(pagesDir, 'en', 'docs', 'cli', 'build.md'),
+      'utf8',
+    )
+    expect(build).toMatch(/^---\ntitle: 'Build'\n/)
+  })
+
   it('spot-check: en concepts/enum has ::: warning and no <Callout', () => {
     const enumMd = readFileSync(
       join(pagesDir, 'en', 'docs', 'concepts', 'enum.md'),

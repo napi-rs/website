@@ -1,4 +1,5 @@
 ---
+title: 'Perguntas Frequentes'
 description: Frequently asked questions about napi-rs.
 ---
 

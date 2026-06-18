@@ -1,4 +1,5 @@
 ---
+title: 'Native module'
 description: What is native module, how Node.js load and execute it.
 ---
 

@@ -1,4 +1,5 @@
 ---
+title: 'Sobrescrita de Tipos'
 description: Overwrite the argument and return TypeScript types.
 ---
 

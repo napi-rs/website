@@ -1,3 +1,7 @@
+---
+title: 'Module Initialization'
+---
+
 # Module Initialization
 
 NAPI-RS provides two APIs for module initialization: `#[napi_derive::module_init]` and `#[napi(module_exports)]`. While they may seem similar, they serve different purposes and execute at different times.

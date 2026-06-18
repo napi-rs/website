@@ -1,4 +1,5 @@
 ---
+title: 'Function'
 description: Define and use JavaScript functions in NAPI-RS.
 ---
 

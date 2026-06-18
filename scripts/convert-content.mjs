@@ -347,9 +347,132 @@ function phaseBInline(text) {
 }
 
 /**
- * Run the full conversion on a source string. Returns the converted markdown.
+ * Strip inline markdown/HTML from a heading text so it can be used as a plain
+ * `title:` value. Handles the forms that actually appear in the corpus:
+ *   - inline code:      `Reference` / `WeakReference`  -> Reference / WeakReference
+ *   - links:            [text](url)                    -> text
+ *   - bold / italic:    **x** / *x* / _x_              -> x
+ *   - leading anchors / trailing `{#id}` heading ids   -> removed
+ * The result is whitespace-collapsed and trimmed. Pure + deterministic.
  */
-function convert(src) {
+function stripMarkdownInline(text) {
+  let t = text
+  // Trailing explicit heading id `{#slug}`.
+  t = t.replace(/\s*\{#[^}]*\}\s*$/, '')
+  // Links [label](url) -> label.
+  t = t.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+  // Inline code `x` -> x.
+  t = t.replace(/`([^`]*)`/g, '$1')
+  // Bold/italic markers (**, __, *, _) -> removed (keep inner text).
+  t = t.replace(/\*\*([^*]+)\*\*/g, '$1')
+  t = t.replace(/__([^_]+)__/g, '$1')
+  t = t.replace(/\*([^*]+)\*/g, '$1')
+  t = t.replace(/_([^_]+)_/g, '$1')
+  // Collapse whitespace.
+  t = t.replace(/\s+/g, ' ').trim()
+  return t
+}
+
+/**
+ * Encode a derived title as a single-quoted YAML scalar, matching the existing
+ * frontmatter style (`title: 'A simple package'`). Single quotes inside the
+ * value are escaped by doubling, per YAML. Pure + deterministic.
+ */
+function yamlSingleQuote(value) {
+  return `'${value.replace(/'/g, "''")}'`
+}
+
+/**
+ * Ensure the converted markdown carries a frontmatter `title:`.
+ *
+ * @void/md derives `<title>` from frontmatter `title`; with void.json's
+ * `titleTemplate: "%s – NAPI-RS"` a page WITHOUT a title renders an empty
+ * `<title>` (no `%s` substitution). Deterministic fix: when the frontmatter has
+ * no `title`, derive one from the page's first H1 (`# ...`) with inline markdown
+ * stripped, and inject it.
+ *
+ *   - frontmatter present, no title  -> insert `title: '<derived>'` first key
+ *   - no frontmatter block at all     -> create `---\ntitle: '<derived>'\n---`
+ *   - frontmatter already has a title -> unchanged
+ *
+ * Title source, in order: first ATX H1 (`# ...`), then `fallbackTitle` (the
+ * legacy `_meta.<locale>.json` leaf title — a handful of pages start at H2 with
+ * no H1, e.g. concepts/env, more/v2-v3-migration-guide), then the first heading
+ * of any level. Every in-scope page resolves to a non-empty title this way; the
+ * content.test asserts it can never silently go empty.
+ *
+ * Idempotent: a second run sees the injected title and is a no-op.
+ */
+function ensureFrontmatterTitle(md, fallbackTitle) {
+  const lines = md.split('\n')
+
+  // Detect a leading frontmatter block (first line exactly `---`).
+  let hasFm = false
+  let fmEnd = -1 // index of the closing `---`
+  if (lines[0] !== undefined && lines[0].trim() === '---') {
+    for (let i = 1; i < lines.length; i++) {
+      if (lines[i].trim() === '---') {
+        hasFm = true
+        fmEnd = i
+        break
+      }
+    }
+  }
+
+  // Already has a title key inside the frontmatter? Leave it alone.
+  if (hasFm) {
+    for (let i = 1; i < fmEnd; i++) {
+      if (/^title\s*:/.test(lines[i])) return md
+    }
+  }
+
+  // Scan the body for headings: prefer the first H1, but remember the first
+  // heading of any level as a last resort.
+  const bodyStart = hasFm ? fmEnd + 1 : 0
+  let h1 = null
+  let firstHeading = null
+  let inFence = false
+  for (let i = bodyStart; i < lines.length; i++) {
+    const line = lines[i]
+    if (FENCE_RE.test(line)) {
+      inFence = !inFence
+      continue
+    }
+    if (inFence) continue
+    const m = line.match(/^(#{1,6})\s+(.+?)\s*$/)
+    if (!m) continue
+    const text = stripMarkdownInline(m[2])
+    if (!text) continue
+    if (firstHeading === null) firstHeading = text
+    if (m[1].length === 1) {
+      h1 = text
+      break
+    }
+  }
+
+  const derived =
+    h1 ??
+    (fallbackTitle ? stripMarkdownInline(fallbackTitle) : null) ??
+    firstHeading
+  if (!derived) return md // nothing to derive from — leave unchanged
+
+  const titleLine = `title: ${yamlSingleQuote(derived)}`
+
+  if (hasFm) {
+    // Insert title as the FIRST frontmatter key (right after the opening `---`).
+    lines.splice(1, 0, titleLine)
+    return lines.join('\n')
+  }
+  // No frontmatter: prepend a fresh block.
+  return `---\n${titleLine}\n---\n\n${md}`
+}
+
+/**
+ * Run the full conversion on a source string. Returns the converted markdown.
+ * `fallbackTitle` (the legacy `_meta` leaf title) is used only when the page has
+ * no H1 to derive a frontmatter `title` from.
+ */
+function convert(src, fallbackTitle) {
   const records = phaseABlocks(src)
 
   // Reassemble, applying the inline phase to contiguous non-code regions only.
@@ -382,19 +505,76 @@ function convert(src) {
   // Strip leading blank lines.
   result = result.replace(/^\n+/, '')
 
+  // Inject a frontmatter `title:` derived from the first H1 (or the legacy
+  // _meta title for the handful of H1-less pages) when absent, so every page
+  // renders a non-empty <title> under titleTemplate. Runs LAST so it sees the
+  // fully-normalized output (and stays idempotent on re-run).
+  result = ensureFrontmatterTitle(result, fallbackTitle)
+
   return result
+}
+
+// ----------------------------------------------------------------------------
+// Legacy _meta title lookup (fallback title source for H1-less pages)
+// ----------------------------------------------------------------------------
+
+/**
+ * Resolve the human title for a legacy route leaf from its directory's
+ * `_meta.<locale>.json`, e.g. routePath `more/v2-v3-migration-guide`, locale
+ * `en` -> legacy_pages/docs/more/_meta.en.json["v2-v3-migration-guide"].
+ * Returns null when no meta entry exists. Cached per (dir, locale).
+ */
+const metaCache = new Map()
+function legacyMetaTitle(routePath, locale) {
+  const slashIdx = routePath.lastIndexOf('/')
+  const dirRel = slashIdx === -1 ? '' : routePath.slice(0, slashIdx)
+  const leaf = slashIdx === -1 ? routePath : routePath.slice(slashIdx + 1)
+  const metaPath = join(legacyDocs, dirRel, `_meta.${locale}.json`)
+  const cacheKey = metaPath
+  let meta = metaCache.get(cacheKey)
+  if (meta === undefined) {
+    meta = existsSync(metaPath)
+      ? JSON.parse(readFileSync(metaPath, 'utf8'))
+      : null
+    metaCache.set(cacheKey, meta)
+  }
+  const value = meta?.[leaf]
+  return typeof value === 'string' ? value : null
 }
 
 // ----------------------------------------------------------------------------
 // Main
 // ----------------------------------------------------------------------------
 
+/**
+ * Recursively delete ONLY `.md` files under `dir` (the converter's own output),
+ * leaving every other file untouched. Critically, the per-locale docs layout
+ * entries `pages/<locale>/docs/layout.island.tsx` are hand-authored and live in
+ * this same tree — a blanket `rmSync(dir, { recursive: true })` would destroy
+ * them on every run. We prune emitted markdown surgically instead, then remove
+ * directories only when they are left empty.
+ */
+function cleanEmittedMarkdown(dir) {
+  if (!existsSync(dir)) return
+  for (const name of readdirSync(dir)) {
+    const full = join(dir, name)
+    if (statSync(full).isDirectory()) {
+      cleanEmittedMarkdown(full)
+      // Remove the directory only if our pruning left it empty (preserves dirs
+      // that still hold non-.md files such as a layout entry).
+      if (readdirSync(full).length === 0) rmSync(full, { recursive: true })
+    } else if (name.endsWith('.md')) {
+      rmSync(full)
+    }
+  }
+}
+
 function main() {
-  // Clean the generated tree so removed source files don't leave stale output.
-  // Only ever touch pages/<locale>/docs — never pages/index.md or other pages.
+  // Clean stale emitted markdown so removed source files don't leave orphans.
+  // Only ever delete `.md` files under pages/<locale>/docs — never the layout
+  // islands living in the same tree, nor pages/index.md or other pages.
   for (const locale of LOCALES) {
-    const dir = join(pagesDir, locale, 'docs')
-    if (existsSync(dir)) rmSync(dir, { recursive: true, force: true })
+    cleanEmittedMarkdown(join(pagesDir, locale, 'docs'))
   }
 
   const allFiles = walk(legacyDocs).sort()
@@ -409,7 +589,7 @@ function main() {
     if (EXCLUDED_ROUTES.has(routePath)) continue
 
     const src = readFileSync(fullPath, 'utf8')
-    const output = convert(src)
+    const output = convert(src, legacyMetaTitle(routePath, locale))
 
     const outPath = join(pagesDir, locale, 'docs', `${routePath}.md`)
     mkdirSync(dirname(outPath), { recursive: true })

@@ -1,4 +1,5 @@
 ---
+title: '异步函数'
 description: 使用 tokio 运行时运行一个 Rust 异步函数。
 ---
 

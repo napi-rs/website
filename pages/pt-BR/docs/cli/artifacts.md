@@ -1,4 +1,5 @@
 ---
+title: 'Artifacts'
 description: napi artifacts command in @napi-rs/cli.
 ---
 

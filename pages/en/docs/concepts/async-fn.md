@@ -1,4 +1,5 @@
 ---
+title: 'async fn'
 description: Run a Rust async fn with the tokio runtime.
 ---
 

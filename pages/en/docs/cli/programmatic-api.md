@@ -1,4 +1,5 @@
 ---
+title: 'Programmatic API'
 description: Use @napi-rs/cli programmatic APIs to customize your build workflow.
 ---
 
