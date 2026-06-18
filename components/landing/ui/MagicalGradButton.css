@@ -1,11 +1,11 @@
 @keyframes colorRotate {
   to {
-    --angle: -360deg
+    --angle: -360deg;
   }
 }
 
 @property --angle {
-  syntax: "<angle>";
+  syntax: '<angle>';
   initial-value: 0deg;
   inherits: false;
 }
@@ -19,7 +19,11 @@
   position: relative;
   padding: 16px 28px 18px 45px;
   border-radius: var(--radius);
-  background-image: linear-gradient(85deg,rgba(254, 115, 1, 0.05) 2.96%,hsla(0, 83%, 47%, 0.05) 96.14%);
+  background-image: linear-gradient(
+    85deg,
+    rgba(254, 115, 1, 0.05) 2.96%,
+    hsla(0, 83%, 47%, 0.05) 96.14%
+  );
   box-shadow: 0 16px 64px 0 rgba(255, 115, 1, 0.12);
   cursor: pointer;
   overflow: hidden;
@@ -33,7 +37,7 @@
   }
 
   &:before {
-    content: "";
+    content: '';
     pointer-events: none;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -43,8 +47,16 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: radial-gradient(circle at var(--x) var(--y),hsl(var(--theme-hsl)/.8) 0,hsl(var(--theme-hsl)/.02) 23%,hsl(var(--theme-hsl)/calc(.1 * var(--border-opacity-scale))) 75%,hsl(var(--theme-hsl)/calc(.1 * var(--border-opacity-scale))) 95%,hsla(0,0%,100%,.1) 100%);
-    -webkit-mask-image: linear-gradient(black, black), linear-gradient(black, black);
+    background: radial-gradient(
+      circle at var(--x) var(--y),
+      hsl(var(--theme-hsl) / 0.8) 0,
+      hsl(var(--theme-hsl) / 0.02) 23%,
+      hsl(var(--theme-hsl) / calc(0.1 * var(--border-opacity-scale))) 75%,
+      hsl(var(--theme-hsl) / calc(0.1 * var(--border-opacity-scale))) 95%,
+      hsla(0, 0%, 100%, 0.1) 100%
+    );
+    -webkit-mask-image:
+      linear-gradient(black, black), linear-gradient(black, black);
     -webkit-mask-clip: content-box, border-box;
     -webkit-mask-origin: content-box, border-box;
     -webkit-mask-composite: xor;
@@ -55,7 +67,7 @@
     --bg-opacity: 0.3;
 
     &:before {
-      padding: 1px
+      padding: 1px;
     }
   }
 
@@ -65,8 +77,8 @@
     font-size: fv(20, 32);
     font-weight: 500;
     line-height: 115.99%;
-    letter-spacing: -.72px;
-    text-transform: capitalize
+    letter-spacing: -0.72px;
+    text-transform: capitalize;
   }
 
   .button-icon {
@@ -80,13 +92,13 @@
 
     > * {
       position: absolute;
-      border-radius: var(--radius)
+      border-radius: var(--radius);
     }
 
     .background-blur {
       inset: 0;
       z-index: 2;
-      background: hsla(0,0%,100%,.01);
+      background: hsla(0, 0%, 100%, 0.01);
       /* backdrop-filter: blur(34px); */
     }
 
@@ -95,14 +107,21 @@
       margin-top: -50%;
       margin-left: -10%;
       aspect-ratio: 1/1;
-      background: conic-gradient(from var(--angle),#fd6304,#0820f9,#f70b0b,#f70ed2,#f77d0b);
+      background: conic-gradient(
+        from var(--angle),
+        #fd6304,
+        #0820f9,
+        #f70b0b,
+        #f70ed2,
+        #f77d0b
+      );
       filter: blur(25px);
       transform-origin: 50% 50%;
       opacity: var(--bg-opacity);
       transition: opacity 318ms;
-      -webkit-mask-image: radial-gradient(100px,#fff,hsla(0,0%,100%,.1));
+      -webkit-mask-image: radial-gradient(100px, #fff, hsla(0, 0%, 100%, 0.1));
       -webkit-mask-position: var(--bound-x) var(--bound-y);
-      animation: colorRotate 20s linear infinite
+      animation: colorRotate 20s linear infinite;
     }
   }
 }

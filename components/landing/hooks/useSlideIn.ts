@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+import { useEffect, useRef } from 'react'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/dist/ScrollTrigger'
 
 /**
  * React Hook to animate an element sliding in when it enters the viewport.
@@ -8,11 +8,11 @@ import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
  */
 export function useSlideIn(selector: HTMLElement | string) {
   // Store the GSAP animation instance to clean up on unmount
-  const animationRef = useRef<gsap.core.Tween | null>(null);
+  const animationRef = useRef<gsap.core.Tween | null>(null)
 
   useEffect(() => {
     // Register ScrollTrigger plugin (ensure it's registered only once)
-    gsap.registerPlugin(ScrollTrigger);
+    gsap.registerPlugin(ScrollTrigger)
 
     // Simulate Vue's nextTick to ensure DOM is updated before animating
     const timer = setTimeout(() => {
@@ -26,15 +26,15 @@ export function useSlideIn(selector: HTMLElement | string) {
           start: 'top 100%', // Animation starts when element top hits bottom of viewport
           once: true, // Only animate once
         },
-      });
-    }, 0);
+      })
+    }, 0)
 
     // Cleanup function: kill animation and scroll trigger when component unmounts
     return () => {
-      clearTimeout(timer);
+      clearTimeout(timer)
       if (animationRef.current) {
-        animationRef.current.kill();
+        animationRef.current.kill()
       }
-    };
-  }, [selector]); // Re-run effect if selector changes
+    }
+  }, [selector]) // Re-run effect if selector changes
 }

@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/dist/ScrollTrigger'
 
 /**
  * Options for the card animation hook
@@ -9,52 +9,52 @@ interface CardAnimationOptions {
   /**
    * If true, animation runs only once and won't reset after completion
    */
-  once?: boolean;
+  once?: boolean
 }
 
 /**
  * Return type of the useCardAnimation hook
  */
 interface CardAnimationReturn {
-  startAnimation: () => void;
-  isCardActive: boolean;
+  startAnimation: () => void
+  isCardActive: boolean
 }
 
 export function useCardAnimation(
   selector: string,
   animation?: () => gsap.core.Timeline,
-  options?: CardAnimationOptions
+  options?: CardAnimationOptions,
 ): CardAnimationReturn {
   // Register ScrollTrigger plugin once
-  gsap.registerPlugin(ScrollTrigger);
+  gsap.registerPlugin(ScrollTrigger)
 
   // State to track if the card is in an active animated state
-  const [isCardActive, setIsCardActive] = useState<boolean>(false);
+  const [isCardActive, setIsCardActive] = useState<boolean>(false)
 
   // Ref to track if animation is currently running (prevents overlapping animations)
-  const [isAnimationRunning, setIsAnimationRunning] = useState<boolean>(false);
+  const [isAnimationRunning, setIsAnimationRunning] = useState<boolean>(false)
 
   // Refs to store GSAP timeline and ScrollTrigger instances
-  const timelineRef = useRef<gsap.core.Timeline | null>(null);
-  const scrollTriggerRef = useRef<ScrollTrigger | null>(null);
+  const timelineRef = useRef<gsap.core.Timeline | null>(null)
+  const scrollTriggerRef = useRef<ScrollTrigger | null>(null)
 
   /**
    * Starts the card animation, managing state and preventing concurrent animations
    */
   const startAnimation = useCallback(() => {
     // Exit if animation is already running exists
-    if (isAnimationRunning) return;
+    if (isAnimationRunning) return
 
     // Mark animation as running and activate card state
     setIsAnimationRunning(true)
-    setIsCardActive(true);
+    setIsCardActive(true)
 
     // Exit if no animation
-    if (!animation) return;
+    if (!animation) return
 
     // Clean up existing timeline if it exists
     if (timelineRef.current) {
-      timelineRef.current.kill();
+      timelineRef.current.kill()
     }
 
     // Create new timeline and add animation
@@ -62,18 +62,17 @@ export function useCardAnimation(
       onComplete: () => {
         // Reset state after animation completes (unless "once" option is true)
         if (!options?.once) {
-          setIsCardActive(false);
+          setIsCardActive(false)
           // Prevent new animations immediately after completion
           setTimeout(() => {
-            setIsAnimationRunning(false);
-          }, 3000);
+            setIsAnimationRunning(false)
+          }, 3000)
         }
-      }
-    });
+      },
+    })
 
-    timelineRef.current.add(animation());
-
-  }, [animation]);
+    timelineRef.current.add(animation())
+  }, [animation])
 
   /**
    * Set up scroll trigger for mobile devices when component mounts
@@ -82,13 +81,15 @@ export function useCardAnimation(
   useEffect(() => {
     // Get target element using the provided selector
     const getTargetElement = (): HTMLElement | null => {
-      return document.querySelector(selector);
-    };
+      return document.querySelector(selector)
+    }
 
-    const targetElement = getTargetElement();
+    const targetElement = getTargetElement()
     if (!targetElement) {
-      console.warn(`useCardAnimation: No element found for selector "${selector}"`);
-      return;
+      console.warn(
+        `useCardAnimation: No element found for selector "${selector}"`,
+      )
+      return
     }
 
     // Set up scroll trigger for mobile devices (<768px)
@@ -97,9 +98,9 @@ export function useCardAnimation(
         trigger: targetElement,
         start: 'top 60%', // Trigger when element top reaches 60% viewport height
         onEnter: () => {
-          startAnimation();
+          startAnimation()
         },
-      });
+      })
     }
 
     /**
@@ -109,23 +110,23 @@ export function useCardAnimation(
     return () => {
       // Kill scroll trigger if it exists
       if (scrollTriggerRef.current) {
-        scrollTriggerRef.current.kill();
-        scrollTriggerRef.current = null;
+        scrollTriggerRef.current.kill()
+        scrollTriggerRef.current = null
       }
 
       // Kill animation timeline if it exists
       if (timelineRef.current) {
-        timelineRef.current.kill();
-        timelineRef.current = null;
+        timelineRef.current.kill()
+        timelineRef.current = null
       }
 
       // Reset animation state
-      setIsAnimationRunning(false);
-    };
-  }, [selector]);
+      setIsAnimationRunning(false)
+    }
+  }, [selector])
 
   return {
     startAnimation,
-    isCardActive
-  };
+    isCardActive,
+  }
 }

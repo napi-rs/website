@@ -1,46 +1,46 @@
-'use client';
+'use client'
 
-import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { gsap } from 'gsap';
+import React, { useEffect, useRef, useState, useMemo } from 'react'
+import { gsap } from 'gsap'
 
 // Define the props interface for the SvgNode component
 export interface SvgNodeProps {
   /**
    * The SVG path to draw the node on.
    */
-  path?: string;
+  path?: string
 
   /**
    * The position of the node along the path, represented as a percentage from 0-1.
    */
-  position?: number;
+  position?: number
 
   /**
    * Whether the node is visible or not.
    */
-  visible?: boolean;
+  visible?: boolean
 
   /**
    * Whether the node label is visible or not.
    */
-  labelVisible?: boolean;
+  labelVisible?: boolean
 
   /**
    * The label to display next to the node.
    */
-  label?: string;
+  label?: string
 
   /**
    * The color of the glow effect.
    */
-  glowColor?: string | undefined;
+  glowColor?: string | undefined
 
   /**
    * The color of the dot.
    */
-  dotColor?: string | undefined;
+  dotColor?: string | undefined
 
-  id?: string;
+  id?: string
 }
 
 // SvgNode component - renders a glowing node that moves along an SVG path
@@ -55,33 +55,35 @@ export const SvgNode: React.FC<SvgNodeProps> = ({
   id,
 }) => {
   // Generate a unique ID for the path to avoid collisions in a single SVG
-  const pathId = useMemo(() => id || Math.random().toString(36), []);
+  const pathId = useMemo(() => id || Math.random().toString(36), [])
 
   // References to DOM elements
-  const pathElement = useRef<SVGPathElement>(null);
+  const pathElement = useRef<SVGPathElement>(null)
 
   // State for animation properties
-  const [gradientWidth] = useState(30); // The radius of the glow effect
-  const [gradientWidthScaleFactor, setGradientWidthScaleFactor] = useState(visible ? 1 : 0);
-  const [dotRadius, setDotRadius] = useState(visible ? 3 : 0);
-  const [dotPosition, setDotPosition] = useState({ x: 0, y: 0 });
+  const [gradientWidth] = useState(30) // The radius of the glow effect
+  const [gradientWidthScaleFactor, setGradientWidthScaleFactor] = useState(
+    visible ? 1 : 0,
+  )
+  const [dotRadius, setDotRadius] = useState(visible ? 3 : 0)
+  const [dotPosition, setDotPosition] = useState({ x: 0, y: 0 })
 
   // Calculate the length of the SVG path
   const pathLength = useMemo(() => {
-    if (!pathElement.current) return 0;
-    return pathElement.current.getTotalLength();
-  }, [pathElement.current]);
+    if (!pathElement.current) return 0
+    return pathElement.current.getTotalLength()
+  }, [pathElement.current])
 
   // Update dot position when position prop changes
   useEffect(() => {
-    if (!pathElement.current) return;
+    if (!pathElement.current) return
 
-    const positionValue = 1 - (position || 0);
-    const length = positionValue * pathLength;
-    const { x, y } = pathElement.current.getPointAtLength(length);
+    const positionValue = 1 - (position || 0)
+    const length = positionValue * pathLength
+    const { x, y } = pathElement.current.getPointAtLength(length)
 
-    setDotPosition({ x, y });
-  }, [position, pathLength]);
+    setDotPosition({ x, y })
+  }, [position, pathLength])
 
   // Animate the glow and dot radius when visibility changes
   useEffect(() => {
@@ -93,10 +95,10 @@ export const SvgNode: React.FC<SvgNodeProps> = ({
         ease: 'power2.inOut',
         value: visible ? 1 : 0,
         onUpdate: function () {
-          setGradientWidthScaleFactor(this.targets()[0].value);
+          setGradientWidthScaleFactor(this.targets()[0].value)
         },
-      }
-    );
+      },
+    )
 
     // Animate the dot radius
     gsap.to(
@@ -106,11 +108,11 @@ export const SvgNode: React.FC<SvgNodeProps> = ({
         ease: 'power2.inOut',
         value: visible ? 3 : 0,
         onUpdate: function () {
-          setDotRadius(this.targets()[0].value);
+          setDotRadius(this.targets()[0].value)
         },
-      }
-    );
-  }, [visible]);
+      },
+    )
+  }, [visible])
 
   return (
     <g>
@@ -181,7 +183,7 @@ export const SvgNode: React.FC<SvgNodeProps> = ({
         </radialGradient>
       </defs>
     </g>
-  );
-};
+  )
+}
 
-export default SvgNode;
+export default SvgNode

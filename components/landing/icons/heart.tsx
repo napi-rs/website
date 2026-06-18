@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from 'react'
 export const Heart = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

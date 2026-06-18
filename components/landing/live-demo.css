@@ -11,11 +11,7 @@
   .live-demo-title {
     span {
       --text-color: var(--theme);
-      background: linear-gradient(
-        to right,
-        var(--text-color) 0%,
-        #F4BC92 100%
-      );
+      background: linear-gradient(to right, var(--text-color) 0%, #f4bc92 100%);
       background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -56,7 +52,7 @@
 
     .panel {
       &:after {
-        background-color: #3A271A;
+        background-color: #3a271a;
       }
     }
 

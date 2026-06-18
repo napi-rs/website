@@ -1,14 +1,16 @@
-import React from 'react';
+import React from 'react'
 
 // Define props interface for the pink indicator component
 interface SvgPinkIndicatorProps {
-  active: boolean;
+  active: boolean
 }
 
 /**
  * SvgPinkIndicator component - displays a pink indicator SVG with conditional rendering based on 'active' prop
  */
-export const SvgPinkIndicator: React.FC<SvgPinkIndicatorProps> = ({ active }) => {
+export const SvgPinkIndicator: React.FC<SvgPinkIndicatorProps> = ({
+  active,
+}) => {
   return (
     <>
       <svg
@@ -180,7 +182,11 @@ export const SvgPinkIndicator: React.FC<SvgPinkIndicatorProps> = ({ active }) =>
               type="matrix"
               values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.85 0"
             />
-            <feBlend mode="normal" in2="shape" result="effect1_innerShadow_1_8" />
+            <feBlend
+              mode="normal"
+              in2="shape"
+              result="effect1_innerShadow_1_8"
+            />
           </filter>
           <filter
             id="filter2_f_1_8"
@@ -230,7 +236,7 @@ export const SvgPinkIndicator: React.FC<SvgPinkIndicatorProps> = ({ active }) =>
       {/* Pink glow element - controlled by active prop */}
       <div className={`pink-glow ${active ? 'active' : ''}`} />
     </>
-  );
-};
+  )
+}
 
-export default SvgPinkIndicator;
+export default SvgPinkIndicator

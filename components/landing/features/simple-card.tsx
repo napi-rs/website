@@ -6,9 +6,15 @@ export type FeatureCardProps = {
   Component?: React.FC
 }
 
-export function FeatureSimpleCard ({ title, description, emoji, lugeReveal }: FeatureCardProps) {
+export function FeatureSimpleCard({
+  title,
+  description,
+  emoji,
+  lugeReveal,
+}: FeatureCardProps) {
   return (
-    <div className="feature-card simple-card"
+    <div
+      className="feature-card simple-card"
       data-lg-reveal={lugeReveal}
       data-lg-reveal-delay="0.15"
     >
