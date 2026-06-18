@@ -1,25 +1,5 @@
-import React from 'react'
-
 const DiffWord = ({ children, type }) => {
-  return (
-    <span className={type}>
-      {children}
-      <style jsx>{`
-        :global(.dark) span.plus {
-          color: rgb(181, 206, 168);
-        }
-        :global(.dark) span.minus {
-          color: rgb(206, 145, 120);
-        }
-        span.plus {
-          color: rgb(9, 134, 88);
-        }
-        span.minus {
-          color: rgb(163, 21, 21);
-        }
-      `}</style>
-    </span>
-  )
+  return <span className={`diff-word ${type}`}>{children}</span>
 }
 
 export const Diff = () => (
@@ -39,3 +19,5 @@ export const Diff = () => (
     </code>
   </pre>
 )
+
+export default Diff

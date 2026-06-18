@@ -1,14 +1,9 @@
+import './contributors.css'
+
 export function Contributors() {
   return (
     <>
       <div className="contributors-wrap">
-        <style jsx>{`
-          .contributors-wrap {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, 100px);
-            grid-gap: 10px;
-          }
-        `}</style>
         <div>
           <a href="https://github.com/oyyd">
             <img
@@ -371,3 +366,5 @@ export function Contributors() {
     </>
   )
 }
+
+export default Contributors

@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -179,4 +179,34 @@ section.footnotes > h2 {
 }
 .limit-narrow-container {
   --width: 1200px + 180px;
+}
+
+/* Badges row (components/badges.jsx — was styled-jsx). The svg fill colors the
+   Sponsor heart, matching the original wrapper-scoped rule. */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.badges a {
+  margin-right: 5px;
+}
+.badges svg {
+  fill: #ea4aaa;
+  margin-right: 5px;
+}
+
+/* v2 diff words (components/v2-diff.jsx — was styled-jsx with :global(.dark)).
+   Scoped under .diff-word so bare .plus/.minus don't leak. */
+.diff-word.plus {
+  color: rgb(9, 134, 88);
+}
+.diff-word.minus {
+  color: rgb(163, 21, 21);
+}
+.dark .diff-word.plus {
+  color: rgb(181, 206, 168);
+}
+.dark .diff-word.minus {
+  color: rgb(206, 145, 120);
 }
