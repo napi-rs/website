@@ -1,4 +1,4 @@
-import { FeatureCardProps } from './simple-card'
+import type { FeatureCardProps } from './simple-card'
 import { useCardAnimation } from '../hooks/useCardAnimation'
 
 import logoApple from './images/apple.svg'
@@ -63,7 +63,13 @@ export function PowerfulCICard({
             stroke="#303030"
             strokeOpacity={0.4}
           />
-          <circle className="circle circle-1" cx={21} cy={20} r={9} fill="#282828" />
+          <circle
+            className="circle circle-1"
+            cx={21}
+            cy={20}
+            r={9}
+            fill="#282828"
+          />
           <path
             d="M25.1993 16.241C25.4802 15.9368 25.9545 15.9181 26.2588 16.199C26.563 16.48 26.5817 16.9543 26.3008 17.2586L21.0635 22.9324C20.3532 23.7019 19.1309 23.6795 18.4493 22.8845L16.1807 20.2381L16.1338 20.1775C15.9166 19.8654 15.967 19.4333 16.2618 19.1804C16.5762 18.9109 17.0498 18.9471 17.3194 19.2615L19.5879 21.908C19.6853 22.0215 19.8595 22.0247 19.961 21.9148L25.1993 16.241Z"
             fill="#C6C6C6"
@@ -86,7 +92,6 @@ export function PowerfulCICard({
             rx={4}
             className="rect rect-2"
             fill="url(#paint0_linear_2001_1093)"
-
           />
           <rect
             x={0.5}
@@ -97,7 +102,13 @@ export function PowerfulCICard({
             stroke="#303030"
             strokeOpacity={0.4}
           />
-          <circle className="circle circle-2" cx={21} cy={118} r={9} fill="#282828" />
+          <circle
+            className="circle circle-2"
+            cx={21}
+            cy={118}
+            r={9}
+            fill="#282828"
+          />
           <path
             d="M25.1993 114.241C25.4802 113.937 25.9545 113.918 26.2588 114.199C26.563 114.48 26.5817 114.954 26.3008 115.259L21.0635 120.932C20.3532 121.702 19.1309 121.679 18.4493 120.885L16.1807 118.238L16.1338 118.178C15.9166 117.865 15.967 117.433 16.2618 117.18C16.5762 116.911 17.0498 116.947 17.3194 117.261L19.5879 119.908C19.6853 120.022 19.8595 120.025 19.961 119.915L25.1993 114.241Z"
             fill="#C6C6C6"
@@ -115,7 +126,6 @@ export function PowerfulCICard({
             rx={4}
             className="rect rect-3"
             fill="url(#paint0_linear_2001_1093)"
-
           />
           <rect
             x={210.5}
@@ -126,7 +136,13 @@ export function PowerfulCICard({
             stroke="#303030"
             strokeOpacity={0.4}
           />
-          <circle className="circle circle-3" cx={231} cy={20} r={9} fill="#282828" />
+          <circle
+            className="circle circle-3"
+            cx={231}
+            cy={20}
+            r={9}
+            fill="#282828"
+          />
           <path
             className="check"
             d="M235.199 16.241C235.48 15.9368 235.955 15.9181 236.259 16.199C236.563 16.48 236.582 16.9543 236.301 17.2586L231.064 22.9324C230.353 23.7019 229.131 23.6795 228.449 22.8845L226.181 20.2381L226.134 20.1775C225.917 19.8654 225.967 19.4333 226.262 19.1804C226.576 18.9109 227.05 18.9471 227.319 19.2615L229.588 21.908C229.685 22.0215 229.859 22.0247 229.961 21.9148L235.199 16.241Z"
@@ -145,7 +161,6 @@ export function PowerfulCICard({
             rx={4}
             className="rect rect-4"
             fill="url(#paint0_linear_2001_1093)"
-
           />
           <rect
             x={210.5}
@@ -156,7 +171,13 @@ export function PowerfulCICard({
             stroke="#303030"
             strokeOpacity={0.4}
           />
-          <circle className="circle circle-4" cx={231} cy={92} r={9} fill="#282828" />
+          <circle
+            className="circle circle-4"
+            cx={231}
+            cy={92}
+            r={9}
+            fill="#282828"
+          />
           <path
             d="M235.199 88.241C235.48 87.9368 235.955 87.9181 236.259 88.199C236.563 88.48 236.582 88.9543 236.301 89.2586L231.064 94.9324C230.353 95.7019 229.131 95.6795 228.449 94.8845L226.181 92.2381L226.134 92.1775C225.917 91.8654 225.967 91.4333 226.262 91.1804C226.576 90.9109 227.05 90.9471 227.319 91.2615L229.588 93.908C229.685 94.0215 229.859 94.0247 229.961 93.9148L235.199 88.241Z"
             fill="#C6C6C6"
@@ -175,7 +196,6 @@ export function PowerfulCICard({
             rx={4}
             className="rect rect-5"
             fill="url(#paint0_linear_2001_1093)"
-
           />
           <rect
             x={210.5}
@@ -186,7 +206,13 @@ export function PowerfulCICard({
             stroke="#303030"
             strokeOpacity={0.4}
           />
-          <circle className="circle circle-5" cx={231} cy={163} r={9} fill="#282828" />
+          <circle
+            className="circle circle-5"
+            cx={231}
+            cy={163}
+            r={9}
+            fill="#282828"
+          />
           <path
             d="M235.199 159.241C235.48 158.937 235.955 158.918 236.259 159.199C236.563 159.48 236.582 159.954 236.301 160.259L231.064 165.932C230.353 166.702 229.131 166.679 228.449 165.885L226.181 163.238L226.134 163.178C225.917 162.865 225.967 162.433 226.262 162.18C226.576 161.911 227.05 161.947 227.319 162.261L229.588 164.908C229.685 165.022 229.859 165.025 229.961 164.915L235.199 159.241Z"
             fill="#C6C6C6"
@@ -220,21 +246,21 @@ export function PowerfulCICard({
             strokeLinecap="round"
           />
           <path
-            className='drawLine line-1'
+            className="drawLine line-1"
             d="M179.5 20H209"
             strokeWidth={1.5}
             strokeLinecap="round"
             pathLength="1"
           />
           <path
-            className='drawLine line-2'
+            className="drawLine line-2"
             d="M180 20V20C188.146 20 194.75 26.6038 194.75 34.75V78.75C194.75 86.0678 200.682 92 208 92V92"
             strokeWidth={1.5}
             strokeLinecap="round"
             pathLength="1"
           />
           <path
-            className='drawLine line-3'
+            className="drawLine line-3"
             d="M180 20V20C188.146 20 194.75 26.6038 194.75 34.75V149.75C194.75 157.068 200.682 163 208 163V163"
             strokeWidth={1.5}
             strokeLinecap="round"

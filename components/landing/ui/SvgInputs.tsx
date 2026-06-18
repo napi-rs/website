@@ -1,9 +1,9 @@
-import React from 'react';
-import SvgNode, { SvgNodeProps } from './SvgNode';
+import React from 'react'
+import SvgNode, { type SvgNodeProps } from './SvgNode'
 
 // Props interface for the SvgInputs component
 interface SvgInputsProps {
-  inputLines: SvgNodeProps[];
+  inputLines: SvgNodeProps[]
 }
 
 // SvgInputs component - renders multiple input lines with nodes
@@ -49,7 +49,7 @@ export const SvgInputs: React.FC<SvgInputsProps> = ({ inputLines }) => {
         </linearGradient>
       </defs>
     </svg>
-  );
-};
+  )
+}
 
-export default SvgInputs;
+export default SvgInputs

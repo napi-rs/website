@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { gsap } from 'gsap'
-import { FeatureCardProps } from './simple-card'
+import type { FeatureCardProps } from './simple-card'
 import cx from 'classnames'
 
 import { useCardAnimation } from '../hooks/useCardAnimation'

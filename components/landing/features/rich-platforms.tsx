@@ -1,4 +1,4 @@
-import { FeatureCardProps } from './simple-card'
+import type { FeatureCardProps } from './simple-card'
 import { useCardAnimation } from '../hooks/useCardAnimation'
 
 import logoApple from './images/apple.svg'

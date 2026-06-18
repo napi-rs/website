@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { gsap } from 'gsap'
 import { useCardAnimation } from '../hooks/useCardAnimation'
 
-import { FeatureCardProps } from './simple-card'
+import type { FeatureCardProps } from './simple-card'
 // Static import (was `dynamic(() => import('../ui/SvgNode'), { ssr: false })`).
 // SvgNode is SSR-safe: no window/document access, gsap runs only in effects, and
 // every path measurement is guarded by a `pathElement.current` null check.
