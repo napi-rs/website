@@ -22,10 +22,15 @@ const RELEASES_URL =
  * - Authorization is CONDITIONAL: the header is omitted when `GITHUB_TOKEN` is
  *   unset so unauthenticated dev works (a bogus token would 401). When set, it
  *   is sent as `token <GITHUB_TOKEN>` (matching the legacy generator).
- * - Every page response is GUARDED with `Array.isArray` before filtering /
- *   length checks: GitHub error bodies (rate-limit, 401, …) are OBJECTS, and
- *   the legacy code crashed on `.length`/`.filter` of an object. On a non-array
- *   we log via `void/log` and return empty HTML so the page still renders.
+ * - The whole network section is wrapped so the TWO GitHub failure modes are
+ *   handled identically: a THROWN fetch (DNS / connection-reset / the worker
+ *   sandbox's "Network connection lost") AND a non-array error body (rate-limit
+ *   / 401, whose `.length`/`.filter` the legacy code crashed on). In PRODUCTION
+ *   we rethrow so Void emits a 500 — the ISR proxy then keeps serving the last
+ *   good (stale) page and NEVER caches a blank body for the 300s revalidate
+ *   window (legacy `getStaticProps` threw too, so Next kept serving stale). In
+ *   DEV (unauthenticated/rate-limited GitHub, flaky sandbox network) we degrade
+ *   to empty HTML so local renders work without a token.
  */
 export async function loadChangelogHtml(
   packageName: string,
@@ -38,26 +43,34 @@ export async function loadChangelogHtml(
   }
 
   const all: unknown[] = []
-  // Paginate while a page is a FULL 100-length array. A short/empty array means
-  // the last page; a non-array means an error body -> bail with empty HTML.
-  let page = 1
-  let more = true
-  while (more) {
-    const res = await fetch(`${RELEASES_URL}&page=${page}`, { headers })
-    const json: unknown = await res.json()
-
-    if (!Array.isArray(json)) {
-      logger.error('changelog: GitHub releases response was not an array', {
-        packageName,
-        page,
-        status: res.status,
-      })
-      return { html: '' }
+  try {
+    // Paginate while a page is a FULL 100-length array. A short/empty array
+    // means the last page; a non-array means a GitHub error body.
+    let page = 1
+    let more = true
+    while (more) {
+      const res = await fetch(`${RELEASES_URL}&page=${page}`, { headers })
+      const json: unknown = await res.json()
+      if (!Array.isArray(json)) {
+        throw new Error(
+          `GitHub releases response was not an array (status=${res.status})`,
+        )
+      }
+      all.push(...json)
+      more = json.length === 100
+      page++
     }
-
-    all.push(...json)
-    more = json.length === 100
-    page++
+  } catch (err) {
+    logger.error('changelog: failed to fetch GitHub releases', {
+      packageName,
+      error: err instanceof Error ? err.message : String(err),
+    })
+    // `import.meta.env.PROD` is statically replaced by Vite in the worker build
+    // (true on `vite build`, false on `vite dev`) — see the doc comment above.
+    if (import.meta.env.PROD) {
+      throw err
+    }
+    return { html: '' }
   }
 
   const md = await buildChangelogMarkdown(all, packageName, locale)

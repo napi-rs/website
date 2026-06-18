@@ -3,6 +3,8 @@
   "output": "server",
   "routing": {
     "redirects": {
+      "/en": { "to": "/", "status": 301 },
+      "/en/*": { "to": "/:splat", "status": 301 },
       "/docs/": { "to": "/docs", "status": 301 },
       "/docs/*/": { "to": "/docs/:splat", "status": 301 },
       "/blog/": { "to": "/blog", "status": 301 },
