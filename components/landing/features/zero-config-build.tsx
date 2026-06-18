@@ -75,7 +75,7 @@ export function ZeroConfigBuildCard({
       <div className={`feature__visualization ${isCardActive ? 'active' : ''}`}>
         <div
           className={cx('build-rs')}
-          style={{ backgroundImage: `url(${buildRs.src})` }}
+          style={{ backgroundImage: `url(${buildRs})` }}
         ></div>
 
         <div

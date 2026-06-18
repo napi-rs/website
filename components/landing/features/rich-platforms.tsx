@@ -1,14 +1,19 @@
 import { FeatureCardProps } from './simple-card'
-import { useCardAnimation } from '../hooks/useCardAnimation';
+import { useCardAnimation } from '../hooks/useCardAnimation'
 
-import logoApple from './images/apple.svg';
-import logoNode from './images/node-js.svg';
-import logoUbuntu from './images/ubuntu.svg';
-import logoChrome from './images/chrome.svg';
-import logoWA from './images/wa.svg';
-import logoLinux from './images/linux.svg';
+import logoApple from './images/apple.svg'
+import logoNode from './images/node-js.svg'
+import logoUbuntu from './images/ubuntu.svg'
+import logoChrome from './images/chrome.svg'
+import logoWA from './images/wa.svg'
+import logoLinux from './images/linux.svg'
 
-export function RichPlatformsCard ({ title, description, emoji, lugeReveal }: FeatureCardProps) {
+export function RichPlatformsCard({
+  title,
+  description,
+  emoji,
+  lugeReveal,
+}: FeatureCardProps) {
   const id = 'rich-platforms'
 
   const { startAnimation, isCardActive } = useCardAnimation(
@@ -16,14 +21,14 @@ export function RichPlatformsCard ({ title, description, emoji, lugeReveal }: Fe
     undefined,
     {
       once: true,
-    }
-  );
+    },
+  )
 
   const handleMouseOver = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    startAnimation();
-  };
+    e.stopPropagation()
+    e.preventDefault()
+    startAnimation()
+  }
 
   return (
     <div
@@ -106,22 +111,22 @@ export function RichPlatformsCard ({ title, description, emoji, lugeReveal }: Fe
 
           {/* Feature cards with respective logos */}
           <div className="card card--apple">
-            <img src={logoApple.src} alt="Apple" />
+            <img src={logoApple} alt="Apple" />
           </div>
           <div className="card card--node">
-            <img src={logoNode.src} alt="Node" />
+            <img src={logoNode} alt="Node" />
           </div>
           <div className="card card--linux">
-            <img src={logoLinux.src} alt="Linux" />
+            <img src={logoLinux} alt="Linux" />
           </div>
           <div className="card card--chrome">
-            <img src={logoChrome.src} alt="Chrome" />
+            <img src={logoChrome} alt="Chrome" />
           </div>
           <div className="card card--wa">
-            <img src={logoWA.src} alt="WebAssembly" />
+            <img src={logoWA} alt="WebAssembly" />
           </div>
           <div className="card card--ubuntu">
-            <img src={logoUbuntu.src} alt="ubuntu" />
+            <img src={logoUbuntu} alt="ubuntu" />
           </div>
         </div>
 
