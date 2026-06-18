@@ -6,8 +6,9 @@
 //
 // Run: GITHUB_TOKEN=dummy vp test run pages/content.test.ts
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import { join, dirname, relative } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { describe, it, expect } from 'vite-plus/test'
 import { nav } from '../lib/nav/index.ts'
 import { convert } from '../scripts/convert-content.mjs'
@@ -447,5 +448,24 @@ describe('converter media rewrites are route-scoped', () => {
     const out = convert(src, 'Heading', 'introduction/getting-started')
     expect(out).toContain('the file ./package-template.png is the template.')
     expect(out).not.toContain('/assets/package-template.png')
+  })
+})
+
+describe('converter is side-effect-free to import', () => {
+  it('imports cleanly via a bare dynamic import (no argv[1]) and does NOT run the CLI', () => {
+    // Regression: the CLI main-guard must guard `process.argv[1]` before calling
+    // pathToFileURL — `node -e "import('./...')"` has argv[1] === undefined, where
+    // pathToFileURL(undefined) THROWS and crashes the import. The export path
+    // (used by these tests) must stay import-safe in any Node context. Also
+    // asserts main() did NOT run on import (it would regenerate pages).
+    const scriptUrl = pathToFileURL(
+      join(root, 'scripts', 'convert-content.mjs'),
+    ).href
+    const code = `import(${JSON.stringify(scriptUrl)}).then((m) => { if (typeof m.convert !== 'function' || typeof m.GETTING_STARTED_ROUTE !== 'string') { console.error('missing exports'); process.exit(2) } process.stdout.write('ok') }).catch((e) => { console.error(e); process.exit(3) })`
+    // execFileSync throws on a non-zero exit; an undefined-argv crash would exit 3.
+    const stdout = execFileSync('node', ['--input-type=module', '-e', code], {
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).toString()
+    expect(stdout).toBe('ok')
   })
 })

@@ -737,8 +737,11 @@ function main() {
 }
 
 // Run as a CLI when invoked directly (node/oxnode scripts/convert-content.mjs),
-// but stay side-effect-free when imported (e.g. by pages/content.test.ts).
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+// but stay side-effect-free when imported. `process.argv[1]` is undefined in
+// bare dynamic-import contexts (`node -e "import('./...')"`), where
+// `pathToFileURL(undefined)` would THROW and crash the import — so guard it.
+const cliEntry = process.argv[1]
+if (cliEntry && import.meta.url === pathToFileURL(cliEntry).href) {
   main()
 }
 
