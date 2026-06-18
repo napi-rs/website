@@ -10,6 +10,7 @@ import { join, dirname, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vite-plus/test'
 import { nav } from '../lib/nav/index.ts'
+import { convert } from '../scripts/convert-content.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = join(__dirname, '..')
@@ -375,5 +376,76 @@ describe('converted content tree', () => {
       'utf8',
     )
     expect(ptbr).toContain('#### Problema de suporte ao IDE')
+  })
+})
+
+describe('converter media rewrites are route-scoped', () => {
+  // Synthetic input reproducing getting-started's JSX <video> + co-located image.
+  const VIDEO_BLOCK = [
+    "<video controls style={{ width: '100%' }}>",
+    '<source src={Video} type="video/mp4" />',
+    '</video>',
+  ].join('\n')
+
+  it('off-route: a <video> and ./package-template.png pass through untouched', () => {
+    const src = [
+      '# Heading',
+      '',
+      VIDEO_BLOCK,
+      '',
+      '![x](./package-template.png)',
+      '',
+    ].join('\n')
+    const out = convert(src, 'Heading', 'concepts/foo')
+    // The video rewrite did NOT fire off-route.
+    expect(out).not.toContain('/assets/napi-rs-guide.mp4')
+    // The image rewrite did NOT fire off-route.
+    expect(out).not.toContain('/assets/package-template.png')
+  })
+
+  it('on-route: the <video> block and image destination are rewritten', () => {
+    const src = [
+      '# Heading',
+      '',
+      VIDEO_BLOCK,
+      '',
+      '![x](./package-template.png)',
+      '',
+    ].join('\n')
+    const out = convert(src, 'Heading', 'introduction/getting-started')
+    expect(out).toContain(
+      '<video controls style="width: 100%"><source src="/assets/napi-rs-guide.mp4" type="video/mp4" /></video>',
+    )
+    expect(out).toContain('](/assets/package-template.png)')
+  })
+
+  it('on-route: fenced <video> and ./package-template.png stay literal inside the fence', () => {
+    const src = [
+      '# Heading',
+      '',
+      '```html',
+      '<video controls>',
+      './package-template.png',
+      '```',
+      '',
+    ].join('\n')
+    const out = convert(src, 'Heading', 'introduction/getting-started')
+    // Untouched inside the fence: no rewrite to the served asset paths.
+    expect(out).toContain('<video controls>')
+    expect(out).toContain('./package-template.png')
+    expect(out).not.toContain('/assets/napi-rs-guide.mp4')
+    expect(out).not.toContain('/assets/package-template.png')
+  })
+
+  it('on-route: a prose mention of ./package-template.png (not image syntax) is NOT rewritten', () => {
+    const src = [
+      '# Heading',
+      '',
+      'the file ./package-template.png is the template.',
+      '',
+    ].join('\n')
+    const out = convert(src, 'Heading', 'introduction/getting-started')
+    expect(out).toContain('the file ./package-template.png is the template.')
+    expect(out).not.toContain('/assets/package-template.png')
   })
 })

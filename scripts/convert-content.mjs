@@ -31,7 +31,7 @@ import {
   statSync,
 } from 'node:fs'
 import { join, dirname, resolve, relative } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execSync } from 'node:child_process'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -47,6 +47,13 @@ const LOCALES = ['en', 'cn', 'pt-BR']
 const EXCLUDED_ROUTES = new Set([
   'concepts/webassembly', // getStaticProps + TransformImage/LinkPreview
 ])
+
+// The single legacy route whose prose carries page-specific media (a JSX
+// <video> element and a co-located ./package-template.png image). The two media
+// rewrites below are gated to this exact route so the converter stays a general
+// tool: a <video> or ./package-template.png on any OTHER page passes through
+// untouched rather than being silently rewritten to getting-started's assets.
+const GETTING_STARTED_ROUTE = 'introduction/getting-started'
 
 // ----------------------------------------------------------------------------
 // File discovery
@@ -114,8 +121,12 @@ function calloutMarker(openTag) {
  *   - top-level `import ` lines: dropped
  * Returns an array of { text, code } line records. `code` true => inside fence body
  * (or a fence delimiter) and must be skipped by the inline phase.
+ *
+ * `routePath` is the legacy route (e.g. 'introduction/getting-started'); it gates
+ * the page-specific media rewrites so they only fire on GETTING_STARTED_ROUTE.
  */
-function phaseABlocks(src) {
+function phaseABlocks(src, routePath) {
+  const isGettingStarted = routePath === GETTING_STARTED_ROUTE
   const lines = src.split('\n')
   const out = []
   let inFence = false
@@ -168,17 +179,17 @@ function phaseABlocks(src) {
 
     // --- outside fences, outside frontmatter ---
 
-    // JSX <video> block (introduction/getting-started). @void/md is plain
+    // JSX <video> block (introduction/getting-started ONLY). @void/md is plain
     // markdown, so it passes through lowercase raw HTML verbatim but cannot
     // evaluate a JSX `src={Video}` expression or a `style={{ ... }}` object.
     // The accompanying `import Video from '...mp4'` line is already dropped by
     // the generic top-level `import` stripper below; here we collapse the
     // multi-line JSX <video> element into one self-contained raw-HTML line that
     // points at the statically-served asset (`public/assets/napi-rs-guide.mp4`
-    // -> `/assets/napi-rs-guide.mp4`). Scoped narrowly to the .mp4 Video case
-    // (the only JSX media element in the prose corpus) rather than a general
-    // JSX-video transform, which would be riskier to get right for every shape.
-    if (/^\s*<video\b/.test(line)) {
+    // -> `/assets/napi-rs-guide.mp4`). Route-gated to GETTING_STARTED_ROUTE (the
+    // only page with a JSX media element in the prose corpus); a <video> on any
+    // other page is left completely untouched rather than rewritten.
+    if (isGettingStarted && /^\s*<video\b/.test(line)) {
       // Consume lines until the closing </video> (inclusive). The block is
       // always outside a fence here, so no fence-state juggling is needed.
       let j = i
@@ -198,11 +209,13 @@ function phaseABlocks(src) {
     // (co-located in legacy_pages/, which is read-only and NOT served); the
     // asset is committed to `public/assets/package-template.png` so it resolves
     // at `/assets/package-template.png`, matching the same `/assets/...`
-    // convention the video uses. Markdown image syntax only, outside fences.
-    if (line.includes('./package-template.png')) {
+    // convention the video uses. Route-gated to GETTING_STARTED_ROUTE and
+    // matched on the markdown-image DESTINATION syntax `](./package-template.png)`
+    // ONLY — a prose/text mention of `./package-template.png` is left untouched.
+    if (isGettingStarted && line.includes('](./package-template.png)')) {
       line = line.replace(
-        /\.\/package-template\.png/g,
-        '/assets/package-template.png',
+        /\]\(\.\/package-template\.png\)/g,
+        '](/assets/package-template.png)',
       )
     }
 
@@ -309,8 +322,11 @@ function jsxStyleObjectToCss(objLiteral) {
 }
 
 /**
- * Rewrite a JSX <video>...</video> block (introduction/getting-started) into a
- * single line of plain raw HTML that @void/md emits verbatim:
+ * Rewrite a JSX <video>...</video> block into a single line of plain raw HTML
+ * that @void/md emits verbatim. Called ONLY for GETTING_STARTED_ROUTE (the call
+ * site in phaseABlocks is route-gated), which is why hardcoding the served
+ * `/assets/napi-rs-guide.mp4` src is correct here — that is the one and only
+ * page in the corpus carrying this JSX <video> element:
  *
  *   <video controls style={{ width: '100%' }}>
  *     <source src={Video} type="video/mp4" />
@@ -557,10 +573,11 @@ function ensureFrontmatterTitle(md, fallbackTitle) {
 /**
  * Run the full conversion on a source string. Returns the converted markdown.
  * `fallbackTitle` (the legacy `_meta` leaf title) is used only when the page has
- * no H1 to derive a frontmatter `title` from.
+ * no H1 to derive a frontmatter `title` from. `routePath` (the legacy route)
+ * gates the page-specific media rewrites to GETTING_STARTED_ROUTE.
  */
-function convert(src, fallbackTitle) {
-  const records = phaseABlocks(src)
+function convert(src, fallbackTitle, routePath) {
+  const records = phaseABlocks(src, routePath)
 
   // Reassemble, applying the inline phase to contiguous non-code regions only.
   const pieces = []
@@ -676,7 +693,7 @@ function main() {
     if (EXCLUDED_ROUTES.has(routePath)) continue
 
     const src = readFileSync(fullPath, 'utf8')
-    const output = convert(src, legacyMetaTitle(routePath, locale))
+    const output = convert(src, legacyMetaTitle(routePath, locale), routePath)
 
     const outPath = join(pagesDir, locale, 'docs', `${routePath}.md`)
     mkdirSync(dirname(outPath), { recursive: true })
@@ -719,4 +736,10 @@ function main() {
   }
 }
 
-main()
+// Run as a CLI when invoked directly (node/oxnode scripts/convert-content.mjs),
+// but stay side-effect-free when imported (e.g. by pages/content.test.ts).
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main()
+}
+
+export { convert, GETTING_STARTED_ROUTE }
