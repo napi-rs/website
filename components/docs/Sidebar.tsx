@@ -230,14 +230,15 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Desktop sidebar. DocsLayout wraps this in an aside that is hidden
-          below lg, so we render plainly here and let the layout gate width.
-          Flex column: scrollable nav + a pinned footer holding the language +
-          theme toggles (matching live napi.rs, which keeps them at the sidebar
-          bottom on docs — they hydrate as children of this Sidebar island). */}
+      {/* Desktop sidebar. The DocsLayout aside is now always rendered (so the
+          mobile drawer trigger below can show), so THIS desktop column hides
+          itself below lg and shows as a flex column at lg+. Flex column:
+          scrollable nav + a pinned footer holding the language + theme toggles
+          (matching live napi.rs, which keeps them at the sidebar bottom on docs
+          — they hydrate as children of this Sidebar island). */}
       <div
         className={cn(
-          'sticky top-14 flex max-h-[calc(100vh-3.5rem)] flex-col',
+          'sticky top-14 hidden max-h-[calc(100vh-3.5rem)] flex-col lg:flex',
           'bg-sidebar text-sidebar-foreground',
           className,
         )}

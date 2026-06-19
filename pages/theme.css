@@ -45,3 +45,24 @@
   text-align: center;
   color: var(--vmd-text-muted, #64748b);
 }
+
+/* Code-fence copy feedback. @void/md styles the `.copy` button (clipboard glyph,
+ * opacity 0 → 1 on hover) but ships no "copied" state; the delegated handler in
+ * middleware/01.head.ts toggles `.copied` for ~2s after a successful copy. Keep
+ * the button visible during feedback (the base button is hover-only) and swap
+ * the clipboard glyph for a green check. The base `::before` sets
+ * `background: currentColor`, so tinting the button green tints the check too. */
+.void-md div[class*='language-'] .copy.copied {
+  opacity: 1;
+  color: #16a34a;
+  border-color: #16a34a;
+}
+[data-theme='dark'] .void-md div[class*='language-'] .copy.copied,
+.dark .void-md div[class*='language-'] .copy.copied {
+  color: #22c55e;
+  border-color: #22c55e;
+}
+.void-md div[class*='language-'] .copy.copied::before {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E")
+    center / 60% no-repeat;
+}

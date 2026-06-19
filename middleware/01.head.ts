@@ -46,6 +46,29 @@ e.classList.toggle("dark",d);
 e.setAttribute("data-theme",d?"dark":"light");
 })();`
 
+// Code-fence copy button. @void/md renders a <button class="copy"> in every
+// `language-*` fence (and lib/changelog/render.ts mirrors that markup), but
+// neither ships a click handler — the button was decorative. We attach ONE
+// delegated listener on `document` so it works for every fence on every content
+// page (docs/blog/changelog) without per-island wiring, and it keeps working
+// across SPA navigation (the document + listener outlive page swaps; new fences
+// just bubble to the same handler). On a successful copy we toggle `.copied`
+// for ~2s — pages/theme.css swaps the clipboard glyph for a green check (and
+// forces the otherwise hover-only button visible during feedback). The async
+// Clipboard API is preferred; a hidden-textarea execCommand path is the
+// fallback for non-secure / older contexts. A click is a user gesture, so the
+// write is permitted.
+const COPY_CODE = `(function(){
+document.addEventListener("click",function(e){
+var t=e.target;var b=t&&t.closest?t.closest("button.copy"):null;if(!b)return;
+var w=b.parentElement;var c=w&&(w.querySelector("pre code")||w.querySelector("pre"));if(!c)return;
+var text=c.textContent.replace(/\\n$/,"");
+var ok=function(){b.classList.add("copied");if(b._ct)clearTimeout(b._ct);b._ct=setTimeout(function(){b.classList.remove("copied");},2000);};
+if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok).catch(function(){});}
+else{try{var a=document.createElement("textarea");a.value=text;a.style.position="fixed";a.style.top="-9999px";document.body.appendChild(a);a.focus();a.select();document.execCommand("copy");document.body.removeChild(a);ok();}catch(_){}}
+},false);
+})();`
+
 export default defineMiddleware(async (c, next) => {
   const method = c.req.method
   // Resolve the PUBLIC route path the same way 03.page-path.ts does: a rewritten
@@ -59,7 +82,7 @@ export default defineMiddleware(async (c, next) => {
       : c.req.path
 
   c.set('headDefaults', {
-    script: [{ innerHTML: THEME_BOOTSTRAP }],
+    script: [{ innerHTML: THEME_BOOTSTRAP }, { innerHTML: COPY_CODE }],
     htmlAttrs: { lang: htmlLang(getLocale(publicPath)) },
   })
   await next()

@@ -75,8 +75,15 @@ export default function DocsLayout({
 
       {/* Body: [ sidebar | main | toc ] */}
       <div className="mx-auto flex w-full max-w-[1400px] gap-0">
-        {/* SLOT: sidebar (island 'load') */}
-        <aside className="hidden w-64 shrink-0 border-r border-sidebar-border lg:block">
+        {/* SLOT: sidebar (island 'load'). The aside must NOT be display:none
+            below lg — the Sidebar island renders its own mobile drawer trigger
+            (a position:fixed FAB) inside this slot, and a fixed element inside a
+            display:none ancestor is dropped from the render tree entirely. So we
+            keep the aside rendered (width 0, no border) on mobile and only give
+            it the desktop column width + divider at lg+. The Sidebar component
+            hides its desktop nav itself (hidden lg:flex) and shows the drawer
+            via its own lg:hidden wrapper. */}
+        <aside className="w-0 shrink-0 lg:w-64 lg:border-r lg:border-sidebar-border">
           {sidebar ?? <div data-slot-placeholder="sidebar" />}
         </aside>
 
