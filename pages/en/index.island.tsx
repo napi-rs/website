@@ -22,13 +22,20 @@ import Luge from '../../components/landing/luge' with {
 import TransformImage from '../../components/transform-image/_Demo' with {
   island: 'idle',
 }
+// The site top bar — the SAME navbar the docs chrome uses (logo, section tabs,
+// search, GitHub/Discord, language + theme toggles), matching the live napi.rs
+// landing. It is an island ('load') and so MUST be imported in this entry file.
+import Navbar from '../../components/docs/Navbar' with { island: 'load' }
 import { HomePage } from '@/components/landing'
 import type { Props } from './index.server'
 
-export const layout = false
-
 export default function EnHome({ sponsors }: Props) {
   return (
-    <HomePage sponsors={sponsors} luge={<Luge />} demo={<TransformImage />} />
+    <>
+      <header className="sticky top-0 z-50">
+        <Navbar locale="en" currentPath="/" />
+      </header>
+      <HomePage sponsors={sponsors} luge={<Luge />} demo={<TransformImage />} />
+    </>
   )
 }

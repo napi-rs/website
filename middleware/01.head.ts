@@ -15,7 +15,10 @@
 // `[data-theme]`; Tailwind's `dark:` variant keys off the `.dark` class
 // (`@custom-variant dark (&:is(.dark *))`). We reconcile the two BEFORE first
 // paint via an inline <head> script: read the saved preference, then ALWAYS
-// apply the resolved theme to BOTH `.dark` and `data-theme`. The try/catch wraps
+// apply the resolved theme to BOTH `.dark` and `data-theme`. The default (no
+// saved preference) is DARK — matching the live napi.rs site (which is dark
+// regardless of the OS `prefers-color-scheme`) and the void.json `data-theme:
+// "dark"` SSR default, so there is no SSR→client theme flip. The try/catch wraps
 // ONLY the storage read (which can throw in private mode), defaulting to dark on
 // failure — so the DOM writes always run and the two theme systems never desync.
 //
@@ -37,7 +40,7 @@ import { getLocale, htmlLang } from '../lib/docs/locale.ts'
 // before the browser paints. The try/catch guards ONLY the storage read; the
 // DOM writes that follow always run so `.dark` and `data-theme` stay in sync.
 const THEME_BOOTSTRAP = `(function(){
-var d;try{var t=localStorage.getItem("theme");d=t?t==="dark":matchMedia("(prefers-color-scheme: dark)").matches;}catch(_){d=true;}
+var d;try{var t=localStorage.getItem("theme");d=t?t==="dark":true;}catch(_){d=true;}
 var e=document.documentElement;
 e.classList.toggle("dark",d);
 e.setAttribute("data-theme",d?"dark":"light");
