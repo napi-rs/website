@@ -13,6 +13,7 @@ import {
   renderChangelogHtml,
   type GitHubRelease,
 } from './render.ts'
+import { extractTocHeadings } from '../docs/page-data.ts'
 
 // --- Fixtures --------------------------------------------------------------
 
@@ -173,5 +174,47 @@ describe('renderChangelogHtml', () => {
     const html = await renderChangelogHtml('```rust\nfn main() {}\n```\n')
     expect(html).toContain('class="language-rust')
     expect(html).toContain('shiki')
+  })
+})
+
+// --- TOC extraction end-to-end (drift guard) -------------------------------
+//
+// The changelog right-rail TOC (components/docs/Toc.tsx) DOM-scans the rendered
+// HTML via extractTocHeadings (lib/docs/page-data.ts). Render real changelog
+// HTML here and assert the extraction so the two stay in sync: if the renderer
+// ever changes its heading markup, this breaks before shipping a blank TOC.
+describe('extractTocHeadings over renderChangelogHtml output', () => {
+  it('yields one h2 per release (text = tag, non-empty slug), dropping the page H1', async () => {
+    const md = await buildChangelogMarkdown(RELEASES, 'napi', 'en')
+    const html = await renderChangelogHtml(md)
+    const headings = extractTocHeadings(html)
+
+    // The page H1 (`# napi`) is depth 1 -> excluded from the TOC range.
+    expect(headings.some((h) => h.depth === 1)).toBe(false)
+    expect(headings.every((h) => h.slug.length > 0)).toBe(true)
+
+    // The `napi` filter over-matches `napi-derive@*` (legacy startsWith quirk),
+    // so the three matching releases each become an h2 whose text is the tag.
+    const versions = headings.filter((h) => h.depth === 2).map((h) => h.text)
+    expect(versions).toEqual(['napi@3.0.0', 'napi@2.16.0', 'napi-derive@3.0.0'])
+  })
+
+  it('captures release sub-sections (### Fixed/Added) as h3 entries', async () => {
+    const releases: GitHubRelease[] = [
+      {
+        name: 'napi@9.9.9',
+        tag_name: 'napi@9.9.9',
+        html_url: 'https://example.com',
+        published_at: '2024-01-01T00:00:00Z',
+        body: '### Fixed\n\n- a\n\n### Added\n\n- b',
+      },
+    ]
+    const md = await buildChangelogMarkdown(releases, 'napi', 'en')
+    const headings = extractTocHeadings(await renderChangelogHtml(md))
+    expect(headings).toEqual([
+      { depth: 2, slug: 'napi%409.9.9', text: 'napi@9.9.9' },
+      { depth: 3, slug: 'fixed', text: 'Fixed' },
+      { depth: 3, slug: 'added', text: 'Added' },
+    ])
   })
 })

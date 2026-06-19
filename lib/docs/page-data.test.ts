@@ -21,6 +21,7 @@ import {
   sectionHasReachablePage,
   computeLangSwitchUrl,
   tocHeadings,
+  extractTocHeadings,
   type MdPageLike,
 } from './page-data.ts'
 
@@ -472,5 +473,54 @@ describe('tocHeadings', () => {
       'methods',
       'detail',
     ])
+  })
+})
+
+// --- extractTocHeadings ----------------------------------------------------
+//
+// Feeds the EXACT markup `lib/changelog/render.ts` emits (verbatim from a real
+// renderChangelogHtml run) so the changelog TOC's DOM-scan source is covered.
+// An end-to-end assertion against the live renderer lives in
+// lib/changelog/render.test.ts (drift guard).
+describe('extractTocHeadings', () => {
+  const CHANGELOG_HTML = `
+<h1 id="napi" tabindex="-1"><a class="header-anchor" href="#napi" aria-hidden="true">#</a> napi</h1>
+<h2 id="napi%403.0.0" tabindex="-1"><a class="header-anchor" href="#napi%403.0.0" aria-hidden="true">#</a> <a href="https://github.com/napi-rs/napi-rs/releases/tag/napi%403.0.0" target="_blank" rel="noopener">napi@3.0.0</a></h2>
+<h3 id="fixed" tabindex="-1"><a class="header-anchor" href="#fixed" aria-hidden="true">#</a> Fixed</h3>
+<h3 id="added" tabindex="-1"><a class="header-anchor" href="#added" aria-hidden="true">#</a> Added</h3>
+<h2 id="napi%402.16.0" tabindex="-1"><a class="header-anchor" href="#napi%402.16.0" aria-hidden="true">#</a> <a href="https://github.com/napi-rs/napi-rs/releases/tag/napi%402.16.0" target="_blank" rel="noopener">napi@2.16.0</a></h2>
+<h3 id="fixed-1" tabindex="-1"><a class="header-anchor" href="#fixed-1" aria-hidden="true">#</a> Fixed</h3>
+`
+
+  it('extracts h2–h4 with id + permalink-stripped text, dropping the h1', () => {
+    expect(extractTocHeadings(CHANGELOG_HTML)).toEqual([
+      { depth: 2, slug: 'napi%403.0.0', text: 'napi@3.0.0' },
+      { depth: 3, slug: 'fixed', text: 'Fixed' },
+      { depth: 3, slug: 'added', text: 'Added' },
+      { depth: 2, slug: 'napi%402.16.0', text: 'napi@2.16.0' },
+      { depth: 3, slug: 'fixed-1', text: 'Fixed' },
+    ])
+  })
+
+  it('decodes the basic entities markdown-it emits', () => {
+    const html =
+      '<h2 id="a"><a class="header-anchor">#</a> Foo &amp; Bar &lt;T&gt; &#39;x&#39;</h2>'
+    expect(extractTocHeadings(html)).toEqual([
+      { depth: 2, slug: 'a', text: "Foo & Bar <T> 'x'" },
+    ])
+  })
+
+  it('ignores headings without an id and collapses whitespace', () => {
+    const html =
+      '<h2>no id</h2><h3 id="ok">\n  spaced   out\n</h3><h5 id="too-deep">deep</h5>'
+    // h2 has no id -> skipped; h5 is out of the h2–h4 range; h3 normalised.
+    expect(extractTocHeadings(html)).toEqual([
+      { depth: 3, slug: 'ok', text: 'spaced out' },
+    ])
+  })
+
+  it('returns [] for empty / heading-less HTML', () => {
+    expect(extractTocHeadings('')).toEqual([])
+    expect(extractTocHeadings('<p>just a paragraph</p>')).toEqual([])
   })
 })

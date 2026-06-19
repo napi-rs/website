@@ -18,7 +18,11 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 import type { Locale } from '@/lib/nav/index.ts'
 import { getLocale, splitLocale } from '@/lib/docs/locale.ts'
-import { getPageDataCore, tocHeadings } from '@/lib/docs/page-data.ts'
+import {
+  getPageDataCore,
+  tocHeadings,
+  extractTocHeadings,
+} from '@/lib/docs/page-data.ts'
 import pages from '@void/md/pages'
 import { useRouter } from '@void/react'
 
@@ -66,10 +70,38 @@ export default function Toc({
   const locale = localeProp ?? getLocale(path)
   const [, rest] = splitLocale(path)
 
-  const headings = React.useMemo(() => {
-    const page = getPageDataCore(rest, locale, pages)
-    return page ? tocHeadings(page.headings) : []
-  }, [rest, locale])
+  // Docs/blog headings come from the @void/md page (available at SSR). The
+  // changelog pages are loader-driven islands with NO @void/md entry, so `page`
+  // is undefined there and we fall back to scanning the rendered DOM after
+  // mount (below). `page` being defined also gates the edit-on-GitHub link:
+  // changelog has no markdown source, so a `pages/<locale>/<rest>.md` edit link
+  // would 404.
+  const page = React.useMemo(
+    () => getPageDataCore(rest, locale, pages),
+    [rest, locale],
+  )
+  const pageHeadings = React.useMemo(
+    () => (page ? tocHeadings(page.headings) : []),
+    [page],
+  )
+
+  // DOM-scanned headings for pages without an @void/md entry (changelog). The
+  // server-rendered HTML carries markdown-it heading anchors (`<h2 id=…>`);
+  // extractTocHeadings parses the same markup tested in node. Runs only after
+  // mount (this is a 'visible' island), so SSR + first client render both show
+  // nothing and there is no hydration mismatch — it populates post-hydration.
+  const [domHeadings, setDomHeadings] = React.useState<
+    ReadonlyArray<{ depth: number; slug: string; text: string }>
+  >([])
+
+  React.useEffect(() => {
+    if (pageHeadings.length > 0) return // md page already provided headings
+    const main = document.getElementById('main-content')
+    if (!main) return
+    setDomHeadings(tocHeadings(extractTocHeadings(main.innerHTML)))
+  }, [pageHeadings, rest])
+
+  const headings = pageHeadings.length > 0 ? pageHeadings : domHeadings
 
   const [activeSlug, setActiveSlug] = React.useState<string | null>(
     headings[0]?.slug ?? null,
@@ -115,8 +147,11 @@ export default function Toc({
   if (headings.length === 0) return null
 
   // Edit-on-GitHub source path: same derivation as <EditOnGithub> — the new
-  // markdown lives at pages/<locale>/<leaf>.md.
-  const editHref = rest ? `${EDIT_BASE}/pages/${locale}/${rest}.md` : null
+  // markdown lives at pages/<locale>/<leaf>.md. Only shown when the page HAS an
+  // @void/md source: changelog (loader-driven island, no .md) would otherwise
+  // get a link to a non-existent file.
+  const editHref =
+    page && rest ? `${EDIT_BASE}/pages/${locale}/${rest}.md` : null
 
   return (
     <nav

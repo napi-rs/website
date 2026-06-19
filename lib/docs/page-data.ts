@@ -394,3 +394,55 @@ export function tocHeadings(
 ): ReadonlyArray<{ depth: number; slug: string; text: string }> {
   return headings.filter((h) => h.depth >= minDepth && h.depth <= maxDepth)
 }
+
+// ---------------------------------------------------------------------------
+// extractTocHeadings — derive TOC headings from rendered HTML (changelog).
+//
+// Docs/blog pages get their headings from @void/md/pages. The changelog pages
+// are loader-driven `.island.tsx` that `dangerouslySetInnerHTML` a markdown ->
+// HTML string (lib/changelog/render.ts), so they have NO @void/md headings.
+// To match live napi.rs (which shows a right-rail TOC of release versions),
+// the Toc island scans the rendered DOM (`#main-content` innerHTML) and feeds
+// it here.
+//
+// The input is OUR OWN controlled markdown-it output, whose heading shape is
+// stable: `<h2 id="slug" tabindex="-1"><a class="header-anchor" …>#</a> TEXT</h2>`
+// where TEXT may itself contain an <a> (the release link). We drop the
+// permalink anchor, strip remaining tags, decode the few entities markdown-it
+// emits, and keep h2–h4. Pure (string in, array out) so it is unit-testable in
+// node AND runs verbatim in the browser — one code path, no DOM-env dependency.
+const HEADING_RE = /<h([2-4])\b[^>]*\bid="([^"]*)"[^>]*>([\s\S]*?)<\/h\1>/gi
+const HEADER_ANCHOR_RE =
+  /<a\b[^>]*class="[^"]*\bheader-anchor\b[^"]*"[^>]*>[\s\S]*?<\/a>/gi
+const TAG_RE = /<[^>]+>/g
+
+function decodeBasicEntities(s: string): string {
+  return (
+    s
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ')
+      // &amp; LAST so e.g. `&amp;lt;` decodes to `&lt;`, not `<`.
+      .replace(/&amp;/g, '&')
+  )
+}
+
+export function extractTocHeadings(html: string): Array<{
+  depth: number
+  slug: string
+  text: string
+}> {
+  const out: Array<{ depth: number; slug: string; text: string }> = []
+  for (const m of html.matchAll(HEADING_RE)) {
+    const depth = Number(m[1])
+    const slug = m[2]
+    const inner = m[3].replace(HEADER_ANCHOR_RE, '')
+    const text = decodeBasicEntities(inner.replace(TAG_RE, ''))
+      .replace(/\s+/g, ' ')
+      .trim()
+    if (slug && text) out.push({ depth, slug, text })
+  }
+  return out
+}
