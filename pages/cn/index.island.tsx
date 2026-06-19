@@ -12,6 +12,29 @@ import type { Props } from './index.server'
 import '@/components/landing/style.css'
 import './landing.css'
 
+// Intro code demo ported verbatim from the legacy index.cn.mdx fences. These are
+// plain string literals (not @void/md fences), so JSX never interprets the
+// braces / angle brackets in the Rust `match` arms — they render literally.
+const LIB_RS = `use napi_derive::napi;
+
+#[napi]
+fn fibonacci(n: u32) -> u32 {
+  match n {
+    1 | 2 => 1,
+    _ => fibonacci(n - 1) + fibonacci(n - 2),
+  }
+}`
+
+const MAIN_MJS = `import { fibonacci } from './index.js'
+
+// output: 5
+console.log(fibonacci(5))`
+
+const MAIN_CJS = `const { fibonacci } = require('./index')
+
+// output: 5
+console.log(fibonacci(5))`
+
 export const layout = false
 
 export default function CnHome({ sponsors }: Props) {
@@ -23,6 +46,25 @@ export default function CnHome({ sponsors }: Props) {
         <Badges />
 
         <h2>轻松锈化你的 Node.js 应用!</h2>
+
+        <pre className="shiki">
+          <code>{LIB_RS}</code>
+        </pre>
+
+        <p>
+          与 <code>CommonJS</code>， <code>esm</code> 模块系统兼容， 自动生成{' '}
+          <code>.d.ts</code> 定义文件:
+        </p>
+
+        <pre className="shiki">
+          <code>{MAIN_MJS}</code>
+        </pre>
+
+        <pre className="shiki">
+          <code>{MAIN_CJS}</code>
+        </pre>
+
+        <h2>功能</h2>
 
         <p>
           🚀 为 <code>Node.js</code> 应用带来原生性能
@@ -44,6 +86,16 @@ export default function CnHome({ sponsors }: Props) {
 
         <h2>支持列表</h2>
         <SupportMatrix />
+
+        <h2>相关项目</h2>
+        <ul>
+          <li>
+            <a href="https://www.neon-bindings.com">neon</a>
+          </li>
+          <li>
+            <a href="https://github.com/infinyon/node-bindgen">node-bindgen</a>
+          </li>
+        </ul>
       </div>
     </div>
   )

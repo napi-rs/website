@@ -93,3 +93,6 @@ dist
 # Vite+ generated commit-hook helpers (keep .vite-hooks/* hook scripts, ignore the generated _ dir)
 .vite-hooks/_
 .dev.vars
+
+# Claude-in-Chrome / Playwright MCP browser-automation artifacts
+.playwright-mcp/

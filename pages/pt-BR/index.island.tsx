@@ -13,6 +13,29 @@ import type { Props } from './index.server'
 import '@/components/landing/style.css'
 import './landing.css'
 
+// Intro code demo ported verbatim from the legacy index.pt-BR.mdx fences. These
+// are plain string literals (not @void/md fences), so JSX never interprets the
+// braces / angle brackets in the Rust `match` arms — they render literally.
+const LIB_RS = `use napi_derive::napi;
+
+#[napi]
+fn fibonacci(n: u32) -> u32 {
+  match n {
+    1 | 2 => 1,
+    _ => fibonacci(n - 1) + fibonacci(n - 2),
+  }
+}`
+
+const MAIN_MJS = `import { fibonacci } from './index.js'
+
+// output: 5
+console.log(fibonacci(5))`
+
+const MAIN_CJS = `const { fibonacci } = require('./index')
+
+// output: 5
+console.log(fibonacci(5))`
+
 export const layout = false
 
 export default function PtBrHome({ sponsors }: Props) {
@@ -24,6 +47,25 @@ export default function PtBrHome({ sponsors }: Props) {
         <Badges />
 
         <h2>Rustifique o Node.js em poucas linhas!</h2>
+
+        <pre className="shiki">
+          <code>{LIB_RS}</code>
+        </pre>
+
+        <p>
+          Compatível tanto com <code>CommonJS</code> quanto com <code>esm</code>
+          , além do arquivo <code>.d.ts</code> ser gerado automaticamente:
+        </p>
+
+        <pre className="shiki">
+          <code>{MAIN_MJS}</code>
+        </pre>
+
+        <pre className="shiki">
+          <code>{MAIN_CJS}</code>
+        </pre>
+
+        <h2>Recursos</h2>
 
         <p>
           🚀 Traga desempenho nativo para o <code>Node.js</code>
@@ -47,6 +89,16 @@ export default function PtBrHome({ sponsors }: Props) {
 
         <h2>Matriz de suporte</h2>
         <SupportMatrix />
+
+        <h2>Projetos relacionados</h2>
+        <ul>
+          <li>
+            <a href="https://www.neon-bindings.com">neon</a>
+          </li>
+          <li>
+            <a href="https://github.com/infinyon/node-bindgen">node-bindgen</a>
+          </li>
+        </ul>
       </div>
     </div>
   )

@@ -39,3 +39,28 @@
   gap: 6px;
   margin: fv(16, 24) 0;
 }
+
+/* Intro code demo. These pages are NOT `.void-md`, so the shiki theme CSS does
+ * not apply here. Render the `<pre className="shiki">` blocks as a dark code
+ * panel consistent with the landing live-demo convention (themed border on the
+ * `#29211de0` panel background). */
+.page-landing-locale pre.shiki {
+  margin: fv(12, 20) 0;
+  padding: fv(12, 16) fv(14, 20);
+  border-radius: 12px;
+  border: 1px solid hsl(var(--theme-hsl) / 0.15);
+  background: #29211de0;
+  overflow-x: auto;
+}
+
+.page-landing-locale pre.shiki code {
+  display: block;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: #e6e1da;
+  font-family: ui-monospace, 'Cascadia Code', Menlo, monospace;
+  font-size: fv(12, 14);
+  line-height: 1.6;
+  white-space: pre;
+}
