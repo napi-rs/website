@@ -8,6 +8,12 @@ export interface NavLeaf {
 
 export interface NavGroup {
   group: string
+  /**
+   * Display label for the group header. A BLANK title ('') marks a "flat" group:
+   * its leaves are rendered directly (no collapsible sidebar header, no group
+   * breadcrumb crumb), matching live napi.rs for blog/changelog whose source
+   * _meta is a flat slug->title map. Docs groups always carry a real title.
+   */
   title: string
   items: NavLeaf[]
 }
@@ -220,7 +226,7 @@ export const nav: Record<Locale, LocaleNav> = {
       blog: [
         {
           group: 'blog',
-          title: 'Blog',
+          title: '',
           items: [
             {
               title: 'Functions and Callbacks in NAPI-RS',
@@ -240,7 +246,7 @@ export const nav: Record<Locale, LocaleNav> = {
       changelog: [
         {
           group: 'changelog',
-          title: 'Changelog',
+          title: '',
           items: [
             {
               title: 'napi',

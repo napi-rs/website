@@ -125,36 +125,47 @@ function SidebarNav({
   return (
     <nav aria-label="Docs navigation" className="flex flex-col gap-5">
       {groups.map((group) => {
-        const expanded = isOpen(group.group)
+        // A blank group title is the "flat group" marker (blog/changelog): the
+        // leaves render directly with no collapsible header, matching live
+        // napi.rs. Real docs groups always have a title and stay collapsible.
+        const flat = group.title.trim() === ''
+        const expanded = flat || isOpen(group.group)
         const panelId = `sidebar-group-${tabKey}-${group.group}`
         return (
           <div key={group.group} className="flex flex-col">
-            <button
-              type="button"
-              aria-expanded={expanded}
-              aria-controls={panelId}
-              onClick={() => toggle(group.group)}
-              className={cn(
-                'flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5',
-                'text-xs font-semibold tracking-wide text-muted-foreground',
-                'transition-colors hover:text-sidebar-foreground',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-              )}
-            >
-              <span className="truncate">{group.title}</span>
-              <ChevronRight
-                aria-hidden="true"
+            {!flat && (
+              <button
+                type="button"
+                aria-expanded={expanded}
+                aria-controls={panelId}
+                onClick={() => toggle(group.group)}
                 className={cn(
-                  'size-3.5 shrink-0 transition-transform duration-200',
-                  expanded && 'rotate-90',
+                  'flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5',
+                  'text-xs font-semibold tracking-wide text-muted-foreground',
+                  'transition-colors hover:text-sidebar-foreground',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
                 )}
-              />
-            </button>
+              >
+                <span className="truncate">{group.title}</span>
+                <ChevronRight
+                  aria-hidden="true"
+                  className={cn(
+                    'size-3.5 shrink-0 transition-transform duration-200',
+                    expanded && 'rotate-90',
+                  )}
+                />
+              </button>
+            )}
 
             <ul
               id={panelId}
               hidden={!expanded}
-              className="mt-1 flex flex-col gap-0.5 border-l border-sidebar-border pl-2"
+              className={cn(
+                'flex flex-col gap-0.5',
+                // Flat groups have no header to indent under, so drop the
+                // left rule + indent the grouped lists use.
+                !flat && 'mt-1 border-l border-sidebar-border pl-2',
+              )}
             >
               {group.items.map((item) => {
                 const href = localizeHref(item.path, locale)

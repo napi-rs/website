@@ -260,7 +260,12 @@ export function getBreadcrumbCore(
       href:
         firstSectionLeafHref(section, locale, localeNav, existsByPage) ?? '',
     },
-    { label: found.group.title, href: '' },
+    // A blank group title marks a "flat" section (blog/changelog): live napi.rs
+    // shows `Tab › Leaf` there with no redundant group crumb. Real docs groups
+    // keep their `Tab › Group › Leaf` crumb.
+    ...(found.group.title.trim() === ''
+      ? []
+      : [{ label: found.group.title, href: '' }]),
     { label: found.leafTitle, href: localizeHref(leafPath, locale) },
   ]
 }

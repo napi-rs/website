@@ -88,7 +88,11 @@ function buildBlogSidebar(locale) {
     })
   }
   if (items.length === 0) return []
-  return [{ group: 'blog', title: 'Blog', items }]
+  // Blog is a FLAT list (the source _meta is a direct slug->title map, with no
+  // intermediate group). Emit ONE group with a blank title — the "flat group"
+  // marker the Sidebar/Breadcrumb honor to skip the redundant section-named
+  // header + crumb (matching live napi.rs). Docs, by contrast, has real groups.
+  return [{ group: 'blog', title: '', items }]
 }
 
 function buildChangelogSidebar(locale) {
@@ -104,7 +108,10 @@ function buildChangelogSidebar(locale) {
     })
   }
   if (items.length === 0) return []
-  return [{ group: 'changelog', title: 'Changelog', items }]
+  // Changelog is a FLAT list (source _meta is a direct slug->title map). Same
+  // "flat group" marker as blog: a blank title means render the leaves directly
+  // with no group header/crumb, unlike the real multi-group docs sidebar.
+  return [{ group: 'changelog', title: '', items }]
 }
 
 function buildLocaleNav(locale) {
@@ -145,6 +152,12 @@ export interface NavLeaf {
 
 export interface NavGroup {
   group: string
+  /**
+   * Display label for the group header. A BLANK title ('') marks a "flat" group:
+   * its leaves are rendered directly (no collapsible sidebar header, no group
+   * breadcrumb crumb), matching live napi.rs for blog/changelog whose source
+   * _meta is a flat slug->title map. Docs groups always carry a real title.
+   */
   title: string
   items: NavLeaf[]
 }

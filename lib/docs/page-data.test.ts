@@ -195,6 +195,62 @@ describe('getBreadcrumbCore', () => {
       getBreadcrumbCore('docs/concepts/missing', 'en', enNav, existence),
     ).toEqual([])
   })
+
+  // Flat sections (blank group title) are the blog/changelog shape: live napi.rs
+  // shows `Tab › Leaf` with NO redundant group crumb. The docs tests above prove
+  // a NON-blank group title still yields `Tab › Group › Leaf`; these prove the
+  // flat path drops the middle crumb.
+  it('omits the group crumb for a flat changelog section: Changelog › Leaf', () => {
+    const flatNav: LocaleNav = {
+      tabs: [{ key: 'changelog', title: 'Changelog' }],
+      sidebar: {
+        docs: [],
+        blog: [],
+        changelog: [
+          {
+            group: 'changelog',
+            title: '', // blank => flat marker
+            items: [{ title: 'napi', path: 'changelog/napi' }],
+          },
+        ],
+      },
+    }
+    const crumb = getBreadcrumbCore('changelog/napi', 'en', flatNav, existence)
+    expect(crumb).toEqual([
+      // changelog/napi is a reachable island leaf (default supplement) -> tab
+      // crumb resolves to it.
+      { label: 'Changelog', href: '/changelog/napi' },
+      { label: 'napi', href: '/changelog/napi' },
+    ])
+  })
+
+  it('omits the group crumb for a flat blog section: Blog › Leaf', () => {
+    const flatNav: LocaleNav = {
+      tabs: [{ key: 'blog', title: 'Blog' }],
+      sidebar: {
+        docs: [],
+        blog: [
+          {
+            group: 'blog',
+            title: '', // blank => flat marker
+            items: [{ title: 'Announce V3', path: 'blog/announce-v3' }],
+          },
+        ],
+        changelog: [],
+      },
+    }
+    const crumb = getBreadcrumbCore(
+      'blog/announce-v3',
+      'en',
+      flatNav,
+      existence,
+    )
+    expect(crumb).toEqual([
+      // No emitted blog md page -> no reachable section leaf -> empty tab href.
+      { label: 'Blog', href: '' },
+      { label: 'Announce V3', href: '/blog/announce-v3' },
+    ])
+  })
 })
 
 // --- flatten + pager -------------------------------------------------------
