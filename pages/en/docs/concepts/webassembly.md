@@ -1,5 +1,6 @@
 <script>
 import LinkPreview from "../../../../components/link-preview.tsx" with { island: "visible" }
+import TransformImage from "../../../../components/transform-image/_Demo.tsx" with { island: "idle" }
 </script>
 
 ---
@@ -22,11 +23,7 @@ description: Build WebAssembly with **NAPI-RS**.
 
 The example app below is a simple image transformer, it's using [`@napi-rs/image`](https://github.com/Brooooooklyn/Image) directly:
 
-::: info Interactive demo
-
-The in-browser image transformer (powered by [`@napi-rs/image`](https://github.com/Brooooooklyn/Image) compiled to WebAssembly) runs on cross-origin-isolated pages — see [Server configuration](#server-configuration) below for the required `SharedArrayBuffer` response headers.
-
-:::
+<TransformImage />
 
 You can use the package like this:
 

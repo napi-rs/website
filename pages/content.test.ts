@@ -509,7 +509,12 @@ describe('webassembly slice', () => {
     expect(script).not.toBe(null)
     // Default import (no braces), relative specifier, island strategy "visible".
     expect(script).toMatch(
-      /^import\s+LinkPreview\s+from\s+"\.\.\/\.\.\/\.\.\/\.\.\/components\/link-preview\.tsx"\s+with\s*\{\s*island\s*:\s*"visible"\s*\}$/,
+      /import\s+LinkPreview\s+from\s+"\.\.\/\.\.\/\.\.\/\.\.\/components\/link-preview\.tsx"\s+with\s*\{\s*island\s*:\s*"visible"\s*\}/,
+    )
+    // The interactive WASM demo import — relative, real `.tsx` extension, and the
+    // `idle` strategy matching the en landing's proven island config.
+    expect(script).toMatch(
+      /import\s+TransformImage\s+from\s+"\.\.\/\.\.\/\.\.\/\.\.\/components\/transform-image\/_Demo\.tsx"\s+with\s*\{\s*island\s*:\s*"idle"\s*\}/,
     )
     // The frontmatter survives intact as the start of the post-script body.
     expect(body.startsWith('---\ntitle: ')).toBe(true)
@@ -588,12 +593,14 @@ describe('webassembly slice', () => {
     expect(wasmMd).toContain('<span class="text-sky-500">Webpack</span>')
   })
 
-  it('drops getStaticProps / top-level imports / TransformImage from the body', () => {
+  it('drops getStaticProps / top-level imports; keeps the TransformImage island tag', () => {
     const { body } = stripLeadingScript(wasmMd)
     expect(body).not.toContain('getStaticProps')
     // No `export const` (the getStaticProps loader) anywhere in the body.
     expect(body).not.toMatch(/^\s*export const\b/m)
-    expect(body).not.toContain('<TransformImage')
+    // The interactive WASM demo tag passes through as an island and hydrates via
+    // the byte-0 <script> (it is NOT rewritten to a fallback note any more).
+    expect(body).toContain('<TransformImage />')
     // No top-level `import ` leak outside code fences (the only import is in the
     // leading <script>, already stripped from `body`).
     const lines = body.split('\n')
@@ -620,9 +627,12 @@ describe('webassembly slice', () => {
     }
   })
 
-  it('replaces the demo with the ::: info Interactive demo fallback', () => {
-    expect(wasmMd).toContain('::: info Interactive demo')
-    expect(wasmMd).toContain(
+  it('keeps the interactive demo as a TransformImage island (no fallback note)', () => {
+    // The demo is restored as a real island; the old static "Interactive demo"
+    // fallback note (and its #server-configuration link) is gone.
+    expect(wasmMd).toContain('<TransformImage />')
+    expect(wasmMd).not.toContain('::: info Interactive demo')
+    expect(wasmMd).not.toContain(
       'runs on cross-origin-isolated pages — see [Server configuration](#server-configuration) below',
     )
   })
@@ -806,7 +816,7 @@ describe('blog slice', () => {
     expect(md).not.toContain('<Diff')
   })
 
-  it('announce-v3 leads with a byte-0 <script> importing LinkPreview + SVG logos + Sponsor', () => {
+  it('announce-v3 leads with a byte-0 <script> importing LinkPreview + TransformImage + SVG logos + Sponsor', () => {
     const md = blogPage('en', 'announce-v3')
     expect(md.startsWith('<script>')).toBe(true)
     const { script, body } = stripLeadingScript(md)
@@ -814,6 +824,11 @@ describe('blog slice', () => {
     // LinkPreview is the lone .tsx; the rest are .jsx; all 3-deep + visible.
     expect(script).toContain(
       'import LinkPreview from "../../../components/link-preview.tsx" with { island: "visible" }',
+    )
+    // The interactive WASM demo: real .tsx extension, 3-deep, `idle` strategy
+    // (matching the en landing) — the only island here that is NOT "visible".
+    expect(script).toContain(
+      'import TransformImage from "../../../components/transform-image/_Demo.tsx" with { island: "idle" }',
     )
     const expectedJsxIslands: Record<string, string> = {
       TailwindLogo: 'tailwind-logo',
@@ -867,11 +882,12 @@ describe('blog slice', () => {
     ])
   })
 
-  it('announce-v3 drops getStaticProps, static-ifies file logos, falls back TransformImage', () => {
+  it('announce-v3 drops getStaticProps, static-ifies file logos, keeps the TransformImage island', () => {
     const md = blogPage('en', 'announce-v3')
     expect(md).not.toContain('getStaticProps')
-    expect(md).not.toContain('<TransformImage')
-    expect(md).toContain('::: info Interactive demo')
+    // The interactive WASM demo tag passes through (no fallback note).
+    expect(md).toContain('<TransformImage />')
+    expect(md).not.toContain('::: info Interactive demo')
     // File logos -> static /assets/.
     for (const file of [
       'rolldown.svg',
@@ -1031,14 +1047,20 @@ describe('converter blog rewrites are route-scoped', () => {
     expect(out).not.toContain('getStaticProps')
     expect(out).toContain('<img src="/assets/rolldown.svg"')
     expect(out).not.toContain('{rolldownLogo.src}')
-    expect(out).toContain('::: info Interactive demo')
+    // The interactive WASM demo tag passes through (no fallback note).
+    expect(out).toContain('<TransformImage />')
+    expect(out).not.toContain('::: info Interactive demo')
     expect(out).toContain(
       '<LinkPreview href="https://github.com/napi-rs/cross-toolchain" data=\'',
     )
     expect(out.startsWith('<script>')).toBe(true)
-    // The island <script> imports LinkPreview (the only island tag here).
+    // The island <script> imports the tags present here: LinkPreview (visible)
+    // and TransformImage (idle).
     const { script } = stripLeadingScript(out)
     expect(script).toContain('import LinkPreview from')
+    expect(script).toContain(
+      'import TransformImage from "../../../components/transform-image/_Demo.tsx" with { island: "idle" }',
+    )
   })
 
   it('blog section: fenced logo img / LinkPreview / getStaticProps stay literal', () => {

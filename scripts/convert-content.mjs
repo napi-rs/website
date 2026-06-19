@@ -82,9 +82,12 @@ const GETTING_STARTED_ROUTE = 'introduction/getting-started'
 // evaluate: a getStaticProps data loader, inline logo <img src={X.src} ...>
 // elements, two <LinkPreview href=.../> previews (fed by getStaticProps), and a
 // <TransformImage /> interactive demo. The rewrites below (strip getStaticProps,
-// static-ify logos, bake LinkPreview metadata from the fixture, fall back the
-// demo, inject the LinkPreview island <script>) are ALL gated to this exact
-// route so the converter stays a general tool.
+// static-ify logos, bake LinkPreview metadata from the fixture, inject the
+// LinkPreview + TransformImage island <script>) are ALL gated to this exact
+// route so the converter stays a general tool. The <TransformImage /> tag passes
+// through untouched and hydrates as an island (see WEBASSEMBLY_SCRIPT_BLOCK);
+// this is one of exactly two leaves whose document carries the demo, and the only
+// docs leaf with the cross-origin-isolation response headers it needs.
 const WEBASSEMBLY_ROUTE = 'concepts/webassembly'
 
 // ----------------------------------------------------------------------------
@@ -97,7 +100,8 @@ const WEBASSEMBLY_ROUTE = 'concepts/webassembly'
 //     NodeLink. NO LinkPreview, NO custom-React island -> NO <script> block.
 //   - announce-v2 (en + cn): prose + <Diff/> + <Contributors/> islands.
 //   - announce-v3 (en): getStaticProps loader, 4 <LinkPreview/> cards, SVG-
-//     component logo islands, file-logo <img src={X.src}>, <TransformImage/>,
+//     component logo islands, file-logo <img src={X.src}>, <TransformImage/>
+//     (the interactive WASM demo island — passes through and hydrates),
 //     <Sponsor/>, and inline JSX-isms (style={{}} / className).
 //
 // All blog rewrites are gated to the BLOG section AND to the specific leaf via
@@ -128,6 +132,10 @@ const BLOG_ISLAND_COMPONENTS = {
   Contributors: '../../../components/contributors.jsx',
   // announce-v3
   LinkPreview: '../../../components/link-preview.tsx',
+  // The interactive in-browser @napi-rs/image WASM demo. Hydrated with the
+  // `idle` strategy (matching the en landing's proven island config) rather than
+  // the `visible` strategy the other blog islands use; see buildBlogIslandScript.
+  TransformImage: '../../../components/transform-image/_Demo.tsx',
   TailwindLogo: '../../../components/tailwind-logo.jsx',
   TurborepoLogo: '../../../components/turborepo-logo.jsx',
   NxLogo: '../../../components/nx-logo.jsx',
@@ -144,6 +152,7 @@ const BLOG_ISLAND_ORDER = [
   'Diff',
   'Contributors',
   'LinkPreview',
+  'TransformImage',
   'TailwindLogo',
   'TurborepoLogo',
   'NxLogo',
@@ -154,6 +163,15 @@ const BLOG_ISLAND_ORDER = [
   'BitwardenLogo',
   'TsLogo',
 ]
+
+// Per-component island hydration strategy for the byte-0 blog `<script>` block.
+// Everything defaults to `"visible"` (hydrate on scroll-into-view); only the
+// interactive WASM demo overrides to `"idle"` to match the en landing's proven
+// config (a recent fix moved it visible -> idle). See buildBlogIslandScript.
+const DEFAULT_BLOG_ISLAND_STRATEGY = 'visible'
+const BLOG_ISLAND_STRATEGY = {
+  TransformImage: 'idle',
+}
 
 // File-logo import identifiers (used as `<img src={NAME.src} ...>`) -> served
 // asset filename under public/assets/. These are the FILE logos (static <img>);
@@ -350,16 +368,12 @@ function phaseABlocks(src, routePath, section = 'docs') {
       )
     }
 
-    // WebAssembly page (route-gated, outside fences). All three rewrites here are
-    // idempotent and never fire on any other route.
+    // WebAssembly page (route-gated, outside fences). The rewrites here are
+    // idempotent and never fire on any other route. The `<TransformImage />` tag
+    // is intentionally NOT rewritten — it passes through as an uppercase island
+    // tag and hydrates via the byte-0 WEBASSEMBLY_SCRIPT_BLOCK (the page carries
+    // the cross-origin-isolation response headers the demo needs).
     if (isWebAssembly) {
-      // <TransformImage /> -> static "Interactive demo" fallback container.
-      // (The interactive WASM demo island is deferred to a later task.)
-      if (/^\s*<TransformImage\s*\/>\s*$/.test(line)) {
-        for (const c of TRANSFORM_IMAGE_FALLBACK.split('\n'))
-          out.push({ text: c, code: false })
-        continue
-      }
       // Inline logo <img src={NAME.src} ...> (incl. inside `### ` headings, and
       // multiple per line) -> static /assets/ raw HTML.
       if (/<img\b[^>]*\bsrc\s*=\s*\{[A-Za-z]/.test(line)) {
@@ -393,17 +407,12 @@ function phaseABlocks(src, routePath, section = 'docs') {
     // Blog pages (section-gated, outside fences). Mirrors the WebAssembly block:
     // every rewrite is idempotent and fires only on the gated blog leaf. The
     // SVG-component logo island tags (<TailwindLogo />, <NxLogo .../>, …),
-    // <Diff/>, <Contributors/>, and <Sponsor/> are NOT rewritten here — they pass
-    // through as uppercase tags and hydrate via the byte-0 island <script>.
+    // <Diff/>, <Contributors/>, <Sponsor/>, and <TransformImage/> (the
+    // interactive WASM demo, announce-v3 only) are NOT rewritten here — they pass
+    // through as uppercase tags and hydrate via the byte-0 island <script>. The
+    // announce-v3 page carries the cross-origin-isolation response headers the
+    // demo needs (see void.json routing.headers + vite.config isolation plugin).
     if (isBlog) {
-      // <TransformImage /> -> static "Interactive demo" fallback (announce-v3
-      // only). The blog is NOT cross-origin-isolated, so the live demo cannot
-      // run here; the same fallback the WebAssembly page uses keeps it coherent.
-      if (isBlogLinkPreview && /^\s*<TransformImage\s*\/>\s*$/.test(line)) {
-        for (const c of TRANSFORM_IMAGE_FALLBACK.split('\n'))
-          out.push({ text: c, code: false })
-        continue
-      }
       // Inline file-logo <img src={NAME.src} ...> -> static /assets/ raw HTML
       // (announce-v3 + function-and-callbacks). Uses the blog logo asset map.
       if (
@@ -735,17 +744,6 @@ function rewriteLinkPreview(line) {
   })
 }
 
-// Static fallback for the legacy <TransformImage /> interactive WASM demo. The
-// demo is deferred (not yet ported as an island); this markdown container keeps
-// the page coherent and points readers at the headers section they need.
-const TRANSFORM_IMAGE_FALLBACK = [
-  '::: info Interactive demo',
-  '',
-  'The in-browser image transformer (powered by [`@napi-rs/image`](https://github.com/Brooooooklyn/Image) compiled to WebAssembly) runs on cross-origin-isolated pages — see [Server configuration](#server-configuration) below for the required `SharedArrayBuffer` response headers.',
-  '',
-  ':::',
-].join('\n')
-
 /**
  * Rewrite a JSX <video>...</video> block into a single line of plain raw HTML
  * that @void/md emits verbatim. Called ONLY for GETTING_STARTED_ROUTE (the call
@@ -1005,6 +1003,10 @@ function ensureFrontmatterTitle(md, fallbackTitle) {
 const WEBASSEMBLY_SCRIPT_BLOCK = [
   '<script>',
   'import LinkPreview from "../../../../components/link-preview.tsx" with { island: "visible" }',
+  // The interactive in-browser @napi-rs/image WASM demo. `idle` strategy matches
+  // the en landing's proven island config (pages/en/index.island.tsx); the demo
+  // is SSR-safe (mount-gates, only reads self.crossOriginIsolated after mount).
+  'import TransformImage from "../../../../components/transform-image/_Demo.tsx" with { island: "idle" }',
   '</script>',
 ].join('\n')
 
@@ -1017,9 +1019,10 @@ const WEBASSEMBLY_SCRIPT_BLOCK = [
  *
  * Like @void/md's own findIslandTags, a tag counts whether it is self-closing
  * (`<Name .../>`) or has children (`<Name ...>…</Name>`). The specifiers are
- * RELATIVE to pages/<locale>/blog/<leaf>.md (3 dirs deep -> `../../../`) and each
- * uses the `with { island: "visible" }` attribute, mirroring the WebAssembly
- * precedent.
+ * RELATIVE to pages/<locale>/blog/<leaf>.md (3 dirs deep -> `../../../`). Each
+ * import carries a per-component `with { island: "<strategy>" }` attribute —
+ * `"visible"` for every component except the interactive WASM demo, which uses
+ * `"idle"` (BLOG_ISLAND_STRATEGY) to match the en landing's proven config.
  */
 function buildBlogIslandScript(body) {
   const present = new Set()
@@ -1030,8 +1033,11 @@ function buildBlogIslandScript(body) {
   }
   if (present.size === 0) return null
   const imports = BLOG_ISLAND_ORDER.filter((name) => present.has(name)).map(
-    (name) =>
-      `import ${name} from "${BLOG_ISLAND_COMPONENTS[name]}" with { island: "visible" }`,
+    (name) => {
+      const strategy =
+        BLOG_ISLAND_STRATEGY[name] ?? DEFAULT_BLOG_ISLAND_STRATEGY
+      return `import ${name} from "${BLOG_ISLAND_COMPONENTS[name]}" with { island: "${strategy}" }`
+    },
   )
   return ['<script>', ...imports, '</script>'].join('\n')
 }

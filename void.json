@@ -30,6 +30,30 @@
         "Cross-Origin-Opener-Policy: same-origin",
         "Cross-Origin-Embedder-Policy: require-corp"
       ],
+      "/docs/concepts/webassembly": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/cn/docs/concepts/webassembly": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/pt-BR/docs/concepts/webassembly": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/blog/announce-v3": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/cn/blog/announce-v3": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/pt-BR/blog/announce-v3": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
       "/assets/*": [
         "Cross-Origin-Embedder-Policy: require-corp",
         "Cross-Origin-Resource-Policy: same-origin"

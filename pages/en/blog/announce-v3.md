@@ -1,5 +1,6 @@
 <script>
 import LinkPreview from "../../../components/link-preview.tsx" with { island: "visible" }
+import TransformImage from "../../../components/transform-image/_Demo.tsx" with { island: "idle" }
 import TailwindLogo from "../../../components/tailwind-logo.jsx" with { island: "visible" }
 import TurborepoLogo from "../../../components/turborepo-logo.jsx" with { island: "visible" }
 import NxLogo from "../../../components/nx-logo.jsx" with { island: "visible" }
@@ -83,11 +84,7 @@ This is a sample app using **NAPI-RS** WebAssembly. You can transform the image 
   You can also feel free to use it in **NAPI-RS** project.
 :::
 
-::: info Interactive demo
-
-The in-browser image transformer (powered by [`@napi-rs/image`](https://github.com/Brooooooklyn/Image) compiled to WebAssembly) runs on cross-origin-isolated pages — see [Server configuration](#server-configuration) below for the required `SharedArrayBuffer` response headers.
-
-:::
+<TransformImage />
 
 ## `API Improvements`
 

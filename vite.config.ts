@@ -9,24 +9,60 @@ import { voidMarkdown } from '@void/md/plugin'
 // `@/components/ui/*` resolve under Vite the same way TypeScript resolves them.
 const projectRoot = fileURLToPath(new URL('.', import.meta.url))
 
-// Dev/preview cross-origin isolation. The landing page runs the @napi-rs/image
-// WASM transcoder, which needs SharedArrayBuffer + threads. `self.crossOriginIsolated`
-// (the gate for SAB) is only true when the DOCUMENT carries BOTH
-// Cross-Origin-Opener-Policy: same-origin AND Cross-Origin-Embedder-Policy: require-corp.
-// The deployed worker sets these per-route via void.json `routing.headers`; `void dev`
-// and `vite preview` do NOT replay those, so we stamp them here. Under COEP:require-corp
-// the browser also blocks every subresource the isolated page loads (the worker module,
-// the nested wasi-worker, the .wasm, images) unless each carries CORP — so we add CORP too.
+// Dev/preview cross-origin isolation. Three pages run the @napi-rs/image WASM
+// transcoder, which needs SharedArrayBuffer + threads: the landing (`/`), the
+// WebAssembly doc (`/docs/concepts/webassembly`), and the v3 announcement blog
+// (`/blog/announce-v3`). `self.crossOriginIsolated` (the gate for SAB) is only
+// true when the DOCUMENT carries BOTH Cross-Origin-Opener-Policy: same-origin
+// AND Cross-Origin-Embedder-Policy: require-corp. The deployed worker sets these
+// per-route via void.json `routing.headers`; `void dev` and `vite preview` do
+// NOT replay those, so we stamp them here — but ONLY on those three document
+// paths (the migration scoped COEP to the demo pages, not site-wide), so every
+// other page stays non-isolated, matching production.
+//
+// CORP is set UNCONDITIONALLY (on every response, including non-demo pages). It
+// is harmless on a non-isolated document, and it is REQUIRED on the demo pages'
+// subresources: under COEP:require-corp the browser blocks every subresource the
+// isolated page loads (the worker module, the nested wasi-worker, the .wasm, the
+// sample image, the `.vite/deps` modules) unless each carries CORP. Those
+// subresource requests have their own non-document URLs, so scoping COOP/COEP to
+// document paths while keeping CORP everywhere is exactly what makes the demo run
+// in dev/preview without leaking isolation onto unrelated pages.
 const DUPLICATED_WASM_PKG =
   '@napi-rs/image-wasm32-wasi/@napi-rs/image-wasm32-wasi/'
+
+// Document paths whose response must be cross-origin isolated (COOP + COEP). The
+// landing serves at `/` and `/en`; the two demo leaves serve at their canonical
+// path AND every locale-prefixed variant that i18n fallback renders 200 (the
+// `/en/*` variants 301-redirect to canonical, so they never serve a document and
+// need no header). Matched on the pathname only (query/hash stripped). Mirrors
+// the void.json `routing.headers` keys for the same paths.
+function needsIsolation(url: string | undefined): boolean {
+  if (!url) return false
+  const pathname = url.split(/[?#]/, 1)[0]
+  if (pathname === '/' || pathname === '/en') return true
+  // Locale-tolerant match for the two demo leaves: `/`, `/en/`, `/cn/`, `/pt-BR/`
+  // prefixes all resolve to the same en document.
+  return (
+    /^\/(?:en\/|cn\/|pt-BR\/)?docs\/concepts\/webassembly\/?$/.test(pathname) ||
+    /^\/(?:en\/|cn\/|pt-BR\/)?blog\/announce-v3\/?$/.test(pathname)
+  )
+}
+
 function isolationMiddleware(
   req: { url?: string },
   res: { setHeader: (name: string, value: string) => void },
   next: () => void,
 ) {
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+  // CORP on every response (see note above): harmless on non-isolated pages,
+  // required on the demo pages' subresources.
   res.setHeader('Cross-Origin-Resource-Policy', 'same-origin')
-  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
+  // COOP + COEP ONLY on the demo document paths, so isolation is scoped and a
+  // non-demo page never becomes cross-origin isolated.
+  if (needsIsolation(req.url)) {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
+  }
   // @napi-rs/image-wasm32-wasi spawns its own module worker via
   // `new Worker(new URL('@napi-rs/image-wasm32-wasi/wasi-worker-browser.mjs', import.meta.url))`.
   // Under `vite dev` that bare-specifier resolves with the package dir doubled and 404s;
