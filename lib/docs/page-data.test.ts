@@ -163,7 +163,7 @@ describe('getPageDataCore', () => {
 
 describe('getBreadcrumbCore', () => {
   const existence = buildPageExistenceSets(pages)
-  it('builds Home > tab > group > leaf for en; tab crumb points at the first reachable leaf, NOT the bare /docs index (404)', () => {
+  it('builds tab > group > leaf for en (no "Home" crumb, matching live); tab crumb points at the first reachable leaf, NOT the bare /docs index (404)', () => {
     const crumb = getBreadcrumbCore(
       'docs/concepts/class',
       'en',
@@ -171,14 +171,13 @@ describe('getBreadcrumbCore', () => {
       existence,
     )
     expect(crumb).toEqual([
-      { label: 'Home', href: '/' },
       // first reachable leaf of `docs`, same target as the navbar tab — NOT `/docs`
       { label: 'Docs', href: '/docs/introduction/simple-package' },
       { label: 'Concepts', href: '' },
       { label: 'Class', href: '/docs/concepts/class' },
     ])
   })
-  it('uses prefixed hrefs + localized Home for cn; tab crumb is the first reachable cn leaf', () => {
+  it('uses prefixed hrefs for cn (still no "Home" crumb); tab crumb is the first reachable cn leaf', () => {
     const crumb = getBreadcrumbCore(
       'docs/concepts/class',
       'cn',
@@ -186,7 +185,6 @@ describe('getBreadcrumbCore', () => {
       existence,
     )
     expect(crumb).toEqual([
-      { label: '首页', href: '/cn' },
       { label: '文档', href: '/cn/docs/concepts/class' },
       { label: '概念', href: '' },
       { label: '类', href: '/cn/docs/concepts/class' },
@@ -411,8 +409,12 @@ describe('sectionHasReachablePage', () => {
 // --- tocHeadings -----------------------------------------------------------
 
 describe('tocHeadings', () => {
-  it('keeps only h2–h3 by default', () => {
+  it('keeps h2–h4 by default (matching live napi.rs), dropping only h1', () => {
     const filtered = tocHeadings(pages[0].headings)
-    expect(filtered.map((h) => h.slug)).toEqual(['constructor', 'methods'])
+    expect(filtered.map((h) => h.slug)).toEqual([
+      'constructor',
+      'methods',
+      'detail',
+    ])
   })
 })

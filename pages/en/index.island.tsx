@@ -22,10 +22,21 @@ import Luge from '../../components/landing/luge' with {
 import TransformImage from '../../components/transform-image/_Demo' with {
   island: 'idle',
 }
+// The animated hero flow diagram (Rust → Node.js) + brand-chip logo watermark.
+// It only renders/animates after its useEffect runs, so it must hydrate: a plain
+// SSR child never hydrates under Void's islands model and stays an empty shell.
+import HeroDiagram from '../../components/landing/hero-diagram' with {
+  island: 'load',
+}
 // The site top bar — the SAME navbar the docs chrome uses (logo, section tabs,
 // search, GitHub/Discord, language + theme toggles), matching the live napi.rs
 // landing. It is an island ('load') and so MUST be imported in this entry file.
 import Navbar from '../../components/docs/Navbar' with { island: 'load' }
+// The landing has no sidebar, so (like live napi.rs) the theme + language
+// toggles live in the footer. Footer is an island here so those toggles hydrate;
+// passing `locale` is what makes it render them (the docs layout renders a plain,
+// toggle-less Footer instead — those toggles live in the docs sidebar footer).
+import Footer from '../../components/docs/Footer' with { island: 'load' }
 import { HomePage } from '@/components/landing'
 import type { Props } from './index.server'
 
@@ -35,7 +46,15 @@ export default function EnHome({ sponsors }: Props) {
       <header className="sticky top-0 z-50">
         <Navbar locale="en" currentPath="/" />
       </header>
-      <HomePage sponsors={sponsors} luge={<Luge />} demo={<TransformImage />} />
+      <HomePage
+        sponsors={sponsors}
+        luge={<Luge />}
+        demo={<TransformImage />}
+        heroDiagram={<HeroDiagram />}
+      />
+      <footer className="border-t border-border">
+        <Footer locale="en" />
+      </footer>
     </>
   )
 }

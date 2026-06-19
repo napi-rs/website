@@ -1,17 +1,32 @@
-// Footer — STATIC site footer. Not an island.
+// Footer — site footer.
 //
 // Left: Logo + MIT license line + copyright (render-time year).
 // Right: attribution links — "Built with Void" (https://void.cloud) and
 //        "UI inspired by Vite" (https://vite.dev). The previous Nextra/Vercel
-//        attributions are intentionally NOT carried over.
+//        attributions are intentionally NOT carried over (we migrated off them).
+//
+// Theme + language controls: live napi.rs shows these in the footer ON THE
+// LANDING (which has no sidebar to hold them); on docs they live in the sidebar
+// footer instead. So this component renders the toggles ONLY when a `locale` is
+// passed — the LANDING entries import this `with { island: 'load' }` and pass a
+// locale (so ThemeToggle/LangSwitcher hydrate as this island's children), while
+// the docs layout renders it as a plain static slot WITHOUT a locale (no toggles).
 import { cn } from '@/lib/utils'
+import type { Locale } from '@/lib/nav/index.ts'
 import Logo from './Logo.tsx'
+import LangSwitcher from './LangSwitcher'
+import ThemeToggle from './ThemeToggle'
 
 export interface FooterProps {
+  /**
+   * When set, the footer renders the language + theme toggles (landing context).
+   * Omit on docs — the sidebar footer carries them there, matching live.
+   */
+  locale?: Locale
   className?: string
 }
 
-export default function Footer({ className }: FooterProps) {
+export default function Footer({ locale, className }: FooterProps) {
   const year = new Date().getFullYear()
 
   return (
@@ -22,6 +37,12 @@ export default function Footer({ className }: FooterProps) {
       )}
     >
       <div className="flex flex-col gap-2">
+        {locale ? (
+          <div className="mb-1 flex items-center gap-1">
+            <LangSwitcher locale={locale} showLabel />
+            <ThemeToggle />
+          </div>
+        ) : null}
         <Logo />
         <p>Released under the MIT License.</p>
         <p>Copyright © {year} NAPI-RS.</p>

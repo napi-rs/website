@@ -36,10 +36,20 @@ const PAGE_EXISTENCE = buildPageExistenceSets(pages)
 export interface LangSwitcherProps {
   /** Active locale (the per-locale layout.island passes its own literal). */
   locale: Locale
+  /**
+   * Show the locale NAME (e.g. "English") beside the globe, as a wider button —
+   * used in the sidebar/landing footer to match live napi.rs. Default (false) is
+   * the compact icon-only trigger.
+   */
+  showLabel?: boolean
   className?: string
 }
 
-export default function LangSwitcher({ locale, className }: LangSwitcherProps) {
+export default function LangSwitcher({
+  locale,
+  showLabel = false,
+  className,
+}: LangSwitcherProps) {
   const [open, setOpen] = React.useState(false)
   // Live route pathname. Empty on SSR (server has no window); resolved after
   // mount and refreshed whenever the popover opens so links stay correct across
@@ -63,17 +73,31 @@ export default function LangSwitcher({ locale, className }: LangSwitcherProps) {
 
   const active = locales.find((l) => l.locale === locale)
 
+  const triggerInner = showLabel ? (
+    <>
+      <Globe className="size-4" />
+      <span className="truncate">{active?.text ?? 'Language'}</span>
+    </>
+  ) : (
+    <Globe className="size-4" />
+  )
+  const triggerSize = showLabel ? 'sm' : 'icon'
+  const triggerClass = cn(
+    showLabel && 'justify-start gap-2 font-normal',
+    className,
+  )
+
   if (!mounted) {
     return (
       <Button
         type="button"
         variant="ghost"
-        size="icon"
+        size={triggerSize}
         aria-label="Switch language"
         title={active?.text ?? 'Switch language'}
-        className={className}
+        className={triggerClass}
       >
-        <Globe className="size-4" />
+        {triggerInner}
       </Button>
     )
   }
@@ -90,12 +114,12 @@ export default function LangSwitcher({ locale, className }: LangSwitcherProps) {
         <Button
           type="button"
           variant="ghost"
-          size="icon"
+          size={triggerSize}
           aria-label="Switch language"
           title={active?.text ?? 'Switch language'}
-          className={className}
+          className={triggerClass}
         >
-          <Globe className="size-4" />
+          {triggerInner}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 p-1">

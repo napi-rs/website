@@ -30,16 +30,18 @@ export function HomePage({
   sponsors,
   luge,
   demo,
+  heroDiagram,
 }: {
   sponsors: WashedSponsors
   luge?: ReactNode
   demo?: ReactNode
+  heroDiagram?: ReactNode
 }) {
   return (
     <div className="page-home">
       {luge}
 
-      <Hero />
+      <Hero heroDiagram={heroDiagram} />
 
       <LiveDemo demo={demo} />
 

@@ -25,6 +25,8 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { nav, type Locale, type NavGroup } from '@/lib/nav/index.ts'
 import { localizeHref, splitLocale } from '@/lib/docs/locale.ts'
+import LangSwitcher from './LangSwitcher'
+import ThemeToggle from './ThemeToggle'
 
 const STORAGE_KEY = 'sidebar:open'
 
@@ -134,7 +136,7 @@ function SidebarNav({
               onClick={() => toggle(group.group)}
               className={cn(
                 'flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5',
-                'text-xs font-semibold uppercase tracking-wide text-muted-foreground',
+                'text-xs font-semibold tracking-wide text-muted-foreground',
                 'transition-colors hover:text-sidebar-foreground',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
               )}
@@ -167,7 +169,7 @@ function SidebarNav({
                         'block rounded-md px-3 py-1.5 text-sm transition-colors',
                         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
                         active
-                          ? 'bg-sidebar-accent font-medium text-primary'
+                          ? 'bg-[hsl(var(--theme-hsl)/0.1)] font-medium text-[var(--theme)]'
                           : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',
                       )}
                     >
@@ -218,20 +220,29 @@ export default function Sidebar({
   return (
     <>
       {/* Desktop sidebar. DocsLayout wraps this in an aside that is hidden
-          below lg, so we render plainly here and let the layout gate width. */}
+          below lg, so we render plainly here and let the layout gate width.
+          Flex column: scrollable nav + a pinned footer holding the language +
+          theme toggles (matching live napi.rs, which keeps them at the sidebar
+          bottom on docs — they hydrate as children of this Sidebar island). */}
       <div
         className={cn(
-          'sticky top-14 max-h-[calc(100vh-3.5rem)] overflow-y-auto',
-          'bg-sidebar px-4 py-6 text-sidebar-foreground',
+          'sticky top-14 flex max-h-[calc(100vh-3.5rem)] flex-col',
+          'bg-sidebar text-sidebar-foreground',
           className,
         )}
       >
-        <SidebarNav
-          groups={groups}
-          locale={locale}
-          tabKey={tabKey}
-          currentPath={currentPath}
-        />
+        <div className="flex-1 overflow-y-auto px-4 py-6">
+          <SidebarNav
+            groups={groups}
+            locale={locale}
+            tabKey={tabKey}
+            currentPath={currentPath}
+          />
+        </div>
+        <div className="flex items-center justify-between gap-1 border-t border-sidebar-border px-4 py-3">
+          <LangSwitcher locale={locale} showLabel />
+          <ThemeToggle />
+        </div>
       </div>
 
       {/* Mobile: a floating trigger + off-canvas drawer. `lg:hidden` so it never

@@ -1,4 +1,5 @@
-// Breadcrumb — STATIC docs breadcrumb trail: Home > tab > group > leaf.
+// Breadcrumb — STATIC docs breadcrumb trail: tab > group > leaf (no "Home",
+// matching live napi.rs).
 //
 // Rendered as a slot prop of DocsLayout; NOT an island (zero JS). It may read
 // `useRouter().path` at SSR to derive the current leaf, but it uses plain <a>

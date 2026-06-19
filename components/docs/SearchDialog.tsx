@@ -125,13 +125,15 @@ export default function SearchDialog({ locale, className }: SearchDialogProps) {
         onClick={() => setOpen(true)}
         aria-label={TRIGGER_LABEL[locale]}
         className={cn(
-          'text-muted-foreground h-9 gap-2 px-3 font-normal',
+          // Mirror live napi.rs: a wide (~w-64) input-like box showing the full
+          // localized placeholder, with the ⌘K hint pinned to the right edge.
+          'text-muted-foreground h-9 justify-start gap-2 px-3 font-normal sm:w-56 md:w-64',
           className,
         )}
       >
-        <SearchIcon className="size-4" />
-        <span className="hidden sm:inline">{TRIGGER_LABEL[locale]}</span>
-        <kbd className="bg-muted text-muted-foreground pointer-events-none ml-2 hidden h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium select-none sm:inline-flex">
+        <SearchIcon className="size-4 shrink-0" />
+        <span className="hidden truncate sm:inline">{PLACEHOLDER[locale]}</span>
+        <kbd className="bg-muted text-muted-foreground pointer-events-none ml-auto hidden h-5 items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium select-none sm:inline-flex">
           {mac ? '⌘' : 'Ctrl'} K
         </kbd>
       </Button>

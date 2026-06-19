@@ -400,4 +400,10 @@ export const HeroDiagram: React.FC = () => {
   )
 }
 
+// Default export so the en landing entry (pages/en/index.island.tsx) can import
+// this as an island (`with { island: 'load' }`). Void's islands plugin honours
+// island imports only in `.island.tsx` ENTRY files and binds the DEFAULT export
+// — matching the Luge / TransformImage / Navbar islands. Without hydration the
+// component is stuck in its pre-mount shell (empty `.hero__diagram`, no
+// brand-chip, no animation), so it MUST be an island, not a plain SSR child.
 export default HeroDiagram

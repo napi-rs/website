@@ -36,11 +36,11 @@ export interface DocsLayoutSlots {
   navbar?: React.ReactNode
   /** SLOT: sidebar — island ('load'). Collapsible section nav for the active tab. */
   sidebar?: React.ReactNode
-  /** SLOT: toc — island ('visible'). Scroll-spy table of contents (h2–h3). */
+  /** SLOT: toc — island ('visible'). Scroll-spy table of contents (h2–h4). */
   toc?: React.ReactNode
   /** SLOT: banner — static. NotTranslatedBanner (island 'load') is passed here when shown; empty otherwise. Designed to accept future banners. */
   banner?: React.ReactNode
-  /** SLOT: breadcrumb — static. Home > tab > group > leaf. */
+  /** SLOT: breadcrumb — static. tab > group > leaf (no "Home"). */
   breadcrumb?: React.ReactNode
   /** SLOT: pager — static. Prev/next links. */
   pager?: React.ReactNode
@@ -100,8 +100,12 @@ export default function DocsLayout({
           {/* SLOT: pager (static) */}
           {pager ?? <div data-slot-placeholder="pager" />}
 
-          {/* SLOT: editOnGithub (static) */}
-          {editOnGithub ?? <div data-slot-placeholder="edit-on-github" />}
+          {/* SLOT: editOnGithub (static). On xl+ the right-rail TOC carries the
+              edit + feedback links (matching live), so this center copy only
+              shows when that rail is hidden (below xl) — no duplication. */}
+          <div className="xl:hidden">
+            {editOnGithub ?? <div data-slot-placeholder="edit-on-github" />}
+          </div>
         </div>
 
         {/* SLOT: toc (island 'visible') */}

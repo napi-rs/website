@@ -1,13 +1,18 @@
+import type { ReactNode } from 'react'
+
 import { HeroDiagram } from './hero-diagram'
 
 // @Ref: https://github.com/vitejs/vite/blob/main/docs/.vitepress/theme/components/landing/1.%20hero-section/HeroSection.vue
 //
-// HeroDiagram is imported statically (the old code used
-// `dynamic(() => import('./hero-diagram'), { ssr: false })`). It is SSR-safe on
-// its own: it mount-gates its render (returns an inert shell until mounted on the
-// client) and keeps every `window` / gsap / ScrollTrigger access inside effects,
-// so importing and SSR-rendering it never touches browser-only globals.
-export function Hero() {
+// HeroDiagram mount-gates its render (an inert shell until mounted on the client)
+// and keeps every `window` / gsap / ScrollTrigger access inside effects, so it is
+// SSR-safe. BUT it only animates (and renders its brand-chip + svg flow) once its
+// `useEffect` runs — i.e. once HYDRATED. A plain SSR child never hydrates under
+// Void's islands model, so the diagram stayed an empty shell. The en landing
+// entry therefore passes a hydrated HeroDiagram ISLAND in via `heroDiagram`; we
+// render that when present and fall back to the static (shell-only) component
+// otherwise (cn/pt-BR don't use this Hero at all).
+export function Hero({ heroDiagram }: { heroDiagram?: ReactNode }) {
   return (
     <div className="hero">
       <div className="container">
@@ -50,8 +55,8 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Animated Diagram */}
-      <HeroDiagram />
+      {/* Animated Diagram — hydrated island from the page entry (see above) */}
+      {heroDiagram ?? <HeroDiagram />}
     </div>
   )
 }

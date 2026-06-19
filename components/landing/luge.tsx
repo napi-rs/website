@@ -81,19 +81,41 @@ export const Luge = () => {
       gsap.registerPlugin(SplitText)
       gsap.registerPlugin(CustomEase)
 
-      // Setting ticker
+      // Drive luge's ticker off gsap's RAF loop instead of luge's own internal
+      // one. NOTE: luge's Ticker constructor already read `ticker.external`
+      // (default `false`) at module-eval time and started its own RAF loop; once
+      // we flip it to `true` here that internal loop stops itself after the next
+      // frame, so gsap must take over — hence `gsap.ticker.add(tick)` below.
+      //
+      // We deliberately do NOT set `scroll.disabled` here. luge applies it to its
+      // `ScrollAnimation` plugin (slug `scroll`) — the only effect is stamping
+      // `lg-scroll-disabled` on <html> (Plugin.beforeInit). This landing uses
+      // `data-lg-reveal` + `data-lg-smooth` only (zero `data-lg-scroll`), so the
+      // class is dead weight and diverges from the live site, which has no such
+      // class.
       luge.settings({
         ticker: { external: true },
-        scroll: {
-          disabled: true,
-        },
       })
       tick = luge.ticker.tick
       gsap.ticker.add(tick)
 
-      // Force refresh when route change
-      luge.lifecycle.refresh()
-
+      // Register reveal animations BEFORE luge's lifecycle reaches its `reveal`
+      // step. luge auto-runs a single `load` cycle on import (Core/luge.js:
+      // `Ticker.nextTick(() => LifeCycle.cycle('load'))` when the document has
+      // already loaded — which is always the case for a dynamically-imported
+      // island that mounts after hydration). That `load` cycle ends with the
+      // `reveal` event, which sets `Reveal.canReveal = true` and flips in-view
+      // `[data-lg-reveal]` elements from `is-out` -> `is-in`.
+      //
+      // We must NOT call `luge.lifecycle.refresh()` here: `refresh` is a second
+      // cycle and `LifeCycle.cycle()` zeroes EVERY event's `done` counter, so
+      // starting it concurrently with the still-draining auto `load` cycle
+      // corrupts the latter's progress. The `load` cycle then stalls forever at
+      // its `['siteLoad', 'pageLoad']` multi-event wait and never reaches
+      // `reveal` — leaving `lg-scroll-disabled` stuck and all reveals frozen at
+      // `is-out`. The original (static top-level import) never hit this because
+      // luge evaluated while `readyState === 'loading'`, so the auto `load` ran
+      // cleanly from `DOMContentLoaded` long before this effect's `refresh()`.
       registerLugeReveal(luge)
     })
 

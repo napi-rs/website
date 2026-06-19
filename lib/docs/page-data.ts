@@ -225,9 +225,11 @@ function findGroupAndLeaf(
 }
 
 /**
- * Build the breadcrumb trail for a leaf: Home > <tab> > <group> > <leaf>.
+ * Build the breadcrumb trail for a leaf: <tab> > <group> > <leaf>.
  *
- * - Home links to the locale root (`/`, `/cn`, `/pt-BR`).
+ * Matches the live napi.rs trail, which starts at the SECTION tab
+ * (Docs/Blog/Changelog) — there is NO leading "Home" crumb.
+ *
  * - The tab links to the FIRST reachable leaf of the section, NOT the bare
  *   section index — `/docs` (and `/cn/docs`, …) has no index page and 404s.
  *   This is the same target as the navbar tab (firstSectionLeafHref). If the
@@ -252,11 +254,7 @@ export function getBreadcrumbCore(
   const found = findGroupAndLeaf(groups, leafPath)
   if (!tab || !found) return []
 
-  const homeLabel =
-    locale === 'en' ? 'Home' : locale === 'cn' ? '首页' : 'Início'
-
   return [
-    { label: homeLabel, href: localizeHref('', locale) },
     {
       label: tab.title,
       href:
@@ -379,14 +377,15 @@ export function computeLangSwitchUrl(
 }
 
 /**
- * Filter a page's headings to the TOC range (h2–h3 by default). Pure helper so
+ * Filter a page's headings to the TOC range (h2–h4 by default, matching the
+ * live napi.rs right-rail "On this page"). Pure helper so
  * `useCurrentPageHeadings()` (a thin runtime wrapper that reads
  * `getPageDataCore(...).headings`) and tests share one implementation.
  */
 export function tocHeadings(
   headings: ReadonlyArray<{ depth: number; slug: string; text: string }>,
   minDepth = 2,
-  maxDepth = 3,
+  maxDepth = 4,
 ): ReadonlyArray<{ depth: number; slug: string; text: string }> {
   return headings.filter((h) => h.depth >= minDepth && h.depth <= maxDepth)
 }

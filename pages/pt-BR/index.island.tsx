@@ -9,6 +9,10 @@
 // components. The only island is the shared site Navbar (matching live napi.rs);
 // island imports MUST be relative (Void's islands plugin ignores the `@/` alias).
 import Navbar from '../../components/docs/Navbar' with { island: 'load' }
+// Footer carries the theme + language toggles on the landing (no sidebar). It is
+// an island so those toggles hydrate; `locale` makes it render them. See the en
+// landing entry for the full rationale.
+import Footer from '../../components/docs/Footer' with { island: 'load' }
 import { Badges } from '@/components/badges'
 import { TitlePTBR } from '@/components/title.pt-BR'
 import { Sponsors, Ecosystem, SupportMatrix } from '@/components/landing'
@@ -110,6 +114,9 @@ export default function PtBrHome({ sponsors }: Props) {
           </ul>
         </div>
       </div>
+      <footer className="border-t border-border">
+        <Footer locale="pt-BR" />
+      </footer>
     </>
   )
 }

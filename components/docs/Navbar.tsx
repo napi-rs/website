@@ -1,9 +1,12 @@
-// Navbar — the docs top bar. THIS is the island entry (it is imported with
-// `{ island: 'load' }` from each pages/<locale>/docs/layout.island.tsx); its
-// children (ThemeToggle, SearchDialog, LangSwitcher) hydrate within it.
+// Navbar — the shared top bar (docs + landing). THIS is an island entry (it is
+// imported with `{ island: 'load' }` from each layout/landing entry); its child
+// SearchDialog hydrates within it.
 //
-// Layout:
-//   [ Logo ]  [ tab tab tab ] ............ [ GitHub Discord | Search Lang Theme ]
+// Layout (matches live napi.rs / Nextra):
+//   [ Logo ] ......................... [ tab tab tab ] [ Search ] [ GitHub ] [ Discord ]
+//
+// Theme + language toggles are deliberately NOT in the navbar — live keeps them
+// in the sidebar footer (docs) and the page footer (landing), so we do too.
 //
 // Tabs come from nav[locale].tabs (which carry NO href). A section has no index
 // page, so each tab links to the FIRST REACHABLE leaf of its section
@@ -29,9 +32,7 @@ import {
 import pages from '@void/md/pages'
 
 import Logo from './Logo'
-import LangSwitcher from './LangSwitcher'
 import SearchDialog from './SearchDialog'
-import ThemeToggle from './ThemeToggle'
 
 const GITHUB_URL = 'https://github.com/napi-rs/napi-rs'
 const DISCORD_URL = 'https://discord.gg/SpWzYHsKHs'
@@ -91,17 +92,21 @@ export default function Navbar({ locale, currentPath }: NavbarProps) {
     )
 
   return (
-    <nav className="mx-auto flex h-14 w-full max-w-[1400px] items-center gap-4 px-4">
-      {/* Brand */}
+    // `justify-end` + the brand's `mr-auto` reproduce the live napi.rs (Nextra)
+    // layout: brand hard-left, everything else (tabs · search · GitHub · Discord)
+    // packed right. Theme + language toggles are NOT here — to match live they
+    // live in the sidebar footer (docs) and the page footer (landing).
+    <nav className="mx-auto flex h-14 w-full max-w-[1400px] items-center justify-end gap-3 px-4">
+      {/* Brand (pushed hard-left) */}
       <a
         href={localizeHref('', locale)}
-        className="flex items-center"
+        className="mr-auto flex items-center"
         aria-label="NAPI-RS home"
       >
         <Logo />
       </a>
 
-      {/* Primary tabs */}
+      {/* Primary tabs — right-aligned, just before search (live order) */}
       <ul className="hidden items-center gap-1 md:flex">
         {tabs.map(({ tab, href }) => {
           const isActive = tab.key === activeSection
@@ -124,35 +129,29 @@ export default function Navbar({ locale, currentPath }: NavbarProps) {
         })}
       </ul>
 
-      {/* Right cluster */}
-      <div className="ml-auto flex items-center gap-1">
-        <SearchDialog locale={locale} />
+      <SearchDialog locale={locale} />
 
-        <a
-          href={GITHUB_URL}
-          target="_blank"
-          rel="noreferrer noopener"
-          aria-label="GitHub"
-          title="GitHub"
-          className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-        >
-          <Github className="size-4" />
-        </a>
+      <a
+        href={GITHUB_URL}
+        target="_blank"
+        rel="noreferrer noopener"
+        aria-label="GitHub"
+        title="GitHub"
+        className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+      >
+        <Github className="size-4" />
+      </a>
 
-        <a
-          href={DISCORD_URL}
-          target="_blank"
-          rel="noreferrer noopener"
-          aria-label="Discord"
-          title="Discord"
-          className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
-        >
-          <DiscordIcon className="size-4" />
-        </a>
-
-        <LangSwitcher locale={locale} />
-        <ThemeToggle />
-      </div>
+      <a
+        href={DISCORD_URL}
+        target="_blank"
+        rel="noreferrer noopener"
+        aria-label="Discord"
+        title="Discord"
+        className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+      >
+        <DiscordIcon className="size-4" />
+      </a>
     </nav>
   )
 }

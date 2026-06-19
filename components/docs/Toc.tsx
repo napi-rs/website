@@ -7,7 +7,7 @@
 // Headings source (runtime join): @void/md/pages is the virtual module of all
 // markdown pages, keyed by LOCALE-PREFIXED path. We resolve the current page via
 //   getPageDataCore(rest, locale, pages)   // rest from splitLocale(router.path)
-// then filter to h2–h3 with tocHeadings(). This mirrors the contract's
+// then filter to h2–h4 with tocHeadings(). This mirrors the contract's
 // `useCurrentPageHeadings()` (which is a thin wrapper over exactly this join).
 //
 // Scroll-spy: an IntersectionObserver watches every heading anchor (the
@@ -38,10 +38,22 @@ export interface TocProps {
   className?: string
 }
 
-const TITLE: Record<Locale, string> = {
-  en: 'On this page',
-  cn: '本页内容',
-  'pt-BR': 'Nesta página',
+// Live napi.rs (Nextra) does NOT localize the TOC title or the feedback label —
+// both render in English on every locale (verified against napi.rs/{cn,pt-BR}).
+// Only the edit-on-GitHub label is localized. We match that exactly.
+const TOC_TITLE = 'On This Page'
+const FEEDBACK_LABEL = 'Question? Give us feedback →'
+
+// TOC footer links (match live napi.rs / Nextra): a feedback link to the docs
+// repo issues + an "edit this page on GitHub" link to the markdown source.
+const EDIT_BASE = 'https://github.com/napi-rs/website/blob/main'
+const FEEDBACK_URL =
+  'https://github.com/napi-rs/website/issues/new?labels=feedback&title=Feedback'
+
+const EDIT_LABEL: Record<Locale, string> = {
+  en: 'Edit this page on GitHub →',
+  cn: '在 GitHub 上编辑本页 →',
+  'pt-BR': 'Editar essa página no Github →',
 }
 
 export default function Toc({
@@ -102,12 +114,16 @@ export default function Toc({
 
   if (headings.length === 0) return null
 
+  // Edit-on-GitHub source path: same derivation as <EditOnGithub> — the new
+  // markdown lives at pages/<locale>/<leaf>.md.
+  const editHref = rest ? `${EDIT_BASE}/pages/${locale}/${rest}.md` : null
+
   return (
     <nav
       aria-label="Table of contents"
       className={cn('sticky top-20 py-8 pr-4 text-sm', className)}
     >
-      <p className="mb-3 font-medium text-foreground">{TITLE[locale]}</p>
+      <p className="mb-3 font-medium text-foreground">{TOC_TITLE}</p>
       <ul className="space-y-2 border-l border-border">
         {headings.map((h) => {
           const isActive = h.slug === activeSlug
@@ -118,7 +134,9 @@ export default function Toc({
                 onClick={() => setActiveSlug(h.slug)}
                 className={cn(
                   '-ml-px block border-l border-transparent transition-colors',
-                  h.depth >= 3 ? 'pl-6' : 'pl-3',
+                  // Indent one level deeper per heading depth (h2 → h3 → h4),
+                  // matching the live napi.rs right-rail nesting.
+                  h.depth >= 4 ? 'pl-9' : h.depth === 3 ? 'pl-6' : 'pl-3',
                   isActive
                     ? 'border-primary font-medium text-primary'
                     : 'text-muted-foreground hover:text-foreground',
@@ -131,6 +149,28 @@ export default function Toc({
           )
         })}
       </ul>
+
+      {/* Footer links — feedback + edit-on-GitHub, matching live napi.rs. */}
+      <div className="mt-6 flex flex-col gap-2 border-t border-border pt-4 text-muted-foreground">
+        <a
+          href={FEEDBACK_URL}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="transition-colors hover:text-foreground"
+        >
+          {FEEDBACK_LABEL}
+        </a>
+        {editHref ? (
+          <a
+            href={editHref}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="transition-colors hover:text-foreground"
+          >
+            {EDIT_LABEL[locale]}
+          </a>
+        ) : null}
+      </div>
     </nav>
   )
 }
