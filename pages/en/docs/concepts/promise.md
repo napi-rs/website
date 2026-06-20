@@ -8,13 +8,15 @@ description: JavaScript Promise in Rust.
 Awaiting a JavaScript `Promise` in Rust sounds crazy, but it's feasible in **NAPI-RS**.
 The `Promise<T>` in **NAPI-RS** implements the `std::future::Future` trait, so you can use the `await` keyword to await it.
 
-::: info
+::: tip
 Awaiting a JavaScript `Promise` needs the `tokio_rt` and `napi4` features to
 be enabled.
+
 :::
 
 ::: info
 `Promise<T>` is `Send`, so you can freely use it in the `async` context.
+
 :::
 
 **lib.rs**

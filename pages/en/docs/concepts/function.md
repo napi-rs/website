@@ -107,6 +107,7 @@ export declare function callFunction(callback: (arg: number) => number): number
 
 ::: info
 You can also create a `Function` at the Rust side, see [`Env::create_function`](/docs/concepts/env#create_function)
+
 :::
 
 ## `FnArgs`
@@ -115,6 +116,7 @@ When the number of parameters exceeds 1, you can use `FnArgs` to define the para
 
 ::: info
 The `tuple` type can be converted to `FnArgs` by calling `.into()`.
+
 :::
 
 **lib.rs**
@@ -197,10 +199,12 @@ By default, the `ThreadsafeFunctionBuilder` will create a `ThreadsafeFunction` w
 
 ::: info
 See [**ThreadsafeFunction**](/docs/concepts/threadsafe-function) for the details of options
+
 :::
 
-::: info
+::: tip
 Since you can pass `ThreadsafeFunction` and `Arc<ThreadsafeFunction>` directly to the `#[napi] fn`, only use the `build_threadsafe_function` when you are need to create a `ThreadsafeFunction` dynamically.
+
 :::
 
 - `max_queue_size` is `0`

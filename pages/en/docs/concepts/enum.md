@@ -8,6 +8,7 @@ title: 'Enum'
 There is no `enum` in JavaScript, and Rust `enum` is very different from
 TypeScript `enum`. You need to read this section carefully before you use Rust
 `enum` in JavaScript.
+
 :::
 
 In **NAPI-RS**, Rust `enum` is basically transformed into a plain JavaScript Object.

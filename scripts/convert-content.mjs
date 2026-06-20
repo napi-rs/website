@@ -179,7 +179,11 @@ const BLOG_ISLAND_STRATEGY = {
 const BLOG_LOGO_ASSETS = {
   rolldownLogo: 'rolldown.svg',
   rspackLogo: 'rspack.svg',
-  parcelLogo: 'parcel.png',
+  // The inline blog logo is the compact 382×288 mark (napi.rs bundled
+  // pages/blog/parcel.png for this). `parcel.png` is the 2997×857 wordmark used
+  // full-width by the landing ecosystem grid — using it inline at width=20
+  // collapses to a 6px sliver, so the inline refs get their own compact asset.
+  parcelLogo: 'parcel-logo.png',
   rollupLogo: 'rollup.svg',
   oxcLogo: 'oxc.png',
   bunLogo: 'bun.svg',
@@ -241,9 +245,14 @@ function calloutMarker(openTag) {
     case 'error':
       return '::: danger'
     case 'info':
+      return '::: info'
     case '':
     default:
-      return '::: info' // @void/md has no :::note; default Callout -> info
+      // Nextra renders a typeless <Callout> (its "default" type) with the 💡
+      // emoji + orange palette — which is @void/md's `tip`, NOT `info` (the blue
+      // ℹ️ box, reserved for an explicit type="info"). Mapping default -> info
+      // turned every plain Callout blue; map it to tip to match napi.rs.
+      return '::: tip'
   }
 }
 
@@ -824,6 +833,11 @@ function convertCalloutLine(line) {
     const after = closeMatch[2].trim()
     const result = []
     if (before) result.push(before)
+    // Blank line before the closing fence so a preceding block (especially a
+    // list) terminates cleanly. Without it `vp fmt` treats a col-0 `:::` right
+    // after a list item as lazy continuation and indents it, which @void/md
+    // then renders as a literal `:::` instead of closing the container.
+    result.push('')
     result.push(':::')
     if (after) result.push(after)
     return result

@@ -7,8 +7,9 @@ description: napi new command in @napi-rs/cli.
 
 Create a new project with pre-configured boilerplate
 
-::: info
+::: tip
 The `napi new` command requires `git` to be installed, and it will clone the repository from the GitHub, be sure you can access the GitHub.
+
 :::
 
 ## Usage

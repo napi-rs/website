@@ -12,13 +12,15 @@ description: Build WebAssembly with **NAPI-RS**.
 
 ::: info
   There is a amazing WebAssembly course developed by [@Dominic Elm](https://x.com/elmd_): <a style="color: var(--color-indigo-400); text-decoration-line: underline" href="https://learn-wasm.dev/?via=brooklyn" target="_blank">Learn **WebAssembly**</a>
+
 :::
 
 **NAPI-RS** supports building `WebAssembly` target and running it in the browser and Node.js. For now we only support the [`wasm32-wasip1-threads`](https://doc.rust-lang.org/rustc/platform-support/wasm32-wasip1-threads.html) target.
 
-::: info
+::: tip
   In theory, `wasm32-unknown-unknown` and `wasm32-wasip1` targets can also be supported, but these two targets are only suitable for people who have deep understanding of `WebAssembly`. For example, you need to handle cases where `std::threads` is used in your code and dependencies yourself, which makes compilation very complex.
   At the current stage, **NAPI-RS**'s `WebAssembly` support is targeted at users who use `WebAssembly` as a fallback in Node.js, as well as users who develop playgrounds and repro in browsers/StackBlitz. These users are not very sensitive to bundle size, so we choose to only support the `wasm32-wasip1-threads` target by default to reduce noise when this feature is in the early stage.
+
 :::
 
 The example app below is a simple image transformer, it's using [`@napi-rs/image`](https://github.com/Brooooooklyn/Image) directly:

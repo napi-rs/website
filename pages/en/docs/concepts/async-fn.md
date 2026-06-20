@@ -5,7 +5,7 @@ description: Run a Rust async fn with the tokio runtime.
 
 # async fn
 
-::: info
+::: tip
 You must enable the **_async_** or **_tokio_rt_** feature in `napi` to use `async fn`:
 
 **Cargo.toml**
@@ -96,6 +96,7 @@ Usually, JavaScript values are only valid within a function call. `async fn` is 
 ::: info
 See [Understanding Lifetime](/docs/concepts/understanding-lifetime) for more
 details.
+
 :::
 
 There are 3 kinds of parameters are automatically turned into `Reference` types:

@@ -7,8 +7,9 @@ description: 在 Rust 中 await 一个 JavaScript Promise。
 
 在 Rust 中 await 一个 JavaScript `Promise` 听起来很疯狂，但在 **NAPI-RS** 中是可行的。
 
-::: info
+::: tip
 Await JavaScript `Promise` 需要启用 `tokio_rt` 和 `napi4` 特性。
+
 :::
 
 **lib.rs**

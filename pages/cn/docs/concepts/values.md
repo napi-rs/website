@@ -313,9 +313,10 @@ export function getNums(): Array<number>
 在 `Rust` 中传递 `BigInt` 的唯一方法是使用 `BigInt` 类型，但是你可以返回
 `BigInt`、`i64`、`u64`、`i128`、`u128`， 返回 `i64` 将被视为 `JavaScript`
 数字，而不是 `BigInt`。
+
 :::
 
-::: info
+::: tip
 
 Rust fn 不能接收 `i128` `u128` `u64` `i64n` 作为参数的原因是，将 JavaScript `BigInt` 转换为它们时可能会丢失精度。
 您可以使用 `BigInt::get_u128`、`BigInt::get_i128` ... 来获取 `BigInt` 中的值。这些方法的返回值还表明是否丢失了精度。
@@ -346,7 +347,7 @@ export function createBigIntI128(): BigInt
 
 ### TypedArray
 
-::: info
+::: tip
 与 JavaScript 对象不同，传递给 Rust fn 的 `TypedArray` 是一个 **引用**，
 不会执行任何数据 `Copy` 或 `Clone`，对 `TypedArray` 的每次更改都会反映到原始的 JavaScript `TypedArray`。
 

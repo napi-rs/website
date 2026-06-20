@@ -7,7 +7,7 @@ description: Config schema of NAPI-RS.
 
 O esquema de configuração do **NAPI-RS**.
 
-::: info
+::: tip
 Todos os campos em `napi` são opcionais.
 :::
 

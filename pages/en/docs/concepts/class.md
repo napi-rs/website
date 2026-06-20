@@ -4,9 +4,10 @@ title: 'Class'
 
 # Class
 
-::: info
+::: tip
 There is no concept of a class in Rust. We use `struct` to represent a
 JavaScript `Class`.
+
 :::
 
 ## `Constructor`
@@ -70,6 +71,7 @@ export class QueryEngine {
 ::: warning
 **NAPI-RS** does not currently support `private constructor`. Your custom
 constructor must be `pub` in Rust.
+
 :::
 
 ## Factory
@@ -109,6 +111,7 @@ export class QueryEngine {
 If no `#[napi(constructor)]` is defined in the `struct`, and you attempt to
 create an instance (`new`) of the `Class` in JavaScript, an error will be
 thrown.
+
 :::
 
 **test.mjs**
@@ -167,10 +170,12 @@ export class QueryEngine {
 
 ::: warning
 `async fn` needs the `napi4` and `tokio_rt` features to be enabled.
+
 :::
 
-::: info
+::: tip
 Any `fn` in `Rust` that returns `Result<T>` will be treated as `T` in JavaScript/TypeScript. If the `Result<T>` is `Err`, a JavaScript Error will be thrown.
+
 :::
 
 ## `Getter`

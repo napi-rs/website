@@ -21,6 +21,7 @@ Any `impl` block of this `struct` will not affect the JavaScript `Object`.
 ::: warning
 If you want to convert a Rust `struct` into JavaScript `Object` using
 `#[napi(object)]` attribute, you need to mark all of its fields as `pub`.
+
 :::
 
 Once `struct` is marked as `#[napi(object)]`, you can use it as a function argument type or return type.
@@ -53,4 +54,5 @@ The JavaScript Object passed in or returned from Rust is cloned. This means
 any mutation on JavaScript `Object` will not affect the original Rust
 `struct`. And any mutation on Rust `struct` will not affect the JavaScript
 `Object` either.
+
 :::

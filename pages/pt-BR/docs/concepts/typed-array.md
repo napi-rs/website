@@ -25,6 +25,7 @@ pub fn create_buffer() -> Buffer {
 }
 ```
 
-::: info
+::: tip
 Abaixo o `Vec<u8>` subjacente não será movido ou copiado dessa maneira.
+
 :::

@@ -54,11 +54,12 @@ pub fn async_fib(input: u32) -> AsyncTask<AsyncFib> {
 
 You may notice there are two associated types on the `Task` trait. The `type Output` and the `type JsValue`. `Output` is the return type of the `compute` method. `JsValue` is the return type of the `resolve` method.
 
-::: info
+::: tip
 We need separate `type Output` and `type JsValue` because we cannot call the
 JavaScript function back in `fn compute`, as it is not executed on the main
 thread. So we need `fn resolve`, which runs on the main thread, to create the
 `JsValue` from `Output` and `Env` and call it back in JavaScript.
+
 :::
 
 You can use the low-level API `Env::spawn` to spawn a defined `Task` in the libuv thread pool. See example in [Reference](/docs/concepts/reference).
@@ -173,8 +174,9 @@ pub fn async_count_buffer_length(data: Buffer) -> AsyncTask<CountBufferLength> {
 }
 ```
 
-::: info
+::: tip
 The `#[napi]` macro above the `impl Task for AsyncFib` is just for `.d.ts` generation. If no `#[napi]` is defined here, the generated TypeScript type of returned `AsyncTask` will be `Promise<unknown>`.
+
 :::
 
 ## `AsyncTask`
@@ -261,9 +263,10 @@ export function asyncFib(
 ): Promise<number>
 ```
 
-::: info
+::: tip
 If `AsyncTask` has already been started or completed, the
 `AbortController.abort` will have no effect.
+
 :::
 
 ## `ScopedTask`

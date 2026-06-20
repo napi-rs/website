@@ -24,6 +24,7 @@ Vamos dar ao pacote um nome maneiro **@napi-rs/cool**:
 Se esses pacotes não estiverem sob um escopo npm, isso pode acionar a
 [**_detecção de spam_**](https://stackoverflow.com/a/54135900/5684750) do npm
 enquanto você os publica pela primeira vez.
+
 :::
 
 ```bash {3}

@@ -91,6 +91,7 @@ fn init() {
 
 ::: warning
 `#[napi_derive::module_init]` is not available for WebAssembly targets. Use `#[cfg(not(target_family = "wasm"))]` to conditionally compile.
+
 :::
 
 ## `#[napi(module_exports)]`
@@ -241,4 +242,5 @@ This means:
 
 ::: info
 The `#[napi_derive::module_init]` function runs via the `ctor` crate, which uses platform-specific mechanisms (`.init_array` on Unix, special constructor functions on Windows) to execute at dynamic library load time.
+
 :::

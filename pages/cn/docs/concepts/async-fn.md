@@ -5,7 +5,7 @@ description: 使用 tokio 运行时运行一个 Rust 异步函数。
 
 # 异步函数
 
-::: info
+::: tip
 为了使用 `async fn` ，你必须开启 `napi` 的 **_async_** 或 **_tokio_rt_** 特性：
 
 **Cargo.toml**

@@ -7,11 +7,12 @@ description: Call a JavaScript callback in other threads.
 
 [`Threadsafe Function`](https://nodejs.org/api/n-api.html#asynchronous-thread-safe-function-calls) is a complex concept in Node.js. As we all know, Node.js is single-threaded, so you can't access [`napi_env`](https://nodejs.org/api/n-api.html#napi_env), [`napi_value`](https://nodejs.org/api/n-api.html#napi_value), and [`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref) on another thread.
 
-::: info
+::: tip
 [`napi_env`](https://nodejs.org/api/n-api.html#napi_env), [`napi_value`](https://nodejs.org/api/n-api.html#napi_value), and [`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref)
 are low level concepts in `Node-API`, which the `#[napi]` macro of **NAPI-RS**
 is built on top of. **NAPI-RS** also provides a [low level
 API](/docs/concepts/env) to access the original `Node-API`.
+
 :::
 
 `Node-API` provides complex `Threadsafe Function` APIs to call JavaScript functions on other threads. It's very complex, so many developers don't understand how to use it correctly. **NAPI-RS** provides a limited version of `Threadsafe Function` APIs to make it easier to use:
@@ -350,6 +351,7 @@ You can set the `MaxQueueSize` parameter of `ThreadsafeFunction` to limit the nu
 
 ::: info
 If call the `ThreadsafeFunction` with the `Blocking` mode, the `MaxQueueSize` parameter will have no effect. `Blocking` mode would block the queue when the queue is full. `NonBlocking` mode would return immediately with the `Status::QueueFull` when the queue is full. See [`napi_call_threadsafe_function`](https://nodejs.org/api/n-api.html#napi_call_threadsafe_function) for more details.
+
 :::
 
 **lib.rs**

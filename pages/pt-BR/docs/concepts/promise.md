@@ -7,9 +7,10 @@ description: Await a JavaScript Promise in Rust.
 
 Aguardar uma `Promise` JavaScript em Rust parece loucura, mas é viável em **NAPI-RS**.
 
-::: info
+::: tip
 Aguardar uma `Promise` JavaScript requer que os recursos `tokio_rt` e `napi4`
 estejam habilitados.
+
 :::
 
 **lib.rs**

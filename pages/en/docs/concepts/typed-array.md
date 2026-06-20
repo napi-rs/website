@@ -30,12 +30,14 @@ pub fn create_buffer() -> Buffer {
 
 ::: info
 The underlying `Vec<u8>` will not be copied in this way.
+
 :::
 
 ::: warning
 The `Electron` will not be able to create `Buffer` in zero copy way. See [V8
 Memory Cage](https://www.electronjs.org/blog/v8-memory-cage) for more details.
 **NAPI-RS** will copy the data of the `Vec<u8>` into the underlying `Buffer` in this case.
+
 :::
 
 ## Buffer and TypedArray Types
@@ -217,6 +219,7 @@ If you create the `Buffer` or `TypedArray` in this way, the ownership of the
 data will not be transferred to the `Buffer` or `TypedArray`, but the
 underlying data will be copied, there should be performance overhead of the
 data copy.
+
 :::
 
 **lib.rs**
@@ -239,6 +242,7 @@ Sometimes, you may want to create a `Buffer` or `TypedArray` from data types tha
 ::: info
 The `finalize_hint` param will be passed to the `finalize` callback. In the example below, the `finalize_hint` is the `Arc<Vec<u8>>` itself. So NAPI-RS will hold the `Arc<Vec<u8>>` until the `finalize` callback is called.
 So you don't need to worry about the data being invalid when the `finalize` callback is called.
+
 :::
 
 **lib.rs**

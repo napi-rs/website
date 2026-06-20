@@ -7,9 +7,10 @@ description: napi prepublish command in @napi-rs/cli.
 
 Rodando algumas preparações para publicação de pacotes **NAPI-RS**.
 
-::: info
+::: tip
 Este comando geralmente é usado nos scripts de ciclo de vida `prepublishOnly`
 no `package.json`.
+
 :::
 
 **package.json**

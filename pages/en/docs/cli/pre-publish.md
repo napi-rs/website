@@ -40,9 +40,10 @@ For boolean options, you can [prefix `no-`](https://mael.dev/clipanion/docs/opti
 | ghReleaseId     | --gh-release-id           | string                                                                         | false    |                                               | Existing GitHub release id                                                                                         |
 | dryRun          | --dry-run                 | boolean                                                                        | false    | false                                         | Dry run without touching file system                                                                               |
 
-::: info
+::: tip
 This command is usually used in `prepublishOnly` lifecycle scripts in
 `package.json`.
+
 :::
 
 **package.json**

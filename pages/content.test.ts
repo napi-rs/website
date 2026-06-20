@@ -761,8 +761,17 @@ describe('blog slice', () => {
     // Prose-island handling: logos -> static /assets, Callouts -> :::, NodeLink
     // -> markdown links; no leftover JSX-isms / island tags.
     expect(md).toContain('<img src="/assets/rolldown.svg"')
-    expect(md).toContain('<img src="/assets/parcel.png"')
+    // The inline blog logo uses the compact 382×288 mark (parcel-logo.png), NOT
+    // the 2997×857 landing wordmark (parcel.png) — the wordmark collapses to a
+    // ~6px sliver at width=20.
+    expect(md).toContain('<img src="/assets/parcel-logo.png"')
+    expect(md).not.toContain('<img src="/assets/parcel.png"')
     expect(md).toContain('::: info')
+    // A typeless <Callout> (Nextra's "default" = 💡 orange) maps to ::: tip, and
+    // a closing fence after a list stays at column 0 (not indented as list
+    // continuation, which would render a literal ":::").
+    expect(md).toContain('::: tip')
+    expect(md).not.toMatch(/^[ \t]+:::[ \t]*$/m)
     expect(md).not.toContain('<Callout')
     expect(md).not.toContain('<NodeLink')
     expect(md).toContain(
@@ -893,7 +902,7 @@ describe('blog slice', () => {
       'rolldown.svg',
       'rollup.svg',
       'rspack.svg',
-      'parcel.png',
+      'parcel-logo.png',
       'oxc.png',
       'bun.svg',
       'huggingface.svg',

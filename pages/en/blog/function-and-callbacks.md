@@ -8,6 +8,7 @@ Callbacks are the heartbeat of JavaScript's ecosystem. Whether you're building a
 
 ::: info
 Here is a project that you can download and play with the demo code: https://github.com/napi-rs/callback-example
+
 :::
 
 ## Why Callbacks Matter in Native Addons
@@ -97,6 +98,7 @@ When building these systems in Rust for performance, you face unique challenges:
 
 ::: warning
 Understanding these challenges is crucial for building stable native addons. Improper callback handling can lead to crashes, memory leaks, or deadlocks in production environments.
+
 :::
 
 ## What You'll Learn
@@ -110,7 +112,7 @@ This guide progressively builds your understanding:
 - **Part 5**: Advanced patterns and error handling
 - **Part 6**: Async operations and promises
 
-By the end, you'll understand how to build robust callback systems that power applications like <img src="/assets/rolldown.svg" width="20" height="20" style="vertical-align: text-bottom" /> [`Rolldown`](https://github.com/rolldown/rolldown) (the Fast Rust bundler for JavaScript/TypeScript with Rollup-compatible API.) and <a href="https://parceljs.org/"><img src="/assets/parcel.png" width="20" height="20" style="vertical-align: text-bottom" /> Parcel </a> (the zero-config bundler).
+By the end, you'll understand how to build robust callback systems that power applications like <img src="/assets/rolldown.svg" width="20" height="20" style="vertical-align: text-bottom" /> [`Rolldown`](https://github.com/rolldown/rolldown) (the Fast Rust bundler for JavaScript/TypeScript with Rollup-compatible API.) and <a href="https://parceljs.org/"><img src="/assets/parcel-logo.png" width="20" height="20" style="vertical-align: text-bottom" /> Parcel </a> (the zero-config bundler).
 
 Let's start with the fundamentals.
 
@@ -200,6 +202,7 @@ JavaScript functions passed to Rust only live within the current function call s
 
 ::: danger
 Never attempt to store a raw `Function` for later use without creating a proper reference. This will cause your application to crash when the function is garbage collected!
+
 :::
 
 ```rust
@@ -222,6 +225,7 @@ Function references solve this by creating a persistent handle that keeps the Ja
 
 ::: info
 `FunctionRef` is lightweight and perfect for main-thread async operations. It's the go-to solution when you need to delay a callback but stay within the JavaScript event loop.
+
 :::
 
 **When You Need References:**
@@ -349,8 +353,9 @@ monitorSystemResources((err, cpuUsage) => {
 | **Error handling** | Simple Result                   | Configurable (fatal/handled) |
 | **When to use**    | Delays/timers in main thread    | Background threads, workers  |
 
-::: info
+::: tip
 **Rule of thumb**: Use `FunctionRef` when staying on the main thread with access to `Env`. Use `ThreadsafeFunction` when crossing thread boundaries.
+
 :::
 
 ## Part 4: Building ThreadsafeFunction from Function
@@ -397,6 +402,7 @@ pub fn start_file_watcher(
 
 ::: tip
 Set a `max_queue_size` when dealing with high-frequency events to prevent memory exhaustion. This is especially important for monitoring systems or real-time data streams.
+
 :::
 
 ## Part 5: ThreadsafeFunction Generic Parameters
@@ -422,6 +428,7 @@ ThreadsafeFunction<
 
 ::: warning
 Be careful with `Blocking` mode in high-throughput scenarios. If the JavaScript event loop can't keep up, your Rust threads will block indefinitely. Consider using `NonBlocking` with proper backpressure handling.
+
 :::
 
 ```rust
@@ -496,6 +503,7 @@ Use weak references when the ThreadsafeFunction shouldn't keep the process alive
 
 ::: info
 Weak references are perfect for optional logging, monitoring, or telemetry callbacks that shouldn't prevent your application from shutting down gracefully.
+
 :::
 
 ```rust
@@ -563,7 +571,7 @@ console.log(profile) // Output: "Enhanced: John Doe"
 
 ## Best Practices
 
-::: info
+::: tip
 
 1. **Choose the right type**:
    - Use `Function` for sync callbacks within the same scope
@@ -586,7 +594,8 @@ console.log(profile) // Output: "Enhanced: John Doe"
 5. **Call modes**:
    - Use `Blocking` for critical data that must be delivered
    - Use `NonBlocking` for optional updates that can be dropped
-     :::
+
+:::
 
 ## Further Reading
 
@@ -596,4 +605,5 @@ console.log(profile) // Output: "Enhanced: John Doe"
 
 ::: tip
 Want to see these patterns in action? Check out the source code of <img src="/assets/rolldown.svg" width="20" height="20" style="vertical-align: text-bottom" /> [`Rolldown`](https://github.com/rolldown/rolldown) to see how they implement plugin callbacks and build hooks.
+
 :::

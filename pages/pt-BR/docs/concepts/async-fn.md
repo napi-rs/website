@@ -5,7 +5,7 @@ description: Run a Rust async fn with the tokio runtime.
 
 # async fn
 
-::: info
+::: tip
 Você deve habilitar o recurso **_async_** ou **_tokio_rt_** no `napi` para usar `async fn`:
 
 **Cargo.toml**

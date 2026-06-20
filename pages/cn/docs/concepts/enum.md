@@ -7,6 +7,7 @@ title: '枚举'
 ::: warning
 JavaScript 中没有 `enum`，并且 Rust 中的 `enum` 与 TypeScript 中的 `enum`
 有很大的不同。 在 JavaScript 中使用 Rust `enum` 之前，你需要仔细阅读本节内容。
+
 :::
 
 在 **NAPI-RS** 中，Rust `enum` 被转换为普通的 JavaScript 对象。

@@ -312,14 +312,16 @@ This requires the `napi6` feature.
 The only way to pass `BigInt` in `Rust` is using `BigInt` type. But you can
 return `BigInt`, `i64n`, `u64`, `i128`, `u128`. Return `i64` will be treated
 as `JavaScript` number, not `BigInt`.
+
 :::
 
-::: info
+::: tip
 The reason why Rust functions can't receive `i128` `u128` `u64` `i64n` as
 arguments is that they may lose precision when converting JavaScript `BigInt`
 into them. You can use `BigInt::get_u128`, `BigInt::get_i128`, etc. to get the
 value in `BigInt`. The return value of these methods also indicates whether
 precision is lost.
+
 :::
 
 **lib.rs**
@@ -346,10 +348,11 @@ export function createBigIntI128(): BigInt
 
 ### TypedArray
 
-::: info
+::: tip
 Unlike JavaScript Object, the `TypedArray` passed into Rust fn is a
 **Reference**. No data `Copy` or `Clone` will be performed. Every mutation on
 the `TypedArray` will be reflected to the original JavaScript `TypedArray`.
+
 :::
 
 **lib.rs**

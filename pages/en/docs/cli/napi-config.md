@@ -7,7 +7,7 @@ description: Config schema of NAPI-RS.
 
 The config schema of **NAPI-RS**.
 
-::: info
+::: tip
 All the fields in `napi` is optional.
 :::
 

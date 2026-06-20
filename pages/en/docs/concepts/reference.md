@@ -11,6 +11,7 @@ In some scenarios, you may want to extend the lifetime of the `Object` to the `R
 Both the `Reference` and `WeakReference` are not `Send`, because of the `drop`
 of the `Reference` must be called in the same thread as the `Reference` is
 created.
+
 :::
 
 ## `Reference`
@@ -19,6 +20,7 @@ created.
 
 ::: info
 NAPI-RS calls the [`napi_wrap`](https://nodejs.org/api/n-api.html#napi_wrap) function to wrap the Rust `struct` with the class instance object when creating the class instance. There is a [`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref) that is created by the `napi_wrap`. `Reference` holds the `napi_ref` so you can always access the underlying `struct` reference before the underlying `napi_ref` is deleted.
+
 :::
 
 For example:
@@ -222,6 +224,7 @@ The `WeakReference` will not increase the reference count of the raw Object, so 
 The `SymbolRef` must be return back to the `JavaScript` side, or call the
 `unref` on it manually. Otherwise, the `Symbol` under the hood will never be
 garbage collected.
+
 :::
 
 In the example below, we create the `ObjectRef` in the constructor and use it later in the `getOptions` method.
@@ -274,6 +277,7 @@ const options = nativeClass.getOptions() // { name: 'John', age: 30 }
 The `SymbolRef` must be return back to the `JavaScript` side, or call the
 `unref` on it manually. Otherwise, the `Symbol` under the hood will never be
 garbage collected.
+
 :::
 
 The `SymbolRef` API is basically the same as the `ObjectRef`.
@@ -297,6 +301,7 @@ pub fn create_symbol_ref(env: &Env) -> Result<SymbolRef> {
 ::: info
 The `FunctionRef` is not `Send` because it needs to be dropped in the same
 thread as the `FunctionRef` is created.
+
 :::
 
 `FunctionRef` can be created on the `Function` directly.
@@ -367,6 +372,7 @@ promiseFinallyCallback(Promise.resolve(), () => {
 ::: info
 The `ExternalRef` is not `Send` because it needs to be dropped in the same
 thread as the `ExternalRef` is created.
+
 :::
 
 `ExternalRef` holds the [`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref) to the object thats created by the [`napi_create_external`](https://nodejs.org/api/n-api.html#napi_create_external) function.

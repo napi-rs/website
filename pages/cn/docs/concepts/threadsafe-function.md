@@ -9,12 +9,13 @@ description: Call a JavaScript callback in other threads.
 众所周知，Node.js 是单线程的，所以你不能在另一个线程上访问 [`napi_env`](https://nodejs.org/api/n-api.html#napi_env)、
 [`napi_value`](https://nodejs.org/api/n-api.html#napi_value) 和 [`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref)。
 
-::: info
+::: tip
 [`napi_env`](https://nodejs.org/api/n-api.html#napi_env)、
 [`napi_value`](https://nodejs.org/api/n-api.html#napi_value) 和
 [`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref) 是 `Node-API`
 中的底层概念， **NAPI-RS** 的 `#[napi]` 宏正是在其之上构建的， **NAPI-RS**
 也提供了一个[底层 API](../compat-mode/concepts/env)来访问原始的 `Node-API`。
+
 :::
 
 `Node-API` 提供了复杂的 `Threadsafe Function` API 来在其他线程上调用 JavaScript 函数，这个 API 非常复杂，

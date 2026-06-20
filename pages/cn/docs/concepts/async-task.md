@@ -43,10 +43,11 @@ impl Task for AsyncFib {
 你可能会注意到 `Task` 特征上有两个关联类型，`type Output` 和 `type JsValue`，
 `Output` 是 `compute` 方法的返回类型，`JsValue` 是 `resolve` 方法的返回类型。
 
-::: info
+::: tip
 我们需要分开 `type Output` 和 `type JsValue`，因为我们无法在 `fn compute`
 中回调 JavaScript 函数，它不在主线程上执行， 所以我们需要在主线程上运行的 `fn
   resolve`，根据 `Output` 和 `Env` 创建 `JsValue` 并在 JavaScript 中回调它。
+
 :::
 
 你可以使用底层 API `Env::spawn` 在 libuv 线程池中生成一个定义的 `Task` ，参见 [引用](../compat-mode/concepts/ref) 中的示例。
@@ -127,9 +128,10 @@ impl Task for CountBufferLength {
 }
 ```
 
-::: info
+::: tip
 `impl Task for AsyncFib` 上面的 `#[napi]` 宏只是为了生成 `.d.ts` 文件，
 如果这里没有定义 `#[napi]`，生成的 TypeScript 类型里， `AsyncTask` 的返回值类型将是 `Promise<unknown>`。
+
 :::
 
 ## `AsyncTask`
@@ -220,6 +222,7 @@ export function asyncFib(
 ): Promise<number>
 ```
 
-::: info
+::: tip
 如果 `AsyncTask` 已经启动或完成，`AbortController.abort` 将不会有任何效果。
+
 :::

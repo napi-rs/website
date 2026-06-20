@@ -28,6 +28,7 @@ pub fn create_buffer() -> Buffer {
 }
 ```
 
-::: info
+::: tip
 底层的 `Vec<u8>` 不会以这种方式被移动或复制。
+
 :::

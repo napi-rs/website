@@ -4,8 +4,9 @@ title: '类'
 
 # 类
 
-::: info
+::: tip
 Rust 中没有类的概念。我们使用 `struct` 来表示 JavaScript 的 `Class`。
+
 :::
 
 ## `Constructor`
@@ -69,6 +70,7 @@ export class QueryEngine {
 ::: warning
 **NAPI-RS** 目前不支持 `private constructor`，在 Rust
 中你的自定义构造函数必须是 `pub` 的。
+
 :::
 
 ## 工厂
@@ -107,6 +109,7 @@ export class QueryEngine {
 ::: warning
 如果结构体中没有定义 `#[napi(constructor)]`，并且你尝试在 JavaScript
 中创建一个 `Class` 的实例（`new`），这将会抛出一个错误。
+
 :::
 
 **test.mjs**
@@ -165,11 +168,13 @@ export class QueryEngine {
 
 ::: warning
 `async fn` 需要启用 `napi4` 和 `tokio_rt` 特性。
+
 :::
 
-::: info
+::: tip
 任何返回 `Result<T>` 的 `Rust` `fn` 在 JavaScript/TypeScript 中都会被视为 `T` ，
 如果 `Result<T>` 是 `Err`，则会抛出一个 JavaScript 错误。
+
 :::
 
 ## `Getter`

@@ -37,6 +37,7 @@ Creates a JavaScript string from a C-style string pointer. This is used for C FF
 
 ::: info
 You can pass `NAPI_AUTO_LENGTH` as the `len` parameter if the C string is null-terminated.
+
 :::
 
 ```rust
@@ -75,6 +76,7 @@ pub fn create_symbol(&self, description: Option<&str>) -> Result<JsSymbol<'_>>
 
 ::: info
 Requires `napi9` feature.
+
 :::
 
 Creates or retrieves a symbol from the global symbol registry.
@@ -145,6 +147,7 @@ pub fn fatal_error(self, location: &str, message: &str)
 
 ::: info
 Requires `napi3` feature.
+
 :::
 
 Triggers an 'uncaughtException' in JavaScript. Useful for async callbacks that throw unrecoverable exceptions.
@@ -180,6 +183,7 @@ pub fn create_function<Args: JsValuesTupleIntoVec, Return>(
 ::: info
 You can access the **`C`** Callback by adding the `_c_callback` suffix to the function name.
 In the example below, the `custom_function_c_callback` is the `C` callback for the `custom_function`.
+
 :::
 
 **lib.rs**
@@ -201,6 +205,7 @@ fn custom_function(input: u32) -> u32 {
 
 ::: info
 The `no_export` attribute is used to prevent the function from being exported to the JavaScript side.
+
 :::
 
 The `custom_function` is not exported, so it's not visible in the JavaScript side. But the `C` callback is used for creating `Function` in `fn create_function`. You can use it like this:
@@ -218,6 +223,7 @@ console.log(customFunction(2)) // 4
 
 ::: info
 Requires `napi5` feature.
+
 :::
 
 Creates a JavaScript function from a Rust closure.
@@ -302,6 +308,7 @@ where
 
 ::: info
 Requires `napi3` feature.
+
 :::
 
 Registers a cleanup hook to be called when the environment is being torn down.
@@ -321,6 +328,7 @@ where
 
 ::: info
 Requires `napi3` feature.
+
 :::
 
 Removes a previously registered cleanup hook.
@@ -335,6 +343,7 @@ where
 
 ::: info
 Requires `napi8` feature.
+
 :::
 
 Registers an asynchronous cleanup hook.
@@ -350,6 +359,7 @@ where
 
 ::: info
 Requires `napi8` feature.
+
 :::
 
 Registers a removable asynchronous cleanup hook.
@@ -402,6 +412,7 @@ pub fn get_node_version(&self) -> Result<NodeVersion>
 
 ::: info
 Requires `napi9` feature.
+
 :::
 
 Retrieves the file path of the currently running JS module as a URL.
@@ -414,6 +425,7 @@ pub fn get_module_file_name(&self) -> Result<String>
 
 ::: info
 Requires `napi2` feature.
+
 :::
 
 Gets a pointer to the underlying libuv event loop.
@@ -428,6 +440,7 @@ pub fn get_uv_event_loop(&self) -> Result<*mut sys::uv_loop_s>
 
 ::: info
 Requires `napi6` feature.
+
 :::
 
 Associates data with the currently running Agent.
@@ -444,6 +457,7 @@ where
 
 ::: info
 Requires `napi6` feature.
+
 :::
 
 Retrieves data previously associated with the currently running Agent.
@@ -468,6 +482,7 @@ pub fn spawn<T: 'static + Task>(&self, task: T) -> Result<AsyncWorkPromise<T::Js
 
 ::: info
 Requires `tokio_rt` and `napi4` feature.
+
 :::
 
 Spawns a Rust future and returns a JavaScript Promise.
@@ -483,6 +498,7 @@ pub fn spawn_future<
 
 ::: info
 Requires `tokio_rt` and `napi4` feature.
+
 :::
 
 Spawns a future with a callback to process the result.
@@ -502,6 +518,7 @@ pub fn spawn_future_with_callback<
 
 ::: info
 Requires `napi5` feature.
+
 :::
 
 Creates a JavaScript Date object from a timestamp.
@@ -516,6 +533,7 @@ pub fn create_date(&self, time: f64) -> Result<JsDate<'_>>
 
 ::: info
 Requires `serde-json` feature.
+
 :::
 
 Serializes a Rust struct into a JavaScript value using serde.
@@ -530,6 +548,7 @@ where
 
 ::: info
 Requires `serde-json` feature.
+
 :::
 
 Deserializes a JavaScript value into a Rust type using serde.

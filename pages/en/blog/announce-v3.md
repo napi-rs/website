@@ -82,6 +82,7 @@ This is a sample app using **NAPI-RS** WebAssembly. You can transform the image 
 
   The `avif` feature is coming from [libavif](https://github.com/AOMediaCodec/libavif). It's a C/C++ mixed library.
   You can also feel free to use it in **NAPI-RS** project.
+
 :::
 
 <TransformImage />
@@ -238,6 +239,7 @@ The `npm` team spent several years resolving this critical issue for native addo
 
 ::: info
   From this issue, we can see that the `npm` team does not prioritize native addon scenarios, so currently **NAPI-RS** neither supports nor recommends using `npm` as a package manager. It's hard to say whether the `npm` team will fix similar critical issues in a timely manner in the future.
+
 :::
 
 ## `@napi-rs/cli` API
@@ -283,7 +285,7 @@ In the frontend build field, **NAPI-RS** has been widely used. Almost all Bundle
 - <a href="https://rolldown.rs/"><img src="/assets/rolldown.svg" width="20" height="20" style="vertical-align: text-bottom" /> Rolldown </a>
 - <a href="https://rollupjs.org/"><img src="/assets/rollup.svg" width="20" height="20" style="vertical-align: text-bottom" /> Rollup </a>
 - <a href="https://rspack.dev/"><img src="/assets/rspack.svg" width="20" height="20" style="vertical-align: text-bottom" /> Rspack </a>
-- <a href="https://parceljs.org/"><img src="/assets/parcel.png" width="20" height="20" style="vertical-align: text-bottom" /> Parcel </a>
+- <a href="https://parceljs.org/"><img src="/assets/parcel-logo.png" width="20" height="20" style="vertical-align: text-bottom" /> Parcel </a>
 
 **Monorepo tools:**
 - <a href="https://turbo.build/"><TurborepoLogo /></a>

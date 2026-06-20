@@ -23,6 +23,7 @@ napi new
 会在每个支持的平台下创建并发布很多个包。 如果这些包不在一个 npm scope
 下，在发布的时候就会触发 npm [**_spam
 detection_**](https://stackoverflow.com/a/54135900/5684750)。
+
 :::
 
 ```bash {3}
@@ -287,6 +288,7 @@ git push
 为了在 `GitHub Actions` 中发布你的包, 你需要在你的 GitHub 仓库中配置 `NPM_TOKEN` 环境变量.
 
 在项目的 **Settings -> Secrets** 中新建 **_NPM_TOKEN_** 环境变量。
+
 :::
 
 如果所有步骤都完成了，你可以在 GitHub 上看到如下的 CI 流程:

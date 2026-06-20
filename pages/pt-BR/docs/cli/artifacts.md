@@ -7,9 +7,10 @@ description: napi artifacts command in @napi-rs/cli.
 
 Gerenciamento de [artifacts](https://docs.github.com/en/actions/advanced-guides/storing-workflow-data-as-artifacts) do GitHub Actions.
 
-::: info
+::: tip
 Este comando geralmente é usado na etapa de publicação, antes do comando `npm
   publish` e após a etapa de `Download artifacts`.
+
 :::
 
 ## Flags List
