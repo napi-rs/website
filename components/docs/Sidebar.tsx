@@ -243,7 +243,7 @@ export default function Sidebar({
           className,
         )}
       >
-        <div className="flex-1 overflow-y-auto px-4 py-6">
+        <div className="thin-scrollbar flex-1 overflow-y-auto px-4 py-6">
           <SidebarNav
             groups={groups}
             locale={locale}
@@ -306,7 +306,7 @@ export default function Sidebar({
                     <X aria-hidden="true" className="size-4" />
                   </Button>
                 </div>
-                <div className="flex-1 overflow-y-auto px-4 py-4">
+                <div className="thin-scrollbar flex-1 overflow-y-auto px-4 py-4">
                   <SidebarNav
                     groups={groups}
                     locale={locale}

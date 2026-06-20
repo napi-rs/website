@@ -102,6 +102,29 @@ section.footnotes > h2 {
   color: #3e7a38;
 }
 
+/* Thin, subtle scrollbar matching the live napi.rs / Nextra sidebar
+   (`.nextra-scrollbar`). Without it the docs sidebar shows the browser's
+   default thick, bright system scrollbar. The two standard properties give the
+   exact thin gray-on-transparent thumb Chrome renders for napi.rs; the
+   `::-webkit-scrollbar` rules are the Safari/older-engine fallback. */
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(115, 115, 115, 0.4) transparent;
+}
+.thin-scrollbar::-webkit-scrollbar {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(115, 115, 115, 0.4);
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
