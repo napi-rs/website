@@ -93,9 +93,17 @@
       pre {
         padding: 16px 0;
 
+        /* Match napi.rs: `code` is a grid so each line is a full-width row, and
+         * the per-line left padding insets the text from the panel edge (without
+         * it the Shiki output hugs the left border). */
+        code {
+          display: grid;
+        }
+
         .line {
           white-space: pre-wrap;
           font-size: fv(12, 14);
+          padding-left: 16px;
         }
       }
     }
