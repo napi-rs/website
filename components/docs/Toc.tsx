@@ -159,7 +159,7 @@ export default function Toc({
       className={cn('sticky top-20 py-8 pr-4 text-sm', className)}
     >
       <p className="mb-3 font-medium text-foreground">{TOC_TITLE}</p>
-      <ul className="space-y-2 border-l border-border">
+      <ul className="space-y-2">
         {headings.map((h) => {
           const isActive = h.slug === activeSlug
           return (
@@ -168,12 +168,20 @@ export default function Toc({
                 href={`#${h.slug}`}
                 onClick={() => setActiveSlug(h.slug)}
                 className={cn(
-                  '-ml-px block border-l border-transparent transition-colors',
-                  // Indent one level deeper per heading depth (h2 → h3 → h4),
-                  // matching the live napi.rs right-rail nesting.
-                  h.depth >= 4 ? 'pl-9' : h.depth === 3 ? 'pl-6' : 'pl-3',
+                  'block transition-colors',
+                  // Indent by heading depth via padding only. Live napi.rs has
+                  // NO left rail / accent bar on the TOC (the `ul` and links
+                  // both report border-left:0): h2 flush, h3 +1rem, h4 +2rem
+                  // (Nextra's `nx-pl-4` per nesting level).
+                  h.depth >= 4 ? 'pl-8' : h.depth === 3 ? 'pl-4' : 'pl-0',
+                  // Depth-based weight (not active-based): top-level h2 is
+                  // semibold, nested headings are normal — matching Nextra.
+                  h.depth === 2 && 'font-semibold',
+                  // Active heading is the brand orange (var(--theme) ≈
+                  // rgb(230,99,0)), matching napi.rs's nx-text-primary-600
+                  // (rgb(230,92,0)). No extra weight, no accent bar.
                   isActive
-                    ? 'border-primary font-medium text-primary'
+                    ? 'text-[var(--theme)]'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
                 aria-current={isActive ? 'location' : undefined}
