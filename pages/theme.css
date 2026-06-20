@@ -150,10 +150,170 @@
 :root[data-theme='dark'] .void-md .code-filename,
 .dark .void-md .code-filename {
   color: #e5e7eb;
-  background: rgba(255, 185, 138, 0.1);
+  /* Header band sits ONE step warmer than the 0.1 code body so the boundary
+   * reads as a separator — exactly how napi.rs does it (its filename bar is
+   * absolute and stacks 0.1-over-0.1 ≈ 0.19; no border). */
+  background: rgba(255, 185, 138, 0.19);
 }
 .void-md .code-filename + div[class*='language-'] {
   margin-top: 0;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
+}
+
+/* ── Prose links: napi.rs (Nextra) primary hue, not @void/md's blue ────────────
+ *
+ * @void/md's prose.css sets `.void-md a { color: var(--vmd-link); decoration:none }`
+ * (#2563eb light / #60a5fa dark). napi.rs uses the Nextra primary hue +
+ * underline: --nextra-primary-hue is 16deg on :root and 24deg on .dark
+ * (style.css), inherited into .void-md, so hsl(… 100% 45%) resolves to the live
+ * orange (dark #e65c00) with no .dark selector needed. Specificity (0,2,1) beats
+ * prose.css's `.void-md a` (0,1,1), so no !important.
+ *
+ * Exclude markdown-it-anchor's heading permalink `<a class="header-anchor"
+ * aria-hidden>#</a>` — prose.css gives it no color, so it would otherwise inherit
+ * --vmd-link and turn orange+underlined. */
+.void-md a:not(.header-anchor) {
+  color: hsl(var(--nextra-primary-hue) 100% 45%);
+  text-decoration: underline;
+  text-decoration-color: hsl(var(--nextra-primary-hue) 100% 45%);
+  /* napi.rs links are normal weight (400), not @void/md's 500 — inherit so a link
+   * matches its surrounding text (body 400, or bold when inside a bold run). */
+  font-weight: inherit;
+}
+.void-md a:not(.header-anchor):hover {
+  color: hsl(var(--nextra-primary-hue) 100% 45%);
+  text-decoration: underline;
+}
+/* Inline `<code>` inside a prose link inherits the link's orange (prose.css's
+ * inline-code rule sets background/border but no color). */
+.void-md a:not(.header-anchor) code {
+  color: inherit;
+}
+
+/* ── Callouts: match napi.rs (Nextra `<Callout>`) — full rounded border + leading
+ *    icon, no uppercase text label ───────────────────────────────────────────────
+ *
+ * @void/md renders `::: info` as
+ *   <div class="info custom-block"><p class="custom-block-title">INFO</p>…</div>
+ * styled by containers.css with a 4px LEFT-accent bar + a colored text label.
+ * napi.rs/Nextra instead uses a 1px FULL rounded border, a tinted fill, a
+ * type-colored ICON in a left gutter, and NO text label. Palette + icons measured
+ * live (Tailwind: light = `*-50/100/200/800/900`, dark = `*-{700,900}/30` bg +
+ * `*-{200,300}` text/border). Our content uses info/tip/warning/danger; the
+ * note/important/caution aliases mirror containers.css's grouping for parity.
+ *
+ * Specificity: theme.css loads BEFORE @void/md's theme-content.css, so equal
+ * selectors lose the cascade tie — `div.custom-block` (0,2,1) beats
+ * containers.css's `.custom-block` (0,2,0), and `.custom-block.<type>` (0,3,0)
+ * beats `.info`/`.warning`/… (0,2,0). Dark rules carry the `[data-theme]`/`:root`
+ * prefix to clear containers.css's own dark selectors. No !important needed. */
+.void-md div.custom-block {
+  position: relative;
+  margin: 1.5rem 0; /* nx-mt-6 */
+  padding: 8px 16px 8px 40px; /* py-2 + pr-4; 40px left gutter = pl-3 + 20px icon + pr-2 */
+  border: 1px solid; /* full border; resets containers.css's border-left:4px */
+  border-radius: 8px; /* nx-rounded-lg */
+}
+/* Drop @void/md's "INFO"/"WARNING" text label — the icon replaces it — and pull
+ * the first body block up flush with the icon. */
+.void-md div.custom-block > .custom-block-title {
+  display: none;
+}
+.void-md div.custom-block > .custom-block-title + * {
+  margin-top: 0;
+}
+/* Leading icon, pinned to the left gutter and aligned with the first text line
+ * (Nextra's py-2 + mt-1 ≈ 12px from the top). */
+.void-md div.custom-block::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  font-size: 20px; /* nx-text-xl — emoji icon size */
+  line-height: 1;
+}
+
+/* info / note — blue, info-circle SVG (mask → currentColor text color) */
+.void-md .custom-block.info,
+.void-md .custom-block.note {
+  border-color: #bfdbfe; /* blue-200 */
+  background: #dbeafe; /* blue-100 */
+  color: #1e3a8a; /* blue-900 */
+}
+.void-md .custom-block.info::before,
+.void-md .custom-block.note::before {
+  width: 20px;
+  height: 20px;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='black'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='black'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+/* tip — orange (Nextra "default" type), 💡 */
+.void-md .custom-block.tip {
+  border-color: #ffedd5; /* orange-100 */
+  background: #fff7ed; /* orange-50 */
+  color: #9a3412; /* orange-800 */
+}
+.void-md .custom-block.tip::before {
+  content: '💡';
+}
+
+/* warning / important — yellow, ⚠️ */
+.void-md .custom-block.warning,
+.void-md .custom-block.important {
+  border-color: #fef9c3; /* yellow-100 */
+  background: #fefce8; /* yellow-50 */
+  color: #713f12; /* yellow-900 */
+}
+.void-md .custom-block.warning::before,
+.void-md .custom-block.important::before {
+  content: '⚠️';
+}
+
+/* danger / caution — red, 🚫 */
+.void-md .custom-block.danger,
+.void-md .custom-block.caution {
+  border-color: #fecaca; /* red-200 */
+  background: #fee2e2; /* red-100 */
+  color: #7f1d1d; /* red-900 */
+}
+.void-md .custom-block.danger::before,
+.void-md .custom-block.caution::before {
+  content: '🚫';
+}
+
+/* Dark mode — Nextra's `*-{700,900}/30` fill, `*-200/30` border, `*-{200,300}` text */
+:root[data-theme='dark'] .void-md .custom-block.info,
+:root[data-theme='dark'] .void-md .custom-block.note,
+.dark .void-md .custom-block.info,
+.dark .void-md .custom-block.note {
+  border-color: rgba(191, 219, 254, 0.3); /* blue-200/30 */
+  background: rgba(30, 58, 138, 0.3); /* blue-900/30 */
+  color: #bfdbfe; /* blue-200 */
+}
+:root[data-theme='dark'] .void-md .custom-block.tip,
+.dark .void-md .custom-block.tip {
+  border-color: rgba(251, 146, 60, 0.3); /* orange-400/30 */
+  background: rgba(251, 146, 60, 0.2); /* orange-400/20 */
+  color: #fdba74; /* orange-300 */
+}
+:root[data-theme='dark'] .void-md .custom-block.warning,
+:root[data-theme='dark'] .void-md .custom-block.important,
+.dark .void-md .custom-block.warning,
+.dark .void-md .custom-block.important {
+  border-color: rgba(254, 240, 138, 0.3); /* yellow-200/30 */
+  background: rgba(161, 98, 7, 0.3); /* yellow-700/30 */
+  color: #fef08a; /* yellow-200 */
+}
+:root[data-theme='dark'] .void-md .custom-block.danger,
+:root[data-theme='dark'] .void-md .custom-block.caution,
+.dark .void-md .custom-block.danger,
+.dark .void-md .custom-block.caution {
+  border-color: rgba(254, 202, 202, 0.3); /* red-200/30 */
+  background: rgba(127, 29, 29, 0.3); /* red-900/30 */
+  color: #fecaca; /* red-200 */
 }
