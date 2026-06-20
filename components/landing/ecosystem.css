@@ -66,13 +66,21 @@
   .marquee-flex {
     display: flex;
     gap: 3em;
+    margin: 0;
+    /* Trailing gap so the duplicated copy wraps with the same 3em spacing as the
+     * internal gaps — this is what makes the -50% translate seamless. */
+    padding-right: 3em;
 
     > * {
       display: flex;
     }
   }
 
-  .rfm-marquee-container {
+  /* CSS-only marquee (replaces react-fast-marquee so the section is fully SSR).
+   * `.marquee` clips + edge-fades; `.marquee__track` holds two identical copies
+   * of the logo row and scrolls -50% forever (one whole copy → seamless loop). */
+  .marquee {
+    overflow: hidden;
     -webkit-mask-image: linear-gradient(
       to right,
       rgba(0, 0, 0, 0),
@@ -80,10 +88,42 @@
       rgba(0, 0, 0, 1) 80%,
       rgba(0, 0, 0, 0)
     );
-    -webkit-mask-size: 100% 100%;
+    mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0),
+      rgba(0, 0, 0, 1) 10%,
+      rgba(0, 0, 0, 1) 80%,
+      rgba(0, 0, 0, 0)
+    );
 
     & + & {
       margin-top: 40px;
     }
+  }
+
+  .marquee__track {
+    display: flex;
+    width: max-content;
+    animation: ecosystem-marquee 40s linear infinite;
+  }
+
+  /* Second row scrolls the other way (was <Marquee direction="right">). */
+  .marquee__track--reverse {
+    animation-direction: reverse;
+  }
+}
+
+@keyframes ecosystem-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ecosystem .marquee__track {
+    animation: none;
   }
 }

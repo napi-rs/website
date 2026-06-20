@@ -1,22 +1,4 @@
-import type { ComponentType } from 'react'
 import cx from 'classnames'
-import MarqueeModule from 'react-fast-marquee'
-
-// react-fast-marquee@1.6.5 is a CJS-only package (`exports.default = Marquee`).
-// Under the Void worker SSR transform the default import comes back wrapped in
-// one or more interop layers (`{ default: { default: Component } }`) instead of
-// the component function itself, which makes React throw
-// "Element type is invalid ... got: object". Peel the `.default` chain until we
-// reach the actual component function.
-function unwrapDefault(mod: unknown): ComponentType<any> {
-  let current: any = mod
-  while (current && typeof current !== 'function' && 'default' in current) {
-    current = current.default
-  }
-  return current as ComponentType<any>
-}
-
-const Marquee = unwrapDefault(MarqueeModule)
 
 function RowOneLogos() {
   return (
@@ -1272,19 +1254,36 @@ function RowTwoLogos() {
   )
 }
 
+// Fully SSR — no react-fast-marquee. That package returns `null` until it
+// mounts on the client (`return !isMounted ? null : …`), and this component is
+// rendered as plain server HTML (not an island), so it never hydrated and the
+// "Trusted Tech Ecosystem" section came up EMPTY. A CSS-only marquee needs no
+// JS: each row renders its logos TWICE and the track translates -50% on an
+// infinite linear keyframe, so the loop is seamless and the logos are in the
+// server HTML. The second copy is aria-hidden (duplicate, decorative).
 export function Ecosystem() {
   return (
-    <div className={cx('ecosystem', `${'dark'}`)} data-lg-reveal="fade-to-top">
-      <Marquee>
-        <p className="marquee-flex">
-          <RowOneLogos />
-        </p>
-      </Marquee>
-      <Marquee direction="right">
-        <p className="marquee-flex">
-          <RowTwoLogos />
-        </p>
-      </Marquee>
+    <div className={cx('ecosystem', 'dark')} data-lg-reveal="fade-to-top">
+      <div className="marquee">
+        <div className="marquee__track">
+          <p className="marquee-flex">
+            <RowOneLogos />
+          </p>
+          <p className="marquee-flex" aria-hidden="true">
+            <RowOneLogos />
+          </p>
+        </div>
+      </div>
+      <div className="marquee">
+        <div className="marquee__track marquee__track--reverse">
+          <p className="marquee-flex">
+            <RowTwoLogos />
+          </p>
+          <p className="marquee-flex" aria-hidden="true">
+            <RowTwoLogos />
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
