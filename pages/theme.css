@@ -125,3 +125,35 @@
 .void-md div[class*='language-'] .lang {
   display: none;
 }
+
+/* Filename header bar. convert-content.mjs turned Nextra `filename=` meta into
+ * bold captions; the Vite pre-transform (lib/md/code-filename.ts) marks the
+ * filename ones as `.code-filename`. Style them as napi.rs's attached header
+ * strip, then square + join the corners of the code block immediately below. */
+.void-md .code-filename {
+  margin: 1em 0 0;
+  padding: 8px 16px;
+  font-family: var(
+    --vmd-font-mono,
+    ui-monospace,
+    'Cascadia Code',
+    Menlo,
+    monospace
+  );
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--vmd-text-muted, #64748b);
+  background: var(--vmd-bg-soft, #f8fafc);
+  border-radius: 8px 8px 0 0;
+}
+:root[data-theme='dark'] .void-md .code-filename,
+.dark .void-md .code-filename {
+  color: #e5e7eb;
+  background: rgba(255, 185, 138, 0.1);
+}
+.void-md .code-filename + div[class*='language-'] {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}

@@ -5,6 +5,7 @@ import { voidPlugin } from 'void'
 import { voidReact } from '@void/react/plugin'
 import { voidMarkdown } from '@void/md/plugin'
 import { convertFenceHighlightMeta } from './lib/md/fence-highlight.ts'
+import { markCodeFilenames } from './lib/md/code-filename.ts'
 
 // Docs dark code theme. napi.rs / Nextra highlight code with Shiki's
 // `css-variables` theme (signature: GREEN string literals #4bb74a), NOT
@@ -180,18 +181,20 @@ export default defineConfig({
         },
         voidPlugin(),
         voidReact(),
-        // Rewrite Nextra-style `{n}` fence highlight meta → Shiki notation
-        // comments BEFORE @void/md compiles the markdown: @void/md loads
-        // markdown-it-attrs after its fence renderer, and attrs eats the trailing
-        // `{…}` before transformerMetaHighlight can read it, so `{n}` silently
-        // does nothing. This `pre` transform must precede voidMarkdown so it runs
-        // first in the .md transform chain. See lib/md/fence-highlight.ts.
+        // Pre-process docs markdown to restore napi.rs code-block affordances
+        // BEFORE @void/md compiles it (must precede voidMarkdown so this `pre`
+        // transform runs first). Two rewrites:
+        //   1. `{n}` fence highlight meta → Shiki notation comments — @void/md's
+        //      markdown-it-attrs eats `{…}` before transformerMetaHighlight reads
+        //      it, so the meta is inert otherwise (lib/md/fence-highlight.ts).
+        //   2. `**filename**` captions → a `<div class="code-filename">` header
+        //      bar element (lib/md/code-filename.ts).
         {
-          name: 'napi-rs-fence-highlight-meta',
+          name: 'napi-rs-md-code-blocks',
           enforce: 'pre',
           transform(code: string, id: string) {
             if (!id.endsWith('.md')) return
-            const out = convertFenceHighlightMeta(code)
+            const out = markCodeFilenames(convertFenceHighlightMeta(code))
             return out === code ? undefined : out
           },
         },
