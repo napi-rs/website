@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { FeatureSection } from './features'
+import { RUST_CODE_HTML, TS_CODE_HTML } from './live-demo-code.gen'
 
 const LiveDemoTitle = () => {
   return (
@@ -12,64 +13,25 @@ const LiveDemoTitle = () => {
 
 // The TS + Rust snippets that used to live in `live-demo-code.mdx`. @void/md only
 // compiles `.md` (and the legacy file contained JSX between the fences), so the
-// component-import path is gone. The code is rendered inline as static
-// preformatted markup, preserving the exact snippet content and the structural
-// `title-bar` divider that the live-demo CSS (`.code-panel pre`) styles.
-const TS_CODE = `import { Transformer } from '@napi-rs/image'
-
-export async function transform() {
-  const imageResponse = await fetch(
-    'https://upload.wikimedia.org/wikipedia/commons/5/5d/ISS-45_EVA-2_%28a%29_Scott_Kelly.jpg'
-  )
-
-  const imageBytes = await imageResponse.arrayBuffer()
-
-  const transformer = new Transformer(imageBytes)
-  const webp = await transformer.toWebp()
-}`
-
-const RUST_CODE = `use napi::bindgen_prelude::*;
-use napi_derive::napi;
-
-#[napi]
-pub struct Transformer {
-  inner: Uint8Array,
-}
-
-#[napi]
-impl Transformer {
-  #[napi(constructor)]
-  pub fn new(inner: Uint8Array) -> Self {
-    Self { inner }
-  }
-
-  #[napi]
-  pub fn to_webp(&self) -> Result<Uint8Array> {
-    let image = image::load_from_memory(&self.inner)?;
-    let webp = image.to_webp().map_err(|e| Error::from(e.to_string()))?;
-    Ok(webp.into())
-  }
-}`
-
+// component-import path is gone. To preserve napi.rs's syntax highlighting (the
+// inline-text fallback rendered MONOCHROME), the snippets are pre-highlighted
+// with Shiki (github-dark, matching @void/md's dark theme) by
+// scripts/build-demo-code.mjs into live-demo-code.gen.ts and injected here. The
+// token colors are inline styles, so they render on the always-dark landing
+// without any `.void-md`-scoped CSS; the structural `title-bar` divider and the
+// `.code-panel pre` / `.line` rules in live-demo.css still apply to the emitted
+// `<pre class="shiki">`.
 function LiveDemoCode() {
   return (
     <>
-      <pre className="shiki">
-        <code>
-          <span className="line">{TS_CODE}</span>
-        </code>
-      </pre>
+      <div dangerouslySetInnerHTML={{ __html: TS_CODE_HTML }} />
       <div
         className="title-bar mt-1"
         style={{ borderTop: '1px solid var(--border-color)' }}
       >
         Rust Code
       </div>
-      <pre className="shiki">
-        <code>
-          <span className="line">{RUST_CODE}</span>
-        </code>
-      </pre>
+      <div dangerouslySetInnerHTML={{ __html: RUST_CODE_HTML }} />
     </>
   )
 }

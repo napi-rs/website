@@ -273,7 +273,13 @@ export default function TransformImage() {
   return (
     <Shell>
       <div className="flex flex-col">
-        <img alt="original image" width={4928} ref={imageRef} />
+        {/* Seed both <img>s with the imported image URL as a placeholder. The
+            old Next component used `nasaImage.blurDataURL` here; Vite returns a
+            plain URL string (no LQIP), so we use the image itself. Without an
+            initial src the slots render a broken-image icon — the original
+            shows immediately, the transformed slot stays a placeholder until a
+            transcode swaps in the result blob. */}
+        <img alt="original image" width={4928} ref={imageRef} src={nasaImage} />
         <span className="font-mono text-center pt-2">
           Original Size: {prettyBytes(imageSize)}
         </span>
@@ -309,7 +315,12 @@ export default function TransformImage() {
       </div>
       <div className="flex flex-col">
         <Progress style={{ borderRadius: '0px' }} value={progress} />
-        <img alt="transformed image" ref={transformedRef} width={4928} />
+        <img
+          alt="transformed image"
+          ref={transformedRef}
+          width={4928}
+          src={nasaImage}
+        />
         <span className="font-mono text-center w-full pt-2">
           Size: {prettyBytes(transformedSize)}
         </span>

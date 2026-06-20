@@ -50,7 +50,10 @@ function needsIsolation(url: string | undefined): boolean {
 }
 
 function isolationMiddleware(
-  req: { url?: string },
+  req: {
+    url?: string
+    headers?: Record<string, string | string[] | undefined>
+  },
   res: { setHeader: (name: string, value: string) => void },
   next: () => void,
 ) {
@@ -61,6 +64,23 @@ function isolationMiddleware(
   // non-demo page never becomes cross-origin isolated.
   if (needsIsolation(req.url)) {
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
+  } else if (
+    // A dedicated/shared worker spawned BY a require-corp document is itself
+    // blocked unless ITS OWN top-level script response also carries
+    // COEP:require-corp (the worker must adopt a policy compatible with its
+    // owner). In production void.json stamps this via `/assets/*`; `void dev`
+    // (the worker is `components/transform-image/worker.ts?worker_file`) and
+    // `vite preview` (`/assets/worker-*.js`) replay neither, so the demo worker
+    // — and the nested @napi-rs `wasi-worker-browser` it spawns — load with an
+    // opaque ONERROR and the transcode silently hangs. `Sec-Fetch-Dest: worker`
+    // (or `sharedworker`) is the browser's signal for a worker top-level fetch
+    // and is the one discriminator that covers BOTH worker layers in BOTH dev
+    // and preview. COOP is intentionally NOT set: it is meaningless on a worker
+    // script and we must not broaden document isolation here.
+    req.headers?.['sec-fetch-dest'] === 'worker' ||
+    req.headers?.['sec-fetch-dest'] === 'sharedworker'
+  ) {
     res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
   }
   // @napi-rs/image-wasm32-wasi spawns its own module worker via
@@ -201,6 +221,10 @@ export default defineConfig({
       // scripts/fetch-link-previews.mjs (its formatter of record). Exempt so
       // `vp fmt` doesn't reflow it out of sync with a future rebake.
       'lib/docs/link-preview-data.json',
+      // Shiki HTML for the landing demo code panels — generated wholesale by
+      // scripts/build-demo-code.mjs. Exempt so `vp fmt` doesn't reflow the long
+      // pre-highlighted HTML strings out of sync with a regen.
+      'components/landing/live-demo-code.gen.ts',
     ],
   },
   // Oxlint — advisory for now (no type-aware path on this JS-heavy codebase yet).
