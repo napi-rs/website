@@ -1,8 +1,25 @@
 import { fileURLToPath } from 'node:url'
+import { createCssVariablesTheme } from 'shiki'
 import { defineConfig } from 'vite-plus'
 import { voidPlugin } from 'void'
 import { voidReact } from '@void/react/plugin'
 import { voidMarkdown } from '@void/md/plugin'
+import { convertFenceHighlightMeta } from './lib/md/fence-highlight.ts'
+
+// Docs dark code theme. napi.rs / Nextra highlight code with Shiki's
+// `css-variables` theme (signature: GREEN string literals #4bb74a), NOT
+// github-dark (which renders strings BLUE). @void/md passes `shiki.themes`
+// straight to createHighlighter/codeToHtml, both of which accept a theme
+// OBJECT, so this css-variables theme becomes the dark half of the dual-theme
+// output: every token emits `--shiki-dark:var(--shiki-token-…)`, and code.css's
+// dark swap (`color:var(--shiki-dark)`) resolves them against the --shiki-token-*
+// hexes defined in pages/theme.css. Light keeps github-light. Mirrors the
+// landing demo panel (scripts/build-demo-code.mjs + components/landing/live-demo.css).
+const shikiDarkCssVars = createCssVariablesTheme({
+  name: 'css-variables',
+  variablePrefix: '--shiki-',
+  fontStyle: true,
+})
 
 // Project root, used to wire the `@/*` -> `./*` path alias (mirrors tsconfig
 // compilerOptions.paths) so runtime imports like `@/lib/utils` /
@@ -163,9 +180,31 @@ export default defineConfig({
         },
         voidPlugin(),
         voidReact(),
+        // Rewrite Nextra-style `{n}` fence highlight meta → Shiki notation
+        // comments BEFORE @void/md compiles the markdown: @void/md loads
+        // markdown-it-attrs after its fence renderer, and attrs eats the trailing
+        // `{…}` before transformerMetaHighlight can read it, so `{n}` silently
+        // does nothing. This `pre` transform must precede voidMarkdown so it runs
+        // first in the .md transform chain. See lib/md/fence-highlight.ts.
+        {
+          name: 'napi-rs-fence-highlight-meta',
+          enforce: 'pre',
+          transform(code: string, id: string) {
+            if (!id.endsWith('.md')) return
+            const out = convertFenceHighlightMeta(code)
+            return out === code ? undefined : out
+          },
+        },
         // enforce:'pre', auto-detects React → MUST come after voidReact()
         voidMarkdown({
           shiki: {
+            // Runtime accepts a theme OBJECT for either half; the @void/md type
+            // narrows `themes` to { light: string; dark: string }, so cast the
+            // css-variables object to satisfy the declared type (runtime is fine).
+            themes: {
+              light: 'github-light',
+              dark: shikiDarkCssVars as unknown as string,
+            },
             langs: [
               'rust',
               'toml',

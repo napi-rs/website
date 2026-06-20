@@ -66,3 +66,62 @@
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E")
     center / 60% no-repeat;
 }
+
+/* ── Code-block theme parity with napi.rs ──────────────────────────────────────
+ *
+ * napi.rs / Nextra highlight code with Shiki's `css-variables` theme (signature:
+ * GREEN string literals #4bb74a), not the github-dark default (BLUE strings).
+ * vite.config.ts feeds a css-variables theme as the dark half of @void/md's
+ * dual-theme output, so each token emits `--shiki-dark:var(--shiki-token-…)` and
+ * code.css's dark swap (`color:var(--shiki-dark)`) resolves it against the hexes
+ * below. Values measured from the live site; mirror the landing demo panel
+ * (components/landing/live-demo.css `.code-panel`). */
+:root[data-theme='dark'] .void-md,
+.dark .void-md {
+  --shiki-foreground: #d1d5db;
+  --shiki-token-constant: #79b8ff;
+  --shiki-token-string: #ffab70;
+  --shiki-token-string-expression: #4bb74a;
+  --shiki-token-comment: #6b737c;
+  --shiki-token-keyword: #f97583;
+  --shiki-token-parameter: #ff9800;
+  --shiki-token-function: #b392f0;
+  --shiki-token-punctuation: #bbbbbb;
+  --shiki-token-link: #ffab70;
+}
+
+/* Warm code-block background: napi.rs paints rgba(255,185,138,0.1) over the dark
+ * page, not @void/md's cool slate #1e293b. Override the wrapper, and force the
+ * css-variables `pre` transparent (its --shiki-dark-bg resolves to the undefined
+ * --shiki-background) so the warm wrapper shows. The `:root` prefix matches
+ * code.css's own dark-selector specificity; this file loads after, so it wins. */
+:root[data-theme='dark'] .void-md div[class*='language-'],
+.dark .void-md div[class*='language-'] {
+  /* `!important`: code.css's wrapper rule has the same specificity and (here)
+   * wins the cascade order, so override decisively. */
+  background: rgba(255, 185, 138, 0.1) !important;
+}
+/* The `div[class*='language-']` qualifier lifts specificity above code.css's own
+ * `!important` pre rule (which paints #1e293b), so the warm wrapper shows. */
+:root[data-theme='dark']
+  .void-md
+  div[class*='language-']
+  pre.shiki.shiki-themes,
+.dark .void-md div[class*='language-'] pre.shiki.shiki-themes {
+  background-color: transparent !important;
+}
+
+/* Highlighted lines (```lang {n}). @void/md already emits `.line.highlighted`
+ * (transformerMetaHighlight is always on; the {n} meta survived conversion) — we
+ * only retint code.css's indigo to napi.rs's exact deeper-orange row + left
+ * marker (measured: bg rgba(230,92,0,0.1), inset 2px marker rgba(230,92,0,0.5)). */
+.void-md pre .line.highlighted {
+  background: rgba(230, 92, 0, 0.1);
+  box-shadow: inset 2px 0 0 rgba(230, 92, 0, 0.5);
+}
+
+/* napi.rs / Nextra never show a language indicator — only a filename header bar.
+ * Hide @void/md's top-right "RUST"/"BASH" label. */
+.void-md div[class*='language-'] .lang {
+  display: none;
+}
