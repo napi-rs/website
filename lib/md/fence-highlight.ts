@@ -54,7 +54,7 @@ function parseSpec(spec: string): Set<number> {
 // Matches a fence opener carrying ONLY a `{spec}` meta, e.g. "```rust {4}" or
 // "  ~~~ts {1,3-5}". Captures indent, fence run, language, and the spec.
 const OPENER =
-  /^([ \t]*)(`{3,}|~{3,})([A-Za-z0-9_+-]+)[ \t]*\{([0-9,\-]+)\}[ \t]*$/
+  /^([ \t]*)(`{3,}|~{3,})([A-Za-z0-9_+-]+)[ \t]*\{([0-9,-]+)\}[ \t]*$/
 
 /**
  * Rewrite `{n}` fence highlight meta to Shiki notation comments. Pure string in,
