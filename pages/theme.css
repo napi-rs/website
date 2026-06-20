@@ -317,3 +317,22 @@
   background: rgba(127, 29, 29, 0.3); /* red-900/30 */
   color: #fecaca; /* red-200 */
 }
+
+/* ── Prose list markers ────────────────────────────────────────────────────────
+ *
+ * @void/md's prose.css gives `.void-md ul,ol` their left padding but never sets
+ * `list-style-type`, leaning on the UA default (disc/decimal). The app's
+ * Tailwind v4 preflight resets `ul,ol { list-style: none }`, so with no
+ * re-assertion every prose list rendered marker-less (numbers/bullets gone) —
+ * visible e.g. in the Best Practices list. Re-assert the markers. The task-list
+ * (`ul.contains-task-list`, 0,2,1) and in-prose TOC (`.table-of-contents ul`,
+ * 0,3,0) keep their own higher-specificity `list-style:none`. */
+.void-md ul {
+  list-style-type: disc;
+}
+.void-md ol {
+  list-style-type: decimal;
+}
+.void-md ul ul {
+  list-style-type: circle;
+}
