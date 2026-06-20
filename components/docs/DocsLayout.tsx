@@ -79,11 +79,13 @@ export default function DocsLayout({
             below lg — the Sidebar island renders its own mobile drawer trigger
             (a position:fixed FAB) inside this slot, and a fixed element inside a
             display:none ancestor is dropped from the render tree entirely. So we
-            keep the aside rendered (width 0, no border) on mobile and only give
-            it the desktop column width + divider at lg+. The Sidebar component
-            hides its desktop nav itself (hidden lg:flex) and shows the drawer
-            via its own lg:hidden wrapper. */}
-        <aside className="w-0 shrink-0 lg:w-64 lg:border-r lg:border-sidebar-border">
+            keep the aside rendered (width 0) on mobile and only give it the
+            desktop column width at lg+. No right border: live napi.rs has no
+            vertical divider between the sidebar and content — the sidebar shares
+            the page canvas and blends straight in. The Sidebar component hides
+            its desktop nav itself (hidden lg:flex) and shows the drawer via its
+            own lg:hidden wrapper. */}
+        <aside className="w-0 shrink-0 lg:w-64">
           {sidebar ?? <div data-slot-placeholder="sidebar" />}
         </aside>
 
