@@ -51,7 +51,15 @@ article pre code .line.highlighted::before {
 
 .dark {
   --nextra-primary-hue: 24deg;
-  --background: oklch(0.145 0 0);
+  /* Page canvas = #111 (rgb 17,17,17), matching the live napi.rs / Nextra body.
+     The old Nextra theme painted `body { background:#111 }` with higher
+     precedence than this shadcn token, so the page was always #111 there. The
+     Void migration dropped Nextra, leaving only `body { @apply bg-background }`,
+     which fell back to the shadcn dark default #0a0a0a (oklch 0.145) — ~6 levels
+     darker than the always-#101010 `.hero`, drawing a visible horizontal seam at
+     the hero's top edge. oklch(0.177 0 0) rasterizes to exactly rgb(17,17,17),
+     restoring the seamless napi.rs canvas (1 level off the hero = imperceptible). */
+  --background: oklch(0.177 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
