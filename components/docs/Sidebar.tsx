@@ -238,7 +238,12 @@ export default function Sidebar({
           — they hydrate as children of this Sidebar island). */}
       <div
         className={cn(
-          'sticky top-14 hidden max-h-[calc(100vh-3.5rem)] flex-col lg:flex',
+          // Full viewport height (minus the 3.5rem navbar), NOT max-height: a
+          // short nav (e.g. the blog with 3 links) would otherwise shrink this
+          // flex column to its content and leave the footer floating mid-sidebar.
+          // A fixed height lets the flex-1 nav expand and pin the footer to the
+          // bottom, matching napi.rs's sticky-bottom locale/theme bar.
+          'sticky top-14 hidden h-[calc(100vh-3.5rem)] flex-col lg:flex',
           'bg-sidebar text-sidebar-foreground',
           className,
         )}
