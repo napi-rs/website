@@ -191,6 +191,26 @@
   color: inherit;
 }
 
+/* Inline `<code>` chips — match napi.rs / Nextra: a neutral translucent overlay
+ * (dark = white/10, light = black/3) instead of @void/md prose.css's slate-tinted
+ * --vmd-bg-soft (#1e293b) + --vmd-border (#334155), which read as a blue-gray. A
+ * solid var can't match napi.rs's translucent overlay, so we override the rule
+ * directly. Nextra metrics: rounded-md (6px), font 0.9em, padding 2px / 0.25em.
+ * The `:root` prefix lifts this above prose.css's `.void-md :not(pre) > code`
+ * (which loads after this file, so an equal-specificity rule would lose). */
+:root .void-md :not(pre) > code {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.04);
+  border-radius: 6px;
+  font-size: 0.9em;
+  padding: 2px 0.25em;
+}
+:root[data-theme='dark'] .void-md :not(pre) > code,
+.dark .void-md :not(pre) > code {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
 /* ── Callouts: match napi.rs (Nextra `<Callout>`) — full rounded border + leading
  *    icon, no uppercase text label ───────────────────────────────────────────────
  *
