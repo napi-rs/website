@@ -10,22 +10,9 @@ import {
 } from '@/components/ui/table'
 import { CheckCircle, Ban } from 'lucide-react'
 
-const nodejsSupport = {
-  className: 'node',
-  title: 'Node.js',
-  headers: [
-    'Node10',
-    'Node12',
-    'Node14',
-    'Node16',
-    'Node18',
-    'Node20',
-    'Node22',
-  ],
-  rows: [
-    { name: 'Support', support: [true, true, true, true, true, true, true] },
-  ],
-}
+// Supported Node.js majors — every LTS + Current line napi-rs tests in CI.
+// Add new majors here; the card derives its range headline + tags from this.
+const nodeVersions = [10, 12, 14, 16, 18, 20, 22, 24, 26]
 
 const platformSupport = {
   title: 'Platform support',
@@ -108,11 +95,50 @@ const SupportTable = ({
   )
 }
 
+// Node.js card — a range headline + per-version tags. Replaces the old sparse
+// single-row table so it stays balanced as new Node majors land (the matrix
+// shape only ever had one "Support" row, all green). The `.node` class drives
+// the green gradient border + title (see support-matrix.css).
+const NodeSupport = () => {
+  const first = nodeVersions[0]
+  const last = nodeVersions[nodeVersions.length - 1]
+  return (
+    <Card className="node bg-card border-border" data-lg-reveal="fade-to-top">
+      <CardHeader>
+        <CardTitle className="gradient-title text-xl text-card-foreground">
+          Node.js
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-6">
+        <div className="node-range flex items-center gap-3">
+          <CheckCircle className="h-7 w-7 shrink-0 text-green-500" />
+          <div className="flex flex-col">
+            <span className="gradient-title text-2xl leading-tight font-semibold">
+              v{first} → v{last}
+            </span>
+            <span className="text-muted-foreground text-sm">
+              All LTS &amp; Current releases — officially tested in the napi-rs
+              repo.
+            </span>
+          </div>
+        </div>
+        <ul className="node-tags mt-5 flex flex-wrap gap-2">
+          {nodeVersions.map((version) => (
+            <li key={version} className="node-tag">
+              {version}
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  )
+}
+
 export function SupportMatrix() {
   return (
     <div className="support-matrix">
       <div className="pb-8">
-        <SupportTable {...nodejsSupport} />
+        <NodeSupport />
       </div>
       <div>
         <SupportTable {...platformSupport} />

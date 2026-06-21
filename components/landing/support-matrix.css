@@ -90,6 +90,36 @@
       .gradient-title {
         --gradient-loud-100: linear-gradient(0deg, #fbf9f3 0, #98ef9f 100%);
       }
+
+      /* Per-version tags: small green-tinted pills that wrap responsively. */
+      .node-tags {
+        list-style: none;
+        padding: 0;
+        margin-top: 20px;
+      }
+
+      .node-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        color: #b9f3c0;
+        background: rgb(71 241 99 / 8%);
+        border: 1px solid rgb(71 241 99 / 22%);
+        transition:
+          background 0.15s ease,
+          border-color 0.15s ease,
+          color 0.15s ease;
+
+        &:hover {
+          color: #d7fbdb;
+          background: rgb(71 241 99 / 14%);
+          border-color: rgb(71 241 99 / 40%);
+        }
+      }
     }
   }
   .support-tips {
