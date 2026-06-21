@@ -18,11 +18,10 @@
 // the current ROUTE path against `localizeHref(leaf.path, locale)`.
 
 import * as React from 'react'
-import { ChevronRight, X } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { useRouter } from '@void/react'
 
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
 import { nav, type Locale, type NavGroup } from '@/lib/nav/index.ts'
 import { localizeHref, splitLocale } from '@/lib/docs/locale.ts'
 import LangSwitcher from './LangSwitcher'
@@ -76,8 +75,12 @@ interface SidebarNavProps {
   onNavigate?: () => void
 }
 
-/** The shared group/leaf list — reused by both desktop and mobile drawer. */
-function SidebarNav({
+/**
+ * The shared group/leaf list — rendered by the desktop sidebar column here AND
+ * by the Navbar island's mobile drawer (which imports this). The mobile drawer
+ * lives in the Navbar so it can sit beside search + tabs; see Navbar.tsx.
+ */
+export function SidebarNav({
   groups,
   locale,
   tabKey,
@@ -208,123 +211,38 @@ export default function Sidebar({
   const tabKey = tabKeyFromPath(currentPath)
   const groups = nav[locale]?.sidebar[tabKey] ?? []
 
-  const [mobileOpen, setMobileOpen] = React.useState(false)
-  const closeMobile = React.useCallback(() => setMobileOpen(false), [])
-
-  // Close the mobile drawer on Escape; lock body scroll while it is open.
-  React.useEffect(() => {
-    if (!mobileOpen) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMobileOpen(false)
-    }
-    window.addEventListener('keydown', onKey)
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevOverflow
-    }
-  }, [mobileOpen])
-
-  const hasNav = groups.length > 0
-
+  // Desktop sidebar only. The mobile nav now lives in the Navbar island as a
+  // hamburger-triggered full-screen drawer (matching live napi.rs, which keeps
+  // search + tabs + nav + locale/theme together in one menu) — so this column
+  // simply hides itself below lg and shows as a flex column at lg+. Flex column:
+  // scrollable nav + a pinned footer holding the language + theme toggles
+  // (matching live napi.rs, which keeps them at the sidebar bottom on docs —
+  // they hydrate as children of this Sidebar island).
   return (
-    <>
-      {/* Desktop sidebar. The DocsLayout aside is now always rendered (so the
-          mobile drawer trigger below can show), so THIS desktop column hides
-          itself below lg and shows as a flex column at lg+. Flex column:
-          scrollable nav + a pinned footer holding the language + theme toggles
-          (matching live napi.rs, which keeps them at the sidebar bottom on docs
-          — they hydrate as children of this Sidebar island). */}
-      <div
-        className={cn(
-          // Full viewport height (minus the 3.5rem navbar), NOT max-height: a
-          // short nav (e.g. the blog with 3 links) would otherwise shrink this
-          // flex column to its content and leave the footer floating mid-sidebar.
-          // A fixed height lets the flex-1 nav expand and pin the footer to the
-          // bottom, matching napi.rs's sticky-bottom locale/theme bar.
-          'sticky top-14 hidden h-[calc(100vh-3.5rem)] flex-col lg:flex',
-          'bg-sidebar text-sidebar-foreground',
-          className,
-        )}
-      >
-        <div className="thin-scrollbar flex-1 overflow-y-auto px-4 py-6">
-          <SidebarNav
-            groups={groups}
-            locale={locale}
-            tabKey={tabKey}
-            currentPath={currentPath}
-          />
-        </div>
-        <div className="flex items-center justify-between gap-1 border-t border-sidebar-border px-4 py-3">
-          <LangSwitcher locale={locale} showLabel />
-          <ThemeToggle />
-        </div>
-      </div>
-
-      {/* Mobile: a floating trigger + off-canvas drawer. `lg:hidden` so it never
-          competes with the desktop aside. Only mounted when there is nav. */}
-      {hasNav && (
-        <div className="lg:hidden">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            aria-haspopup="dialog"
-            aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen(true)}
-            className="fixed bottom-4 left-4 z-30 shadow-md"
-          >
-            <ChevronRight aria-hidden="true" className="size-4" />
-            Menu
-          </Button>
-
-          {mobileOpen && (
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-label="Docs navigation"
-              className="fixed inset-0 z-50"
-            >
-              {/* Backdrop */}
-              <div
-                onClick={closeMobile}
-                className="absolute inset-0 bg-black/50"
-                aria-hidden="true"
-              />
-              {/* Drawer panel */}
-              <div
-                className={cn(
-                  'absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col',
-                  'bg-sidebar text-sidebar-foreground shadow-xl',
-                  'border-r border-sidebar-border',
-                )}
-              >
-                <div className="flex items-center justify-end border-b border-sidebar-border px-3 py-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Close navigation"
-                    onClick={closeMobile}
-                  >
-                    <X aria-hidden="true" className="size-4" />
-                  </Button>
-                </div>
-                <div className="thin-scrollbar flex-1 overflow-y-auto px-4 py-4">
-                  <SidebarNav
-                    groups={groups}
-                    locale={locale}
-                    tabKey={tabKey}
-                    currentPath={currentPath}
-                    onNavigate={closeMobile}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+    <div
+      className={cn(
+        // Full viewport height (minus the 3.5rem navbar), NOT max-height: a
+        // short nav (e.g. the blog with 3 links) would otherwise shrink this
+        // flex column to its content and leave the footer floating mid-sidebar.
+        // A fixed height lets the flex-1 nav expand and pin the footer to the
+        // bottom, matching napi.rs's sticky-bottom locale/theme bar.
+        'sticky top-14 hidden h-[calc(100vh-3.5rem)] flex-col lg:flex',
+        'bg-sidebar text-sidebar-foreground',
+        className,
       )}
-    </>
+    >
+      <div className="thin-scrollbar flex-1 overflow-y-auto px-4 py-6">
+        <SidebarNav
+          groups={groups}
+          locale={locale}
+          tabKey={tabKey}
+          currentPath={currentPath}
+        />
+      </div>
+      <div className="flex items-center justify-between gap-1 border-t border-sidebar-border px-4 py-3">
+        <LangSwitcher locale={locale} showLabel />
+        <ThemeToggle />
+      </div>
+    </div>
   )
 }
