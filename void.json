@@ -76,6 +76,10 @@
       "data-theme": "dark"
     },
     "meta": [
+      {
+        "name": "viewport",
+        "content": "width=device-width, initial-scale=1"
+      },
       { "name": "og:site_name", "content": "NAPI-RS" },
       { "property": "og:type", "content": "website" },
       { "property": "og:image", "content": "https://napi.rs/img/og-v2.png" },
