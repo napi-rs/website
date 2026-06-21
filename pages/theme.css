@@ -88,6 +88,13 @@
   --shiki-token-function: #b392f0;
   --shiki-token-punctuation: #bbbbbb;
   --shiki-token-link: #ffab70;
+  /* ```diff lines. The diff grammar emits spans with
+   * `--shiki-dark:var(--shiki-token-{inserted,deleted})`; without these the dark
+   * swap resolves to nothing and +/- lines fall back to the gray body color
+   * (napi.rs shows them green/red). Values measured from the live site. */
+  --shiki-token-inserted: #4bb74a;
+  --shiki-token-deleted: #ef6270;
+  --shiki-token-changed: #e2c08d;
 }
 
 /* Warm code-block background: napi.rs paints rgba(255,185,138,0.1) over the dark
