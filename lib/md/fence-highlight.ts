@@ -76,8 +76,15 @@ export function convertFenceHighlightMeta(src: string): string {
     const [, indent, fence, lang, spec] = m
     const comment = LINE_COMMENT[lang.toLowerCase()]
     if (!comment) {
-      // No comment syntax (e.g. `text`) — leave the fence as-is.
-      out.push(lines[i])
+      // Comment-less language (e.g. `text`, our directory-tree blocks): a
+      // notation comment (`// [!code highlight]`) would render literally because
+      // the grammar has no comment token AND Shiki's v3 split only fires on a
+      // token that already starts with `//`. Instead keep the `{spec}` for
+      // Shiki's transformerMetaHighlight (regex `/\{[\d,-]+\}/` over meta.__raw),
+      // but append a trailing ` hl` marker so markdown-it-attrs — which strips a
+      // *trailing* `{…}` from the fence info before the highlighter reads it —
+      // leaves the spec intact. The marker is inert (no transformer reads it).
+      out.push(`${indent}${fence}${lang} {${spec}} hl`)
       i++
       continue
     }

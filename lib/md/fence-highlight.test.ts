@@ -29,9 +29,14 @@ describe('convertFenceHighlightMeta', () => {
     expect(out).toBe('```bash\necho hi # [!code highlight]\n```')
   })
 
-  it('leaves languages without a comment syntax (text) untouched', () => {
+  it('keeps the {spec} (+ inert marker) for comment-less languages (text)', () => {
+    // `text` has no comment token, so a `// [!code highlight]` would render
+    // literally. Instead we keep the spec for Shiki's transformerMetaHighlight
+    // and append ` hl` so markdown-it-attrs does not strip the trailing `{…}`.
     const src = '```text {1,2}\nfoo\nbar\n```'
-    expect(convertFenceHighlightMeta(src)).toBe(src)
+    expect(convertFenceHighlightMeta(src)).toBe(
+      '```text {1,2} hl\nfoo\nbar\n```',
+    )
   })
 
   it('keeps an existing trailing comment on a highlighted line', () => {
