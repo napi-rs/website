@@ -65,6 +65,11 @@
 
   .marquee-flex {
     display: flex;
+    /* Vertically center every logo on one line. The anchors carry Nextra's
+     * `nx-flex nx-items-center` classes, which don't exist in our Tailwind v4
+     * build (dead no-ops) — so without this the shorter marks rode the top edge
+     * (up to 9px high). Centering here + on the anchors matches napi.rs. */
+    align-items: center;
     gap: 3em;
     margin: 0;
     /* Trailing gap so the duplicated copy wraps with the same 3em spacing as the
@@ -73,6 +78,7 @@
 
     > * {
       display: flex;
+      align-items: center;
     }
   }
 
