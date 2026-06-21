@@ -85,7 +85,7 @@ export default function DocsLayout({
             the page canvas and blends straight in. The Sidebar component hides
             its desktop nav itself (hidden lg:flex) and shows the drawer via its
             own lg:hidden wrapper. */}
-        <aside className="w-0 shrink-0 lg:w-64">
+        <aside className="w-0 shrink-0 lg:w-64 [&>div]:h-full">
           {sidebar ?? <div data-slot-placeholder="sidebar" />}
         </aside>
 
@@ -117,8 +117,10 @@ export default function DocsLayout({
           </div>
         </div>
 
-        {/* SLOT: toc (island 'visible') */}
-        <aside className="hidden w-56 shrink-0 xl:block">
+        {/* SLOT: toc (island 'visible'). `[&>div]:h-full` for the same reason as
+            the sidebar aside: stretch the island wrapper so the sticky TOC stays
+            pinned instead of scrolling off with the content. */}
+        <aside className="hidden w-56 shrink-0 xl:block [&>div]:h-full">
           {toc ?? <div data-slot-placeholder="toc" />}
         </aside>
       </div>
