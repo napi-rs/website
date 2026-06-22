@@ -4,9 +4,11 @@
 // docs site on Void (Vite + Cloudflare). Replaces the deleted Next sitemap
 // route AND the deleted pages/api/raw/[...slug].js raw-view endpoint.
 //
-// Run: node scripts/generate-sitemap.mjs   (no transpile — pure ESM JS)
-// Wired as the `sitemap` npm script; normally invoked post-build so that
-// dist/client already exists. Created defensively so it also runs standalone.
+// Integrated into the build via `sitemapPlugin()` (a Vite plugin exported below,
+// registered in vite.config.ts) — it runs on every `vite build` / `void deploy`.
+// `generateSitemap()` + the pure route helpers stay exported for the standalone
+// CLI (`node scripts/generate-sitemap.mjs`, the `sitemap` npm script) and the
+// unit test. Pure ESM JS, no transpile.
 //
 // ----------------------------------------------------------------------------
 // Routing model (authoritative — lib/docs/locale.ts + void.json):
@@ -34,7 +36,7 @@ import {
   mkdirSync,
   statSync,
 } from 'node:fs'
-import { join, dirname, resolve, relative } from 'node:path'
+import { join, dirname, resolve, relative, basename } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -248,6 +250,31 @@ function generateSitemap(outDir = distClient) {
   return { routeCount: routes.length, rawCount, sitemapPath, outDir }
 }
 
+/**
+ * Vite build plugin: emit sitemap.xml + the raw `.md` assets into the CLIENT
+ * build output after the bundle is written. Void runs TWO build environments
+ * (void_worker -> dist/ssr, client -> dist/client); this hooks the CLIENT output
+ * only. `writeBundle` fires after the files are on disk and `emptyOutDir` already
+ * ran at build start, so nothing wipes them afterward. This matters because
+ * `void deploy` runs `vp build` (Vite) — NOT `npm run build` — so the npm
+ * `postbuild` hook never fires; this plugin is what guarantees the sitemap ships
+ * on every build/deploy. `generateSitemap()` stays exported for the standalone
+ * CLI (`npm run sitemap`) + the unit test.
+ */
+function sitemapPlugin() {
+  return {
+    name: 'napi-rs-sitemap',
+    apply: 'build',
+    writeBundle(options) {
+      if (!options.dir || basename(options.dir) !== 'client') return
+      const { routeCount, rawCount } = generateSitemap(options.dir)
+      console.log(
+        `napi-rs-sitemap: ${routeCount} routes + ${rawCount} raw .md files -> ${options.dir}`,
+      )
+    },
+  }
+}
+
 function main() {
   const { routeCount, rawCount, sitemapPath } = generateSitemap(distClient)
   console.log(
@@ -265,4 +292,11 @@ if (cliEntry && import.meta.url === pathToFileURL(cliEntry).href) {
   main()
 }
 
-export { fileToRoute, renderSitemap, rawTargets, generateSitemap, BASE_URL }
+export {
+  fileToRoute,
+  renderSitemap,
+  rawTargets,
+  generateSitemap,
+  sitemapPlugin,
+  BASE_URL,
+}

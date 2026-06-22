@@ -8,7 +8,7 @@ import { voidMarkdown } from '@void/md/plugin'
 import { changelogData } from './lib/changelog/plugin.ts'
 import { convertFenceHighlightMeta } from './lib/md/fence-highlight.ts'
 import { markCodeFilenames } from './lib/md/code-filename.ts'
-import { generateSitemap } from './scripts/generate-sitemap.mjs'
+import { sitemapPlugin } from './scripts/generate-sitemap.mjs'
 import { generateRss } from './scripts/generate-rss.mjs'
 
 // Docs dark code theme. napi.rs / Nextra highlight code with Shiki's
@@ -232,24 +232,9 @@ export default defineConfig({
           },
         }),
         // Emit sitemap.xml + the raw `.md` assets into the client build output.
-        // Void runs TWO build environments (void_worker -> dist/ssr, client ->
-        // dist/client); we hook the CLIENT output only. `writeBundle` fires after
-        // the files are on disk and `emptyOutDir` already ran at build start, so
-        // nothing wipes them afterward. This matters because `void deploy` runs
-        // `vp build` (Vite) — NOT `npm run build` — so the npm `postbuild` hook
-        // never fires; this plugin is what guarantees the sitemap ships on every
-        // build/deploy (scripts/generate-sitemap.mjs stays usable standalone too).
-        {
-          name: 'napi-rs-sitemap',
-          apply: 'build',
-          writeBundle(options) {
-            if (!options.dir || basename(options.dir) !== 'client') return
-            const { routeCount, rawCount } = generateSitemap(options.dir)
-            console.log(
-              `napi-rs-sitemap: ${routeCount} routes + ${rawCount} raw .md files -> ${options.dir}`,
-            )
-          },
-        },
+        // Defined as a factory in scripts/generate-sitemap.mjs (co-located with
+        // the generator), mirroring lib/changelog/plugin.ts.
+        sitemapPlugin(),
         // Emit the blog RSS 2.0 feed (rss.xml) into the CLIENT build output, the
         // same way (and for the same reasons) as the sitemap plugin above —
         // `void deploy` runs `vp build`, not `npm run build`, so a build plugin
