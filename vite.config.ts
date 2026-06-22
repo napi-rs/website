@@ -1,3 +1,4 @@
+import { basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createCssVariablesTheme } from 'shiki'
 import { defineConfig } from 'vite-plus'
@@ -6,6 +7,7 @@ import { voidReact } from '@void/react/plugin'
 import { voidMarkdown } from '@void/md/plugin'
 import { convertFenceHighlightMeta } from './lib/md/fence-highlight.ts'
 import { markCodeFilenames } from './lib/md/code-filename.ts'
+import { generateSitemap } from './scripts/generate-sitemap.mjs'
 
 // Docs dark code theme. napi.rs / Nextra highlight code with Shiki's
 // `css-variables` theme (signature: GREEN string literals #4bb74a), NOT
@@ -222,6 +224,25 @@ export default defineConfig({
             ],
           },
         }),
+        // Emit sitemap.xml + the raw `.md` assets into the client build output.
+        // Void runs TWO build environments (void_worker -> dist/ssr, client ->
+        // dist/client); we hook the CLIENT output only. `writeBundle` fires after
+        // the files are on disk and `emptyOutDir` already ran at build start, so
+        // nothing wipes them afterward. This matters because `void deploy` runs
+        // `vp build` (Vite) — NOT `npm run build` — so the npm `postbuild` hook
+        // never fires; this plugin is what guarantees the sitemap ships on every
+        // build/deploy (scripts/generate-sitemap.mjs stays usable standalone too).
+        {
+          name: 'napi-rs-sitemap',
+          apply: 'build',
+          writeBundle(options) {
+            if (!options.dir || basename(options.dir) !== 'client') return
+            const { routeCount, rawCount } = generateSitemap(options.dir)
+            console.log(
+              `napi-rs-sitemap: ${routeCount} routes + ${rawCount} raw .md files -> ${options.dir}`,
+            )
+          },
+        },
       ],
 
   // --- Vitest: use Node pool/environment for lib/nav data-only tests ---

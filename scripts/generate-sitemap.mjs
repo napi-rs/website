@@ -202,7 +202,14 @@ function rawTargets(route, relPath) {
 // Main
 // ----------------------------------------------------------------------------
 
-function main() {
+/**
+ * Emit `sitemap.xml` + the raw `.md` assets into `outDir` (defaults to
+ * dist/client). Pure of any build-tool coupling so it serves BOTH the CLI
+ * `main()` and the Vite build plugin (lib/build/vite-plugin-sitemap or the
+ * inline plugin in vite.config.ts). Idempotent: byte-identical re-runs.
+ * Returns counts + the absolute sitemap path for logging.
+ */
+function generateSitemap(outDir = distClient) {
   const files = walkPages(pagesDir)
 
   // --- routes (sitemap) ---
@@ -213,8 +220,8 @@ function main() {
   }
   const routes = [...routeSet].sort()
 
-  mkdirSync(distClient, { recursive: true })
-  const sitemapPath = join(distClient, 'sitemap.xml')
+  mkdirSync(outDir, { recursive: true })
+  const sitemapPath = join(outDir, 'sitemap.xml')
   writeFileSync(sitemapPath, renderSitemap(routes), 'utf8')
 
   // --- raw markdown assets ---
@@ -230,7 +237,7 @@ function main() {
     const bytes = readFileSync(join(pagesDir, rel))
     for (const target of rawTargets(route, rel)) {
       if (writtenRaw.has(target)) continue
-      const outPath = join(distClient, target)
+      const outPath = join(outDir, target)
       mkdirSync(dirname(outPath), { recursive: true })
       writeFileSync(outPath, bytes)
       writtenRaw.add(target)
@@ -238,8 +245,13 @@ function main() {
     }
   }
 
+  return { routeCount: routes.length, rawCount, sitemapPath, outDir }
+}
+
+function main() {
+  const { routeCount, rawCount, sitemapPath } = generateSitemap(distClient)
   console.log(
-    `sitemap: wrote ${routes.length} routes to ${relative(root, sitemapPath)}`,
+    `sitemap: wrote ${routeCount} routes to ${relative(root, sitemapPath)}`,
   )
   console.log(`sitemap: emitted ${rawCount} raw .md files under dist/client`)
 }
@@ -253,4 +265,4 @@ if (cliEntry && import.meta.url === pathToFileURL(cliEntry).href) {
   main()
 }
 
-export { fileToRoute, renderSitemap, rawTargets, BASE_URL }
+export { fileToRoute, renderSitemap, rawTargets, generateSitemap, BASE_URL }
