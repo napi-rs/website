@@ -77,6 +77,15 @@
     margin-inline: 1rem; /* 16px */
   }
 
+  /* TensorZero: the asset is a square 500×500 SVG, but napi.rs renders it 40×45
+   * (a ~12% vertical stretch). There, the "TensorZero" label's font metrics push
+   * the un-centered anchor to 45px tall and object-fit:fill stretches the mark to
+   * fill it. Our font keeps the label at 40px, so the stretch never happens —
+   * force the height to reproduce napi.rs's distortion for a pixel-for-pixel copy. */
+  img[alt='tensorzero'] {
+    height: 45px;
+  }
+
   &.dark {
     .themed {
       fill: white;
