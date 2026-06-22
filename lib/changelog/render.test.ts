@@ -10,7 +10,6 @@
 import { describe, it, expect } from 'vite-plus/test'
 import {
   buildChangelogMarkdown,
-  CHANGELOG_MAX_RELEASES,
   renderChangelogHtml,
   type GitHubRelease,
 } from './render.ts'
@@ -147,33 +146,23 @@ describe('buildChangelogMarkdown', () => {
     expect(md).toBe('# untagged\n\n')
   })
 
-  it('renders all matches + NO "full history" note when under the cap', async () => {
-    // The fixture has 3 `napi*` matches (< CHANGELOG_MAX_RELEASES) -> byte-for-
-    // byte legacy output, no truncation note.
-    const md = await buildChangelogMarkdown(RELEASES, 'napi', 'en')
-    expect(md).not.toContain('See the full release history on GitHub')
-  })
-
-  it('caps to CHANGELOG_MAX_RELEASES and links to the full history when over', async () => {
-    // Newest-first input (as GitHub returns) -> the most recent N are kept in
-    // order, the rest dropped, and a GitHub link is surfaced under the H1.
-    const many: GitHubRelease[] = Array.from(
-      { length: CHANGELOG_MAX_RELEASES + 5 },
-      (_, i) => ({
-        name: `napi@9.0.${i}`,
-        tag_name: `napi@9.0.${i}`,
-        html_url: `https://example.com/${i}`,
-        published_at: '2024-01-01T00:00:00Z',
-        body: `Release ${i}`,
-      }),
-    )
+  it('renders ALL matches (full history, no cap) in legacy API order', async () => {
+    // Prerendered in Node (no worker memory limit) -> the full matched list is
+    // emitted, byte-for-byte legacy output, with no truncation note.
+    const many: GitHubRelease[] = Array.from({ length: 50 }, (_, i) => ({
+      name: `napi@9.0.${i}`,
+      tag_name: `napi@9.0.${i}`,
+      html_url: `https://example.com/${i}`,
+      published_at: '2024-01-01T00:00:00Z',
+      body: `Release ${i}`,
+    }))
     const md = await buildChangelogMarkdown(many, 'napi', 'en')
-    // Exactly N release H2 blocks (the note is a `>` blockquote, not `## `).
-    expect((md.match(/^## /gm) ?? []).length).toBe(CHANGELOG_MAX_RELEASES)
+    // Every match rendered (one H2 each), no "showing N most recent" note.
+    expect((md.match(/^## /gm) ?? []).length).toBe(50)
     expect(md.startsWith('# napi\n\n')).toBe(true)
-    expect(md).toContain('See the full release history on GitHub')
-    expect(md).toContain('napi@9.0.0') // first (most recent) kept
-    expect(md).not.toContain(`napi@9.0.${CHANGELOG_MAX_RELEASES}`) // N+1th dropped
+    expect(md).not.toContain('See the full release history on GitHub')
+    expect(md).toContain('napi@9.0.0') // newest kept
+    expect(md).toContain('napi@9.0.49') // oldest kept too
   })
 })
 

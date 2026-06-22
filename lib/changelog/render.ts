@@ -37,17 +37,6 @@ export interface GitHubRelease {
 }
 
 /**
- * Max releases rendered per changelog page. The render runs in a Cloudflare
- * Worker (128 MB hard limit); highlighting the FULL napi-rs history OOMs a cold
- * isolate and returns a raw Cloudflare 1101 (measured: the broad `napi` filter
- * matches ~376 releases → ~0.6 MB HTML → ~96 MB heap / ~258 MB RSS). A
- * try/catch in the loader CANNOT catch an OOM — the isolate is killed first —
- * so the only fix is to cap the render. The most recent N is what readers want;
- * older entries link out to GitHub. Bump cautiously and re-measure memory.
- */
-export const CHANGELOG_MAX_RELEASES = 30
-
-/**
  * Build the changelog markdown for one package from a flat list of GitHub
  * releases. Mirrors the legacy getChangelog transform 1:1:
  *
@@ -67,16 +56,8 @@ export async function buildChangelogMarkdown(
   packageName: string,
   locale = 'en',
 ): Promise<string> {
-  // GitHub returns releases newest-first, so the matched list is already in
-  // descending order — take the most recent N WITHOUT re-sorting (preserves the
-  // legacy API order). The cap is what keeps the worker render under its memory
-  // limit; see CHANGELOG_MAX_RELEASES.
-  const matched = releases.filter(
-    (r) => typeof r.name === 'string' && r.name.startsWith(packageName),
-  )
-  const shown = matched.slice(0, CHANGELOG_MAX_RELEASES)
-
-  const releasesMarkdown = shown
+  const releasesMarkdown = releases
+    .filter((r) => typeof r.name === 'string' && r.name.startsWith(packageName))
     .map((release) => {
       const body = (release.body ?? '')
         .replace(/&#39;/g, "'")
@@ -89,15 +70,7 @@ export async function buildChangelogMarkdown(
     })
     .join('\n\n')
 
-  // When more releases exist than we render, surface a link to the full history
-  // (placed under the H1 so it's seen before the list). Kept out of the no-cap
-  // path so under-cap pages render byte-identically to the legacy output.
-  const header =
-    matched.length > shown.length
-      ? `# ${packageName}\n\n> Showing the ${shown.length} most recent releases. [See the full release history on GitHub](https://github.com/napi-rs/napi-rs/releases).`
-      : `# ${packageName}`
-
-  return `${header}\n\n${releasesMarkdown}`
+  return `# ${packageName}\n\n${releasesMarkdown}`
 }
 
 // --- markdown-exit compiler (option A: mirror @void/md's compile config) -----

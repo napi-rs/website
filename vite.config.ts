@@ -307,6 +307,10 @@ export default defineConfig({
       // scripts/build-demo-code.mjs. Exempt so `vp fmt` doesn't reflow the long
       // pre-highlighted HTML strings out of sync with a regen.
       'components/landing/live-demo-code.gen.ts',
+      // Full changelog HTML (~1 MB of pre-rendered release history) — generated
+      // wholesale by scripts/build-changelog.ts. Exempt so `vp fmt` doesn't
+      // reflow the long HTML string literals out of sync with a regen.
+      'lib/changelog/changelog-data.gen.ts',
     ],
   },
   // Oxlint — advisory for now (no type-aware path on this JS-heavy codebase yet).
@@ -318,6 +322,8 @@ export default defineConfig({
       '.yarn/**',
       'legacy_pages/**',
       'public/**',
+      // Generated changelog HTML (~1 MB string literals); nothing to lint.
+      'lib/changelog/changelog-data.gen.ts',
     ],
   },
   // Replaces lint-staged. Format-only so it matches the old `prettier --write` behaviour

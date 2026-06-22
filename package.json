@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "deploy": "void deploy",
     "prepare": "void prepare",
-    "sitemap": "node scripts/generate-sitemap.mjs"
+    "sitemap": "node scripts/generate-sitemap.mjs",
+    "build:changelog": "oxnode scripts/build-changelog.ts"
   },
   "dependencies": {
     "@napi-rs/image": "1.12.1",

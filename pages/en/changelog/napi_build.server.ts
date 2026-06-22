@@ -1,25 +1,8 @@
-import { defineHandler, defineHead, type InferProps } from 'void'
+import { defineHead } from 'void'
 
-import {
-  CHANGELOG_DEGRADED_REVALIDATE,
-  loadChangelogHtml,
-} from '../../../lib/changelog/load.ts'
+// No loader — build-time baked, auto-prerendered static page. See napi.server.ts.
+export const prerender = true
 
-// Edge-cache TTL (seconds). Belt-and-braces with void.json routing.revalidate.
-export const revalidate = 300
-
-// FILTER STRING for this page (matches legacy getStaticProps('napi-build') —
-// the route stem `napi_build` maps to the hyphenated crate name).
-export const loader = defineHandler(async (c) => {
-  const { html, ok } = await loadChangelogHtml('napi-build', 'en')
-  // GitHub-failed (degraded) render: shorten the edge-cache TTL so it
-  // self-heals on the next request instead of being pinned for the full 300s.
-  if (!ok) c.header('x-revalidate', String(CHANGELOG_DEGRADED_REVALIDATE))
-  return { html }
-})
-
-export type Props = InferProps<typeof loader>
-
-export const head = defineHead<Props>(() => ({
+export const head = defineHead(() => ({
   title: 'napi-build',
 }))

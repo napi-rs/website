@@ -18,9 +18,6 @@
       "/blog/*": "/en/blog/:splat",
       "/changelog/*": "/en/changelog/:splat"
     },
-    "revalidate": {
-      "/changelog/*": 300
-    },
     "headers": {
       "/": [
         "Cross-Origin-Opener-Policy: same-origin",

@@ -1,7 +1,7 @@
-// Changelog page body for `napi-build`. Loader-driven static HTML (no
-// hydration); the layout wraps it in `<main class="void-md">`. See napi.island.
-import type { Props } from './napi_build.server.ts'
+// Changelog page body for `napi-build`. Build-time baked static HTML (no loader,
+// no hydration); the layout wraps it in `<main class="void-md">`. See napi.island.
+import { NAPI_BUILD_HTML } from '../../../lib/changelog/changelog-data.gen.ts'
 
-export default function NapiBuildChangelog({ html }: Props) {
-  return <div dangerouslySetInnerHTML={{ __html: html }} />
+export default function NapiBuildChangelog() {
+  return <div dangerouslySetInnerHTML={{ __html: NAPI_BUILD_HTML }} />
 }

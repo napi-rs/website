@@ -1,26 +1,12 @@
-import { defineHandler, defineHead, type InferProps } from 'void'
+import { defineHead } from 'void'
 
-import {
-  CHANGELOG_DEGRADED_REVALIDATE,
-  loadChangelogHtml,
-} from '../../../lib/changelog/load.ts'
+// No loader: the changelog HTML is baked at BUILD time
+// (scripts/build-changelog.ts → lib/changelog/changelog-data.gen.ts) and
+// imported directly by napi.island.tsx. With no loader this page auto-prerenders
+// to a static, cookie-agnostic asset; `prerender = true` makes that explicit.
+// Refresh by regenerating the data file and redeploying.
+export const prerender = true
 
-// Edge-cache TTL (seconds). Belt-and-braces with void.json routing.revalidate.
-export const revalidate = 300
-
-// FILTER STRING for this page (matches the legacy getStaticProps('napi')).
-// NB: `startsWith('napi')` also matches napi-derive/sys/build releases — a
-// faithfully-replicated legacy quirk, not a bug.
-export const loader = defineHandler(async (c) => {
-  const { html, ok } = await loadChangelogHtml('napi', 'en')
-  // GitHub-failed (degraded) render: shorten the edge-cache TTL so it
-  // self-heals on the next request instead of being pinned for the full 300s.
-  if (!ok) c.header('x-revalidate', String(CHANGELOG_DEGRADED_REVALIDATE))
-  return { html }
-})
-
-export type Props = InferProps<typeof loader>
-
-export const head = defineHead<Props>(() => ({
+export const head = defineHead(() => ({
   title: 'napi',
 }))
