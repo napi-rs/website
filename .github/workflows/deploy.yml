@@ -86,7 +86,18 @@ jobs:
 
       # Build first: `vite build` writes the client bundle to dist/client/ and
       # the worker bundle to dist/.
+      #
+      # GITHUB_TOKEN is consumed by the changelog Vite plugin
+      # (lib/changelog/plugin.ts), which fetches the napi-rs release history at
+      # BUILD time. napi-rs/napi-rs is PUBLIC, so the auto-provided Actions token
+      # can read its releases (authenticated → 5000 req/hr; anonymous is 60/hr
+      # and flakes on shared runner IPs → the plugin throws and fails the build).
+      # No special scopes are needed (unlike the sponsors classic-PAT runtime
+      # secret) — public read is enough. Swap to a dedicated PAT secret here if
+      # you ever want a higher/own quota.
       - name: Build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn build
 
       # Sitemap MUST run AFTER build: scripts/generate-sitemap.mjs emits
