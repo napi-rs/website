@@ -5,6 +5,7 @@ import { defineConfig } from 'vite-plus'
 import { voidPlugin } from 'void'
 import { voidReact } from '@void/react/plugin'
 import { voidMarkdown } from '@void/md/plugin'
+import { changelogData } from './lib/changelog/plugin.ts'
 import { convertFenceHighlightMeta } from './lib/md/fence-highlight.ts'
 import { markCodeFilenames } from './lib/md/code-filename.ts'
 import { generateSitemap } from './scripts/generate-sitemap.mjs'
@@ -184,6 +185,11 @@ export default defineConfig({
         },
         voidPlugin(),
         voidReact(),
+        // Build-time changelog data: resolves `virtual:changelog/<slug>` to one
+        // package's full release history rendered to HTML (fetched + Shiki'd once
+        // per build in Node). The changelog page islands import these, so they
+        // carry NO loader and auto-prerender to static, cookie-agnostic HTML.
+        changelogData(),
         // Pre-process docs markdown to restore napi.rs code-block affordances
         // BEFORE @void/md compiles it (must precede voidMarkdown so this `pre`
         // transform runs first). Two rewrites:
@@ -307,10 +313,6 @@ export default defineConfig({
       // scripts/build-demo-code.mjs. Exempt so `vp fmt` doesn't reflow the long
       // pre-highlighted HTML strings out of sync with a regen.
       'components/landing/live-demo-code.gen.ts',
-      // Full changelog HTML (~1 MB of pre-rendered release history) — generated
-      // wholesale by scripts/build-changelog.ts. Exempt so `vp fmt` doesn't
-      // reflow the long HTML string literals out of sync with a regen.
-      'lib/changelog/changelog-data.gen.ts',
     ],
   },
   // Oxlint — advisory for now (no type-aware path on this JS-heavy codebase yet).
@@ -322,8 +324,6 @@ export default defineConfig({
       '.yarn/**',
       'legacy_pages/**',
       'public/**',
-      // Generated changelog HTML (~1 MB string literals); nothing to lint.
-      'lib/changelog/changelog-data.gen.ts',
     ],
   },
   // Replaces lint-staged. Format-only so it matches the old `prettier --write` behaviour
