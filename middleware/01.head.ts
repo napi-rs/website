@@ -34,7 +34,7 @@
 // originalUrl() === the cn URL, so we resolve `cn` -> `zh-CN` correctly.
 
 import { defineMiddleware } from 'void'
-import { getLocale, htmlLang } from '../lib/docs/locale.ts'
+import { getLocale, htmlLang, splitLocale } from '../lib/docs/locale.ts'
 
 // Inlined, IIFE-wrapped, no external deps. Kept minimal so it parses + executes
 // before the browser paints. The try/catch guards ONLY the storage read; the
@@ -69,6 +69,39 @@ else{try{var a=document.createElement("textarea");a.value=text;a.style.position=
 },false);
 })();`
 
+// Per-page Open Graph injection (mirrors live napi.rs):
+//   • og:title       = the resolved <title> with the ` – NAPI-RS` template
+//                      suffix stripped (frontmatter/defineHead title, or the
+//                      `NAPI-RS` default for pages that set none).
+//   • og:description = the page's <meta name="description"> content, or the
+//                      site default below when a page declares none (changelog,
+//                      blog posts without a description) — matching napi.rs.
+//   • og:url         = the canonical URL, which ALWAYS carries the locale
+//                      segment, even `en` (served at root): `/` ->
+//                      https://napi.rs/en/ , `/docs/x` -> …/en/docs/x , a cn
+//                      page -> https://napi.rs/cn/… .
+// Void has no post-render head hook and headDefaults is resolved BEFORE the page
+// renders (so it can't see the page's own title/description), so we rewrite the
+// finished document <head> after next(). The build prerenderer dispatches pages
+// through this same middleware, so the tags are baked into the static HTML too;
+// runtime-rendered pages (landing, changelog) get them per request. The values
+// are read straight from the already-escaped <title>/<meta>, so they are
+// re-injected verbatim (no double-escaping).
+const DEFAULT_DESCRIPTION =
+  'NAPI-RS, a framework for building pre-compiled Node.js addons in Rust'
+
+// The void.json titleTemplate is `%s – NAPI-RS` (spaced en-dash). Tolerate any
+// dash variant defensively; anchored to the end so a page title is never eaten.
+const TITLE_SUFFIX_RE = /\s+[–—-]\s+NAPI-RS\s*$/
+
+/** Canonical, always-locale-prefixed og:url for a public route path. */
+function canonicalUrl(publicPath: string): string {
+  const [locale, rest] = splitLocale(publicPath)
+  return rest
+    ? `https://napi.rs/${locale}/${rest}`
+    : `https://napi.rs/${locale}/`
+}
+
 export default defineMiddleware(async (c, next) => {
   const method = c.req.method
   // Resolve the PUBLIC route path the same way 03.page-path.ts does: a rewritten
@@ -86,4 +119,48 @@ export default defineMiddleware(async (c, next) => {
     htmlAttrs: { lang: htmlLang(getLocale(publicPath)) },
   })
   await next()
+
+  // --- Per-page Open Graph tags (see the block comment above). ---
+  // Only full HTML document responses; island SPA payloads / assets are skipped.
+  if (method !== 'GET' && method !== 'HEAD') return
+  const res = c.res
+  if (!(res.headers.get('content-type') ?? '').includes('text/html')) return
+
+  const html = await res.text()
+  const headEnd = html.indexOf('</head>')
+  // No <head> (a partial / empty HEAD body) or already injected (a prerendered
+  // page passing back through at runtime): re-emit the body untouched.
+  if (headEnd === -1 || html.includes('property="og:url"')) {
+    c.res = new Response(html, {
+      status: res.status,
+      statusText: res.statusText,
+      headers: res.headers,
+    })
+    return
+  }
+
+  const head = html.slice(0, headEnd)
+  const titleMatch = head.match(/<title>([\s\S]*?)<\/title>/i)
+  const ogTitle = titleMatch
+    ? titleMatch[1].replace(TITLE_SUFFIX_RE, '').trim() || 'NAPI-RS'
+    : 'NAPI-RS'
+  const descMatch = head.match(
+    /<meta[^>]*name="description"[^>]*content="([^"]*)"/i,
+  )
+  const ogDescription = descMatch ? descMatch[1] : DEFAULT_DESCRIPTION
+
+  const ogTags =
+    `<meta property="og:title" content="${ogTitle}">` +
+    `<meta property="og:description" content="${ogDescription}">` +
+    `<meta property="og:url" content="${canonicalUrl(publicPath)}">`
+
+  // Drop the now-stale Content-Length; the runtime recomputes it. All other
+  // headers (Content-Type, the scoped COOP/COEP on landing routes) are kept.
+  const headers = new Headers(res.headers)
+  headers.delete('content-length')
+  c.res = new Response(html.slice(0, headEnd) + ogTags + html.slice(headEnd), {
+    status: res.status,
+    statusText: res.statusText,
+    headers,
+  })
 })

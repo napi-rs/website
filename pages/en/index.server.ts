@@ -17,4 +17,13 @@ export type Props = InferProps<typeof loader>
 
 export const head = defineHead<Props>(() => ({
   title: 'NAPI-RS',
+  // The landing page carries its own description (matching napi.rs); content
+  // pages get theirs from frontmatter. middleware/01.head.ts mirrors this into
+  // og:description.
+  meta: [
+    {
+      name: 'description',
+      content: 'NAPI-RS is a framework for building Node.js addons in Rust.',
+    },
+  ],
 }))

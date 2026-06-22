@@ -84,7 +84,9 @@
       { "property": "og:type", "content": "website" },
       { "property": "og:image", "content": "https://napi.rs/img/og-v2.png" },
       { "name": "twitter:card", "content": "summary_large_image" },
-      { "name": "twitter:image", "content": "https://napi.rs/img/og-v2.png" }
+      { "name": "twitter:image", "content": "https://napi.rs/img/og-v2.png" },
+      { "name": "twitter:site", "content": "@napi_rs" },
+      { "name": "twitter:creator", "content": "@napi_rs" }
     ],
     "link": [
       {

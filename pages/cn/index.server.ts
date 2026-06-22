@@ -14,4 +14,12 @@ export type Props = InferProps<typeof loader>
 
 export const head = defineHead<Props>(() => ({
   title: 'NAPI-RS',
+  // Localized landing description (matching napi.rs/cn); mirrored into
+  // og:description by middleware/01.head.ts.
+  meta: [
+    {
+      name: 'description',
+      content: 'NAPI-RS 是一个使用 Rust 构建预编译 Node.js 原生扩展的框架.',
+    },
+  ],
 }))
