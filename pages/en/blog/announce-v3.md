@@ -14,6 +14,7 @@ import TsLogo from "../../../components/ts-logo.jsx" with { island: "visible" }
 
 ---
 title: 'Announcing NAPI-RS v3'
+date: '2025-07-07'
 ---
 
 # Announcing NAPI-RS v3

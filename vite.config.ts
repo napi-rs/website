@@ -8,6 +8,7 @@ import { voidMarkdown } from '@void/md/plugin'
 import { convertFenceHighlightMeta } from './lib/md/fence-highlight.ts'
 import { markCodeFilenames } from './lib/md/code-filename.ts'
 import { generateSitemap } from './scripts/generate-sitemap.mjs'
+import { generateRss } from './scripts/generate-rss.mjs'
 
 // Docs dark code theme. napi.rs / Nextra highlight code with Shiki's
 // `css-variables` theme (signature: GREEN string literals #4bb74a), NOT
@@ -240,6 +241,24 @@ export default defineConfig({
             const { routeCount, rawCount } = generateSitemap(options.dir)
             console.log(
               `napi-rs-sitemap: ${routeCount} routes + ${rawCount} raw .md files -> ${options.dir}`,
+            )
+          },
+        },
+        // Emit the blog RSS 2.0 feed (rss.xml) into the CLIENT build output, the
+        // same way (and for the same reasons) as the sitemap plugin above —
+        // `void deploy` runs `vp build`, not `npm run build`, so a build plugin
+        // is what guarantees the feed ships. napi.rs itself has no feed; this is
+        // net-new. The `<link rel="alternate">` in void.json points browsers /
+        // readers at it (scripts/generate-rss.mjs stays usable standalone too).
+        {
+          name: 'napi-rs-rss',
+          apply: 'build',
+          writeBundle(options) {
+            if (!options.dir || basename(options.dir) !== 'client') return
+            const { itemCount, skipped } = generateRss(options.dir)
+            console.log(
+              `napi-rs-rss: ${itemCount} blog posts -> ${options.dir}/rss.xml` +
+                (skipped.length ? ` (skipped: ${skipped.join(', ')})` : ''),
             )
           },
         },

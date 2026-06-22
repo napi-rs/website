@@ -1,5 +1,6 @@
 ---
 title: 'Functions and Callbacks in NAPI-RS'
+date: '2025-08-10'
 ---
 
 # Functions and Callbacks in NAPI-RS

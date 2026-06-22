@@ -58,7 +58,8 @@
         "Cross-Origin-Embedder-Policy: require-corp",
         "Cross-Origin-Resource-Policy: same-origin"
       ],
-      "/*.md": ["Content-Type: text/markdown; charset=utf-8"]
+      "/*.md": ["Content-Type: text/markdown; charset=utf-8"],
+      "/rss.xml": ["Content-Type: application/rss+xml; charset=utf-8"]
     }
   },
   "inference": {
@@ -101,7 +102,13 @@
         "sizes": "16x16",
         "href": "/img/favicon-16x16.png"
       },
-      { "rel": "shortcut icon", "href": "/img/favicon.png" }
+      { "rel": "shortcut icon", "href": "/img/favicon.png" },
+      {
+        "rel": "alternate",
+        "type": "application/rss+xml",
+        "title": "NAPI-RS Blog",
+        "href": "/rss.xml"
+      }
     ],
     "script": [
       {
