@@ -198,6 +198,25 @@
   color: inherit;
 }
 
+/* Hide the heading permalink `<a class="header-anchor">#</a>` by default and
+ * reveal it only on heading hover. @void/md's hide+reveal lives in its FULL
+ * `theme.css` (the `opacity:0` + `:hover` rule); DocsLayout deliberately imports
+ * only `theme-content.css`, so that rule never shipped and the literal `#` showed
+ * on every heading — most obvious on mobile, where there is no hover to reveal it
+ * and nothing to hide it. Values mirror prose.css so the `#` floats into the left
+ * gutter and the text stays flush, matching napi.rs/Nextra. */
+.void-md .header-anchor {
+  float: left;
+  margin-left: -0.87em;
+  padding-right: 0.23em;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.void-md :is(h1, h2, h3, h4, h5, h6):hover .header-anchor {
+  opacity: 1;
+}
+
 /* Inline `<code>` chips — match napi.rs / Nextra: a neutral translucent overlay
  * (dark = white/10, light = black/3) instead of @void/md prose.css's slate-tinted
  * --vmd-bg-soft (#1e293b) + --vmd-border (#334155), which read as a blue-gray. A

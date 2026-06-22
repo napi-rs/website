@@ -39,7 +39,10 @@ export default function Footer({ locale, className }: FooterProps) {
       <div className="flex flex-col gap-2">
         {locale ? (
           <div className="mb-1 flex items-center gap-1">
-            <LangSwitcher locale={locale} showLabel />
+            {/* -ml-2.5 cancels the labeled button's left padding (size=sm +
+                has-[>svg] -> px-2.5) so the globe icon sits flush-left, aligned
+                with the Logo + license text stacked below it. */}
+            <LangSwitcher locale={locale} showLabel className="-ml-2.5" />
             <ThemeToggle />
           </div>
         ) : null}
