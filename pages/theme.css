@@ -118,6 +118,25 @@
   background-color: transparent !important;
 }
 
+/* Dark-mode Shiki token color swap. @void/md's code.css carries this as
+ * `…pre.shiki.shiki-themes span[style*='--shiki-dark'] { color: var(--shiki-dark) }`,
+ * but the production CSS optimizer drops EVERY `[style*='…']` attribute-selector
+ * rule (verified: the built bundle has zero `span[style*=` selectors), so on the
+ * built site code renders in its github-LIGHT inline colors over the dark page
+ * and the dark tokens (foreground text, strings, punctuation) vanish. Re-declare
+ * the swap here WITHOUT the `[style*]` selector — every Shiki token span carries
+ * its own inline `--shiki-dark`, so a plain descendant `span` with a fallback is
+ * equivalent and survives minification. Dark-only, so light mode keeps the
+ * github-light inline colors. The `pre` rule covers untokenized whitespace. */
+:root[data-theme='dark'] .void-md pre.shiki.shiki-themes,
+.dark .void-md pre.shiki.shiki-themes {
+  color: var(--shiki-dark, #d1d5db) !important;
+}
+:root[data-theme='dark'] .void-md pre.shiki.shiki-themes span,
+.dark .void-md pre.shiki.shiki-themes span {
+  color: var(--shiki-dark, inherit) !important;
+}
+
 /* Highlighted lines (```lang {n}). @void/md already emits `.line.highlighted`
  * (transformerMetaHighlight is always on; the {n} meta survived conversion) — we
  * only retint code.css's indigo to napi.rs's exact deeper-orange row + left
