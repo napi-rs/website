@@ -51,40 +51,44 @@ export function Sponsors({ sponsors }: { sponsors: WashedSponsors }) {
   return (
     <div className="sponsors">
       <div className="sponsor-section-wrapper" data-lg-reveal>
-        {data.map((sponsor) => {
-          return (
-            <div
-              className={cx('sponsor-section', sponsor.size)}
-              data-lg-reveal="fade-to-top"
-              key={sponsor.tier}
-            >
-              <div className="sponsor-tier">{sponsor.tier}</div>
-              <div className="sponsor-grid" data-grid={sponsor.items.length}>
-                {sponsor.items.map((sponsor) => {
-                  return (
-                    <div className="sponsor-grid-item" key={sponsor.name}>
-                      <a
-                        href={sponsor.url}
-                        target="_blank"
-                        className="sponsor-grid-link"
-                      >
-                        <div
-                          className="image-wrapper"
-                          data-lg-reveal="layer-to-bottom"
+        {/* Skip tiers with no sponsors — the live GitHub feed can leave a tier
+            empty (e.g. no Platinum), and a bare heading panel looks broken. */}
+        {data
+          .filter((sponsor) => sponsor.items.length > 0)
+          .map((sponsor) => {
+            return (
+              <div
+                className={cx('sponsor-section', sponsor.size)}
+                data-lg-reveal="fade-to-top"
+                key={sponsor.tier}
+              >
+                <div className="sponsor-tier">{sponsor.tier}</div>
+                <div className="sponsor-grid" data-grid={sponsor.items.length}>
+                  {sponsor.items.map((sponsor) => {
+                    return (
+                      <div className="sponsor-grid-item" key={sponsor.name}>
+                        <a
+                          href={sponsor.url}
+                          target="_blank"
+                          className="sponsor-grid-link"
                         >
-                          <img src={sponsor.img} alt={sponsor.name} />
-                        </div>
-                        <div className="sponsor-grid-item-name">
-                          {sponsor.name}
-                        </div>
-                      </a>
-                    </div>
-                  )
-                })}
+                          <div
+                            className="image-wrapper"
+                            data-lg-reveal="layer-to-bottom"
+                          >
+                            <img src={sponsor.img} alt={sponsor.name} />
+                          </div>
+                          <div className="sponsor-grid-item-name">
+                            {sponsor.name}
+                          </div>
+                        </a>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })}
       </div>
     </div>
   )

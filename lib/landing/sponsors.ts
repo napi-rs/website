@@ -1,13 +1,14 @@
-// Pure transform from the raw sponsors.napi.rs `sponsor.json` payload into the
-// tiered `{ name, img, url }` shape that `components/landing/hooks/useSponsors`
+// Pure transform from the tier-keyed raw sponsor payload into the tiered
+// `{ name, img, url }` shape that `components/landing/hooks/useSponsors`
 // `mapSponsors` expects. Kept pure (no fetch, no globals) so it is trivially
-// unit-testable and safe to run inside the worker SSR loader.
+// unit-testable and safe to run inside the worker SSR loader. The raw payload is
+// built by `load-sponsors.ts` from the GitHub Sponsors GraphQL API.
 //
 // The raw payload is keyed by tier: specialThanks / platinum / gold / sliver /
 // backers (the `sliver` misspelling is intentional and MUST be preserved —
 // `mapSponsors` reads `sponsors['sliver']`). Each raw item is
-// `{ login, name, avatarUrl }`. The payload has no `websiteUrl`, so the sponsor
-// link points at the GitHub profile (`https://github.com/<login>`).
+// `{ login, name, avatarUrl }`; the sponsor link points at the GitHub profile
+// (`https://github.com/<login>`).
 
 export interface RawSponsor {
   login: string
