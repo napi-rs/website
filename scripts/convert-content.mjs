@@ -120,6 +120,20 @@ const BLOG_ISLAND_ROUTES = new Set([
 // of logo/JSX rewrites (announce-v3). Mirrors WEBASSEMBLY_ROUTE for the blog.
 const BLOG_LINKPREVIEW_ROUTE = BLOG_ANNOUNCE_V3_ROUTE
 
+// The exactly-two leaves whose DOCUMENT hosts the interactive @napi-rs/image
+// WASM demo (WebAssembly doc + announce-v3 blog). The demo needs cross-origin
+// isolation (SharedArrayBuffer), supplied by void.json's per-request COOP/COEP
+// `routing.headers`. A prerendered static page bypasses those per-request
+// headers, so these pages' head sidecars MUST opt out of prerender — exactly
+// like the landing (pages/en/index.server.ts). Mirrors vite.config.ts
+// `needsIsolation` (which scopes the same headers in dev/preview).
+function pageNeedsIsolation(section, routePath) {
+  return (
+    (section === 'docs' && routePath === WEBASSEMBLY_ROUTE) ||
+    (section === 'blog' && routePath === BLOG_ANNOUNCE_V3_ROUTE)
+  )
+}
+
 // Island components, keyed by tag name. Each value is the module specifier
 // RELATIVE to an emitted blog page (pages/<locale>/blog/<leaf>.md is 3 dirs deep
 // to the repo root, so `../../../`). The `<script>` block injected at byte 0
@@ -1251,13 +1265,28 @@ function jsSingleQuote(value) {
  * component still loads from the `.md`). Mirrors void.json's head shape
  * (`title`, `meta:[{name:'description'}]`); the titleTemplate applies on top.
  */
-function renderHeadSidecar({ title, description }) {
+function renderHeadSidecar({ title, description, isolated = false }) {
   const fields = [`  title: ${jsSingleQuote(title)},`]
   if (description) {
     fields.push(
       `  meta: [{ name: 'description', content: ${jsSingleQuote(description)} }],`,
     )
   }
+  // Demo pages opt OUT of prerender so void.json's per-request COOP/COEP headers
+  // reach the document (a prerendered static page bypasses them and the WASM
+  // demo loses cross-origin isolation). See pageNeedsIsolation / the landing
+  // sidecar pages/en/index.server.ts.
+  const prerenderBlock = isolated
+    ? [
+        '// Opt OUT of auto-prerender so the per-request COOP/COEP isolation',
+        '// headers from void.json reach this document — it hosts the in-browser',
+        '// @napi-rs/image WASM demo, which needs cross-origin isolation',
+        '// (SharedArrayBuffer). A prerendered static page would bypass those',
+        '// headers. Mirrors pages/en/index.server.ts (landing).',
+        'export const prerender = false',
+        '',
+      ]
+    : []
   return (
     [
       `// ${GENERATED_SIDECAR_MARKER}`,
@@ -1267,6 +1296,7 @@ function renderHeadSidecar({ title, description }) {
       '// converter; do not edit by hand. See renderHeadSidecar() for the full why.',
       "import { defineHead } from 'void'",
       '',
+      ...prerenderBlock,
       'export const head = defineHead(() => ({',
       ...fields,
       '}))',
@@ -1381,7 +1411,8 @@ function main() {
       continue
     }
     const sidecarPath = page.outPath.replace(/\.md$/, '.server.ts')
-    writeFileSync(sidecarPath, renderHeadSidecar(meta), 'utf8')
+    const isolated = pageNeedsIsolation(page.section, page.routePath)
+    writeFileSync(sidecarPath, renderHeadSidecar({ ...meta, isolated }), 'utf8')
   }
 
   // Format the emitted tree so committed output matches `vp fmt` and re-runs are

@@ -34,6 +34,10 @@
         "Cross-Origin-Opener-Policy: same-origin",
         "Cross-Origin-Embedder-Policy: require-corp"
       ],
+      "/en/docs/concepts/webassembly": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
       "/cn/docs/concepts/webassembly": [
         "Cross-Origin-Opener-Policy: same-origin",
         "Cross-Origin-Embedder-Policy: require-corp"
@@ -43,6 +47,10 @@
         "Cross-Origin-Embedder-Policy: require-corp"
       ],
       "/blog/announce-v3": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/en/blog/announce-v3": [
         "Cross-Origin-Opener-Policy: same-origin",
         "Cross-Origin-Embedder-Policy: require-corp"
       ],

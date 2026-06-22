@@ -5,6 +5,13 @@
 // converter; do not edit by hand. See renderHeadSidecar() for the full why.
 import { defineHead } from 'void'
 
+// Opt OUT of auto-prerender so the per-request COOP/COEP isolation
+// headers from void.json reach this document — it hosts the in-browser
+// @napi-rs/image WASM demo, which needs cross-origin isolation
+// (SharedArrayBuffer). A prerendered static page would bypass those
+// headers. Mirrors pages/en/index.server.ts (landing).
+export const prerender = false
+
 export const head = defineHead(() => ({
   title: 'Announcing NAPI-RS v3',
 }))
