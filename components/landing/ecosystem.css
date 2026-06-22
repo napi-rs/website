@@ -50,6 +50,33 @@
     display: inline;
   }
 
+  /* Logo-label text utilities. The marquee labels (Polars, Logseq, Format.JS,
+   * Perfsee) carry Nextra's `nx-text-2xl`/`nx-text-3xl`/`nx-font-bold`/
+   * `nx-font-extrabold`/`nx-mx-*` classes, which don't exist in our Tailwind v4
+   * build (dead no-ops) — so the labels rendered at the 16px body default
+   * instead of napi.rs's big, bold marks. Bridge the dead classes to napi.rs's
+   * exact computed values (line-height is 1.5× the font-size on both). */
+  .nx-font-bold {
+    font-weight: 700;
+  }
+  .nx-font-extrabold {
+    font-weight: 800;
+  }
+  .nx-text-2xl {
+    font-size: 1.5rem; /* 24px */
+    line-height: 1.5; /* 36px */
+  }
+  .nx-text-3xl {
+    font-size: 1.875rem; /* 30px */
+    line-height: 1.5; /* 45px */
+  }
+  .nx-mx-2 {
+    margin-inline: 0.5rem; /* 8px */
+  }
+  .nx-mx-4 {
+    margin-inline: 1rem; /* 16px */
+  }
+
   &.dark {
     .themed {
       fill: white;
