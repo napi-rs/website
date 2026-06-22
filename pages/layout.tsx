@@ -7,15 +7,32 @@
 // live in the docs-level `pages/{en,cn,pt-BR}/docs/layout.island.tsx`.)
 //
 // Responsibilities:
-//   • Load global CSS once: the app's Tailwind tokens (../style.css) and the
-//     docs-content extras (./theme.css, scoped under .void-md).
+//   • Load global CSS once, AT THE ENTRY LAYER (load-bearing — see below):
+//     the app's Tailwind tokens (../style.css), @void/md's prose/code/container
+//     theme (@void/md/theme-content.css, scoped under .void-md), then our
+//     napi.rs overrides (./theme.css, also under .void-md).
 //   • Provide a skip-to-content link for keyboard/screen-reader users.
+//
+// WHY @void/md/theme-content.css is imported HERE and not in DocsLayout:
+// Tailwind v4's content scan prunes selectors from package CSS that is imported
+// deep inside a plain component (DocsLayout is pulled in by the docs island
+// entries) — only theme selectors corroborated by scanned app source survive.
+// That silently dropped ALL of prose.css's bare-element rules (h1–h6, p,
+// blockquote, table, hr, kbd, …) and its :root --vmd-* vars from the prod
+// bundle (dev was fine — unpruned), so docs/blog/changelog headings collapsed
+// to Tailwind preflight (16px/400). Importing it at this static root-layout
+// entry — the same layer where style.css/theme.css already survive 100% — takes
+// it out of the per-component prune path. Order is load-bearing: AFTER style.css
+// and BEFORE theme.css, so our overrides win the cascade tie. It is harmless on
+// non-docs pages (every rule is scoped to .void-md, which only the rendered
+// markdown wrapper carries).
 //
 // Site-wide <head> (titleTemplate, favicons, OG defaults, GA gtag, the
 // data-theme dark default) is owned by void.json `head` (the config layer);
 // the no-FOUC theme bootstrap is injected by middleware/01.head.ts. Head is NOT
 // managed from this body component in Void's model.
 import '../style.css'
+import '@void/md/theme-content.css'
 import './theme.css'
 
 export default function RootLayout({

@@ -29,7 +29,11 @@
 // labeled placeholders. The component clusters (Navbar, Sidebar, Toc, Pager,
 // Breadcrumb, EditOnGithub, NotTranslatedBanner, Footer) are filled in by the
 // later integration phase via the slot props named below.
-import '@void/md/theme-content.css'
+//
+// NOTE: @void/md/theme-content.css is intentionally imported from the static
+// root layout (pages/layout.tsx), NOT here. A package-CSS import inside this
+// plain component gets pruned by Tailwind v4's content scan in the prod build
+// (prose.css bare-element rules silently vanished); see pages/layout.tsx.
 
 export interface DocsLayoutSlots {
   /** SLOT: navbar — island ('load'). Logo, tabs, ThemeToggle, Search, LangSwitcher. */
