@@ -85,18 +85,25 @@ describe('nav manifest', () => {
     ).toBe('more')
   })
 
-  it('no dangling leaves — every leaf has a content file in legacy_pages for its locale', () => {
+  it('no dangling leaves — every leaf has a content file (localized or en fallback)', () => {
     for (const [locale, localeNav] of Object.entries(nav)) {
       for (const [_section, groups] of Object.entries(localeNav.sidebar)) {
         for (const group of groups) {
           for (const leaf of group.items) {
             const base = join(legacyPages, leaf.path)
-            const exists =
+            const localized =
               existsSync(`${base}.${locale}.mdx`) ||
               existsSync(`${base}.${locale}.md`)
+            // The docs sidebar is derived from the EN structure for every
+            // locale, so cn/pt-BR intentionally surface leaves that are not
+            // translated yet; those render the EN page through the i18n
+            // fallback middleware (middleware/02.i18n-fallback.ts). A leaf is
+            // only dangling if NEITHER the localized nor the EN source exists.
+            const enFallback =
+              existsSync(`${base}.en.mdx`) || existsSync(`${base}.en.md`)
             expect(
-              exists,
-              `dangling leaf: legacy_pages/${leaf.path}.${locale}.{mdx,md} not found`,
+              localized || enFallback,
+              `dangling leaf: legacy_pages/${leaf.path} has neither ${locale} nor en source`,
             ).toBe(true)
           }
         }
