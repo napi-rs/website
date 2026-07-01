@@ -38,7 +38,7 @@ export function HomePage({
   heroDiagram?: ReactNode
 }) {
   return (
-    <div className="page-home">
+    <div className="page-home dark" data-theme="dark">
       {luge}
 
       <Hero heroDiagram={heroDiagram} />

@@ -50,7 +50,7 @@ export default function PtBrHome({ sponsors }: Props) {
       <header className="sticky top-0 z-50">
         <Navbar locale="pt-BR" currentPath="/pt-BR" />
       </header>
-      <div className="page-home page-landing-locale">
+      <div className="page-home page-landing-locale dark" data-theme="dark">
         <div className="limit-narrow-container">
           <TitlePTBR />
 

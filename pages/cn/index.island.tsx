@@ -50,7 +50,7 @@ export default function CnHome({ sponsors }: Props) {
       <header className="sticky top-0 z-50">
         <Navbar locale="cn" currentPath="/cn" />
       </header>
-      <div className="page-home page-landing-locale">
+      <div className="page-home page-landing-locale dark" data-theme="dark">
         <div className="limit-narrow-container">
           <TitleZH />
 
