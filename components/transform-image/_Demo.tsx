@@ -93,7 +93,7 @@ export function ImageFormatSelector({ onSelect }) {
 
 // Shared outer shell so the SSR placeholder, the cross-origin-isolation
 // fallback, and the live demo are visually identical — no hydration flicker.
-function Shell({ children }) {
+function Shell({ children = null }) {
   return (
     <div
       className="flex mt-4 flex-col"
@@ -151,7 +151,9 @@ export default function TransformImage() {
       .then((res) => res.bytes())
       .then((bytes) => {
         const url = URL.createObjectURL(
-          new Blob([new Uint8Array(bytes.buffer)]),
+          // fetch() bytes are always backed by a real (non-shared) ArrayBuffer;
+          // narrow ArrayBufferLike so the Blob part typechecks under TS 6 libs.
+          new Blob([new Uint8Array(bytes.buffer as ArrayBuffer)]),
         )
         if (imageRef.current) {
           imageRef.current.src = url

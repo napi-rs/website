@@ -5,6 +5,10 @@
     "lib": ["DOM", "DOM.Iterable", "ESNext", "WebWorker"],
     "module": "ESNext",
     "moduleResolution": "bundler",
+    // The codebase imports with explicit .ts/.tsx extensions (Void/Vite bundler
+    // resolution). Allowed because noEmit is set — clears the TS5097 noise so
+    // `tsc --noEmit` surfaces only real type errors.
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "allowJs": true,
     "checkJs": false,

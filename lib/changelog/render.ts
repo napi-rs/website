@@ -131,7 +131,8 @@ async function createCompiler(): Promise<Compiler> {
       !isSpecialLang(lang) &&
       !highlighter.getLoadedLanguages().includes(lang)
     ) {
-      if (lang in bundledLanguages) await highlighter.loadLanguage(lang)
+      if (lang in bundledLanguages)
+        await highlighter.loadLanguage(lang as keyof typeof bundledLanguages)
       else lang = 'text'
     }
     return highlighter.codeToHtml(code, {

@@ -69,7 +69,8 @@ describe('wash', () => {
           login: 'workleap',
           name: 'Workleap',
           avatarUrl: 'x',
-          // @ts-expect-error — websiteUrl is intentionally ignored.
+          // websiteUrl is intentionally ignored — wash() takes `unknown`, and
+          // the locked decision is to always derive the url from the login.
           websiteUrl: 'https://workleap.com',
         },
       ],
