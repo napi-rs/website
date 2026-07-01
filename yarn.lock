@@ -4146,6 +4146,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@void/md@patch:@void/md@npm%3A0.10.1#~/.yarn/patches/@void-md-npm-0.10.1-253fb4b612.patch":
+  version: 0.10.1
+  resolution: "@void/md@patch:@void/md@npm%3A0.10.1#~/.yarn/patches/@void-md-npm-0.10.1-253fb4b612.patch::version=0.10.1&hash=3cd9aa"
+  dependencies:
+    "@shikijs/engine-javascript": "npm:^4.0.2"
+    "@shikijs/transformers": "npm:^4.0.2"
+    gray-matter: "npm:^4.0.3"
+    markdown-exit: "npm:1.0.0-beta.9"
+    markdown-it-anchor: "npm:^9.2.0"
+    markdown-it-attrs: "npm:^4.3.1"
+    markdown-it-container: "npm:^4.0.0"
+    markdown-it-emoji: "npm:^3.0.0"
+    pathe: "npm:^2.0.3"
+    shiki: "npm:^4.0.2"
+    tinyglobby: "npm:^0.2.16"
+  peerDependencies:
+    vite: ^8.0.0
+    void: 0.10.1
+  checksum: 10c0/e5cabf96c44b6f38fef5fd689f25417f6f2935f66c6d0fe5703b66f8393af138323b993b8769a8ea8acde245d5e6f66e3f5bb01f4905329227952f05c992c8db
+  languageName: node
+  linkType: hard
+
 "@void/react@npm:0.10.1":
   version: 0.10.1
   resolution: "@void/react@npm:0.10.1"
@@ -7139,6 +7161,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"markdown-it-footnote@npm:4.0.0":
+  version: 4.0.0
+  resolution: "markdown-it-footnote@npm:4.0.0"
+  checksum: 10c0/47aa807b143af211d7eca376c724b05e939e8b5960f6e287c63eca7f121be7ac697ff5601d5b7c89cbde7a32713a66b2a6f375251fad1fe989bd05d07f80e4cd
+  languageName: node
+  linkType: hard
+
 "math-intrinsics@npm:^1.1.0":
   version: 1.1.0
   resolution: "math-intrinsics@npm:1.1.0"
@@ -7489,7 +7518,7 @@ __metadata:
     "@types/postcss-functions": "npm:^4"
     "@types/react": "npm:^19.0.0"
     "@types/react-dom": "npm:^19.0.0"
-    "@void/md": "npm:0.10.1"
+    "@void/md": "patch:@void/md@npm%3A0.10.1#~/.yarn/patches/@void-md-npm-0.10.1-253fb4b612.patch"
     "@void/react": "npm:0.10.1"
     "@waaark/luge": "npm:^0.6.20-beta"
     autoprefixer: "npm:^10.5.2"
@@ -7502,6 +7531,7 @@ __metadata:
     lodash-es: "npm:^4.18.1"
     lucide-react: "npm:^1.22.0"
     markdown-exit: "npm:1.1.0-beta.2"
+    markdown-it-footnote: "npm:4.0.0"
     postcss: "npm:^8.5.16"
     postcss-functions: "npm:^4.0.2"
     postcss-import: "npm:^16.1.1"
