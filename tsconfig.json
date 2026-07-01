@@ -16,7 +16,6 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
       "void/routes": ["./.void/routes.d.ts"]
