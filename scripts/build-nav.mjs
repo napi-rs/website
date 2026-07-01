@@ -1,6 +1,12 @@
 // scripts/build-nav.mjs
 // Reads legacy_pages/**/_meta.<locale>.json and generates lib/nav/index.ts
-import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import {
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  readdirSync,
+  statSync,
+} from 'node:fs'
 import { join, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execSync } from 'node:child_process'
@@ -33,44 +39,113 @@ function contentExists(routePath, locale) {
   )
 }
 
-// Build docs sidebar groups for a locale
-function buildDocsSidebar(locale) {
-  const docsMeta = readMeta(join(legacyPages, 'docs'), locale)
-  if (!docsMeta) return []
+/** Title-case a hyphenated slug for a label when no _meta entry exists.
+ *  e.g. "create-npm-dirs" -> "Create Npm Dirs". */
+function humanize(slug) {
+  return slug
+    .split('-')
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(' ')
+}
 
-  const groups = []
-  for (const [key, value] of Object.entries(docsMeta)) {
-    // Skip display:hidden entries
+/** Extract a display title from a _meta value (a string or a { title } object). */
+function metaTitle(meta, key) {
+  const v = meta?.[key]
+  if (v == null) return undefined
+  return typeof v === 'string' ? v : v.title
+}
+
+/** True if `docs/<key>` is a real sub-directory (a group) rather than a leaf
+ *  file like `docs/cross-build.en.mdx`. */
+function isGroupDir(key) {
+  const dir = join(legacyPages, 'docs', key)
+  return existsSync(dir) && statSync(dir).isDirectory()
+}
+
+/** On-disk leaf slugs (`<slug>.en.{md,mdx}`) under a docs group dir, sorted. EN
+ *  is the canonical structural locale; other locales i18n-fall-back to it. */
+function onDiskEnSlugs(dir) {
+  return readdirSync(dir)
+    .map((f) => f.match(/^(.+)\.en\.(?:mdx|md)$/))
+    .filter(Boolean)
+    .map((m) => m[1])
+    .sort()
+}
+
+/**
+ * The ONE canonical docs structure, derived from EN and reused for every locale
+ * (localized only by label). Group order = docs/_meta.en.json key order. Each
+ * group's leaves = its `<group>/_meta.en.json` slugs (in meta order) THEN any
+ * on-disk `*.en.{md,mdx}` slugs not already listed (sorted). A top-level EN key
+ * with no sub-directory (e.g. `cross-build.en.mdx`) becomes a standalone single-
+ * item leaf group (group title == item title). `display:hidden` slugs are
+ * skipped (but still block an on-disk re-add).
+ */
+function buildCanonicalDocsStructure() {
+  const docsMetaEn = readMeta(join(legacyPages, 'docs'), 'en')
+  if (!docsMetaEn) return []
+  const structure = []
+  for (const [key, value] of Object.entries(docsMetaEn)) {
     if (typeof value === 'object' && value.display === 'hidden') continue
-    const title = typeof value === 'string' ? value : value.title
+    if (!isGroupDir(key)) {
+      structure.push({ key, kind: 'leaf' })
+      continue
+    }
     const subDir = join(legacyPages, 'docs', key)
-    const subMeta = readMeta(subDir, locale)
+    const subMetaEn = readMeta(subDir, 'en') ?? {}
+    const seen = new Set()
+    const slugs = []
+    for (const [slug, v] of Object.entries(subMetaEn)) {
+      seen.add(slug) // hidden slugs still block the on-disk re-add below
+      if (typeof v === 'object' && v.display === 'hidden') continue
+      slugs.push(slug)
+    }
+    for (const slug of onDiskEnSlugs(subDir)) {
+      if (seen.has(slug)) continue
+      seen.add(slug)
+      slugs.push(slug)
+    }
+    structure.push({ key, kind: 'group', slugs })
+  }
+  return structure
+}
 
-    if (subMeta) {
-      // It's a group with sub-items — filter to only items with content files
-      const items = []
-      for (const [slug, v] of Object.entries(subMeta)) {
-        // Skip display:hidden entries in sub-sections
-        if (typeof v === 'object' && v.display === 'hidden') continue
-        if (!contentExists(`docs/${key}/${slug}`, locale)) continue
-        items.push({
-          title: typeof v === 'string' ? v : v.title,
-          path: `docs/${key}/${slug}`,
-        })
-      }
-      // Omit the group entirely if it has no items for this locale
-      if (items.length > 0) {
-        groups.push({ group: key, title, items })
-      }
-    } else {
-      // It's a direct leaf page — only include if the content file exists
-      if (!contentExists(`docs/${key}`, locale)) continue
+const CANONICAL_DOCS_STRUCTURE = buildCanonicalDocsStructure()
+
+// Build docs sidebar groups for a locale by LOCALIZING the canonical EN
+// structure. Every EN-derived group/leaf is emitted for every locale — there is
+// NO per-locale content gate and NO empty-group drop; untranslated leaves render
+// EN content at the same URL via the verified i18n-fallback middleware. Labels
+// fall back _meta[locale] -> _meta.en -> humanize(slug).
+function buildDocsSidebar(locale) {
+  const topMeta = readMeta(join(legacyPages, 'docs'), locale) ?? {}
+  const topMetaEn = readMeta(join(legacyPages, 'docs'), 'en') ?? {}
+  const groups = []
+  for (const entry of CANONICAL_DOCS_STRUCTURE) {
+    const { key } = entry
+    const groupTitle =
+      metaTitle(topMeta, key) ?? metaTitle(topMetaEn, key) ?? humanize(key)
+
+    if (entry.kind === 'leaf') {
       groups.push({
         group: key,
-        title,
-        items: [{ title, path: `docs/${key}` }],
+        title: groupTitle,
+        items: [{ title: groupTitle, path: `docs/${key}` }],
       })
+      continue
     }
+
+    const subDir = join(legacyPages, 'docs', key)
+    const subMeta = readMeta(subDir, locale) ?? {}
+    const subMetaEn = readMeta(subDir, 'en') ?? {}
+    const items = entry.slugs.map((slug) => ({
+      title:
+        metaTitle(subMeta, slug) ??
+        metaTitle(subMetaEn, slug) ??
+        humanize(slug),
+      path: `docs/${key}/${slug}`,
+    }))
+    groups.push({ group: key, title: groupTitle, items })
   }
   return groups
 }

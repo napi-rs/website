@@ -191,27 +191,12 @@ describe('converted content tree', () => {
   })
 
   it('every emitted page route appears as a nav leaf for its locale (or is documented)', () => {
-    // Known in-scope pages that exist as content but are intentionally absent
-    // from the nav manifest for their locale (the _meta files simply do not list
-    // them — they are reachable by direct URL but not in the sidebar). Documented
-    // here so the test stays a real guard rather than a rubber stamp.
-    // These in-scope content pages exist on disk and are reachable by direct URL
-    // but are NOT sidebar leaves because their slug is absent from the relevant
-    // _meta.<locale>.json (so scripts/build-nav.mjs never emits a nav leaf). This
-    // is a documented divergence, verified against the legacy _meta files.
-    const KNOWN_NOT_IN_NAV: Record<string, Set<string>> = {
-      en: new Set([
-        // cli/_meta.en.json lists only programmatic-api/build/artifacts/pre-publish/napi-config
-        'docs/cli/create-npm-dirs',
-        'docs/cli/new',
-        'docs/cli/rename',
-        'docs/cli/universalize',
-        'docs/cli/version',
-      ]),
-      // 'promise' content exists for cn/pt-BR but is absent from concepts/_meta.{cn,pt-BR}.json
-      cn: new Set(['docs/concepts/promise']),
-      'pt-BR': new Set(['docs/concepts/promise']),
-    }
+    // Now that scripts/build-nav.mjs derives ONE canonical docs structure from
+    // EN and emits it for every locale (the on-disk cli extras are appended, and
+    // concepts/promise is keyed off EN meta so the stale cn/pt-BR `await-promise`
+    // key no longer hides it), every emitted docs page IS a nav leaf for its
+    // locale. There are no remaining documented divergences.
+    const KNOWN_NOT_IN_NAV: Record<string, Set<string>> = {}
 
     for (const locale of LOCALES) {
       const leaves = navLeafPaths(locale)
@@ -233,17 +218,30 @@ describe('converted content tree', () => {
     }
   })
 
-  it('every nav docs leaf with an in-scope content file has an emitted page', () => {
+  it('every nav docs leaf has an emitted page (en) or an en fallback (cn/pt-BR)', () => {
+    // The docs sidebar now surfaces the full EN structure for EVERY locale, so a
+    // cn/pt-BR nav leaf may have no localized page — it i18n-falls-back to the en
+    // page at the same URL (middleware/02.i18n-fallback.ts). EN coverage stays
+    // strict: every en nav leaf MUST have an emitted en page. For cn/pt-BR accept
+    // the leaf when EITHER the localized page OR the en fallback page exists.
     for (const locale of LOCALES) {
       for (const group of nav[locale as keyof typeof nav].sidebar.docs) {
         for (const leaf of group.items) {
           const routePath = leaf.path.replace(/^docs\//, '') // concepts/class
           if (EXCLUDED_ROUTES.has(routePath)) continue // none currently excluded
-          const out = join(pagesDir, locale, 'docs', `${routePath}.md`)
-          expect(
-            existsSync(out),
-            `nav leaf ${locale} ${leaf.path} has no emitted page`,
-          ).toBe(true)
+          const localized = join(pagesDir, locale, 'docs', `${routePath}.md`)
+          if (locale === 'en') {
+            expect(
+              existsSync(localized),
+              `en nav leaf ${leaf.path} has no emitted page`,
+            ).toBe(true)
+          } else {
+            const enFallback = join(pagesDir, 'en', 'docs', `${routePath}.md`)
+            expect(
+              existsSync(localized) || existsSync(enFallback),
+              `nav leaf ${locale} ${leaf.path} has neither a localized nor an en-fallback page`,
+            ).toBe(true)
+          }
         }
       }
     }

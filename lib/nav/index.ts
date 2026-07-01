@@ -178,6 +178,26 @@ export const nav: Record<Locale, LocaleNav> = {
               title: 'NAPI Config',
               path: 'docs/cli/napi-config',
             },
+            {
+              title: 'Create Npm Dirs',
+              path: 'docs/cli/create-npm-dirs',
+            },
+            {
+              title: 'New',
+              path: 'docs/cli/new',
+            },
+            {
+              title: 'Rename',
+              path: 'docs/cli/rename',
+            },
+            {
+              title: 'Universalize',
+              path: 'docs/cli/universalize',
+            },
+            {
+              title: 'Version',
+              path: 'docs/cli/version',
+            },
           ],
         },
         {
@@ -313,6 +333,10 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/exports',
             },
             {
+              title: 'Module Initialization',
+              path: 'docs/concepts/module-init',
+            },
+            {
               title: '命名约定',
               path: 'docs/concepts/naming-conventions',
             },
@@ -365,12 +389,116 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/external',
             },
             {
+              title: 'Promise',
+              path: 'docs/concepts/promise',
+            },
+            {
               title: '重写类型',
               path: 'docs/concepts/types-overwrite',
             },
             {
               title: 'Typed Array',
               path: 'docs/concepts/typed-array',
+            },
+            {
+              title: 'Understanding Lifetime',
+              path: 'docs/concepts/understanding-lifetime',
+            },
+            {
+              title: 'Env',
+              path: 'docs/concepts/env',
+            },
+            {
+              title: 'WebAssembly',
+              path: 'docs/concepts/webassembly',
+            },
+          ],
+        },
+        {
+          group: 'cli',
+          title: 'CLI',
+          items: [
+            {
+              title: 'Programmatic API',
+              path: 'docs/cli/programmatic-api',
+            },
+            {
+              title: 'Build',
+              path: 'docs/cli/build',
+            },
+            {
+              title: 'Artifacts',
+              path: 'docs/cli/artifacts',
+            },
+            {
+              title: 'Prepublish',
+              path: 'docs/cli/pre-publish',
+            },
+            {
+              title: 'NAPI Config',
+              path: 'docs/cli/napi-config',
+            },
+            {
+              title: 'Create Npm Dirs',
+              path: 'docs/cli/create-npm-dirs',
+            },
+            {
+              title: 'New',
+              path: 'docs/cli/new',
+            },
+            {
+              title: 'Rename',
+              path: 'docs/cli/rename',
+            },
+            {
+              title: 'Universalize',
+              path: 'docs/cli/universalize',
+            },
+            {
+              title: 'Version',
+              path: 'docs/cli/version',
+            },
+          ],
+        },
+        {
+          group: 'deep-dive',
+          title: 'Deep dive',
+          items: [
+            {
+              title: 'Native module',
+              path: 'docs/deep-dive/native-module',
+            },
+            {
+              title: 'History',
+              path: 'docs/deep-dive/history',
+            },
+            {
+              title: 'Release native packages',
+              path: 'docs/deep-dive/release',
+            },
+          ],
+        },
+        {
+          group: 'cross-build',
+          title: 'Cross build',
+          items: [
+            {
+              title: 'Cross build',
+              path: 'docs/cross-build',
+            },
+          ],
+        },
+        {
+          group: 'more',
+          title: 'More',
+          items: [
+            {
+              title: 'Frequently Asked Questions',
+              path: 'docs/more/faq',
+            },
+            {
+              title: 'V2 to V3 Migration Guide',
+              path: 'docs/more/v2-v3-migration-guide',
             },
           ],
         },
@@ -417,6 +545,10 @@ export const nav: Record<Locale, LocaleNav> = {
             {
               title: 'Exports',
               path: 'docs/concepts/exports',
+            },
+            {
+              title: 'Module Initialization',
+              path: 'docs/concepts/module-init',
             },
             {
               title: 'Naming conventions',
@@ -471,6 +603,10 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/external',
             },
             {
+              title: 'Promise',
+              path: 'docs/concepts/promise',
+            },
+            {
               title: 'Sobrescrita de Tipos',
               path: 'docs/concepts/types-overwrite',
             },
@@ -478,12 +614,28 @@ export const nav: Record<Locale, LocaleNav> = {
               title: 'Typed Array',
               path: 'docs/concepts/typed-array',
             },
+            {
+              title: 'Understanding Lifetime',
+              path: 'docs/concepts/understanding-lifetime',
+            },
+            {
+              title: 'Env',
+              path: 'docs/concepts/env',
+            },
+            {
+              title: 'WebAssembly',
+              path: 'docs/concepts/webassembly',
+            },
           ],
         },
         {
           group: 'cli',
           title: 'CLI',
           items: [
+            {
+              title: 'Programmatic API',
+              path: 'docs/cli/programmatic-api',
+            },
             {
               title: 'Build',
               path: 'docs/cli/build',
@@ -499,6 +651,26 @@ export const nav: Record<Locale, LocaleNav> = {
             {
               title: 'NAPI Config',
               path: 'docs/cli/napi-config',
+            },
+            {
+              title: 'Create Npm Dirs',
+              path: 'docs/cli/create-npm-dirs',
+            },
+            {
+              title: 'New',
+              path: 'docs/cli/new',
+            },
+            {
+              title: 'Rename',
+              path: 'docs/cli/rename',
+            },
+            {
+              title: 'Universalize',
+              path: 'docs/cli/universalize',
+            },
+            {
+              title: 'Version',
+              path: 'docs/cli/version',
             },
           ],
         },
@@ -521,12 +693,26 @@ export const nav: Record<Locale, LocaleNav> = {
           ],
         },
         {
+          group: 'cross-build',
+          title: 'Compilação cruzada',
+          items: [
+            {
+              title: 'Compilação cruzada',
+              path: 'docs/cross-build',
+            },
+          ],
+        },
+        {
           group: 'more',
           title: 'Mais',
           items: [
             {
               title: 'Perguntas Frequentes',
               path: 'docs/more/faq',
+            },
+            {
+              title: 'V2 to V3 Migration Guide',
+              path: 'docs/more/v2-v3-migration-guide',
             },
           ],
         },
