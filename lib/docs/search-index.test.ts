@@ -35,6 +35,23 @@ const pages: MdPageLike[] = [
     frontmatter: { description: 'CLI build' },
     headings: [],
   },
+  // EN-only leaf that also has a matching EN page in the concepts group. The cn
+  // page (concepts/class) is localized, so its leaf must NOT be duplicated by a
+  // fallback; but concepts/enum is en-only, so it IS a fallback candidate for cn.
+  {
+    path: '/en/docs/concepts/class',
+    title: 'Class',
+    frontmatter: { description: 'Classes in napi-rs' },
+    headings: [{ depth: 2, slug: 'constructor', text: 'Constructor' }],
+  },
+  // A genuinely fallback-only leaf: exists only in EN, so it should surface in
+  // BOTH cn and pt-BR buckets with a localized href + the EN content.
+  {
+    path: '/en/docs/cli/create-npm-dirs',
+    title: 'create-npm-dirs',
+    frontmatter: { description: 'Create npm dirs' },
+    headings: [{ depth: 2, slug: 'usage', text: 'Usage' }],
+  },
 ]
 
 describe('pageLocale', () => {
@@ -66,10 +83,14 @@ describe('pageHref — PUBLIC navigable href (not the internal /en/… md path)'
 describe('buildSearchIndexCore', () => {
   const index = buildSearchIndexCore(pages)
 
-  it('buckets entries by locale', () => {
-    expect(index.en).toHaveLength(1)
-    expect(index.cn).toHaveLength(1)
-    expect(index['pt-BR']).toHaveLength(1)
+  it('buckets ACTUAL entries by locale, then appends en fallbacks', () => {
+    // en: 3 real pages (enum, class, create-npm-dirs); en NEVER gets fallbacks.
+    expect(index.en).toHaveLength(3)
+    // cn: 1 real (concepts/class) + 2 en fallbacks (concepts/enum,
+    // cli/create-npm-dirs — concepts/class is already localized, so it is skipped).
+    expect(index.cn).toHaveLength(3)
+    // pt-BR: 1 real (cli/build) + 3 en fallbacks (every en leaf is unlocalized).
+    expect(index['pt-BR']).toHaveLength(4)
   })
   it('captures path, PUBLIC href, title, heading texts, and description', () => {
     expect(index.en[0]).toEqual({
@@ -86,5 +107,65 @@ describe('buildSearchIndexCore', () => {
   it('omits description when frontmatter lacks one', () => {
     expect(index.cn[0].description).toBeUndefined()
     expect(index.cn[0].headings).toEqual(['构造'])
+  })
+})
+
+describe('buildSearchIndexCore — EN i18n fallback parity', () => {
+  const index = buildSearchIndexCore(pages)
+
+  const cnFallback = index.cn.find(
+    (e) => e.path === '/cn/docs/cli/create-npm-dirs',
+  )
+  const ptFallback = index['pt-BR'].find(
+    (e) => e.path === '/pt-BR/docs/cli/create-npm-dirs',
+  )
+
+  it('a fallback-only leaf appears in BOTH cn and pt-BR with a LOCALIZED href + EN content', () => {
+    expect(cnFallback).toEqual({
+      path: '/cn/docs/cli/create-npm-dirs',
+      href: '/cn/docs/cli/create-npm-dirs',
+      title: 'create-npm-dirs',
+      headings: ['Usage'],
+      description: 'Create npm dirs',
+    })
+    expect(ptFallback).toEqual({
+      path: '/pt-BR/docs/cli/create-npm-dirs',
+      href: '/pt-BR/docs/cli/create-npm-dirs',
+      title: 'create-npm-dirs',
+      headings: ['Usage'],
+      description: 'Create npm dirs',
+    })
+  })
+
+  it('never reuses the raw /en/… path for a fallback entry', () => {
+    expect(index.cn.some((e) => e.path.startsWith('/en/'))).toBe(false)
+    expect(index['pt-BR'].some((e) => e.path.startsWith('/en/'))).toBe(false)
+  })
+
+  it('a genuinely localized cn page appears once (not duplicated by a fallback)', () => {
+    const classEntries = index.cn.filter(
+      (e) => e.href === '/cn/docs/concepts/class',
+    )
+    expect(classEntries).toHaveLength(1)
+    // It is the REAL cn entry: localized title, not the en copy.
+    expect(classEntries[0].title).toBe('类')
+    expect(classEntries[0].path).toBe('/cn/docs/concepts/class')
+  })
+
+  it('does NOT leak a second copy of an en-only leaf into the en bucket', () => {
+    // concepts/enum is en-only: exactly once in en, and the en bucket only ever
+    // holds the real en pages (no fallback siblings, no localized paths).
+    expect(
+      index.en.filter((e) => e.href === '/docs/concepts/enum'),
+    ).toHaveLength(1)
+    expect(index.en.every((e) => e.path.startsWith('/en/'))).toBe(true)
+  })
+
+  it('appends fallbacks AFTER localized entries, in en source order', () => {
+    expect(index.cn.map((e) => e.path)).toEqual([
+      '/cn/docs/concepts/class', // real localized entry first
+      '/cn/docs/concepts/enum', // then en fallbacks, in en source order
+      '/cn/docs/cli/create-npm-dirs',
+    ])
   })
 })
