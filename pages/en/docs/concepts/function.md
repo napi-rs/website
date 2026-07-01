@@ -166,8 +166,8 @@ impl RustClass {
 
 #[napi]
 pub fn call_function_with_apply(
-  callback: Function<(), ()>,
   this: ClassInstance<RustClass>,
+  callback: Function<(), ()>,
 ) -> Result<()> {
   callback.apply(this, ())
 }
