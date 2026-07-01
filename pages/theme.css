@@ -137,6 +137,47 @@
   color: var(--shiki-dark, inherit) !important;
 }
 
+/* ── Light-mode code theme (napi.rs light palette) ─────────────────────────────
+ *
+ * The LIGHT half is now a css-variables theme too (shikiLightCssVars,
+ * `--shiki-light-` prefix; vite.config.ts + lib/changelog/render.ts), so each
+ * token span carries `color:var(--shiki-light-token-…)`. Resolve those against
+ * napi.rs's measured light hexes — signature GREEN strings (#2e853c), crimson
+ * keywords, violet functions — so light mode keeps the brand palette instead of
+ * github-light's blue strings. Defined on plain `.void-md`: light is the base,
+ * and the dark swap above overrides via `--shiki-dark` with `!important`, so
+ * these vars are only ever consumed in light mode. */
+.void-md {
+  --shiki-light-foreground: #414141;
+  --shiki-light-token-constant: #0078d1;
+  --shiki-light-token-string: #2e853c;
+  --shiki-light-token-string-expression: #2e853c;
+  --shiki-light-token-comment: #aaaaaa;
+  --shiki-light-token-keyword: #d7302e;
+  --shiki-light-token-parameter: #ff9705;
+  --shiki-light-token-function: #5e47c0;
+  --shiki-light-token-punctuation: #212121;
+  --shiki-light-token-link: #2e853c;
+  --shiki-light-token-inserted: #2e853c;
+  --shiki-light-token-deleted: #d7302e;
+  --shiki-light-token-changed: #b5811d;
+}
+
+/* Warm light code background: napi.rs paints rgba(199,53,0,0.05) over white (the
+ * light mirror of the dark warm wrapper). Force the css-variables `pre`
+ * transparent so the wrapper shows — its inline `--shiki-light-background` is
+ * undefined, and @void/md's code.css would otherwise paint a cool #f8fafc.
+ * Scoped light-only (`:not(.dark)`) so the dark warm wrapper above is untouched. */
+:root:not([data-theme='dark']):not(.dark) .void-md div[class*='language-'] {
+  background: rgba(199, 53, 0, 0.05) !important;
+}
+:root:not([data-theme='dark']):not(.dark)
+  .void-md
+  div[class*='language-']
+  pre.shiki.shiki-themes {
+  background-color: transparent !important;
+}
+
 /* Highlighted lines (```lang {n}). @void/md already emits `.line.highlighted`
  * (transformerMetaHighlight is always on; the {n} meta survived conversion) — we
  * only retint code.css's indigo to napi.rs's exact deeper-orange row + left

@@ -6,6 +6,7 @@ import { voidPlugin } from 'void'
 import { voidReact } from '@void/react/plugin'
 import { voidMarkdown } from '@void/md/plugin'
 import { changelogData } from './lib/changelog/plugin.ts'
+import { shikiLightCssVars } from './lib/shiki-themes.ts'
 import { convertFenceHighlightMeta } from './lib/md/fence-highlight.ts'
 import { markCodeFilenames } from './lib/md/code-filename.ts'
 import { sitemapPlugin } from './scripts/generate-sitemap.mjs'
@@ -18,8 +19,10 @@ import { generateRss } from './scripts/generate-rss.mjs'
 // OBJECT, so this css-variables theme becomes the dark half of the dual-theme
 // output: every token emits `--shiki-dark:var(--shiki-token-…)`, and code.css's
 // dark swap (`color:var(--shiki-dark)`) resolves them against the --shiki-token-*
-// hexes defined in pages/theme.css. Light keeps github-light. Mirrors the
-// landing demo panel (scripts/build-demo-code.mjs + components/landing/live-demo.css).
+// hexes defined in pages/theme.css. The LIGHT half is a matching css-variables
+// theme (shikiLightCssVars, --shiki-light- prefix, lib/shiki-themes.ts) so light
+// mode keeps napi.rs's GREEN strings too instead of github-light's blue. Mirrors
+// the landing demo panel (scripts/build-demo-code.mjs + components/landing/live-demo.css).
 const shikiDarkCssVars = createCssVariablesTheme({
   name: 'css-variables',
   variablePrefix: '--shiki-',
@@ -214,7 +217,7 @@ export default defineConfig({
             // narrows `themes` to { light: string; dark: string }, so cast the
             // css-variables object to satisfy the declared type (runtime is fine).
             themes: {
-              light: 'github-light',
+              light: shikiLightCssVars as unknown as string,
               dark: shikiDarkCssVars as unknown as string,
             },
             langs: [

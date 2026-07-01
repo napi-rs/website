@@ -26,6 +26,7 @@ import MarkdownExit from 'markdown-exit'
 import anchor from 'markdown-it-anchor'
 import { createJavaScriptRegexEngine } from '@shikijs/engine-javascript'
 import { bundledLanguages, createHighlighter, isSpecialLang } from 'shiki'
+import { shikiLightCssVars } from '../shiki-themes.ts'
 
 /** Minimal shape of a GitHub release we depend on (structural typing). */
 export interface GitHubRelease {
@@ -96,7 +97,11 @@ const SHIKI_LANGS = [
   'yaml',
 ] as const
 
-const SHIKI_THEMES = { light: 'github-light', dark: 'github-dark' } as const
+// Light half = the shared css-variables light theme (napi.rs palette, GREEN
+// strings), matching the docs (@void/md) so changelog code looks identical.
+// Dark stays github-dark. The light token hexes live in pages/theme.css
+// (.void-md), which wraps the changelog HTML (DocsLayout).
+const SHIKI_THEMES = { light: shikiLightCssVars, dark: 'github-dark' } as const
 
 type Compiler = InstanceType<typeof MarkdownExit>
 
