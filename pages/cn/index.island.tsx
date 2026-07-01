@@ -33,7 +33,10 @@ import './landing.css'
 export default function CnHome({ sponsors }: Props) {
   return (
     <>
-      <header className="sticky top-0 z-50">
+      <header
+        className="sticky top-0 z-50 dark bg-background text-foreground"
+        data-theme="dark"
+      >
         <Navbar locale="cn" currentPath="/cn" />
       </header>
       <div className="page-home page-landing-locale dark" data-theme="dark">

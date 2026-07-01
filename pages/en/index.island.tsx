@@ -43,7 +43,10 @@ import type { Props } from './index.server'
 export default function EnHome({ sponsors }: Props) {
   return (
     <>
-      <header className="sticky top-0 z-50">
+      <header
+        className="sticky top-0 z-50 dark bg-background text-foreground"
+        data-theme="dark"
+      >
         <Navbar locale="en" currentPath="/" />
       </header>
       <HomePage

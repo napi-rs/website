@@ -33,7 +33,10 @@ import './landing.css'
 export default function PtBrHome({ sponsors }: Props) {
   return (
     <>
-      <header className="sticky top-0 z-50">
+      <header
+        className="sticky top-0 z-50 dark bg-background text-foreground"
+        data-theme="dark"
+      >
         <Navbar locale="pt-BR" currentPath="/pt-BR" />
       </header>
       <div className="page-home page-landing-locale dark" data-theme="dark">
