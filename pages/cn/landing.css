@@ -41,9 +41,14 @@
 }
 
 /* Intro code demo. These pages are NOT `.void-md`, so the shiki theme CSS does
- * not apply here. Render the `<pre className="shiki">` blocks as a dark code
- * panel consistent with the landing live-demo convention (themed border on the
- * `#29211de0` panel background). */
+ * not apply here. The snippets are pre-highlighted by scripts/build-demo-code.mjs
+ * (Shiki css-variables theme) and injected as `<pre class="shiki css-variables">`
+ * via dangerouslySetInnerHTML, so every token is `color:var(--shiki-token-…)`.
+ * Render the block as a dark code panel consistent with the landing live-demo
+ * convention (themed border on the `#29211de0` panel background), and define the
+ * napi.rs / Nextra DARK palette here so the injected token spans resolve — the
+ * signature being the GREEN string-expression (#4bb74a). Keep this palette in
+ * sync with the sibling cn/pt-BR landing.css and components/landing/live-demo.css. */
 .page-landing-locale pre.shiki {
   margin: fv(12, 20) 0;
   padding: fv(12, 16) fv(14, 20);
@@ -51,6 +56,17 @@
   border: 1px solid hsl(var(--theme-hsl) / 0.15);
   background: #29211de0;
   overflow-x: auto;
+
+  --shiki-foreground: #d1d5db;
+  --shiki-token-constant: #79b8ff;
+  --shiki-token-string: #ffab70;
+  --shiki-token-string-expression: #4bb74a;
+  --shiki-token-comment: #6b737c;
+  --shiki-token-keyword: #f97583;
+  --shiki-token-parameter: #ff9800;
+  --shiki-token-function: #b392f0;
+  --shiki-token-punctuation: #bbbbbb;
+  --shiki-token-link: #ffab70;
 }
 
 .page-landing-locale pre.shiki code {
@@ -58,7 +74,9 @@
   padding: 0;
   border-radius: 0;
   background: none;
-  color: #e6e1da;
+  /* Foreground fallback for any untokenized text; the Shiki token spans carry
+   * their own inline `color:var(--shiki-token-…)` and win over this. */
+  color: var(--shiki-foreground);
   font-family: ui-monospace, 'Cascadia Code', Menlo, monospace;
   font-size: fv(12, 14);
   line-height: 1.6;

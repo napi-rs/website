@@ -16,33 +16,19 @@ import Footer from '../../components/docs/Footer' with { island: 'load' }
 import { Badges } from '@/components/badges'
 import { TitleZH } from '@/components/title.zh'
 import { Sponsors, Ecosystem, SupportMatrix } from '@/components/landing'
+// Intro snippets pre-highlighted by scripts/build-demo-code.mjs (Shiki
+// css-variables theme) so they render with napi.rs colors instead of monochrome.
+// The token hex values are defined in landing.css under `.page-landing-locale
+// pre.shiki`. Regenerate with `node scripts/build-demo-code.mjs`.
+import {
+  INTRO_LIB_RS_HTML,
+  INTRO_MJS_HTML,
+  INTRO_CJS_HTML,
+} from '@/components/landing/live-demo-code.gen'
 import type { Props } from './index.server'
 
 import '@/components/landing/style.css'
 import './landing.css'
-
-// Intro code demo ported verbatim from the legacy index.cn.mdx fences. These are
-// plain string literals (not @void/md fences), so JSX never interprets the
-// braces / angle brackets in the Rust `match` arms — they render literally.
-const LIB_RS = `use napi_derive::napi;
-
-#[napi]
-fn fibonacci(n: u32) -> u32 {
-  match n {
-    1 | 2 => 1,
-    _ => fibonacci(n - 1) + fibonacci(n - 2),
-  }
-}`
-
-const MAIN_MJS = `import { fibonacci } from './index.js'
-
-// output: 5
-console.log(fibonacci(5))`
-
-const MAIN_CJS = `const { fibonacci } = require('./index')
-
-// output: 5
-console.log(fibonacci(5))`
 
 export default function CnHome({ sponsors }: Props) {
   return (
@@ -58,22 +44,16 @@ export default function CnHome({ sponsors }: Props) {
 
           <h2>轻松锈化你的 Node.js 应用!</h2>
 
-          <pre className="shiki">
-            <code>{LIB_RS}</code>
-          </pre>
+          <div dangerouslySetInnerHTML={{ __html: INTRO_LIB_RS_HTML }} />
 
           <p>
             与 <code>CommonJS</code>， <code>esm</code> 模块系统兼容， 自动生成{' '}
             <code>.d.ts</code> 定义文件:
           </p>
 
-          <pre className="shiki">
-            <code>{MAIN_MJS}</code>
-          </pre>
+          <div dangerouslySetInnerHTML={{ __html: INTRO_MJS_HTML }} />
 
-          <pre className="shiki">
-            <code>{MAIN_CJS}</code>
-          </pre>
+          <div dangerouslySetInnerHTML={{ __html: INTRO_CJS_HTML }} />
 
           <h2>功能</h2>
 
