@@ -4168,17 +4168,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@void/react@npm:0.10.1":
-  version: 0.10.1
-  resolution: "@void/react@npm:0.10.1"
+"@void/react@npm:0.10.2":
+  version: 0.10.2
+  resolution: "@void/react@npm:0.10.2"
   dependencies:
     "@vitejs/plugin-react": "npm:^6.0.1"
   peerDependencies:
     react: ^19.0.0
     react-dom: ^19.0.0
     vite: ^8.0.0
-    void: 0.10.1
-  checksum: 10c0/240a7bcc9e9efdbc4bf52fc3b1ecd282506a86e2185e85a817320cd0bf09c14d7eec80c21a66115c592153d85b65e4d528a558c58aa6deb9c166e1b576a4c5a3
+    void: 0.10.2
+  checksum: 10c0/e05cfc1b664614fc2c1a333c8a1250441611a617be1963beb7adeb94d082526431b19cb94550e4041643cfa5a928c99d5979ce5491058be6b2dbb835f908fd69
   languageName: node
   linkType: hard
 
@@ -7519,7 +7519,7 @@ __metadata:
     "@types/react": "npm:^19.0.0"
     "@types/react-dom": "npm:^19.0.0"
     "@void/md": "patch:@void/md@npm%3A0.10.1#~/.yarn/patches/@void-md-npm-0.10.1-253fb4b612.patch"
-    "@void/react": "npm:0.10.1"
+    "@void/react": "npm:0.10.2"
     "@waaark/luge": "npm:^0.6.20-beta"
     autoprefixer: "npm:^10.5.2"
     buffer: "npm:^6.0.3"
