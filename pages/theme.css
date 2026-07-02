@@ -1,0 +1,444 @@
+/*
+ * Docs-content extras layered on top of @void/md/theme-content.css.
+ *
+ * Everything here is scoped under `.void-md` (the wrapper DocsLayout puts around
+ * markdown bodies) so it cannot leak into the chrome (navbar, sidebar, TOC) or
+ * the landing page. We deliberately do NOT import @void/md/theme.css (the full
+ * theme with reset + baseline) — DocsLayout imports @void/md/theme-content.css
+ * (scoped, no reset) and the app's own Tailwind reset in style.css owns the
+ * baseline.
+ *
+ * Dark handling: @void/md drives dark via the [data-theme="dark"] attribute on
+ * the root element, while the app's Tailwind uses the `.dark` class. The
+ * no-FOUC bootstrap (middleware/01.head.ts) sets BOTH, so we match either
+ * signal here.
+ */
+
+/* `<Chalk>`-style inline colored spans used in the prose (ported from the old
+ * components/chalk.jsx). Light defaults; dark overrides for legibility. */
+.void-md .chalk-green {
+  color: #255d00;
+}
+.void-md .chalk-rust {
+  color: #b7410e;
+}
+.void-md .chalk-warning {
+  color: #ff7043;
+}
+
+/* Dark mode: triggered by an explicit toggle (`[data-theme="dark"]`) OR by the
+ * Tailwind `.dark` class on any ancestor. */
+[data-theme='dark'] .void-md .chalk-green,
+.dark .void-md .chalk-green {
+  color: #d7ffd9;
+}
+[data-theme='dark'] .void-md .chalk-warning,
+.dark .void-md .chalk-warning {
+  color: #fbc02d;
+}
+
+/* Caption shown under figures / framed media blocks in docs content. */
+.void-md .container-caption {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--vmd-text-muted, #64748b);
+}
+
+/* Code-fence copy feedback. @void/md styles the `.copy` button (clipboard glyph,
+ * opacity 0 → 1 on hover) but ships no "copied" state; the delegated handler in
+ * middleware/01.head.ts toggles `.copied` for ~2s after a successful copy. Keep
+ * the button visible during feedback (the base button is hover-only) and swap
+ * the clipboard glyph for a green check. The base `::before` sets
+ * `background: currentColor`, so tinting the button green tints the check too. */
+.void-md div[class*='language-'] .copy.copied {
+  opacity: 1;
+  color: #16a34a;
+  border-color: #16a34a;
+}
+[data-theme='dark'] .void-md div[class*='language-'] .copy.copied,
+.dark .void-md div[class*='language-'] .copy.copied {
+  color: #22c55e;
+  border-color: #22c55e;
+}
+.void-md div[class*='language-'] .copy.copied::before {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E")
+    center / 60% no-repeat;
+}
+
+/* ── Code-block theme parity with napi.rs ──────────────────────────────────────
+ *
+ * napi.rs / Nextra highlight code with Shiki's `css-variables` theme (signature:
+ * GREEN string literals #4bb74a), not the github-dark default (BLUE strings).
+ * vite.config.ts feeds a css-variables theme as the dark half of @void/md's
+ * dual-theme output, so each token emits `--shiki-dark:var(--shiki-token-…)` and
+ * code.css's dark swap (`color:var(--shiki-dark)`) resolves it against the hexes
+ * below. Values measured from the live site; mirror the landing demo panel
+ * (components/landing/live-demo.css `.code-panel`). */
+:root[data-theme='dark'] .void-md,
+.dark .void-md {
+  --shiki-foreground: #d1d5db;
+  --shiki-token-constant: #79b8ff;
+  --shiki-token-string: #ffab70;
+  --shiki-token-string-expression: #4bb74a;
+  --shiki-token-comment: #6b737c;
+  --shiki-token-keyword: #f97583;
+  --shiki-token-parameter: #ff9800;
+  --shiki-token-function: #b392f0;
+  --shiki-token-punctuation: #bbbbbb;
+  --shiki-token-link: #ffab70;
+  /* ```diff lines. The diff grammar emits spans with
+   * `--shiki-dark:var(--shiki-token-{inserted,deleted})`; without these the dark
+   * swap resolves to nothing and +/- lines fall back to the gray body color
+   * (napi.rs shows them green/red). Values measured from the live site. */
+  --shiki-token-inserted: #4bb74a;
+  --shiki-token-deleted: #ef6270;
+  --shiki-token-changed: #e2c08d;
+}
+
+/* Warm code-block background: napi.rs paints rgba(255,185,138,0.1) over the dark
+ * page, not @void/md's cool slate #1e293b. Override the wrapper, and force the
+ * css-variables `pre` transparent (its --shiki-dark-bg resolves to the undefined
+ * --shiki-background) so the warm wrapper shows. The `:root` prefix matches
+ * code.css's own dark-selector specificity; this file loads after, so it wins. */
+:root[data-theme='dark'] .void-md div[class*='language-'],
+.dark .void-md div[class*='language-'] {
+  /* `!important`: code.css's wrapper rule has the same specificity and (here)
+   * wins the cascade order, so override decisively. */
+  background: rgba(255, 185, 138, 0.1) !important;
+}
+/* The `div[class*='language-']` qualifier lifts specificity above code.css's own
+ * `!important` pre rule (which paints #1e293b), so the warm wrapper shows. */
+:root[data-theme='dark']
+  .void-md
+  div[class*='language-']
+  pre.shiki.shiki-themes,
+.dark .void-md div[class*='language-'] pre.shiki.shiki-themes {
+  background-color: transparent !important;
+}
+
+/* Dark-mode Shiki token color swap. @void/md's code.css carries this as
+ * `…pre.shiki.shiki-themes span[style*='--shiki-dark'] { color: var(--shiki-dark) }`,
+ * but the production CSS optimizer drops EVERY `[style*='…']` attribute-selector
+ * rule (verified: the built bundle has zero `span[style*=` selectors), so on the
+ * built site code renders in its github-LIGHT inline colors over the dark page
+ * and the dark tokens (foreground text, strings, punctuation) vanish. Re-declare
+ * the swap here WITHOUT the `[style*]` selector — every Shiki token span carries
+ * its own inline `--shiki-dark`, so a plain descendant `span` with a fallback is
+ * equivalent and survives minification. Dark-only, so light mode keeps the
+ * github-light inline colors. The `pre` rule covers untokenized whitespace. */
+:root[data-theme='dark'] .void-md pre.shiki.shiki-themes,
+.dark .void-md pre.shiki.shiki-themes {
+  color: var(--shiki-dark, #d1d5db) !important;
+}
+:root[data-theme='dark'] .void-md pre.shiki.shiki-themes span,
+.dark .void-md pre.shiki.shiki-themes span {
+  color: var(--shiki-dark, inherit) !important;
+}
+
+/* ── Light-mode code theme (napi.rs light palette) ─────────────────────────────
+ *
+ * The LIGHT half is now a css-variables theme too (shikiLightCssVars,
+ * `--shiki-light-` prefix; vite.config.ts + lib/changelog/render.ts), so each
+ * token span carries `color:var(--shiki-light-token-…)`. Resolve those against
+ * napi.rs's measured light hexes — signature GREEN strings (#2e853c), crimson
+ * keywords, violet functions — so light mode keeps the brand palette instead of
+ * github-light's blue strings. Defined on plain `.void-md`: light is the base,
+ * and the dark swap above overrides via `--shiki-dark` with `!important`, so
+ * these vars are only ever consumed in light mode. */
+.void-md {
+  --shiki-light-foreground: #414141;
+  --shiki-light-token-constant: #0078d1;
+  --shiki-light-token-string: #2e853c;
+  --shiki-light-token-string-expression: #2e853c;
+  --shiki-light-token-comment: #aaaaaa;
+  --shiki-light-token-keyword: #d7302e;
+  --shiki-light-token-parameter: #ff9705;
+  --shiki-light-token-function: #5e47c0;
+  --shiki-light-token-punctuation: #212121;
+  --shiki-light-token-link: #2e853c;
+  --shiki-light-token-inserted: #2e853c;
+  --shiki-light-token-deleted: #d7302e;
+  --shiki-light-token-changed: #b5811d;
+}
+
+/* Warm light code background: napi.rs paints rgba(199,53,0,0.05) over white (the
+ * light mirror of the dark warm wrapper). Force the css-variables `pre`
+ * transparent so the wrapper shows — its inline `--shiki-light-background` is
+ * undefined, and @void/md's code.css would otherwise paint a cool #f8fafc.
+ * Scoped light-only (`:not(.dark)`) so the dark warm wrapper above is untouched. */
+:root:not([data-theme='dark']):not(.dark) .void-md div[class*='language-'] {
+  background: rgba(199, 53, 0, 0.05) !important;
+}
+:root:not([data-theme='dark']):not(.dark)
+  .void-md
+  div[class*='language-']
+  pre.shiki.shiki-themes {
+  background-color: transparent !important;
+}
+
+/* Highlighted lines (```lang {n}). @void/md already emits `.line.highlighted`
+ * (transformerMetaHighlight is always on; the {n} meta survived conversion) — we
+ * only retint code.css's indigo to napi.rs's exact deeper-orange row + left
+ * marker (measured: bg rgba(230,92,0,0.1), inset 2px marker rgba(230,92,0,0.5)). */
+.void-md pre .line.highlighted {
+  background: rgba(230, 92, 0, 0.1);
+  box-shadow: inset 2px 0 0 rgba(230, 92, 0, 0.5);
+}
+
+/* napi.rs / Nextra never show a language indicator — only a filename header bar.
+ * Hide @void/md's top-right "RUST"/"BASH" label. */
+.void-md div[class*='language-'] .lang {
+  display: none;
+}
+
+/* Filename header bar. convert-content.mjs turned Nextra `filename=` meta into
+ * bold captions; the Vite pre-transform (lib/md/code-filename.ts) marks the
+ * filename ones as `.code-filename`. Style them as napi.rs's attached header
+ * strip, then square + join the corners of the code block immediately below. */
+.void-md .code-filename {
+  margin: 1em 0 0;
+  padding: 8px 16px;
+  font-family: var(
+    --vmd-font-mono,
+    ui-monospace,
+    'Cascadia Code',
+    Menlo,
+    monospace
+  );
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--vmd-text-muted, #64748b);
+  background: var(--vmd-bg-soft, #f8fafc);
+  border-radius: 8px 8px 0 0;
+}
+:root[data-theme='dark'] .void-md .code-filename,
+.dark .void-md .code-filename {
+  color: #e5e7eb;
+  /* Header band sits ONE step warmer than the 0.1 code body so the boundary
+   * reads as a separator — exactly how napi.rs does it (its filename bar is
+   * absolute and stacks 0.1-over-0.1 ≈ 0.19; no border). */
+  background: rgba(255, 185, 138, 0.19);
+}
+.void-md .code-filename + div[class*='language-'] {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* ── Prose links: napi.rs (Nextra) primary hue, not @void/md's blue ────────────
+ *
+ * @void/md's prose.css sets `.void-md a { color: var(--vmd-link); decoration:none }`
+ * (#2563eb light / #60a5fa dark). napi.rs uses the Nextra primary hue +
+ * underline: --nextra-primary-hue is 16deg on :root and 24deg on .dark
+ * (style.css), inherited into .void-md, so hsl(… 100% 45%) resolves to the live
+ * orange (dark #e65c00) with no .dark selector needed. Specificity (0,2,1) beats
+ * prose.css's `.void-md a` (0,1,1), so no !important.
+ *
+ * Exclude markdown-it-anchor's heading permalink `<a class="header-anchor"
+ * aria-hidden>#</a>` — prose.css gives it no color, so it would otherwise inherit
+ * --vmd-link and turn orange+underlined. */
+.void-md a:not(.header-anchor) {
+  color: hsl(var(--nextra-primary-hue) 100% 45%);
+  text-decoration: underline;
+  text-decoration-color: hsl(var(--nextra-primary-hue) 100% 45%);
+  /* napi.rs links are normal weight (400), not @void/md's 500 — inherit so a link
+   * matches its surrounding text (body 400, or bold when inside a bold run). */
+  font-weight: inherit;
+}
+.void-md a:not(.header-anchor):hover {
+  color: hsl(var(--nextra-primary-hue) 100% 45%);
+  text-decoration: underline;
+}
+/* Inline `<code>` inside a prose link inherits the link's orange (prose.css's
+ * inline-code rule sets background/border but no color). */
+.void-md a:not(.header-anchor) code {
+  color: inherit;
+}
+
+/* Hide the heading permalink `<a class="header-anchor">#</a>` by default and
+ * reveal it only on heading hover. @void/md's hide+reveal lives in its FULL
+ * `theme.css` (the `opacity:0` + `:hover` rule); DocsLayout deliberately imports
+ * only `theme-content.css`, so that rule never shipped and the literal `#` showed
+ * on every heading — most obvious on mobile, where there is no hover to reveal it
+ * and nothing to hide it. Values mirror prose.css so the `#` floats into the left
+ * gutter and the text stays flush, matching napi.rs/Nextra. */
+.void-md .header-anchor {
+  float: left;
+  margin-left: -0.87em;
+  padding-right: 0.23em;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.void-md :is(h1, h2, h3, h4, h5, h6):hover .header-anchor {
+  opacity: 1;
+}
+
+/* Inline `<code>` chips — match napi.rs / Nextra: a neutral translucent overlay
+ * (dark = white/10, light = black/3) instead of @void/md prose.css's slate-tinted
+ * --vmd-bg-soft (#1e293b) + --vmd-border (#334155), which read as a blue-gray. A
+ * solid var can't match napi.rs's translucent overlay, so we override the rule
+ * directly. Nextra metrics: rounded-md (6px), font 0.9em, padding 2px / 0.25em.
+ * The `:root` prefix lifts this above prose.css's `.void-md :not(pre) > code`
+ * (which loads after this file, so an equal-specificity rule would lose). */
+:root .void-md :not(pre) > code {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.04);
+  border-radius: 6px;
+  font-size: 0.9em;
+  padding: 2px 0.25em;
+}
+:root[data-theme='dark'] .void-md :not(pre) > code,
+.dark .void-md :not(pre) > code {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Callouts: match napi.rs (Nextra `<Callout>`) — full rounded border + leading
+ *    icon, no uppercase text label ───────────────────────────────────────────────
+ *
+ * @void/md renders `::: info` as
+ *   <div class="info custom-block"><p class="custom-block-title">INFO</p>…</div>
+ * styled by containers.css with a 4px LEFT-accent bar + a colored text label.
+ * napi.rs/Nextra instead uses a 1px FULL rounded border, a tinted fill, a
+ * type-colored ICON in a left gutter, and NO text label. Palette + icons measured
+ * live (Tailwind: light = `*-50/100/200/800/900`, dark = `*-{700,900}/30` bg +
+ * `*-{200,300}` text/border). Our content uses info/tip/warning/danger; the
+ * note/important/caution aliases mirror containers.css's grouping for parity.
+ *
+ * Specificity: theme.css loads BEFORE @void/md's theme-content.css, so equal
+ * selectors lose the cascade tie — `div.custom-block` (0,2,1) beats
+ * containers.css's `.custom-block` (0,2,0), and `.custom-block.<type>` (0,3,0)
+ * beats `.info`/`.warning`/… (0,2,0). Dark rules carry the `[data-theme]`/`:root`
+ * prefix to clear containers.css's own dark selectors. No !important needed. */
+.void-md div.custom-block {
+  position: relative;
+  margin: 1.5rem 0; /* nx-mt-6 */
+  padding: 8px 16px 8px 40px; /* py-2 + pr-4; 40px left gutter = pl-3 + 20px icon + pr-2 */
+  border: 1px solid; /* full border; resets containers.css's border-left:4px */
+  border-radius: 8px; /* nx-rounded-lg */
+}
+/* Drop @void/md's "INFO"/"WARNING" text label — the icon replaces it — and pull
+ * the first body block up flush with the icon. */
+.void-md div.custom-block > .custom-block-title {
+  display: none;
+}
+.void-md div.custom-block > .custom-block-title + * {
+  margin-top: 0;
+}
+/* Leading icon, pinned to the left gutter and aligned with the first text line
+ * (Nextra's py-2 + mt-1 ≈ 12px from the top). */
+.void-md div.custom-block::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  font-size: 20px; /* nx-text-xl — emoji icon size */
+  line-height: 1;
+}
+
+/* info / note — blue, info-circle SVG (mask → currentColor text color) */
+.void-md .custom-block.info,
+.void-md .custom-block.note {
+  border-color: #bfdbfe; /* blue-200 */
+  background: #dbeafe; /* blue-100 */
+  color: #1e3a8a; /* blue-900 */
+}
+.void-md .custom-block.info::before,
+.void-md .custom-block.note::before {
+  width: 20px;
+  height: 20px;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='black'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='black'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+/* tip — orange (Nextra "default" type), 💡 */
+.void-md .custom-block.tip {
+  border-color: #ffedd5; /* orange-100 */
+  background: #fff7ed; /* orange-50 */
+  color: #9a3412; /* orange-800 */
+}
+.void-md .custom-block.tip::before {
+  content: '💡';
+}
+
+/* warning / important — yellow, ⚠️ */
+.void-md .custom-block.warning,
+.void-md .custom-block.important {
+  border-color: #fef9c3; /* yellow-100 */
+  background: #fefce8; /* yellow-50 */
+  color: #713f12; /* yellow-900 */
+}
+.void-md .custom-block.warning::before,
+.void-md .custom-block.important::before {
+  content: '⚠️';
+}
+
+/* danger / caution — red, 🚫 */
+.void-md .custom-block.danger,
+.void-md .custom-block.caution {
+  border-color: #fecaca; /* red-200 */
+  background: #fee2e2; /* red-100 */
+  color: #7f1d1d; /* red-900 */
+}
+.void-md .custom-block.danger::before,
+.void-md .custom-block.caution::before {
+  content: '🚫';
+}
+
+/* Dark mode — Nextra's `*-{700,900}/30` fill, `*-200/30` border, `*-{200,300}` text */
+:root[data-theme='dark'] .void-md .custom-block.info,
+:root[data-theme='dark'] .void-md .custom-block.note,
+.dark .void-md .custom-block.info,
+.dark .void-md .custom-block.note {
+  border-color: rgba(191, 219, 254, 0.3); /* blue-200/30 */
+  background: rgba(30, 58, 138, 0.3); /* blue-900/30 */
+  color: #bfdbfe; /* blue-200 */
+}
+:root[data-theme='dark'] .void-md .custom-block.tip,
+.dark .void-md .custom-block.tip {
+  border-color: rgba(251, 146, 60, 0.3); /* orange-400/30 */
+  background: rgba(251, 146, 60, 0.2); /* orange-400/20 */
+  color: #fdba74; /* orange-300 */
+}
+:root[data-theme='dark'] .void-md .custom-block.warning,
+:root[data-theme='dark'] .void-md .custom-block.important,
+.dark .void-md .custom-block.warning,
+.dark .void-md .custom-block.important {
+  border-color: rgba(254, 240, 138, 0.3); /* yellow-200/30 */
+  background: rgba(161, 98, 7, 0.3); /* yellow-700/30 */
+  color: #fef08a; /* yellow-200 */
+}
+:root[data-theme='dark'] .void-md .custom-block.danger,
+:root[data-theme='dark'] .void-md .custom-block.caution,
+.dark .void-md .custom-block.danger,
+.dark .void-md .custom-block.caution {
+  border-color: rgba(254, 202, 202, 0.3); /* red-200/30 */
+  background: rgba(127, 29, 29, 0.3); /* red-900/30 */
+  color: #fecaca; /* red-200 */
+}
+
+/* ── Prose list markers ────────────────────────────────────────────────────────
+ *
+ * @void/md's prose.css gives `.void-md ul,ol` their left padding but never sets
+ * `list-style-type`, leaning on the UA default (disc/decimal). The app's
+ * Tailwind v4 preflight resets `ul,ol { list-style: none }`, so with no
+ * re-assertion every prose list rendered marker-less (numbers/bullets gone) —
+ * visible e.g. in the Best Practices list. Re-assert the markers. The task-list
+ * (`ul.contains-task-list`, 0,2,1) and in-prose TOC (`.table-of-contents ul`,
+ * 0,3,0) keep their own higher-specificity `list-style:none`. */
+.void-md ul {
+  list-style-type: disc;
+}
+.void-md ol {
+  list-style-type: decimal;
+}
+.void-md ul ul {
+  list-style-type: circle;
+}

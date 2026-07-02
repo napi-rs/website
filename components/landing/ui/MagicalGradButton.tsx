@@ -8,7 +8,7 @@ export function MagicalGradButton({
   children,
   onClick,
   lightBorder,
-  Icon = ArrowTopRight
+  Icon = ArrowTopRight,
 }: {
   children: any
   onClick?: (e: any) => void
@@ -18,11 +18,11 @@ export function MagicalGradButton({
   const ref = useRef(null)
   const { docX, docY, posX, posY, elX, elY, elW, elH } = useMouseHovered(
     ref,
-    {}
+    {},
   )
   const { elX: boundElX, elY: boundElY } = useMouseHovered(ref, {
     whenHovered: true,
-    bound: true
+    bound: true,
   })
 
   const handleButtonClick = (e: any) => {
@@ -31,7 +31,10 @@ export function MagicalGradButton({
 
   return (
     <div
-      className={cx('MagicalGradButton', { 'LightBorder': lightBorder, 'NoIcon': !Icon })}
+      className={cx('MagicalGradButton', {
+        LightBorder: lightBorder,
+        NoIcon: !Icon,
+      })}
       onClick={(e) => handleButtonClick(e)}
       ref={ref}
       style={{
@@ -42,8 +45,8 @@ export function MagicalGradButton({
         '--bound-y': `${boundElY - elH / 2}px`,
         '--rotate': `${Math.atan2(
           elX - posY - elH / 2,
-          elY - posX - elW / 2
-        )}rad`
+          elY - posX - elW / 2,
+        )}rad`,
       }}
     >
       <div className="button-content flex items-center gap-4">

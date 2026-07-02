@@ -1,0 +1,176 @@
+---
+title: 'ThreadsafeFunction'
+description: Call a JavaScript callback in other threads.
+---
+
+# ThreadsafeFunction
+
+[`ThreadSafe Function`](https://nodejs.org/api/n-api.html#asynchronous-thread-safe-function-calls) é um conceito complexo no Node.js. Como todos sabemos, o Node.js é single-threaded, então você não pode acessar [`napi_env`](https://nodejs.org/api/n-api.html#napi_env), [`napi_value`](https://nodejs.org/api/n-api.html#napi_value), e [`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref) em outra thread.
+
+::: tip
+[`napi_env`](https://nodejs.org/api/n-api.html#napi_env),
+[`napi_value`](https://nodejs.org/api/n-api.html#napi_value), e
+[`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref) são conceitos de
+baixo nível em `Node-API`, na qual a macro `#[napi]` do **NAPI-RS** é
+construída em cima. **NAPI-RS** também fornece uma [API de baixo
+nível](../compat-mode/concepts/env) para acessar a `Node-API` original.
+
+:::
+
+`Node-API` fornece APIs complexas de `Threadsafe Function` para chamar funções JavaScript em outras threads. É muito complexo, então muitos desenvolvedores não entendem como usá-lo corretamente. O **NAPI-RS** fornece uma versão limitada das APIs de `Threadsafe Function` para facilitar o uso:
+
+**lib.rs**
+
+```rust {10}
+use std::thread;
+
+use napi::{
+  bindgen_prelude::*,
+  threadsafe_function::{ErrorStrategy, ThreadsafeFunction, ThreadsafeFunctionCallMode},
+};
+
+#[napi]
+pub fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
+  let tsfn: ThreadsafeFunction<u32, ErrorStrategy::CalleeHandled> = callback
+    .create_threadsafe_function(0, |ctx| {
+      ctx.env.create_uint32(ctx.value + 1).map(|v| vec![v])
+    })?;
+  for n in 0..100 {
+    let tsfn = tsfn.clone();
+    thread::spawn(move || {
+      tsfn.call(Ok(n), ThreadsafeFunctionCallMode::Blocking);
+    });
+  }
+  Ok(())
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+**index.d.ts**
+
+```ts
+export function callThreadsafeFunction(callback: (...args: any[]) => any): void
+```
+
+`ThreadsafeFunction` é muito complexa, então o **NAPI-RS** não fornece a geração precisa de definição TypeScript para ela. Se você deseja ter um tipo TypeScript melhor, pode usar `#[napi(ts_args_type)]` para sobreescrever o tipo do argumento `JsFunction`:
+
+**lib.rs**
+
+```rust {8}
+use std::thread;
+
+use napi::{
+  bindgen_prelude::*,
+  threadsafe_function::{ErrorStrategy, ThreadsafeFunction, ThreadsafeFunctionCallMode},
+};
+
+#[napi(ts_args_type = "callback: (err: null | Error, result: number) => void")]
+pub fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
+  let tsfn: ThreadsafeFunction<u32, ErrorStrategy::CalleeHandled> = callback
+    .create_threadsafe_function(0, |ctx| {
+      ctx.env.create_uint32(ctx.value + 1).map(|v| vec![v])
+    })?;
+  for n in 0..100 {
+    let tsfn = tsfn.clone();
+    thread::spawn(move || {
+      tsfn.call(Ok(n), ThreadsafeFunctionCallMode::Blocking);
+    });
+  }
+  Ok(())
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+**index.d.ts**
+
+```ts
+export function callThreadsafeFunction(
+  callback: (err: null | Error, result: number) => void,
+): void
+```
+
+## ErrorStrategy
+
+Existem duas estratégias diferentes de tratamento de erros para `Threadsafe Function`. A estratégia pode ser definida no segundo parâmetro genérico de `ThreadsafeFunction`:
+
+**lib.rs**
+
+```rust
+let tsfn: ThreadsafeFunction<u32, ErrorStrategy::CalleeHandled> = ...
+```
+
+O primeiro argumento no parâmetro genérico é o tipo de retorno da `Threadsafe Function`.
+
+### `ErrorStrategy::CalleeHandled`
+
+O `Err` do código Rust será passado como o primeiro argumento para a função de retorno de chamada(callback) JavaScript. Esse comportamento segue as convenções de retorno de chamada assíncrona do Node.js: https://nodejs.org/en/learn/asynchronous-work/javascript-asynchronous-programming-and-callbacks#handling-errors-in-callbacks. Muitas APIs assíncronas no Node.js são projetadas nesse formato, como `fs.read`.
+
+Com `ErrorStrategy::CalleeHandled`, você deve chamar a `ThreadsafeFunction` com o tipo `Result`, para que o `Error` seja tratado e retornado para a função de callback JavaScript:
+
+**lib.rs**
+
+```rust {10,17}
+use std::thread;
+
+use napi::{
+  bindgen_prelude::*,
+  threadsafe_function::{ErrorStrategy, ThreadsafeFunction, ThreadsafeFunctionCallMode},
+};
+
+#[napi(ts_args_type = "callback: (err: null | Error, result: number) => void")]
+pub fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
+  let tsfn: ThreadsafeFunction<u32, ErrorStrategy::CalleeHandled> = callback
+    .create_threadsafe_function(0, |ctx| {
+      ctx.env.create_uint32(ctx.value + 1).map(|v| vec![v])
+    })?;
+  for n in 0..100 {
+    let tsfn = tsfn.clone();
+    thread::spawn(move || {
+      tsfn.call(Ok(n), ThreadsafeFunctionCallMode::Blocking);
+    });
+  }
+  Ok(())
+}
+```
+
+### `ErrorStrategy::Fatal`
+
+Nenhum `Error` será retornado para o lado JavaScript. Você pode usar essa estratégia para evitar o encapsulamento `Ok` no lado Rust se seu código nunca retornar `Err`.
+
+Com essa estratégia, `ThreadsafeFunction` não precisa ser chamada com `Result<T>`, e o primeiro argumento do callback JavaScript é o valor vindo do Rust, não `Error | null`.
+
+**lib.rs**
+
+```rust {10,17}
+use std::thread;
+
+use napi::{
+  bindgen_prelude::*,
+  threadsafe_function::{ErrorStrategy, ThreadsafeFunction, ThreadsafeFunctionCallMode},
+};
+
+#[napi(ts_args_type = "callback: (result: number) => void")]
+pub fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
+  let tsfn: ThreadsafeFunction<u32, ErrorStrategy::Fatal> = callback
+    .create_threadsafe_function(0, |ctx| {
+      ctx.env.create_uint32(ctx.value + 1).map(|v| vec![v])
+    })?;
+  for n in 0..100 {
+    let tsfn = tsfn.clone();
+    thread::spawn(move || {
+      tsfn.call(n, ThreadsafeFunctionCallMode::Blocking);
+    });
+  }
+  Ok(())
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+**index.d.ts**
+
+```ts {2}
+export function callThreadsafeFunction(callback: (result: number) => void): void
+```

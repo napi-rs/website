@@ -11,11 +11,7 @@
   .live-demo-title {
     span {
       --text-color: var(--theme);
-      background: linear-gradient(
-        to right,
-        var(--text-color) 0%,
-        #F4BC92 100%
-      );
+      background: linear-gradient(to right, var(--text-color) 0%, #f4bc92 100%);
       background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -56,7 +52,7 @@
 
     .panel {
       &:after {
-        background-color: #3A271A;
+        background-color: #3a271a;
       }
     }
 
@@ -94,12 +90,45 @@
     .code-panel {
       flex: 1;
 
+      /* napi.rs / Nextra Shiki `css-variables` palette. The demo code HTML
+       * (live-demo-code.gen.ts) is generated with Shiki's css-variables theme,
+       * so every token is `color:var(--shiki-token-…)`. These are Nextra's exact
+       * dark values — the signature being the GREEN string-expression (#4bb74a),
+       * which github-dark (our earlier theme) rendered blue. */
+      --shiki-foreground: #d1d5db;
+      --shiki-token-constant: #79b8ff;
+      --shiki-token-string: #ffab70;
+      --shiki-token-string-expression: #4bb74a;
+      --shiki-token-comment: #6b737c;
+      --shiki-token-keyword: #f97583;
+      --shiki-token-parameter: #ff9800;
+      --shiki-token-function: #b392f0;
+      --shiki-token-punctuation: #bbbbbb;
+      --shiki-token-link: #ffab70;
+
       pre {
         padding: 16px 0;
+
+        /* Match napi.rs: `code` is a grid so each line is a full-width row, and
+         * the per-line left padding insets the text from the panel edge (without
+         * it the Shiki output hugs the left border). */
+        code {
+          display: grid;
+        }
 
         .line {
           white-space: pre-wrap;
           font-size: fv(12, 14);
+          padding-left: 16px;
+        }
+
+        /* Blank source lines become empty `<span class="line"></span>`. Under
+         * `code { display: grid }` an empty grid item collapses to 0 height, so
+         * the blank lines between code blocks vanished — napi.rs keeps them (its
+         * Shiki put a newline inside each line span). A zero-width space gives
+         * the empty line its line box back, restoring napi.rs's spacing. */
+        .line:empty::before {
+          content: '\200B';
         }
       }
     }

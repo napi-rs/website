@@ -1,0 +1,84 @@
+/* Localized landing prose (cn / pt-BR roots). A light prose layer on top of the
+ * shared landing `.page-home` background — these pages port the legacy markdown
+ * roots, so they are mostly text + the shared Sponsors/Ecosystem/SupportMatrix
+ * blocks rather than the full GSAP HomePage. */
+.page-landing-locale {
+  padding: fv(40, 80) 0;
+}
+
+.page-landing-locale .limit-narrow-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.page-landing-locale h2 {
+  margin-top: fv(32, 56);
+  margin-bottom: fv(12, 20);
+  font-size: fv(24, 36);
+  font-weight: 600;
+}
+
+.page-landing-locale p {
+  margin: fv(8, 12) 0;
+  font-size: fv(14, 18);
+  line-height: 1.7;
+}
+
+.page-landing-locale code {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: hsl(var(--theme-hsl) / 0.12);
+  font-size: 0.9em;
+}
+
+.page-landing-locale .badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: fv(16, 24) 0;
+}
+
+/* Intro code demo. These pages are NOT `.void-md`, so the shiki theme CSS does
+ * not apply here. The snippets are pre-highlighted by scripts/build-demo-code.mjs
+ * (Shiki css-variables theme) and injected as `<pre class="shiki css-variables">`
+ * via dangerouslySetInnerHTML, so every token is `color:var(--shiki-token-…)`.
+ * Render the block as a dark code panel consistent with the landing live-demo
+ * convention (themed border on the `#29211de0` panel background), and define the
+ * napi.rs / Nextra DARK palette here so the injected token spans resolve — the
+ * signature being the GREEN string-expression (#4bb74a). Keep this palette in
+ * sync with the sibling cn/pt-BR landing.css and components/landing/live-demo.css. */
+.page-landing-locale pre.shiki {
+  margin: fv(12, 20) 0;
+  padding: fv(12, 16) fv(14, 20);
+  border-radius: 12px;
+  border: 1px solid hsl(var(--theme-hsl) / 0.15);
+  background: #29211de0;
+  overflow-x: auto;
+
+  --shiki-foreground: #d1d5db;
+  --shiki-token-constant: #79b8ff;
+  --shiki-token-string: #ffab70;
+  --shiki-token-string-expression: #4bb74a;
+  --shiki-token-comment: #6b737c;
+  --shiki-token-keyword: #f97583;
+  --shiki-token-parameter: #ff9800;
+  --shiki-token-function: #b392f0;
+  --shiki-token-punctuation: #bbbbbb;
+  --shiki-token-link: #ffab70;
+}
+
+.page-landing-locale pre.shiki code {
+  display: block;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  /* Foreground fallback for any untokenized text; the Shiki token spans carry
+   * their own inline `color:var(--shiki-token-…)` and win over this. */
+  color: var(--shiki-foreground);
+  font-family: ui-monospace, 'Cascadia Code', Menlo, monospace;
+  font-size: fv(12, 14);
+  line-height: 1.6;
+  white-space: pre;
+}

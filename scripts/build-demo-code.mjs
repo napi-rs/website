@@ -1,0 +1,164 @@
+// scripts/build-demo-code.mjs
+//
+// Pre-highlights the two static snippets shown in the landing-page "Live WASM +
+// NAPI-RS Demo" code panel (TS Code / Rust Code) and writes the Shiki HTML to
+// components/landing/live-demo-code.gen.ts.
+//
+// Why a build artifact: the snippets used to live in `live-demo-code.mdx` and
+// were highlighted by the Nextra/Shiki markdown pipeline. @void/md only compiles
+// `.md` pages (not arbitrary component code), so the migrated landing inlined the
+// snippets as plain text — which rendered MONOCHROME, unlike napi.rs (Shiki
+// colors). Running Shiki here restores the exact colored output without paying a
+// highlight cost at render time (the landing is worker-rendered, prerender:false).
+//
+// Theme: Shiki's `css-variables` theme, reproducing the live napi.rs / Nextra
+// palette EXACTLY (pink keywords #f97583, purple functions #b392f0, and — the
+// signature — GREEN string-expressions #4bb74a). Tokens are emitted as
+// `style="color:var(--shiki-token-…)"`; the hex values live once in
+// components/landing/live-demo.css (`.code-panel`), mirroring how Nextra fed
+// these same `--shiki-token-*` variables. (github-dark — our earlier choice —
+// renders BLUE strings, which did NOT match napi.rs.) We strip the `<pre>`
+// `background-color:var(--shiki-background)` so the panel's own background shows.
+//
+// Regenerate after editing a snippet: `node scripts/build-demo-code.mjs`
+// (the output is committed; this is a one-shot generator like build-nav.mjs).
+
+import { writeFileSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { createJavaScriptRegexEngine } from '@shikijs/engine-javascript'
+import { createCssVariablesTheme, createHighlighter } from 'shiki'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const root = resolve(__dirname, '..')
+const outFile = join(root, 'components', 'landing', 'live-demo-code.gen.ts')
+
+const TS_CODE = `import { Transformer } from '@napi-rs/image'
+
+export async function transform() {
+  const imageResponse = await fetch(
+    'https://upload.wikimedia.org/wikipedia/commons/5/5d/ISS-45_EVA-2_%28a%29_Scott_Kelly.jpg'
+  )
+
+  const imageBytes = await imageResponse.arrayBuffer()
+
+  const transformer = new Transformer(imageBytes)
+  const webp = await transformer.toWebp()
+}`
+
+const RUST_CODE = `use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub struct Transformer {
+  inner: Uint8Array,
+}
+
+#[napi]
+impl Transformer {
+  #[napi(constructor)]
+  pub fn new(inner: Uint8Array) -> Self {
+    Self { inner }
+  }
+
+  #[napi]
+  pub fn to_webp(&self) -> Result<Uint8Array> {
+    let image = image::load_from_memory(&self.inner)?;
+    let webp = image.to_webp().map_err(|e| Error::from(e.to_string()))?;
+    Ok(webp.into())
+  }
+}`
+
+// Intro snippets shown on the cn / pt-BR localized landing pages (ported from the
+// legacy index.cn.mdx / index.pt-BR.mdx fences). Lifted VERBATIM from the string
+// literals that used to live in pages/{cn,pt-BR}/index.island.tsx; pre-highlighted
+// here so those pages match napi.rs Shiki colors instead of rendering monochrome.
+const LIB_RS = `use napi_derive::napi;
+
+#[napi]
+fn fibonacci(n: u32) -> u32 {
+  match n {
+    1 | 2 => 1,
+    _ => fibonacci(n - 1) + fibonacci(n - 2),
+  }
+}`
+
+const MAIN_MJS = `import { fibonacci } from './index.js'
+
+// output: 5
+console.log(fibonacci(5))`
+
+const MAIN_CJS = `const { fibonacci } = require('./index')
+
+// output: 5
+console.log(fibonacci(5))`
+
+// Drop the css-variables `<pre>` background (`background-color:var(--shiki-background)`)
+// so the demo panel's own background shows through instead of a painted box.
+function stripPreBackground(html) {
+  return html.replace(
+    /(<pre class="shiki[^"]*"[^>]*?)background-color:var\(--shiki-background\);?/,
+    '$1',
+  )
+}
+
+// css-variables theme: tokens become `color:var(--shiki-token-…)` (default
+// `--shiki-` prefix → the exact var names Nextra/napi.rs used). The hex values
+// are defined in live-demo.css.
+const cssVariablesTheme = createCssVariablesTheme({
+  name: 'css-variables',
+  variablePrefix: '--shiki-',
+  fontStyle: true,
+})
+
+const highlighter = await createHighlighter({
+  engine: createJavaScriptRegexEngine(),
+  themes: [cssVariablesTheme],
+  langs: ['typescript', 'rust', 'javascript'],
+})
+
+const tsHtml = stripPreBackground(
+  highlighter.codeToHtml(TS_CODE, {
+    lang: 'typescript',
+    theme: 'css-variables',
+  }),
+)
+const rustHtml = stripPreBackground(
+  highlighter.codeToHtml(RUST_CODE, { lang: 'rust', theme: 'css-variables' }),
+)
+const introLibRsHtml = stripPreBackground(
+  highlighter.codeToHtml(LIB_RS, { lang: 'rust', theme: 'css-variables' }),
+)
+const introMjsHtml = stripPreBackground(
+  highlighter.codeToHtml(MAIN_MJS, {
+    lang: 'javascript',
+    theme: 'css-variables',
+  }),
+)
+const introCjsHtml = stripPreBackground(
+  highlighter.codeToHtml(MAIN_CJS, {
+    lang: 'javascript',
+    theme: 'css-variables',
+  }),
+)
+
+const banner = `// GENERATED by scripts/build-demo-code.mjs — DO NOT EDIT.
+// Shiki (css-variables theme) HTML for the landing "Live WASM + NAPI-RS Demo"
+// code panels; token colors come from the --shiki-token-* vars defined in
+// live-demo.css. Regenerate with: node scripts/build-demo-code.mjs\n\n`
+
+const body =
+  banner +
+  `export const TS_CODE_HTML = ${JSON.stringify(tsHtml)}\n\n` +
+  `export const RUST_CODE_HTML = ${JSON.stringify(rustHtml)}\n\n` +
+  `export const INTRO_LIB_RS_HTML = ${JSON.stringify(introLibRsHtml)}\n\n` +
+  `export const INTRO_MJS_HTML = ${JSON.stringify(introMjsHtml)}\n\n` +
+  `export const INTRO_CJS_HTML = ${JSON.stringify(introCjsHtml)}\n`
+
+writeFileSync(outFile, body)
+console.log(`wrote ${outFile}`)
+console.log(`  ts:   ${tsHtml.length} bytes`)
+console.log(`  rust: ${rustHtml.length} bytes`)
+console.log(`  intro lib.rs:  ${introLibRsHtml.length} bytes`)
+console.log(`  intro main.mjs: ${introMjsHtml.length} bytes`)
+console.log(`  intro main.cjs: ${introCjsHtml.length} bytes`)

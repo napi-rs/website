@@ -1,0 +1,132 @@
+{
+  "$schema": "./node_modules/void/schema.json",
+  "output": "server",
+  "routing": {
+    "redirects": {
+      "/en": { "to": "/", "status": 301 },
+      "/en/*": { "to": "/:splat", "status": 301 },
+      "/docs/": { "to": "/docs", "status": 301 },
+      "/docs/*/": { "to": "/docs/:splat", "status": 301 },
+      "/blog/": { "to": "/blog", "status": 301 },
+      "/blog/*/": { "to": "/blog/:splat", "status": 301 },
+      "/changelog/": { "to": "/changelog", "status": 301 },
+      "/changelog/*/": { "to": "/changelog/:splat", "status": 301 }
+    },
+    "rewrites": {
+      "/": "/en",
+      "/docs/*": "/en/docs/:splat",
+      "/blog/*": "/en/blog/:splat",
+      "/changelog/*": "/en/changelog/:splat"
+    },
+    "headers": {
+      "/": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/en": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/docs/concepts/webassembly": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/en/docs/concepts/webassembly": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/cn/docs/concepts/webassembly": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/pt-BR/docs/concepts/webassembly": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/blog/announce-v3": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/en/blog/announce-v3": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/cn/blog/announce-v3": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/pt-BR/blog/announce-v3": [
+        "Cross-Origin-Opener-Policy: same-origin",
+        "Cross-Origin-Embedder-Policy: require-corp"
+      ],
+      "/assets/*": [
+        "Cross-Origin-Embedder-Policy: require-corp",
+        "Cross-Origin-Resource-Policy: same-origin"
+      ],
+      "/*.md": ["Content-Type: text/markdown; charset=utf-8"],
+      "/rss.xml": ["Content-Type: application/rss+xml; charset=utf-8"]
+    }
+  },
+  "inference": {
+    "bindings": {
+      "db": false,
+      "kv": false,
+      "storage": false,
+      "ai": false
+    }
+  },
+  "head": {
+    "titleTemplate": "%s – NAPI-RS",
+    "htmlAttrs": {
+      "lang": "en",
+      "data-theme": "dark"
+    },
+    "meta": [
+      {
+        "name": "viewport",
+        "content": "width=device-width, initial-scale=1"
+      },
+      { "name": "og:site_name", "content": "NAPI-RS" },
+      { "property": "og:type", "content": "website" },
+      { "property": "og:image", "content": "https://napi.rs/img/og-v2.png" },
+      { "name": "twitter:card", "content": "summary_large_image" },
+      { "name": "twitter:image", "content": "https://napi.rs/img/og-v2.png" },
+      { "name": "twitter:site", "content": "@napi_rs" },
+      { "name": "twitter:creator", "content": "@napi_rs" }
+    ],
+    "link": [
+      {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "32x32",
+        "href": "/img/favicon-32x32.png"
+      },
+      {
+        "rel": "icon",
+        "type": "image/png",
+        "sizes": "16x16",
+        "href": "/img/favicon-16x16.png"
+      },
+      { "rel": "shortcut icon", "href": "/img/favicon.png" },
+      {
+        "rel": "alternate",
+        "type": "application/rss+xml",
+        "title": "NAPI-RS Blog",
+        "href": "/rss.xml"
+      }
+    ],
+    "script": [
+      {
+        "src": "https://www.googletagmanager.com/gtag/js?id=G-38WMNQBW8F",
+        "async": "",
+        "crossorigin": "anonymous"
+      },
+      {
+        "innerHTML": "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-38WMNQBW8F');"
+      }
+    ]
+  },
+  "worker": {
+    "compatibility_date": "2026-02-24"
+  }
+}

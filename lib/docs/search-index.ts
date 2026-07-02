@@ -1,0 +1,138 @@
+// Builds a lightweight, per-locale search index from `@void/md/pages`.
+//
+// Full body-text indexing is intentionally DEFERRED (the @void/md page metadata
+// does not expose rendered body text). For now each entry carries the title,
+// the heading texts, and the frontmatter `description` — enough for a fast
+// Cmd-K title/heading search in the Navbar search island.
+//
+// Kept pure: `buildSearchIndexCore` takes the pages array as a parameter so it
+// is testable without the virtual module. The Search island calls the thin
+// `buildSearchIndex()` wrapper with the live `@void/md/pages` import.
+
+import type { Locale } from '../nav/index.ts'
+import { localizeHref, DEFAULT_LOCALE, PREFIXED_LOCALES } from './locale.ts'
+import type { MdPageLike } from './page-data.ts'
+
+export interface SearchEntry {
+  /** Locale-prefixed route path from @void/md/pages, e.g. /en/docs/concepts/enum. */
+  path: string
+  /**
+   * PUBLIC, navigable href: the md `path` with its locale segment normalised to
+   * the user-facing route (en dropped to root: `/docs/…`; cn/pt-BR kept:
+   * `/cn/docs/…`). Navigating here keeps the canonical URL and round-trips
+   * cleanly through splitLocale (unlike the raw `/en/…` md path).
+   */
+  href: string
+  title: string
+  /** Heading texts (for matching + result sub-rows). */
+  headings: string[]
+  /** frontmatter.description, when present. */
+  description?: string
+}
+
+export type SearchIndex = Record<Locale, SearchEntry[]>
+
+const LOCALES: Locale[] = ['en', 'cn', 'pt-BR']
+
+/** The locale segment of a `@void/md/pages` path (`/cn/docs/…` -> `cn`). */
+export function pageLocale(path: string): Locale {
+  const seg = path.split('/')[1]
+  return seg === 'cn' || seg === 'pt-BR' ? seg : 'en'
+}
+
+/**
+ * Strip the leading locale segment from a `@void/md/pages` path, yielding the
+ * UNPREFIXED leaf (`/en/docs/concepts/enum` -> `docs/concepts/enum`,
+ * `/cn/docs/x` -> `docs/x`).
+ */
+export function pageLeaf(path: string): string {
+  const stripped = path.replace(/^\/+/, '')
+  const slash = stripped.indexOf('/')
+  return slash === -1 ? '' : stripped.slice(slash + 1)
+}
+
+/**
+ * The PUBLIC navigable href for a `@void/md/pages` path: drop the leading locale
+ * segment, then re-apply the en-at-root / cn-prefixed route asymmetry via
+ * `localizeHref` (en -> `/docs/…`, cn -> `/cn/docs/…`).
+ */
+export function pageHref(path: string): string {
+  return localizeHref(pageLeaf(path), pageLocale(path))
+}
+
+/**
+ * Group md pages into a per-locale search index. Non-`.md` and locale-less
+ * paths default to the `en` bucket via `pageLocale`.
+ *
+ * EN-fallback pass: `scripts/build-nav.mjs` derives every locale's docs sidebar
+ * from the EN structure, so cn/pt-BR sidebars surface pages that have no
+ * localized markdown — the i18n-fallback middleware (middleware/02.i18n-fallback)
+ * serves the EN page at the `/cn/…` / `/pt-BR/…` URL. To keep Cmd-K parity with
+ * what is browsable, we mirror that exact rule here: for each non-default locale,
+ * every EN page whose leaf is NOT already localized gets an extra entry in that
+ * locale's bucket, pointing at the localized route (the middleware-served
+ * target) with the EN content. All `@void/md/pages` (docs AND blog) are in
+ * scope, same as the middleware. Fallback entries are appended AFTER the
+ * locale's real entries, in EN source order, so the result stays deterministic.
+ */
+export function buildSearchIndexCore(
+  pages: ReadonlyArray<MdPageLike>,
+): SearchIndex {
+  const index = {
+    en: [],
+    cn: [],
+    'pt-BR': [],
+  } as SearchIndex
+
+  // Leaves that have an ACTUAL localized page, per locale — so the fallback pass
+  // below skips any leaf that is already translated in that locale.
+  const presentLeaves: Record<Locale, Set<string>> = {
+    en: new Set(),
+    cn: new Set(),
+    'pt-BR': new Set(),
+  }
+  // EN pages (leaf + built entry) in source order, to source the fallback pass.
+  const enPages: Array<{ leaf: string; entry: SearchEntry }> = []
+
+  for (const page of pages) {
+    const locale = pageLocale(page.path)
+    const description =
+      typeof page.frontmatter.description === 'string'
+        ? page.frontmatter.description
+        : undefined
+    const entry: SearchEntry = {
+      path: page.path,
+      href: pageHref(page.path),
+      title: page.title,
+      headings: page.headings.map((h) => h.text),
+      description,
+    }
+    index[locale].push(entry)
+    const leaf = pageLeaf(page.path)
+    presentLeaves[locale].add(leaf)
+    if (locale === DEFAULT_LOCALE) enPages.push({ leaf, entry })
+  }
+
+  // EN-fallback pass (mirrors the i18n-fallback middleware: localized page
+  // absent AND en page present ⇒ the en page is served at the localized URL).
+  for (const locale of PREFIXED_LOCALES) {
+    for (const { leaf, entry } of enPages) {
+      if (presentLeaves[locale].has(leaf)) continue
+      index[locale].push({
+        // Localized route as the (unique, locale-consistent) React key; the raw
+        // /en/… path is intentionally NOT reused.
+        path: `/${locale}/${leaf}`,
+        // The navigable target the i18n middleware serves.
+        href: localizeHref(leaf, locale),
+        // EN content — that is what actually renders under the fallback.
+        title: entry.title,
+        headings: entry.headings,
+        description: entry.description,
+      })
+    }
+  }
+
+  return index
+}
+
+export { LOCALES }

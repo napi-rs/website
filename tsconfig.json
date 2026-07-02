@@ -1,24 +1,42 @@
 {
+  "extends": "./.void/tsconfig.json",
   "compilerOptions": {
-    "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ESNext", "WebWorker"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    // The codebase imports with explicit .ts/.tsx extensions (Void/Vite bundler
+    // resolution). Allowed because noEmit is set — clears the TS5097 noise so
+    // `tsc --noEmit` surfaces only real type errors.
+    "allowImportingTsExtensions": true,
+    "jsx": "react-jsx",
     "allowJs": true,
-    "skipLibCheck": true,
+    "checkJs": false,
     "strict": false,
-    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
     "noEmit": true,
-    "incremental": true,
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
-    "baseUrl": ".",
+    "verbatimModuleSyntax": true,
+    "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@/*": ["./*"]
-    }
+      "@/*": ["./*"],
+      "void/routes": ["./.void/routes.d.ts"]
+    },
+    "types": ["void/env"]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "pages",
+    "components",
+    "lib",
+    "routes",
+    "middleware",
+    "scripts",
+    "types",
+    "env.ts",
+    "vite.config.ts",
+    ".void"
+  ],
+  "exclude": ["node_modules", "dist", ".wrangler", "legacy_pages"]
 }

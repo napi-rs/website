@@ -10,7 +10,7 @@
   }
 
   .layer-front {
-    background: linear-gradient(180deg, #FFF 0%, #C29FE3 100%);
+    background: linear-gradient(180deg, #fff 0%, #c29fe3 100%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -18,7 +18,7 @@
   .layer-blur {
     position: absolute;
     top: 0;
-    color: #7B2AFF;
+    color: #7b2aff;
     opacity: 0.6;
     filter: blur(16px);
   }

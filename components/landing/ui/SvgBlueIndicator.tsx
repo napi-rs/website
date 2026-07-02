@@ -1,10 +1,12 @@
-import React from 'react';
+import React from 'react'
 
 interface SvgBlueIndicatorProps {
-  active: boolean;
+  active: boolean
 }
 
-export const SvgBlueIndicator: React.FC<SvgBlueIndicatorProps> = ({ active }) => {
+export const SvgBlueIndicator: React.FC<SvgBlueIndicatorProps> = ({
+  active,
+}) => {
   return (
     <>
       <svg
@@ -181,7 +183,11 @@ export const SvgBlueIndicator: React.FC<SvgBlueIndicatorProps> = ({ active }) =>
               type="matrix"
               values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.85 0"
             />
-            <feBlend mode="normal" in2="shape" result="effect1_innerShadow_1_2" />
+            <feBlend
+              mode="normal"
+              in2="shape"
+              result="effect1_innerShadow_1_2"
+            />
           </filter>
           <filter
             id="filter2_f_1_2"
@@ -209,7 +215,7 @@ export const SvgBlueIndicator: React.FC<SvgBlueIndicatorProps> = ({ active }) =>
 
       <div className={`blue-glow ${active ? 'active' : ''}`} />
     </>
-  );
-};
+  )
+}
 
-export default SvgBlueIndicator;
+export default SvgBlueIndicator

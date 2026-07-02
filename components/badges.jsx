@@ -1,20 +1,6 @@
 export function Badges() {
   return (
-    <div>
-      <style jsx>{`
-        div {
-          display: flex;
-          flex-wrap: wrap;
-          margin-top: 10px;
-        }
-        div a {
-          margin-right: 5px;
-        }
-        svg {
-          fill: #ea4aaa;
-          margin-right: 5px;
-        }
-      `}</style>
+    <div className="badges">
       <a href="https://docs.rs/crate/napi" target="_blank" rel="noreferrer">
         <img src="https://docs.rs/napi/badge.svg" alt="rust doc" />
       </a>

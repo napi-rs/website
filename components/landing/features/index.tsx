@@ -5,7 +5,7 @@ import { PowerfulCICard } from './powerful-ci'
 import { RichPlatformsCard } from './rich-platforms'
 import { OptimizedPerformanceCard } from './optimized-performance'
 import { FeatureSection } from './section'
-import { FeatureSimpleCard, FeatureCardProps } from './simple-card'
+import { FeatureSimpleCard, type FeatureCardProps } from './simple-card'
 
 // @TODO: Update features list & Make full motion cards
 export function Features() {
