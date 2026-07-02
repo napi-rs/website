@@ -99,10 +99,11 @@ const WEBASSEMBLY_ROUTE = 'concepts/webassembly'
 //   - function-and-callbacks: prose + inline logo <img src={X.src}> + Callouts +
 //     NodeLink. NO LinkPreview, NO custom-React island -> NO <script> block.
 //   - announce-v2 (en + cn): prose + <Diff/> + <Contributors/> islands.
-//   - announce-v3 (en): getStaticProps loader, 4 <LinkPreview/> cards, SVG-
-//     component logo islands, file-logo <img src={X.src}>, <TransformImage/>
-//     (the interactive WASM demo island — passes through and hydrates),
-//     <Sponsor/>, and inline JSX-isms (style={{}} / className).
+//   - announce-v3 (en): getStaticProps loader, 4 <LinkPreview/> cards, raw
+//     inline <svg> brand logos (lowercase HTML — pass through unchanged),
+//     file-logo <img src={X.src}>, <TransformImage/> (the interactive WASM demo
+//     island — passes through and hydrates), <Sponsor/>, and inline JSX-isms
+//     (style={{}} / className).
 //
 // All blog rewrites are gated to the BLOG section AND to the specific leaf via
 // the sets below, so the converter stays a general tool.
@@ -140,6 +141,11 @@ function pageNeedsIsolation(section, routePath) {
 // imports exactly the components whose tags appear on a given page, in the
 // deterministic order below. NOTE: the blog island components are `.jsx`
 // (LinkPreview is the lone `.tsx`); the specifier MUST carry the real extension.
+//
+// The announce-v3 SVG brand logos (Tailwind/Turborepo/Nx/Deno/LanceDB/Affine/
+// Bitwarden/Ts) are NO LONGER converter-managed islands: the source now carries
+// them as raw inline `<svg>` (lowercase HTML that passes through unchanged),
+// so their standalone island components were deleted and they need no import.
 const BLOG_ISLAND_COMPONENTS = {
   // announce-v2
   Diff: '../../../components/v2-diff.jsx',
@@ -150,15 +156,7 @@ const BLOG_ISLAND_COMPONENTS = {
   // `idle` strategy (matching the en landing's proven island config) rather than
   // the `visible` strategy the other blog islands use; see buildBlogIslandScript.
   TransformImage: '../../../components/transform-image/_Demo.tsx',
-  TailwindLogo: '../../../components/tailwind-logo.jsx',
-  TurborepoLogo: '../../../components/turborepo-logo.jsx',
-  NxLogo: '../../../components/nx-logo.jsx',
-  DenoLogo: '../../../components/deno-logo.jsx',
   Sponsor: '../../../components/sponsor.jsx',
-  LanceDBLogo: '../../../components/lancedb-logo.jsx',
-  AffineLogo: '../../../components/affine-logo.jsx',
-  BitwardenLogo: '../../../components/bitwarden-logo.jsx',
-  TsLogo: '../../../components/ts-logo.jsx',
 }
 
 // Deterministic emit order for the import lines in the island <script> block.
@@ -167,15 +165,7 @@ const BLOG_ISLAND_ORDER = [
   'Contributors',
   'LinkPreview',
   'TransformImage',
-  'TailwindLogo',
-  'TurborepoLogo',
-  'NxLogo',
-  'DenoLogo',
   'Sponsor',
-  'LanceDBLogo',
-  'AffineLogo',
-  'BitwardenLogo',
-  'TsLogo',
 ]
 
 // Per-component island hydration strategy for the byte-0 blog `<script>` block.
@@ -189,7 +179,8 @@ const BLOG_ISLAND_STRATEGY = {
 
 // File-logo import identifiers (used as `<img src={NAME.src} ...>`) -> served
 // asset filename under public/assets/. These are the FILE logos (static <img>);
-// the SVG-COMPONENT logos above stay as island tags instead.
+// the announce-v3 brand logos are raw inline <svg> in the source (lowercase HTML
+// that passes through unchanged), not island tags.
 const BLOG_LOGO_ASSETS = {
   rolldownLogo: 'rolldown.svg',
   rspackLogo: 'rspack.svg',
@@ -429,12 +420,13 @@ function phaseABlocks(src, routePath, section = 'docs') {
 
     // Blog pages (section-gated, outside fences). Mirrors the WebAssembly block:
     // every rewrite is idempotent and fires only on the gated blog leaf. The
-    // SVG-component logo island tags (<TailwindLogo />, <NxLogo .../>, …),
-    // <Diff/>, <Contributors/>, <Sponsor/>, and <TransformImage/> (the
-    // interactive WASM demo, announce-v3 only) are NOT rewritten here — they pass
-    // through as uppercase tags and hydrate via the byte-0 island <script>. The
-    // announce-v3 page carries the cross-origin-isolation response headers the
-    // demo needs (see void.json routing.headers + vite.config isolation plugin).
+    // island tags <Diff/>, <Contributors/>, <Sponsor/>, and <TransformImage/>
+    // (the interactive WASM demo, announce-v3 only) are NOT rewritten here — they
+    // pass through as uppercase tags and hydrate via the byte-0 island <script>.
+    // The announce-v3 brand logos are raw inline <svg> (lowercase HTML) and also
+    // pass through untouched. The announce-v3 page carries the cross-origin-
+    // isolation response headers the demo needs (see void.json routing.headers +
+    // vite.config isolation plugin).
     if (isBlog) {
       // Inline file-logo <img src={NAME.src} ...> -> static /assets/ raw HTML
       // (announce-v3 + function-and-callbacks). Uses the blog logo asset map.
@@ -449,8 +441,9 @@ function phaseABlocks(src, routePath, section = 'docs') {
       // ESCAPE a tag bearing a JSX style object (leaking it as visible text), and
       // `className` is inert in real HTML. Runs AFTER the logo rewrite (so logo
       // <img> styles are already CSS strings) and BEFORE the LinkPreview rewrite
-      // (so the baked `data='...'` JSON blob is never scanned). Also normalizes
-      // the SVG-component logo island tags that carry a JSX `style={{}}`.
+      // (so the baked `data='...'` JSON blob is never scanned). The raw inline
+      // <svg> brand logos already carry plain `style="..."` CSS strings, so this
+      // never touches them.
       if (line.includes('style={{')) {
         line = line.replace(
           /style=\{\{([^}]*)\}\}/g,
@@ -1152,7 +1145,8 @@ function convert(src, fallbackTitle, routePath, section = 'docs') {
 
   // Blog island pages: prepend a byte-0 island <script> importing exactly the
   // island components whose tags appear on the page (Diff/Contributors for
-  // announce-v2; LinkPreview + SVG-logo components + Sponsor for announce-v3).
+  // announce-v2; LinkPreview + TransformImage + Sponsor for announce-v3 — its
+  // brand logos are raw inline <svg>, not islands).
   // function-and-callbacks uses no islands -> no block, stays frontmatter-first.
   // Idempotent: the leading <script> was already stripped above, so we always
   // rebuild from the current body and re-prepend.

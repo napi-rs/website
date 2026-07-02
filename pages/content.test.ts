@@ -823,12 +823,12 @@ describe('blog slice', () => {
     expect(md).not.toContain('<Diff')
   })
 
-  it('announce-v3 leads with a byte-0 <script> importing LinkPreview + TransformImage + SVG logos + Sponsor', () => {
+  it('announce-v3 leads with a byte-0 <script> importing LinkPreview + TransformImage + Sponsor (brand logos are inline <svg>, not islands)', () => {
     const md = blogPage('en', 'announce-v3')
     expect(md.startsWith('<script>')).toBe(true)
     const { script, body } = stripLeadingScript(md)
     expect(script).not.toBe(null)
-    // LinkPreview is the lone .tsx; the rest are .jsx; all 3-deep + visible.
+    // LinkPreview is the lone .tsx; 3-deep + visible.
     expect(script).toContain(
       'import LinkPreview from "../../../components/link-preview.tsx" with { island: "visible" }',
     )
@@ -837,24 +837,27 @@ describe('blog slice', () => {
     expect(script).toContain(
       'import TransformImage from "../../../components/transform-image/_Demo.tsx" with { island: "idle" }',
     )
-    const expectedJsxIslands: Record<string, string> = {
-      TailwindLogo: 'tailwind-logo',
-      TurborepoLogo: 'turborepo-logo',
-      NxLogo: 'nx-logo',
-      DenoLogo: 'deno-logo',
-      Sponsor: 'sponsor',
-      LanceDBLogo: 'lancedb-logo',
-      AffineLogo: 'affine-logo',
-      BitwardenLogo: 'bitwarden-logo',
-      TsLogo: 'ts-logo',
-    }
-    for (const [name, file] of Object.entries(expectedJsxIslands)) {
+    // Sponsor is the sole surviving .jsx island (3-deep, visible).
+    expect(script).toContain(
+      'import Sponsor from "../../../components/sponsor.jsx" with { island: "visible" }',
+    )
+    // The brand logos are raw inline <svg> in the source now, NOT island
+    // components — their standalone components were deleted, so none of their old
+    // imports may appear in the byte-0 script block.
+    for (const name of [
+      'TailwindLogo',
+      'TurborepoLogo',
+      'NxLogo',
+      'DenoLogo',
+      'LanceDBLogo',
+      'AffineLogo',
+      'BitwardenLogo',
+      'TsLogo',
+    ]) {
       expect(
-        script!.includes(
-          `import ${name} from "../../../components/${file}.jsx" with { island: "visible" }`,
-        ),
-        `missing island import for ${name}`,
-      ).toBe(true)
+        script!.includes(name),
+        `unexpected island import for ${name}`,
+      ).toBe(false)
     }
     expect(body.startsWith('---\ntitle: ')).toBe(true)
   })
@@ -913,8 +916,20 @@ describe('blog slice', () => {
         `missing static img for ${file}`,
       ).toBe(true)
     }
-    // SVG-component logos stay as island tags (NOT static <img>).
-    expect(md).toContain('<TailwindLogo />')
+    // Brand logos are now raw inline <svg> in the source (no island tag): the
+    // Tailwind anchor wraps an <svg>, and the removed component tag never appears.
+    expect(md).not.toContain('<TailwindLogo')
+    const tailwindLine = md
+      .split('\n')
+      .find((l) => l.includes('href="https://tailwindcss.com/"'))
+    expect(tailwindLine, 'tailwind anchor line missing').toBeDefined()
+    expect(
+      tailwindLine!.indexOf(
+        '<svg',
+        tailwindLine!.indexOf('href="https://tailwindcss.com/"'),
+      ),
+    ).toBeGreaterThan(-1)
+    // Sponsor is still an island tag (its component survives).
     expect(md).toContain('<Sponsor />')
     // No leftover JSX expression src / .src / style object / className.
     expect(md).not.toMatch(/src=\{[A-Za-z]/)
@@ -982,8 +997,9 @@ describe('blog slice', () => {
 })
 
 describe('converter blog rewrites are route-scoped', () => {
-  // announce-v3-shaped source: getStaticProps, file-logo img, SVG-logo island
-  // tag, LinkPreview, JSX-isms.
+  // announce-v3-shaped source: getStaticProps, file-logo img, a raw inline <svg>
+  // brand logo (lowercase HTML — passes through, no import injected), the
+  // TransformImage island, LinkPreview, JSX-isms.
   const OFF_ROUTE_SRC = [
     'export const getStaticProps = async () => {',
     '  return { props: { ssg: {} } }',
@@ -992,6 +1008,8 @@ describe('converter blog rewrites are route-scoped', () => {
     '# Heading',
     '',
     "<img src={rolldownLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} />",
+    '',
+    '<a href="https://tailwindcss.com/"><svg viewBox="0 0 10 10" fill="var(--primary)"><path d="M0 0h10v10H0z"></path></svg></a>',
     '',
     '<TransformImage />',
     '',
@@ -1010,6 +1028,10 @@ describe('converter blog rewrites are route-scoped', () => {
     expect(out).toContain('export const getStaticProps')
     expect(out).toContain('<img src={rolldownLogo.src}')
     expect(out).not.toContain('/assets/rolldown.svg')
+    // The raw inline <svg> brand logo passes through verbatim (no import).
+    expect(out).toContain(
+      '<a href="https://tailwindcss.com/"><svg viewBox="0 0 10 10" fill="var(--primary)"><path d="M0 0h10v10H0z"></path></svg></a>',
+    )
     expect(out).toContain('<TransformImage />')
     expect(out).not.toContain('Interactive demo')
     expect(out).not.toContain("data='")
@@ -1060,14 +1082,20 @@ describe('converter blog rewrites are route-scoped', () => {
     expect(out).toContain(
       '<LinkPreview href="https://github.com/napi-rs/cross-toolchain" data=\'',
     )
+    // The raw inline <svg> brand logo passes through verbatim even on-route —
+    // it is lowercase HTML, not a converter-managed island.
+    expect(out).toContain(
+      '<a href="https://tailwindcss.com/"><svg viewBox="0 0 10 10" fill="var(--primary)"><path d="M0 0h10v10H0z"></path></svg></a>',
+    )
     expect(out.startsWith('<script>')).toBe(true)
     // The island <script> imports the tags present here: LinkPreview (visible)
-    // and TransformImage (idle).
+    // and TransformImage (idle) — and NO brand-logo island (they are inline <svg>).
     const { script } = stripLeadingScript(out)
     expect(script).toContain('import LinkPreview from')
     expect(script).toContain(
       'import TransformImage from "../../../components/transform-image/_Demo.tsx" with { island: "idle" }',
     )
+    expect(script).not.toContain('TailwindLogo')
   })
 
   it('blog section: fenced logo img / LinkPreview / getStaticProps stay literal', () => {
