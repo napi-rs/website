@@ -88,7 +88,16 @@ export function LinkPreview({ href, data }: { href: string; data?: string }) {
     >
       <Card
         className="w-full gap-2 py-3 backdrop-blur"
-        style={{ border: 'solid 1px oklch(0.922 0 0)', marginTop: '10px' }}
+        style={{
+          border: 'solid 1px oklch(0.922 0 0)',
+          marginTop: '10px',
+          // The card is an island embedded in @void/md prose, whose `p {
+          // margin-bottom }` rhythm gives the following block no top margin (see
+          // the inner `my-0` resets below). Add the gap below the card here so
+          // it isn't jammed against the next paragraph — matching napi.rs's
+          // ~24px separation.
+          marginBottom: '24px',
+        }}
       >
         <CardHeader>
           <CardTitle className="text-shadow-lg">
@@ -112,10 +121,19 @@ export function LinkPreview({ href, data }: { href: string; data?: string }) {
         </CardHeader>
         <CardContent className="flex justify-between">
           <div className="flex-col justify-between w-1/2 flex">
-            <p className="link-preview-body line-clamp-4 text-sm">
+            {/* Inline `margin: 0` (NOT a `my-0` class): the card lives inside
+                @void/md prose, whose `.void-md p { margin-bottom: 14px }` rule
+                (specificity 0,1,1) outranks a `.my-0` utility (0,1,0), so the
+                class is ignored and the footer gets pushed up (measured 27px vs
+                napi.rs's 13px). An inline style wins, resetting it so the footer
+                sits tight to the card bottom. */}
+            <p
+              className="link-preview-body line-clamp-4 text-sm"
+              style={{ margin: 0 }}
+            >
               {linkMeta.body}
             </p>
-            <p className="flex text-sm align-center">
+            <p className="flex text-sm align-center" style={{ margin: 0 }}>
               <span className="inline-block align-middle">{logo}</span>
               <span
                 style={{
