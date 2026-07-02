@@ -29,16 +29,6 @@ function readMeta(dir, locale) {
   return JSON.parse(readFileSync(file, 'utf8'))
 }
 
-/** Returns true if a content file (.mdx or .md) exists for the given route path and locale.
- *  routePath is relative to legacy_pages, e.g. "docs/cross-build" or "docs/concepts/class".
- */
-function contentExists(routePath, locale) {
-  const base = join(legacyPages, routePath)
-  return (
-    existsSync(`${base}.${locale}.mdx`) || existsSync(`${base}.${locale}.md`)
-  )
-}
-
 /** Title-case a hyphenated slug for a label when no _meta entry exists.
  *  e.g. "create-npm-dirs" -> "Create Npm Dirs". */
 function humanize(slug) {
@@ -150,43 +140,45 @@ function buildDocsSidebar(locale) {
   return groups
 }
 
-function buildBlogSidebar(locale) {
-  const meta = readMeta(join(legacyPages, 'blog'), locale)
-  if (!meta) return []
+// A FLAT section (blog / changelog) sidebar, derived ONCE from the EN `_meta`
+// and emitted for EVERY locale — mirroring buildDocsSidebar. There is NO
+// per-locale content gate: a cn/pt-BR leaf that lacks a localized source renders
+// the EN page at the same URL via the i18n-fallback middleware. This is what
+// keeps the Blog AND Changelog tabs visible under /cn and /pt-BR (matching live
+// napi.rs); gating on localized content used to blank the sidebar — which hides
+// the whole tab (Navbar/Breadcrumb/Pager derive visibility from it). Blog leaves
+// fall back as markdown; the changelog leaves are loader-driven islands, so
+// middleware/02.i18n-fallback unions lib/docs/page-data's ISLAND_PAGES into its
+// known-page set to make /<locale>/changelog/* fall back too. Labels localize
+// `_meta[locale]` -> `_meta.en` -> humanize(slug); order follows EN `_meta`.
+function buildFlatSidebar(section, locale) {
+  const metaEn = readMeta(join(legacyPages, section), 'en')
+  if (!metaEn) return []
+  const metaLocale = readMeta(join(legacyPages, section), locale) ?? {}
   const items = []
-  for (const [slug, v] of Object.entries(meta)) {
-    if (typeof v === 'object' && v.display === 'hidden') continue
-    if (!contentExists(`blog/${slug}`, locale)) continue
+  for (const [slug, vEn] of Object.entries(metaEn)) {
+    if (typeof vEn === 'object' && vEn.display === 'hidden') continue
     items.push({
-      title: typeof v === 'string' ? v : v.title,
-      path: `blog/${slug}`,
+      title:
+        metaTitle(metaLocale, slug) ??
+        metaTitle(metaEn, slug) ??
+        humanize(slug),
+      path: `${section}/${slug}`,
     })
   }
   if (items.length === 0) return []
-  // Blog is a FLAT list (the source _meta is a direct slug->title map, with no
-  // intermediate group). Emit ONE group with a blank title — the "flat group"
-  // marker the Sidebar/Breadcrumb honor to skip the redundant section-named
-  // header + crumb (matching live napi.rs). Docs, by contrast, has real groups.
-  return [{ group: 'blog', title: '', items }]
+  // A blank group title marks a "flat" section — the Sidebar/Breadcrumb skip the
+  // redundant section-named header + crumb (matching live napi.rs), unlike the
+  // real multi-group docs sidebar.
+  return [{ group: section, title: '', items }]
+}
+
+function buildBlogSidebar(locale) {
+  return buildFlatSidebar('blog', locale)
 }
 
 function buildChangelogSidebar(locale) {
-  const meta = readMeta(join(legacyPages, 'changelog'), locale)
-  if (!meta) return []
-  const items = []
-  for (const [slug, v] of Object.entries(meta)) {
-    if (typeof v === 'object' && v.display === 'hidden') continue
-    if (!contentExists(`changelog/${slug}`, locale)) continue
-    items.push({
-      title: typeof v === 'string' ? v : v.title,
-      path: `changelog/${slug}`,
-    })
-  }
-  if (items.length === 0) return []
-  // Changelog is a FLAT list (source _meta is a direct slug->title map). Same
-  // "flat group" marker as blog: a blank title means render the leaves directly
-  // with no group header/crumb, unlike the real multi-group docs sidebar.
-  return [{ group: 'changelog', title: '', items }]
+  return buildFlatSidebar('changelog', locale)
 }
 
 function buildLocaleNav(locale) {

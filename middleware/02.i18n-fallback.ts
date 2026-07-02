@@ -31,7 +31,12 @@
 
 import { defineMiddleware } from 'void'
 import mdPages from '@void/md/pages'
-import { decideFallback, isFallbackOriginal } from '../lib/i18n/fallback.ts'
+import {
+  decideFallback,
+  isFallbackOriginal,
+  islandKnownPaths,
+} from '../lib/i18n/fallback.ts'
+import { ISLAND_PAGES } from '../lib/docs/page-data.ts'
 
 // Shared data surfaced to pages/layouts via `useShared()` from the framework
 // adapter. `i18nFallback` is set here; `path` (the public route path) is set by
@@ -52,7 +57,15 @@ let cachedSet: ReadonlySet<string> | undefined
 function knownPaths(): ReadonlySet<string> {
   if (cachedSet && cachedSource === mdPages) return cachedSet
   cachedSource = mdPages
-  cachedSet = new Set(mdPages.map((p) => p.path))
+  const set = new Set(mdPages.map((p) => p.path))
+  // Island routes (loader-driven `*.island.tsx`, e.g. the changelog pages) have
+  // NO `@void/md/pages` entry, so without this they are invisible to
+  // decideFallback and a `/cn/changelog/*` request would 404 instead of serving
+  // the en island via fallback. Union lib/docs/page-data's ISLAND_PAGES — the
+  // very supplement the chrome's reachability set uses — so the middleware's
+  // known-page set matches what the navbar/breadcrumb actually link to.
+  for (const p of islandKnownPaths(ISLAND_PAGES)) set.add(p)
+  cachedSet = set
   return cachedSet
 }
 

@@ -9,6 +9,7 @@ import { describe, it, expect } from 'vite-plus/test'
 import {
   decideFallback,
   isFallbackOriginal,
+  islandKnownPaths,
   FALLBACK_LOCALES,
   DEFAULT_LOCALE,
 } from './fallback.ts'
@@ -146,5 +147,47 @@ describe('isFallbackOriginal', () => {
 
   it('is false when neither path is locale-prefixed', () => {
     expect(isFallbackOriginal('/', '/en')).toBe(false)
+  })
+})
+
+describe('islandKnownPaths', () => {
+  it('locale-prefixes each unprefixed island leaf', () => {
+    expect(
+      islandKnownPaths({
+        en: ['changelog/napi', 'changelog/napi-cli'],
+        cn: [],
+        'pt-BR': [],
+      }),
+    ).toEqual(['/en/changelog/napi', '/en/changelog/napi-cli'])
+  })
+
+  it('tolerates a leading slash on the leaf (no double slash)', () => {
+    expect(islandKnownPaths({ en: ['/changelog/napi'] })).toEqual([
+      '/en/changelog/napi',
+    ])
+  })
+
+  it('returns [] when no locale has island leaves', () => {
+    expect(islandKnownPaths({ en: [], cn: [], 'pt-BR': [] })).toEqual([])
+  })
+
+  // The reason islandKnownPaths exists: unioned into the known-page set, a
+  // markdown-less changelog island now falls back like a markdown page — a
+  // `/cn/changelog/*` request rewrites to the en island instead of 404ing.
+  it('makes a changelog island fall back once unioned into knownPaths', () => {
+    const known = new Set<string>([
+      '/en/docs/concepts/enum', // some markdown page
+      ...islandKnownPaths({ en: ['changelog/napi'], cn: [], 'pt-BR': [] }),
+    ])
+    expect(decideFallback('/cn/changelog/napi', known)).toEqual({
+      fallback: true,
+      destination: '/en/changelog/napi',
+      locale: 'cn',
+    })
+    // Without the island union it would NOT fall back (en path unknown) → 404.
+    expect(
+      decideFallback('/cn/changelog/napi', new Set(['/en/docs/concepts/enum']))
+        .fallback,
+    ).toBe(false)
   })
 })

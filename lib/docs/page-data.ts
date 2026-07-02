@@ -63,11 +63,14 @@ export function leafSection(leafPath: string): string {
 // Page existence (from @void/md/pages) — distinct from nav existence
 // ---------------------------------------------------------------------------
 //
-// IMPORTANT: nav leaves and EMITTED pages diverge. The nav manifest lists
-// blog/changelog leaves, but no blog/changelog markdown has been migrated yet —
-// so those sections have ZERO @void/md/pages entries. Tab visibility + the
-// "first real leaf" target must key off ACTUAL pages (`@void/md/pages`), never
-// the nav existence sets, or we'd link tabs at 404s.
+// IMPORTANT: nav leaves and EMITTED pages diverge. The nav manifest lists a leaf
+// for every locale (docs + blog + changelog), but a leaf only renders if it has
+// an actual page: a `@void/md/pages` entry (docs + blog markdown) OR — for the
+// loader-driven changelog islands, which have NO markdown — an `ISLAND_PAGES`
+// supplement entry. Tab visibility + the "first real leaf" target must key off
+// this ACTUAL-page set (`@void/md/pages` ∪ `ISLAND_PAGES`), never the raw nav
+// leaves, or we'd link tabs at 404s. For non-en locales an untranslated leaf is
+// reachable via the en fallback (isLeafReachable), matching the middleware.
 
 /**
  * ISLAND routes that exist as PAGES but are NOT `@void/md/pages` entries (they

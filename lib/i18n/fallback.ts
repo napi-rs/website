@@ -94,6 +94,32 @@ export function decideFallback(
 }
 
 /**
+ * Locale-prefixed route paths for markdown-less ISLAND routes (loader-driven
+ * `*.island.tsx`, e.g. the changelog pages). The middleware unions these into
+ * the known-page set it passes to `decideFallback` — without them an island
+ * route is invisible (it has no `@void/md/pages` entry) and a `/cn/changelog/*`
+ * request would 404 instead of falling back to the en island. Mirrors
+ * lib/docs/page-data `buildPageExistenceSets`' island merge.
+ *
+ * @param islandPages  Locale -> UNPREFIXED, section-qualified leaves
+ *                     (e.g. `{ en: ['changelog/napi'], cn: [], 'pt-BR': [] }`).
+ * @returns            Leading-slash, locale-prefixed paths
+ *                     (e.g. `['/en/changelog/napi']`), shaped like the
+ *                     `@void/md/pages` `path` values.
+ */
+export function islandKnownPaths(
+  islandPages: Record<string, ReadonlyArray<string>>,
+): string[] {
+  const paths: string[] = []
+  for (const [locale, leaves] of Object.entries(islandPages)) {
+    for (const leaf of leaves) {
+      paths.push(`/${locale}/${leaf.replace(/^\/+/, '')}`)
+    }
+  }
+  return paths
+}
+
+/**
  * On a re-dispatched (rewritten) request, decide whether the rewrite was an
  * i18n fallback — i.e. the user asked for a non-default-locale page that wasn't
  * translated, and we are now rendering the matching `/en/…` page.

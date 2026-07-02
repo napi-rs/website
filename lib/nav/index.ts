@@ -503,8 +503,54 @@ export const nav: Record<Locale, LocaleNav> = {
           ],
         },
       ],
-      blog: [],
-      changelog: [],
+      blog: [
+        {
+          group: 'blog',
+          title: '',
+          items: [
+            {
+              title: 'Functions and Callbacks in NAPI-RS',
+              path: 'blog/function-and-callbacks',
+            },
+            {
+              title: 'Announce V3',
+              path: 'blog/announce-v3',
+            },
+            {
+              title: 'Announce V2',
+              path: 'blog/announce-v2',
+            },
+          ],
+        },
+      ],
+      changelog: [
+        {
+          group: 'changelog',
+          title: '',
+          items: [
+            {
+              title: 'napi',
+              path: 'changelog/napi',
+            },
+            {
+              title: 'napi-derive',
+              path: 'changelog/napi_derive',
+            },
+            {
+              title: 'napi-sys',
+              path: 'changelog/napi_sys',
+            },
+            {
+              title: 'napi-build',
+              path: 'changelog/napi_build',
+            },
+            {
+              title: '@napi-rs/cli',
+              path: 'changelog/napi-cli',
+            },
+          ],
+        },
+      ],
     },
   },
   'pt-BR': {
@@ -717,8 +763,54 @@ export const nav: Record<Locale, LocaleNav> = {
           ],
         },
       ],
-      blog: [],
-      changelog: [],
+      blog: [
+        {
+          group: 'blog',
+          title: '',
+          items: [
+            {
+              title: 'Functions and Callbacks in NAPI-RS',
+              path: 'blog/function-and-callbacks',
+            },
+            {
+              title: 'Announce V3',
+              path: 'blog/announce-v3',
+            },
+            {
+              title: 'Announce V2',
+              path: 'blog/announce-v2',
+            },
+          ],
+        },
+      ],
+      changelog: [
+        {
+          group: 'changelog',
+          title: '',
+          items: [
+            {
+              title: 'napi',
+              path: 'changelog/napi',
+            },
+            {
+              title: 'napi-derive',
+              path: 'changelog/napi_derive',
+            },
+            {
+              title: 'napi-sys',
+              path: 'changelog/napi_sys',
+            },
+            {
+              title: 'napi-build',
+              path: 'changelog/napi_build',
+            },
+            {
+              title: '@napi-rs/cli',
+              path: 'changelog/napi-cli',
+            },
+          ],
+        },
+      ],
     },
   },
 } as const
