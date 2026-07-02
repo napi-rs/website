@@ -4124,9 +4124,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@void/md@npm:0.10.1":
-  version: 0.10.1
-  resolution: "@void/md@npm:0.10.1"
+"@void/md@npm:0.10.2":
+  version: 0.10.2
+  resolution: "@void/md@npm:0.10.2"
   dependencies:
     "@shikijs/engine-javascript": "npm:^4.0.2"
     "@shikijs/transformers": "npm:^4.0.2"
@@ -4141,14 +4141,14 @@ __metadata:
     tinyglobby: "npm:^0.2.16"
   peerDependencies:
     vite: ^8.0.0
-    void: 0.10.1
-  checksum: 10c0/b947a68450dbb77f96ce8e2869d139c07e70e095740d3c61c2bf9a78d42101c9e946aabb63488d228d96e12d12896fbcb005fbeee10afe885619d9675ab69bd8
+    void: 0.10.2
+  checksum: 10c0/388b4a0ecfc72b31ef67c26156e02ece0a443cd56807aac9f357979d7229bc28cedf7df8f8591d8817f38964b820ea7cabdbce0b8562ad63a11b35588e3ceb23
   languageName: node
   linkType: hard
 
-"@void/md@patch:@void/md@npm%3A0.10.1#~/.yarn/patches/@void-md-npm-0.10.1-253fb4b612.patch":
-  version: 0.10.1
-  resolution: "@void/md@patch:@void/md@npm%3A0.10.1#~/.yarn/patches/@void-md-npm-0.10.1-253fb4b612.patch::version=0.10.1&hash=3cd9aa"
+"@void/md@patch:@void/md@npm%3A0.10.2#~/.yarn/patches/@void-md-npm-0.10.2-b34bb16ef2.patch":
+  version: 0.10.2
+  resolution: "@void/md@patch:@void/md@npm%3A0.10.2#~/.yarn/patches/@void-md-npm-0.10.2-b34bb16ef2.patch::version=0.10.2&hash=3cd9aa"
   dependencies:
     "@shikijs/engine-javascript": "npm:^4.0.2"
     "@shikijs/transformers": "npm:^4.0.2"
@@ -4163,8 +4163,8 @@ __metadata:
     tinyglobby: "npm:^0.2.16"
   peerDependencies:
     vite: ^8.0.0
-    void: 0.10.1
-  checksum: 10c0/e5cabf96c44b6f38fef5fd689f25417f6f2935f66c6d0fe5703b66f8393af138323b993b8769a8ea8acde245d5e6f66e3f5bb01f4905329227952f05c992c8db
+    void: 0.10.2
+  checksum: 10c0/6ac7b232b9f33b4d861bd4f054131d7ab4b0f987e10592255b5877f91485ced80ec975fb883f6afedec8e79475a6f05ec8f3e6f08d14c0e956c701f9a917d80c
   languageName: node
   linkType: hard
 
@@ -7518,7 +7518,7 @@ __metadata:
     "@types/postcss-functions": "npm:^4"
     "@types/react": "npm:^19.0.0"
     "@types/react-dom": "npm:^19.0.0"
-    "@void/md": "patch:@void/md@npm%3A0.10.1#~/.yarn/patches/@void-md-npm-0.10.1-253fb4b612.patch"
+    "@void/md": "patch:@void/md@npm%3A0.10.2#~/.yarn/patches/@void-md-npm-0.10.2-b34bb16ef2.patch"
     "@void/react": "npm:0.10.2"
     "@waaark/luge": "npm:^0.6.20-beta"
     autoprefixer: "npm:^10.5.2"
@@ -7547,7 +7547,7 @@ __metadata:
     typescript: "npm:^6.0.3"
     vite: "npm:^8"
     vite-plus: "npm:^0.2.1"
-    void: "npm:^0.10.1"
+    void: "npm:^0.10.2"
   languageName: unknown
   linkType: soft
 
@@ -10178,9 +10178,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"void@npm:^0.10.1":
-  version: 0.10.1
-  resolution: "void@npm:0.10.1"
+"void@npm:^0.10.2":
+  version: 0.10.2
+  resolution: "void@npm:0.10.2"
   dependencies:
     "@cloudflare/sandbox": "npm:^0.10.0"
     "@cloudflare/vite-plugin": "npm:^1.36.3"
@@ -10202,7 +10202,7 @@ __metadata:
     pg: "npm:^8.20.0"
     wrangler: "npm:^4.90.0"
   peerDependencies:
-    "@void/md": 0.10.1
+    "@void/md": 0.10.2
     arktype: ">=2.0.0"
     valibot: ">=1.0.0-beta.7"
     vite: ^8.0.0
@@ -10218,7 +10218,7 @@ __metadata:
       optional: true
   bin:
     void: dist/cli/cli.mjs
-  checksum: 10c0/e7adf5b7c87786e9ddfbf891a1f1fa36e6b989d53a38dfbfb09427b80a3f80149c859293c78883d16fd4e5f11d634e4b4858fe2dbf296635cbc250b4f36d3e5e
+  checksum: 10c0/3314d7c0d5a804716e1857b0fb81ad396df8b043b09afdab7483741e97d4523eb1aca955e70f87102b4777be6eb83dcde516e10fbf7b0cf67605fd9e0ce0802c
   languageName: node
   linkType: hard
 
