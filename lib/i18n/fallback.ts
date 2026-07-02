@@ -43,7 +43,7 @@ function splitLocale(path: string): [string, string] | null {
 }
 
 /** True for a leading-slash path that ends in a known static-asset extension. */
-function looksLikeAsset(pathname: string): boolean {
+export function looksLikeAsset(pathname: string): boolean {
   const lastSegment = pathname.slice(pathname.lastIndexOf('/') + 1)
   return ASSET_EXT_RE.test(lastSegment)
 }
