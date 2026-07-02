@@ -35,9 +35,14 @@ import {
   readdirSync,
   mkdirSync,
   statSync,
+  existsSync,
 } from 'node:fs'
 import { join, dirname, resolve, relative, basename } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+// Node 24 strips types on import, so the plain-ESM CLI can consume these `.ts`
+// modules directly (Vite/rolldown handle them in the plugin + Vitest contexts).
+import { nav } from '../lib/nav/index.ts'
+import { buildLlmsIndex } from '../lib/docs/llms-index.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
@@ -204,12 +209,56 @@ function rawTargets(route, relPath) {
 // Main
 // ----------------------------------------------------------------------------
 
+// ----------------------------------------------------------------------------
+// llms.txt index (https://llmstxt.org/) — the discoverable, grouped markdown
+// index of the whole site. Emitted per locale: en at `/llms.txt`, the others at
+// `/<locale>/llms.txt`. Links point at each page's `.md` when a markdown SOURCE
+// exists (docs + blog), else the clean HTML URL (island-only sections like the
+// changelog). cn/pt-BR pages without their own translation link to the en `.md`
+// — the same en fallback the HTML pages use.
+// ----------------------------------------------------------------------------
+
+const LLMS_TITLE = {
+  en: 'NAPI-RS Documentation',
+  cn: 'NAPI-RS 文档',
+  'pt-BR': 'Documentação do NAPI-RS',
+}
+const LLMS_SUMMARY = {
+  en: 'NAPI-RS is a framework for building compiled Node.js add-ons in Rust via Node-API. This index links the Markdown source of every documentation and blog page.',
+  cn: 'NAPI-RS 是一个使用 Node-API 通过 Rust 构建预编译 Node.js 插件的框架。本索引链接了每个文档与博客页面的 Markdown 源文件。',
+  'pt-BR':
+    'NAPI-RS é um framework para criar add-ons compilados de Node.js em Rust via Node-API. Este índice lista o Markdown de cada página de documentação e blog.',
+}
+
+/** True when a `.md` SOURCE exists under `pages/<locale>/<leafPath>.md`. */
+function hasMarkdownSource(locale, leafPath) {
+  return existsSync(join(pagesDir, locale, `${leafPath}.md`))
+}
+
 /**
- * Emit `sitemap.xml` + the raw `.md` assets into `outDir` (defaults to
- * dist/client). Pure of any build-tool coupling so it serves BOTH the CLI
- * `main()` and the Vite build plugin (lib/build/vite-plugin-sitemap or the
- * inline plugin in vite.config.ts). Idempotent: byte-identical re-runs.
- * Returns counts + the absolute sitemap path for logging.
+ * Resolve a nav leaf `path` (public, unprefixed, e.g. `docs/concepts/exports`)
+ * to the URL the llms.txt index should link to, for a given locale:
+ *   • prefer that locale's own `.md` (`/<locale>/…​.md`, or `/…​.md` for en);
+ *   • else the en `.md` (matches the HTML i18n fallback for untranslated pages);
+ *   • else the clean HTML URL (no `.md` source at all, e.g. changelog islands).
+ */
+function llmsHrefFor(locale, leafPath) {
+  if (locale === DEFAULT_LOCALE) {
+    return hasMarkdownSource(DEFAULT_LOCALE, leafPath)
+      ? `/${leafPath}.md`
+      : `/${leafPath}`
+  }
+  if (hasMarkdownSource(locale, leafPath)) return `/${locale}/${leafPath}.md`
+  if (hasMarkdownSource(DEFAULT_LOCALE, leafPath)) return `/${leafPath}.md`
+  return `/${locale}/${leafPath}`
+}
+
+/**
+ * Emit `sitemap.xml`, the raw `.md` assets, and the `llms.txt` index files into
+ * `outDir` (defaults to dist/client). Pure of any build-tool coupling so it
+ * serves BOTH the CLI `main()` and the Vite build plugin (the inline plugin in
+ * vite.config.ts). Idempotent: byte-identical re-runs. Returns counts + the
+ * absolute sitemap path for logging.
  */
 function generateSitemap(outDir = distClient) {
   const files = walkPages(pagesDir)
@@ -247,7 +296,26 @@ function generateSitemap(outDir = distClient) {
     }
   }
 
-  return { routeCount: routes.length, rawCount, sitemapPath, outDir }
+  // --- llms.txt index (per locale) ---
+  let llmsCount = 0
+  for (const locale of LOCALES) {
+    const localeNav = nav[locale]
+    if (!localeNav) continue
+    const md = buildLlmsIndex(localeNav, {
+      title: LLMS_TITLE[locale] ?? LLMS_TITLE[DEFAULT_LOCALE],
+      summary: LLMS_SUMMARY[locale] ?? LLMS_SUMMARY[DEFAULT_LOCALE],
+      hrefFor: (leafPath) => llmsHrefFor(locale, leafPath),
+    })
+    const outPath =
+      locale === DEFAULT_LOCALE
+        ? join(outDir, 'llms.txt')
+        : join(outDir, locale, 'llms.txt')
+    mkdirSync(dirname(outPath), { recursive: true })
+    writeFileSync(outPath, md, 'utf8')
+    llmsCount++
+  }
+
+  return { routeCount: routes.length, rawCount, llmsCount, sitemapPath, outDir }
 }
 
 /**
@@ -267,20 +335,22 @@ function sitemapPlugin() {
     apply: 'build',
     writeBundle(options) {
       if (!options.dir || basename(options.dir) !== 'client') return
-      const { routeCount, rawCount } = generateSitemap(options.dir)
+      const { routeCount, rawCount, llmsCount } = generateSitemap(options.dir)
       console.log(
-        `napi-rs-sitemap: ${routeCount} routes + ${rawCount} raw .md files -> ${options.dir}`,
+        `napi-rs-sitemap: ${routeCount} routes + ${rawCount} raw .md files + ${llmsCount} llms.txt -> ${options.dir}`,
       )
     },
   }
 }
 
 function main() {
-  const { routeCount, rawCount, sitemapPath } = generateSitemap(distClient)
+  const { routeCount, rawCount, llmsCount, sitemapPath } =
+    generateSitemap(distClient)
   console.log(
     `sitemap: wrote ${routeCount} routes to ${relative(root, sitemapPath)}`,
   )
   console.log(`sitemap: emitted ${rawCount} raw .md files under dist/client`)
+  console.log(`sitemap: emitted ${llmsCount} llms.txt index files`)
 }
 
 // Run as a CLI when invoked directly, but stay side-effect-free when imported
