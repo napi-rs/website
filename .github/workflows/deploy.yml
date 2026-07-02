@@ -65,11 +65,32 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # Deploy: only on push to main. Build -> sitemap -> deploy (skip rebuild).
+  #
+  # Auth is GitHub OIDC — there is NO long-lived VOID_TOKEN secret to store or
+  # rotate. `void deploy` (>= 0.10.2) detects GitHub Actions and does the token
+  # exchange itself: it mints a short-lived GitHub OIDC token (audience "void"),
+  # trades it at $VOID_API_URL/auth/github-oidc for a short-lived, project-scoped
+  # deploy token, and deploys — so the workflow is a single `void deploy` step.
+  # `permissions: id-token: write` is what lets the CLI mint the OIDC token.
+  # Requires the repo connected to the project with the `github_actions` build
+  # executor (one-time, run once by a maintainer):
+  #   void github connect napi-rs --repo napi-rs/website \
+  #     --branch main --executor github_actions
+  # That connection also switches the project OFF Void's own platform container
+  # build, so this workflow is the single deploy path (no double "Void Build").
   # ---------------------------------------------------------------------------
   deploy:
     name: Deploy to Void
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # mint the GitHub OIDC token for the Void token exchange
+      contents: read
+    env:
+      # Read by `void deploy` for the OIDC token exchange endpoint. Override via
+      # a `VOID_API_URL` repo variable to target staging.
+      VOID_API_URL: ${{ vars.VOID_API_URL || 'https://api.void.cloud' }}
+      VOID_PROJECT: napi-rs # prod slug (napi-rs.void.app), NOT napi-rs-website
     steps:
       - uses: actions/checkout@v4
 
@@ -106,12 +127,9 @@ jobs:
       - name: Generate sitemap (post-build, writes into dist/client)
         run: yarn sitemap
 
-      # Deploy with --skip-build so `void deploy` ships the existing dist/
-      # output instead of triggering its own `vite build`, which would clobber
-      # dist/client and drop the sitemap.xml + raw .md emitted above.
-      # (`void deploy --skip-build` is documented in `void deploy --help`.)
+      # Single step: `void deploy` self-authenticates via GitHub OIDC (see the
+      # job header). --skip-build ships the dist/ built above instead of
+      # triggering its own `vite build`, which would clobber dist/client and drop
+      # the sitemap.xml + raw .md emitted by the sitemap step.
       - name: Deploy
-        env:
-          VOID_TOKEN: ${{ secrets.VOID_TOKEN }}
-          VOID_PROJECT: napi-rs-website
-        run: npx void deploy --skip-build
+        run: npx void deploy --project "$VOID_PROJECT" --skip-build
