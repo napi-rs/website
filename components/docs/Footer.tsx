@@ -1,9 +1,10 @@
 // Footer — site footer.
 //
 // Left: Logo + MIT license line + copyright (render-time year).
-// Right: attribution links — "Built with Void" (https://void.cloud) and
-//        "UI inspired by Vite" (https://vite.dev). The previous Nextra/Vercel
-//        attributions are intentionally NOT carried over (we migrated off them).
+// Right: the "Built with Void" attribution link (https://void.cloud). The
+//        previous Nextra/Vercel attributions are intentionally NOT carried over
+//        (we migrated off them); the "UI inspired by Vite" credit was dropped
+//        after Vite redesigned their homepage.
 //
 // Language control: the LANDING has no sidebar to hold a language switcher, so it
 // lives in the footer there. This renders it ONLY when a `locale` is passed — the
@@ -60,14 +61,6 @@ export default function Footer({ locale, className }: FooterProps) {
           className="transition-colors hover:text-primary"
         >
           Built with Void
-        </a>
-        <a
-          href="https://vite.dev"
-          target="_blank"
-          rel="noreferrer noopener"
-          className="transition-colors hover:text-primary"
-        >
-          UI inspired by Vite
         </a>
       </div>
     </div>
