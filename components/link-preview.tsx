@@ -80,24 +80,22 @@ export function LinkPreview({ href, data }: { href: string; data?: string }) {
     />
   )
   return (
+    // The below-card separation gap lives on this wrapper's OWN margin, not on
+    // the Card's marginBottom. The wrapper carries the onClick + cursor-pointer,
+    // and a flex item's margin sits INSIDE the wrapper's box — so a gap placed
+    // there becomes part of the click target (clicking the whitespace below the
+    // card opens the link). A margin on the wrapper is outside its hit area:
+    // separation without a dead-click strip. Matches napi.rs's ~24px gap below.
     <div
       className="flex justify-center w-full cursor-pointer"
+      style={{ marginBottom: '24px' }}
       onClick={() => {
         window.open(href, '_blank')
       }}
     >
       <Card
         className="w-full gap-2 py-3 backdrop-blur"
-        style={{
-          border: 'solid 1px oklch(0.922 0 0)',
-          marginTop: '10px',
-          // The card is an island embedded in @void/md prose, whose `p {
-          // margin-bottom }` rhythm gives the following block no top margin (see
-          // the inner `my-0` resets below). Add the gap below the card here so
-          // it isn't jammed against the next paragraph — matching napi.rs's
-          // ~24px separation.
-          marginBottom: '24px',
-        }}
+        style={{ border: 'solid 1px oklch(0.922 0 0)', marginTop: '10px' }}
       >
         <CardHeader>
           <CardTitle className="text-shadow-lg">
