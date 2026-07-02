@@ -11,7 +11,7 @@ description: What is native module, how Node.js load and execute it.
 
 Vamos começar com o desenvolvimento do módulo C++ mais essencial para o Node.js. Por exemplo, temos um módulo nativo legítimo chamado `pinyin.linux-x64-gnu.node` no Linux, que é na verdade um arquivo binário que não pode ser visualizado corretamente em um editor de texto, até encontrarmos um visualizador de binário.
 
-![](./hex.png)
+![](/assets/hex.png)
 
 O leitor perspicaz verá que seu Número Mágico[^1] é `0x7F454C46` e o código ASCII que ele pressiona é ELF, então a resposta é óbvia: é um arquivo **_DLL_** para Linux.
 
@@ -72,7 +72,7 @@ Logicamente, o processo de carregamento realmente se parece com isso.
 
 O fluxo descendente é semelhante a este diagrama de fluxo:
 
-![nm flow](./nm-flow.png)
+![nm flow](/assets/nm-flow.png)
 
 ## Como construir um módulo nativo
 

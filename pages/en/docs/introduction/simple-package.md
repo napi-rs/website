@@ -289,7 +289,7 @@ In the project **Settings -> Secrets**, add your **_NPM_TOKEN_** into it.
 
 If everything works fine, you will see the following CI matrix:
 
-![](./CI.png)
+![](/assets/CI.png)
 
 This is just a test CI matrix, let's finally publish this package:
 
