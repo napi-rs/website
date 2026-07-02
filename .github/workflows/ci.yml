@@ -20,7 +20,7 @@ jobs:
     name: Check (tests, fmt, lint, typecheck)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # setup-vp is the canonical Void/Vite+ CI action (see
       # node_modules/void/skills/void/docs/guide/deployment.md). It installs the

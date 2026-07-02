@@ -47,7 +47,7 @@ jobs:
     name: Deploy to Void
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Vite+ toolchain (Node 24 + Yarn install)
         uses: voidzero-dev/setup-vp@v1
