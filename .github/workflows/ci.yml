@@ -1,16 +1,35 @@
 name: CI
 
-# PR gate only. The deploy lives in its own canonically-named workflow
-# (void-deploy.yml) because Void's GitHub OIDC exchange validates the deploy
-# token's `job_workflow_ref` against `.github/workflows/void-deploy.yml`.
+# One workflow, two concerns:
+#   - `check`  runs on pull requests: the PR gate (tests + fmt blocking; lint +
+#     typecheck advisory).
+#   - `deploy` runs on push to main: deploys to Void via GitHub OIDC (no stored
+#     VOID_TOKEN secret).
+#
+# WHY the deploy lives HERE (not a separate void-deploy.yml): Void's OIDC
+# exchange validates the deploy token's `job_workflow_ref` against the
+# connection's pinned `workflow_path`. That pin is one-time set to THIS file:
+#   npx void@latest github update napi-rs --workflow .github/workflows/ci.yml
+# (the pin defaults to `.github/workflows/void-deploy.yml`; the `--workflow`
+# flag needs void >= 0.10.3). Only ONE workflow path can be authorized per
+# connection, so this must be the sole deploy workflow — do not re-add
+# void-deploy.yml.
 
 on:
   pull_request:
+  push:
+    branches: [main]
 
-# Cancel any in-flight run for the same PR ref when a new push lands.
+# Cancel any in-flight run for the same ref when a new push lands. A PR run
+# (`check`) and a main run (`deploy`) never share a group (distinct refs), so
+# this cancels stale PR checks and supersedes an older main deploy.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+# Restrictive default; the deploy job widens to id-token below.
+permissions:
+  contents: read
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -18,6 +37,7 @@ jobs:
   # ---------------------------------------------------------------------------
   check:
     name: Check (tests, fmt, lint, typecheck)
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -63,3 +83,63 @@ jobs:
       - name: Typecheck (advisory)
         continue-on-error: true
         run: npx tsc --noEmit
+
+  # ---------------------------------------------------------------------------
+  # Deploy: push to main only, via GitHub OIDC (no stored VOID_TOKEN). `void
+  # deploy` (>= 0.10.2) detects GitHub Actions, mints a short-lived OIDC token
+  # (audience "void"), exchanges it at $VOID_API_URL/auth/github-oidc for a
+  # short-lived, project-scoped deploy token, and ships dist/ — a single step.
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: Deploy to Void
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # id-token: write is what lets the job (and thus `void deploy`) mint the
+    # GitHub OIDC token. No stored VOID_TOKEN secret.
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      # Read by `void deploy` for the OIDC exchange endpoint. Override with a
+      # VOID_API_URL repo variable to target staging.
+      VOID_API_URL: ${{ vars.VOID_API_URL || 'https://api.void.cloud' }}
+      VOID_PROJECT: napi-rs # prod slug (napi-rs.void.app), NOT napi-rs-website
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Vite+ toolchain (Node 24 + Yarn install)
+        uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: '24'
+          cache: true
+
+      # Generate .void types before build so the production build resolves
+      # generated virtual modules cleanly.
+      - name: Generate Void types
+        run: yarn prepare
+
+      # Build first: `vite build` writes the client bundle to dist/client/ and
+      # the worker bundle to dist/.
+      #
+      # GITHUB_TOKEN is consumed by the changelog Vite plugin
+      # (lib/changelog/plugin.ts), which fetches the napi-rs release history at
+      # BUILD time. napi-rs/napi-rs is PUBLIC, so the auto-provided Actions token
+      # can read its releases (authenticated → 5000 req/hr; anonymous is 60/hr
+      # and flakes on shared runner IPs → the plugin throws and fails the build).
+      - name: Build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: yarn build
+
+      # Sitemap MUST run AFTER build: scripts/generate-sitemap.mjs emits
+      # sitemap.xml and the raw .md files INTO dist/client/. If it ran before
+      # build, `vite build` would wipe dist/client and discard these files.
+      - name: Generate sitemap (post-build, writes into dist/client)
+        run: yarn sitemap
+
+      # Single step: `void deploy` self-authenticates via GitHub OIDC (see
+      # header). --skip-build ships the dist/ built above instead of triggering
+      # its own `vite build`, which would clobber dist/client and drop the
+      # sitemap.xml + raw .md emitted by the sitemap step.
+      - name: Deploy
+        run: npx void deploy --project "$VOID_PROJECT" --skip-build
