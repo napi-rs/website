@@ -40,6 +40,7 @@
 // originalUrl() === the cn URL, so we resolve `cn` -> `zh-CN` correctly.
 
 import { defineMiddleware } from 'void'
+import mdPages from '@void/md/pages'
 import { getLocale, htmlLang, splitLocale } from '../lib/docs/locale.ts'
 
 // Inlined, IIFE-wrapped, no external deps. Kept minimal so it parses + executes
@@ -110,6 +111,47 @@ function canonicalUrl(publicPath: string): string {
     : `https://napi.rs/${locale}/`
 }
 
+// Per-page `rel="alternate"` markdown hint (see the block comment above the og
+// block). The set of routes that HAVE an emitted `<path>.md` is exactly the
+// `@void/md/pages` route set (island-only pages — landing, changelog — are not
+// markdown and are absent). Memoised against the array identity like
+// 02.i18n-fallback.ts (HMR-aware in dev, frozen in prod).
+let cachedSource: ReadonlyArray<{ path: string }> | undefined
+let cachedSet: ReadonlySet<string> | undefined
+function markdownPagePaths(): ReadonlySet<string> {
+  if (cachedSet && cachedSource === mdPages) return cachedSet
+  cachedSource = mdPages
+  cachedSet = new Set(mdPages.map((p) => p.path))
+  return cachedSet
+}
+
+/**
+ * Normalise a request path to the INTERNAL `@void/md/pages` route form
+ * (`/en|cn|pt-BR/…`). The prerender/runtime request may arrive already
+ * locale-prefixed (`/en/docs/x`) or as the public en URL (`/docs/x`); both map
+ * to the same internal path so the membership check + href are stable either
+ * way. Trailing slash stripped; root maps to the en root.
+ */
+function toInternalPath(reqPath: string): string {
+  const p = reqPath.replace(/\/+$/, '')
+  if (!p || p === '/') return '/en'
+  return /^\/(en|cn|pt-BR)(\/|$)/.test(p) ? p : `/en${p}`
+}
+
+/**
+ * The page's own markdown URL for a `<link rel="alternate">`, or '' when the
+ * route has no markdown. Derived from the INTERNAL (rendered) route so an
+ * i18n-fallback page — rendered as `/en/…` — points at the en `.md` that
+ * actually exists, not a missing `/cn/…​.md`. en drops its prefix (served at
+ * root); cn/pt-BR keep theirs.
+ */
+function markdownAlternateHref(internalPath: string): string {
+  const m = internalPath.match(/^\/(en|cn|pt-BR)\/(.+)$/)
+  if (!m) return ''
+  const [, locale, rest] = m
+  return locale === 'en' ? `/${rest}.md` : `/${locale}/${rest}.md`
+}
+
 export default defineMiddleware(async (c, next) => {
   const method = c.req.method
   // Resolve the PUBLIC route path the same way 03.page-path.ts does: a rewritten
@@ -157,7 +199,20 @@ export default defineMiddleware(async (c, next) => {
   )
   const ogDescription = descMatch ? descMatch[1] : DEFAULT_DESCRIPTION
 
+  // Advertise the page's raw-markdown twin to agents (llms.txt ecosystem). Only
+  // for routes that actually emit a `.md` (docs/blog); island pages (landing,
+  // changelog) are absent from the set and get no link. Baked into the
+  // prerendered HTML, so it costs nothing at runtime.
+  const internalPath = toInternalPath(c.req.path)
+  const mdHref = markdownPagePaths().has(internalPath)
+    ? markdownAlternateHref(internalPath)
+    : ''
+  const mdLink = mdHref
+    ? `<link rel="alternate" type="text/markdown" href="${mdHref}" title="Markdown">`
+    : ''
+
   const ogTags =
+    mdLink +
     `<meta property="og:title" content="${ogTitle}">` +
     `<meta property="og:description" content="${ogDescription}">` +
     `<meta property="og:url" content="${canonicalUrl(publicPath)}">`
