@@ -14,17 +14,19 @@
 // server HTML is already dark. The @void/md content theme keys off
 // `[data-theme]`; Tailwind's `dark:` variant keys off the `.dark` class
 // (`@custom-variant dark (&:is(.dark *))`). We reconcile the two BEFORE first
-// paint via an inline <head> script: read the saved preference — one of `light`
-// | `dark` | `system` — resolve `system` against the OS `prefers-color-scheme`,
+// paint via an inline <head> script: read the saved preference — `light` |
+// `dark` | `system` — and resolve it (an UNSET preference DEFAULTS to `system`),
 // then ALWAYS apply the resolved theme to BOTH `.dark` and `data-theme` (this MUST
-// stay in lockstep with ThemeToggle's own resolution). The default (no saved
-// preference) is DARK — matching live napi.rs (dark on first visit regardless of
-// the OS scheme; its switch still offers Light/Dark/System) and the void.json
-// `data-theme: "dark"` SSR default, so an unset/dark/system-dark visitor sees no
-// SSR→client flip (a `light`/`system-light` visitor flips before paint, no FOUC).
-// The try/catch wraps ONLY the storage read (which can throw in private mode),
-// defaulting to dark on failure — so the DOM writes always run and the two theme
-// systems never desync.
+// stay in lockstep with ThemeToggle's resolution). Default is SYSTEM: a first-time
+// visitor follows the OS `prefers-color-scheme`. The script also registers a
+// matchMedia listener so a live OS light/dark switch re-applies immediately while
+// the preference is `system`/unset — this is the AUTHORITATIVE "follow system"
+// handler (ThemeToggle no longer carries its own), so it works on every page even
+// where no toggle island is mounted (e.g. a closed mobile drawer). The home/
+// landing routes are dark-always regardless — their whole subtree (header, body,
+// footer) carries its own `.dark` — so this html-level resolution is invisible
+// there. The try/catch wraps ONLY the storage read (which can throw in private
+// mode), falling back to system — so the DOM writes always run and never desync.
 //
 // The `01.` prefix orders this BEFORE `02.i18n-fallback.ts`. `script`/`htmlAttrs`
 // from middleware are SSR-only (not re-applied on SPA navigation) — exactly right
@@ -44,12 +46,12 @@ import { getLocale, htmlLang, splitLocale } from '../lib/docs/locale.ts'
 // before the browser paints. The try/catch guards ONLY the storage read; the
 // DOM writes that follow always run so `.dark` and `data-theme` stay in sync.
 const THEME_BOOTSTRAP = `(function(){
-var d;try{var t=localStorage.getItem("theme");
-d=t==="light"?false:t==="system"?matchMedia("(prefers-color-scheme: dark)").matches:true;
-}catch(_){d=true;}
-var e=document.documentElement;
-e.classList.toggle("dark",d);
-e.setAttribute("data-theme",d?"dark":"light");
+var mq=matchMedia("(prefers-color-scheme: dark)");
+function read(){try{return localStorage.getItem("theme");}catch(_){return null;}}
+function apply(dark){var e=document.documentElement;e.classList.toggle("dark",dark);e.setAttribute("data-theme",dark?"dark":"light");}
+function resolve(t){return t==="light"?false:t==="dark"?true:mq.matches;}
+apply(resolve(read()));
+mq.addEventListener("change",function(){var t=read();if(t==="light"||t==="dark")return;apply(mq.matches);});
 })();`
 
 // Code-fence copy button. @void/md renders a <button class="copy"> in every

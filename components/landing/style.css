@@ -324,22 +324,32 @@
 footer {
   position: relative;
   z-index: 2;
-  background-color: transparent !important;
+  /* The landing footer is dark-ALWAYS (its subtree carries `.dark`, so
+     `--background` resolves to the dark canvas on this element). This used to be
+     `transparent` so a dark <body> showed through — but the body now follows the
+     site theme, so a light theme leaked a white footer. Paint the footer itself:
+     identical #111 in dark mode, and no longer white in light mode. `!important`
+     is kept only to stay authoritative over the layered `bg-background` utility
+     (Tailwind v4 utilities live in a lower @layer than this unlayered rule). */
+  background-color: var(--background) !important;
 }
 
-.dark {
-  footer {
-    > *:last-child {
-      padding-top: fv(40, 80);
-      padding-bottom: fv(40, 80);
-      background-image: radial-gradient(
-        50.75% 50.75% at 50% 0,
-        rgb(255 169 121 / 15%) 0,
-        rgb(255 190 121 / 0%) 100%
-      );
-      background-size: 70% 180%;
-      background-position: center top;
-      background-repeat: no-repeat;
-    }
-  }
+/* The footer's warm radial glow. It must key off the footer's OWN `.dark`
+   (`footer.dark`), not only an ancestor `.dark` (`.dark footer`): the landing
+   footer is dark-ALWAYS and carries its own `.dark`, but when the site theme is
+   light none of its ancestors do — so the ancestor-only selector dropped the glow
+   in a light OS and the "always dark" homepage looked different per theme. Both
+   selectors are listed so docs footers (ancestor `.dark`) keep the glow too. */
+.dark footer > *:last-child,
+footer.dark > *:last-child {
+  padding-top: fv(40, 80);
+  padding-bottom: fv(40, 80);
+  background-image: radial-gradient(
+    50.75% 50.75% at 50% 0,
+    rgb(255 169 121 / 15%) 0,
+    rgb(255 190 121 / 0%) 100%
+  );
+  background-size: 70% 180%;
+  background-position: center top;
+  background-repeat: no-repeat;
 }

@@ -55,7 +55,10 @@ export default function EnHome({ sponsors }: Props) {
         demo={<TransformImage />}
         heroDiagram={<HeroDiagram />}
       />
-      <footer className="border-t border-border">
+      <footer
+        className="dark border-t border-border bg-background text-foreground"
+        data-theme="dark"
+      >
         <Footer locale="en" />
       </footer>
     </>

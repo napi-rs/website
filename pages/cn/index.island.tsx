@@ -94,7 +94,10 @@ export default function CnHome({ sponsors }: Props) {
           </ul>
         </div>
       </div>
-      <footer className="border-t border-border">
+      <footer
+        className="dark border-t border-border bg-background text-foreground"
+        data-theme="dark"
+      >
         <Footer locale="cn" />
       </footer>
     </>

@@ -5,15 +5,16 @@
 //   • Tailwind keys off the `.dark` class on <html> (@custom-variant dark).
 //   • @void/md keys off `[data-theme="dark"]` on <html>.
 // The pre-paint bootstrap (middleware/01.head.ts) resolves the SAME three modes
-// before first paint and sets both signals. This component keeps them in
-// lockstep, persists the chosen MODE ('light' | 'dark' | 'system') to
-// localStorage('theme'), and — while 'system' is active — re-resolves live when
-// the OS `prefers-color-scheme` changes.
+// before first paint, sets both signals, AND owns the live "follow system"
+// listener — so a mid-session OS light/dark switch re-applies on every page, even
+// where no toggle island is mounted (e.g. a closed mobile drawer). This component
+// only persists the chosen MODE ('light' | 'dark' | 'system') to
+// localStorage('theme') and applies it on selection; the trigger shows the mode's
+// icon (sun / moon / monitor).
 //
-// Default when unset is DARK (verified: live napi.rs renders dark on first visit
-// regardless of the OS scheme; its switch still OFFERS System), matching the
-// void.json `data-theme="dark"` SSR default so an unset/dark/system-dark visitor
-// sees no SSR→client flip.
+// Default when unset is SYSTEM — a first-time visitor follows the OS
+// `prefers-color-scheme`. (The home/landing pages have no theme control at all;
+// they are dark-always.)
 //
 // Island note: this lives inside the Navbar island ('load'). It must not render a
 // preference-dependent icon on the SERVER (no localStorage there) or React warns
@@ -48,7 +49,7 @@ function isDarkFor(mode: ThemeMode): boolean {
   return mode === 'system' ? prefersDark() : mode === 'dark'
 }
 
-/** Saved mode; default 'dark' (matches the SSR default + live napi.rs). */
+/** Saved mode; default 'system' (first visit follows the OS). */
 function savedMode(): ThemeMode {
   try {
     const t = localStorage.getItem('theme')
@@ -56,7 +57,7 @@ function savedMode(): ThemeMode {
   } catch {
     // localStorage can throw in private mode — fall through to the default.
   }
-  return 'dark'
+  return 'system'
 }
 
 /** Apply a mode to BOTH theme signals on <html> (keeps Tailwind + @void/md in sync). */
@@ -74,23 +75,15 @@ export interface ThemeToggleProps {
 export default function ThemeToggle({ className }: ThemeToggleProps) {
   const [mounted, setMounted] = React.useState(false)
   const [open, setOpen] = React.useState(false)
-  // Initial state matches the SSR default (dark); reconciled to the saved mode
-  // on mount so SSR and first client render are identical.
-  const [mode, setMode] = React.useState<ThemeMode>('dark')
+  // Initial state matches the unset default ('system'); reconciled to the saved
+  // mode on mount so SSR and the first client render are identical. Live OS
+  // changes are handled by the bootstrap listener, not here.
+  const [mode, setMode] = React.useState<ThemeMode>('system')
 
   React.useEffect(() => {
     setMode(savedMode())
     setMounted(true)
   }, [])
-
-  // While 'system' is active, follow live OS scheme changes.
-  React.useEffect(() => {
-    if (!mounted || mode !== 'system') return
-    const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const onChange = () => applyMode('system')
-    mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
-  }, [mounted, mode])
 
   const select = (next: ThemeMode) => {
     try {

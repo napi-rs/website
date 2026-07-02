@@ -5,17 +5,19 @@
 //        "UI inspired by Vite" (https://vite.dev). The previous Nextra/Vercel
 //        attributions are intentionally NOT carried over (we migrated off them).
 //
-// Theme + language controls: live napi.rs shows these in the footer ON THE
-// LANDING (which has no sidebar to hold them); on docs they live in the sidebar
-// footer instead. So this component renders the toggles ONLY when a `locale` is
-// passed — the LANDING entries import this `with { island: 'load' }` and pass a
-// locale (so ThemeToggle/LangSwitcher hydrate as this island's children), while
-// the docs layout renders it as a plain static slot WITHOUT a locale (no toggles).
+// Language control: the LANDING has no sidebar to hold a language switcher, so it
+// lives in the footer there. This renders it ONLY when a `locale` is passed — the
+// LANDING entries import this `with { island: 'load' }` and pass a locale (so
+// LangSwitcher hydrates as this island's child); the docs layout renders the
+// footer as a plain static slot WITHOUT a locale.
+//
+// There is intentionally NO theme control here: the home/landing pages are
+// dark-always, so there is no theme choice to offer. docs/blog/changelog carry the
+// theme switch in their sidebar/navbar chrome instead (see DocsLayout).
 import { cn } from '@/lib/utils'
 import type { Locale } from '@/lib/nav/index.ts'
 import Logo from './Logo.tsx'
 import LangSwitcher from './LangSwitcher'
-import ThemeToggle from './ThemeToggle'
 
 export interface FooterProps {
   /**
@@ -43,7 +45,6 @@ export default function Footer({ locale, className }: FooterProps) {
                 has-[>svg] -> px-2.5) so the globe icon sits flush-left, aligned
                 with the Logo + license text stacked below it. */}
             <LangSwitcher locale={locale} showLabel className="-ml-2.5" />
-            <ThemeToggle />
           </div>
         ) : null}
         <Logo />
