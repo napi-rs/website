@@ -1866,18 +1866,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@napi-rs/image-wasm32-wasi@npm:1.12.1":
-  version: 1.12.1
-  resolution: "@napi-rs/image-wasm32-wasi@npm:1.12.1"
-  dependencies:
-    "@emnapi/core": "npm:1.11.1"
-    "@emnapi/runtime": "npm:1.11.1"
-    "@napi-rs/wasm-runtime": "npm:^1.1.5"
-  checksum: 10c0/9738f85b03df273d343a6df7903510dbdb46b744db501b01ddc6f8b7e05f2fddabf3274695564236f1ca78ea6d6595dda6150127724d10e4b00adb8c306ac853
-  conditions: cpu=wasm32
-  languageName: node
-  linkType: hard
-
 "@napi-rs/image-wasm32-wasi@npm:1.14.0":
   version: 1.14.0
   resolution: "@napi-rs/image-wasm32-wasi@npm:1.14.0"
@@ -1885,6 +1873,7 @@ __metadata:
     "@emnapi/core": "npm:1.11.1"
     "@emnapi/runtime": "npm:1.11.1"
     "@napi-rs/wasm-runtime": "npm:^1.1.6"
+  checksum: 10c0/312fc7c373ee41ed8cbcb655f3277ab0d653b7c70397fc03c6dd81d917ade6af687608ae89ed303f484f346a57bdae103412709ee57984d0034fb6d6d39a74b1
   conditions: cpu=wasm32
   languageName: node
   linkType: hard
@@ -2087,7 +2076,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@napi-rs/wasm-runtime@npm:^1.1.4, @napi-rs/wasm-runtime@npm:^1.1.5":
+"@napi-rs/wasm-runtime@npm:^1.1.4":
   version: 1.1.5
   resolution: "@napi-rs/wasm-runtime@npm:1.1.5"
   dependencies:
@@ -7519,7 +7508,7 @@ __metadata:
   resolution: "napi-rs-docs@workspace:."
   dependencies:
     "@napi-rs/image": "npm:1.14.0"
-    "@napi-rs/image-wasm32-wasi": "npm:1.12.1"
+    "@napi-rs/image-wasm32-wasi": "npm:1.14.0"
     "@radix-ui/react-dialog": "npm:^1.1.18"
     "@radix-ui/react-popover": "npm:^1.1.18"
     "@radix-ui/react-progress": "npm:^1.1.11"
