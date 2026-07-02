@@ -80,8 +80,15 @@ export function LinkPreview({ href, data }: { href: string; data?: string }) {
     />
   )
   return (
+    // The below-card separation gap lives on this wrapper's OWN margin, not on
+    // the Card's marginBottom. The wrapper carries the onClick + cursor-pointer,
+    // and a flex item's margin sits INSIDE the wrapper's box — so a gap placed
+    // there becomes part of the click target (clicking the whitespace below the
+    // card opens the link). A margin on the wrapper is outside its hit area:
+    // separation without a dead-click strip. Matches napi.rs's ~24px gap below.
     <div
       className="flex justify-center w-full cursor-pointer"
+      style={{ marginBottom: '24px' }}
       onClick={() => {
         window.open(href, '_blank')
       }}
@@ -112,10 +119,19 @@ export function LinkPreview({ href, data }: { href: string; data?: string }) {
         </CardHeader>
         <CardContent className="flex justify-between">
           <div className="flex-col justify-between w-1/2 flex">
-            <p className="link-preview-body line-clamp-4 text-sm">
+            {/* Inline `margin: 0` (NOT a `my-0` class): the card lives inside
+                @void/md prose, whose `.void-md p { margin-bottom: 14px }` rule
+                (specificity 0,1,1) outranks a `.my-0` utility (0,1,0), so the
+                class is ignored and the footer gets pushed up (measured 27px vs
+                napi.rs's 13px). An inline style wins, resetting it so the footer
+                sits tight to the card bottom. */}
+            <p
+              className="link-preview-body line-clamp-4 text-sm"
+              style={{ margin: 0 }}
+            >
               {linkMeta.body}
             </p>
-            <p className="flex text-sm align-center">
+            <p className="flex text-sm align-center" style={{ margin: 0 }}>
               <span className="inline-block align-middle">{logo}</span>
               <span
                 style={{
