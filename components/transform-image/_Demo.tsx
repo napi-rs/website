@@ -23,6 +23,9 @@ import { ChromaSubsampling, OUTPUT_MIME } from './protocol'
 // Vite resolves an image import to its emitted URL STRING (not a {src,
 // blurDataURL} object like the old Next image loader), so this is used directly.
 import nasaImage from './nasa-4928x3279.png'
+// Build-time LQIP (tiny blurred WebP data URI) for the result slot, produced by
+// scripts/build-demo-lqip.mjs — replaces the old Next `nasaImage.blurDataURL`.
+import { NASA_LQIP } from './lqip.gen'
 
 const imageFormats = [
   {
@@ -275,12 +278,12 @@ export default function TransformImage() {
   return (
     <Shell>
       <div className="flex flex-col">
-        {/* Seed both <img>s with the imported image URL as a placeholder. The
-            old Next component used `nasaImage.blurDataURL` here; Vite returns a
-            plain URL string (no LQIP), so we use the image itself. Without an
-            initial src the slots render a broken-image icon — the original
-            shows immediately, the transformed slot stays a placeholder until a
-            transcode swaps in the result blob. */}
+        {/* The original slot shows the full imported image immediately. The
+            result slot below is instead seeded with a build-time LQIP (a tiny
+            blurred WebP data URI from scripts/build-demo-lqip.mjs, generated
+            with @napi-rs/image) — this replaces the old Next `blurDataURL` and
+            reads as a blurry "no result yet" placeholder until a transcode swaps
+            in the real result blob (transformedRef.current.src = nextUrl). */}
         <img alt="original image" width={4928} ref={imageRef} src={nasaImage} />
         <span className="font-mono text-center pt-2">
           Original Size: {prettyBytes(imageSize)}
@@ -321,7 +324,7 @@ export default function TransformImage() {
           alt="transformed image"
           ref={transformedRef}
           width={4928}
-          src={nasaImage}
+          src={NASA_LQIP}
         />
         <span className="font-mono text-center w-full pt-2">
           Size: {prettyBytes(transformedSize)}
