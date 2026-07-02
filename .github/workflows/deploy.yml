@@ -19,7 +19,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # setup-vp is the canonical Void/Vite+ CI action (see
       # node_modules/void/skills/void/docs/guide/deployment.md). It installs the
@@ -71,7 +71,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Vite+ toolchain (Node 24 + Yarn install)
         uses: voidzero-dev/setup-vp@v1
