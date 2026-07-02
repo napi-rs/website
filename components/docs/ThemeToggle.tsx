@@ -16,6 +16,7 @@ import * as React from 'react'
 import { Moon, Sun } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 function currentIsDark(): boolean {
   if (typeof document === 'undefined') return true
@@ -60,7 +61,11 @@ export default function ThemeToggle({ className }: ThemeToggleProps) {
       onClick={toggle}
       aria-label="Toggle theme"
       title="Toggle theme"
-      className={className}
+      // size="icon" is a 36px square, but this toggle always sits beside the
+      // labeled LangSwitcher (a size="sm" 32px button) in every context — the
+      // landing footer, the docs sidebar footer, and the mobile drawer. Match
+      // that 32px height so the row's two controls are equal height.
+      className={cn('size-8', className)}
     >
       {/*
         Until mounted, render a neutral icon to keep SSR/CSR markup identical.
