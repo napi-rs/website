@@ -67,7 +67,15 @@ export default function ThemeToggle({ className }: ThemeToggleProps) {
         After mount we reflect the real DOM theme. `suppressHydrationWarning`
         guards the icon swap.
       */}
-      <span suppressHydrationWarning>
+      {/* flex-center the icon so it sits on the button's vertical center in ALL
+          browsers. A plain inline <span> centers the svg via vertical-align
+          against the 20px line-box, which Chromium collapses to the icon height
+          but Safari/Firefox render ~2-4px low — visibly off from the sibling
+          LangSwitcher (whose globe is a direct flex child). */}
+      <span
+        suppressHydrationWarning
+        className="flex items-center justify-center"
+      >
         {mounted && !isDark ? (
           <Sun className="size-4" />
         ) : (
