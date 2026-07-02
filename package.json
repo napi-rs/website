@@ -21,7 +21,7 @@
     "@radix-ui/react-popover": "^1.1.18",
     "@radix-ui/react-progress": "^1.1.11",
     "@radix-ui/react-slot": "^1.3.0",
-    "@void/md": "patch:@void/md@npm%3A0.10.2#~/.yarn/patches/@void-md-npm-0.10.2-b34bb16ef2.patch",
+    "@void/md": "0.10.3",
     "@void/react": "0.10.3",
     "@waaark/luge": "^0.6.20-beta",
     "buffer": "^6.0.3",
@@ -33,7 +33,6 @@
     "lodash-es": "^4.18.1",
     "lucide-react": "^1.22.0",
     "markdown-exit": "1.1.0-beta.2",
-    "markdown-it-footnote": "4.0.0",
     "react": "^19",
     "react-device-detect": "^2.2.3",
     "react-dom": "^19",
@@ -57,7 +56,7 @@
     "typescript": "^6.0.3",
     "vite": "^8",
     "vite-plus": "^0.2.1",
-    "void": "^0.10.2"
+    "void": "^0.10.3"
   },
   "packageManager": "yarn@4.17.0"
 }

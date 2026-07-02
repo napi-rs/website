@@ -3380,9 +3380,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@void/md@npm:0.10.2":
-  version: 0.10.2
-  resolution: "@void/md@npm:0.10.2"
+"@void/md@npm:0.10.3":
+  version: 0.10.3
+  resolution: "@void/md@npm:0.10.3"
   dependencies:
     "@shikijs/engine-javascript": "npm:^4.0.2"
     "@shikijs/transformers": "npm:^4.0.2"
@@ -3392,35 +3392,14 @@ __metadata:
     markdown-it-attrs: "npm:^4.3.1"
     markdown-it-container: "npm:^4.0.0"
     markdown-it-emoji: "npm:^3.0.0"
+    markdown-it-footnote: "npm:^4.0.0"
     pathe: "npm:^2.0.3"
     shiki: "npm:^4.0.2"
     tinyglobby: "npm:^0.2.16"
   peerDependencies:
     vite: ^8.0.0
-    void: 0.10.2
-  checksum: 10c0/388b4a0ecfc72b31ef67c26156e02ece0a443cd56807aac9f357979d7229bc28cedf7df8f8591d8817f38964b820ea7cabdbce0b8562ad63a11b35588e3ceb23
-  languageName: node
-  linkType: hard
-
-"@void/md@patch:@void/md@npm%3A0.10.2#~/.yarn/patches/@void-md-npm-0.10.2-b34bb16ef2.patch":
-  version: 0.10.2
-  resolution: "@void/md@patch:@void/md@npm%3A0.10.2#~/.yarn/patches/@void-md-npm-0.10.2-b34bb16ef2.patch::version=0.10.2&hash=3cd9aa"
-  dependencies:
-    "@shikijs/engine-javascript": "npm:^4.0.2"
-    "@shikijs/transformers": "npm:^4.0.2"
-    gray-matter: "npm:^4.0.3"
-    markdown-exit: "npm:1.0.0-beta.9"
-    markdown-it-anchor: "npm:^9.2.0"
-    markdown-it-attrs: "npm:^4.3.1"
-    markdown-it-container: "npm:^4.0.0"
-    markdown-it-emoji: "npm:^3.0.0"
-    pathe: "npm:^2.0.3"
-    shiki: "npm:^4.0.2"
-    tinyglobby: "npm:^0.2.16"
-  peerDependencies:
-    vite: ^8.0.0
-    void: 0.10.2
-  checksum: 10c0/6ac7b232b9f33b4d861bd4f054131d7ab4b0f987e10592255b5877f91485ced80ec975fb883f6afedec8e79475a6f05ec8f3e6f08d14c0e956c701f9a917d80c
+    void: 0.10.3
+  checksum: 10c0/b1d133011ecf779dfface34bb755cbbad6da0e40a16e55dcc26c09343a13bda2e5c695e92011a75eec5d2acc87940cabc6956397b24997f821f569071e018678
   languageName: node
   linkType: hard
 
@@ -6311,7 +6290,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"markdown-it-footnote@npm:4.0.0":
+"markdown-it-footnote@npm:^4.0.0":
   version: 4.0.0
   resolution: "markdown-it-footnote@npm:4.0.0"
   checksum: 10c0/47aa807b143af211d7eca376c724b05e939e8b5960f6e287c63eca7f121be7ac697ff5601d5b7c89cbde7a32713a66b2a6f375251fad1fe989bd05d07f80e4cd
@@ -6606,7 +6585,7 @@ __metadata:
     "@types/postcss-functions": "npm:^4"
     "@types/react": "npm:^19.0.0"
     "@types/react-dom": "npm:^19.0.0"
-    "@void/md": "patch:@void/md@npm%3A0.10.2#~/.yarn/patches/@void-md-npm-0.10.2-b34bb16ef2.patch"
+    "@void/md": "npm:0.10.3"
     "@void/react": "npm:0.10.3"
     "@waaark/luge": "npm:^0.6.20-beta"
     autoprefixer: "npm:^10.5.2"
@@ -6619,7 +6598,6 @@ __metadata:
     lodash-es: "npm:^4.18.1"
     lucide-react: "npm:^1.22.0"
     markdown-exit: "npm:1.1.0-beta.2"
-    markdown-it-footnote: "npm:4.0.0"
     postcss: "npm:^8.5.16"
     postcss-functions: "npm:^4.0.2"
     postcss-import: "npm:^16.1.1"
@@ -6635,7 +6613,7 @@ __metadata:
     typescript: "npm:^6.0.3"
     vite: "npm:^8"
     vite-plus: "npm:^0.2.1"
-    void: "npm:^0.10.2"
+    void: "npm:^0.10.3"
   languageName: unknown
   linkType: soft
 
@@ -9123,9 +9101,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"void@npm:^0.10.2":
-  version: 0.10.2
-  resolution: "void@npm:0.10.2"
+"void@npm:^0.10.3":
+  version: 0.10.3
+  resolution: "void@npm:0.10.3"
   dependencies:
     "@cloudflare/sandbox": "npm:^0.10.0"
     "@cloudflare/vite-plugin": "npm:^1.36.3"
@@ -9147,7 +9125,7 @@ __metadata:
     pg: "npm:^8.20.0"
     wrangler: "npm:^4.90.0"
   peerDependencies:
-    "@void/md": 0.10.2
+    "@void/md": 0.10.3
     arktype: ">=2.0.0"
     valibot: ">=1.0.0-beta.7"
     vite: ^8.0.0
@@ -9163,7 +9141,7 @@ __metadata:
       optional: true
   bin:
     void: dist/cli/cli.mjs
-  checksum: 10c0/3314d7c0d5a804716e1857b0fb81ad396df8b043b09afdab7483741e97d4523eb1aca955e70f87102b4777be6eb83dcde516e10fbf7b0cf67605fd9e0ce0802c
+  checksum: 10c0/0ab9a2f1542f18cd866b48f0f4480751c54903c7f5a4692eaf274e6cbe6b707c10ba6fe60eb40dac574cee32f28dcd722908862b9caabf2da60e5baae9170682
   languageName: node
   linkType: hard
 
