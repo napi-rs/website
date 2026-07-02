@@ -10,17 +10,21 @@
 // in a SINGLE `c.set('headDefaults', …)` because the protocol reads one value
 // (`c.get("headDefaults")`) — a second `set` would clobber the first.
 //
-// (2) Dark-mode bootstrap — void.json sets `data-theme="dark"` as the SSR
-// default so server HTML is already dark. The @void/md content theme keys off
+// (2) Theme bootstrap — void.json sets `data-theme="dark"` as the SSR default so
+// server HTML is already dark. The @void/md content theme keys off
 // `[data-theme]`; Tailwind's `dark:` variant keys off the `.dark` class
 // (`@custom-variant dark (&:is(.dark *))`). We reconcile the two BEFORE first
-// paint via an inline <head> script: read the saved preference, then ALWAYS
-// apply the resolved theme to BOTH `.dark` and `data-theme`. The default (no
-// saved preference) is DARK — matching the live napi.rs site (which is dark
-// regardless of the OS `prefers-color-scheme`) and the void.json `data-theme:
-// "dark"` SSR default, so there is no SSR→client theme flip. The try/catch wraps
-// ONLY the storage read (which can throw in private mode), defaulting to dark on
-// failure — so the DOM writes always run and the two theme systems never desync.
+// paint via an inline <head> script: read the saved preference — one of `light`
+// | `dark` | `system` — resolve `system` against the OS `prefers-color-scheme`,
+// then ALWAYS apply the resolved theme to BOTH `.dark` and `data-theme` (this MUST
+// stay in lockstep with ThemeToggle's own resolution). The default (no saved
+// preference) is DARK — matching live napi.rs (dark on first visit regardless of
+// the OS scheme; its switch still offers Light/Dark/System) and the void.json
+// `data-theme: "dark"` SSR default, so an unset/dark/system-dark visitor sees no
+// SSR→client flip (a `light`/`system-light` visitor flips before paint, no FOUC).
+// The try/catch wraps ONLY the storage read (which can throw in private mode),
+// defaulting to dark on failure — so the DOM writes always run and the two theme
+// systems never desync.
 //
 // The `01.` prefix orders this BEFORE `02.i18n-fallback.ts`. `script`/`htmlAttrs`
 // from middleware are SSR-only (not re-applied on SPA navigation) — exactly right
@@ -40,7 +44,9 @@ import { getLocale, htmlLang, splitLocale } from '../lib/docs/locale.ts'
 // before the browser paints. The try/catch guards ONLY the storage read; the
 // DOM writes that follow always run so `.dark` and `data-theme` stay in sync.
 const THEME_BOOTSTRAP = `(function(){
-var d;try{var t=localStorage.getItem("theme");d=t?t==="dark":true;}catch(_){d=true;}
+var d;try{var t=localStorage.getItem("theme");
+d=t==="light"?false:t==="system"?matchMedia("(prefers-color-scheme: dark)").matches:true;
+}catch(_){d=true;}
 var e=document.documentElement;
 e.classList.toggle("dark",d);
 e.setAttribute("data-theme",d?"dark":"light");
