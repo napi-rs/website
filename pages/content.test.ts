@@ -21,7 +21,7 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = join(__dirname, '..')
-const legacyDocs = join(root, 'legacy_pages', 'docs')
+const contentDocs = join(root, 'content', 'docs')
 const pagesDir = join(root, 'pages')
 
 const LOCALES = ['en', 'cn', 'pt-BR'] as const
@@ -68,8 +68,8 @@ function walk(dir: string): string[] {
 /** All in-scope legacy files as { routePath, locale }. */
 function inScopeLegacy(): { routePath: string; locale: string }[] {
   const result: { routePath: string; locale: string }[] = []
-  for (const full of walk(legacyDocs)) {
-    const rel = relative(legacyDocs, full).replace(/\\/g, '/')
+  for (const full of walk(contentDocs)) {
+    const rel = relative(contentDocs, full).replace(/\\/g, '/')
     const m = rel.match(/^(.+)\.(en|cn|pt-BR)\.(mdx|md)$/)
     if (!m) continue
     const [, routePath, locale] = m
@@ -702,7 +702,7 @@ describe('webassembly slice', () => {
     // depends on (the workflow re-reads pristine source, but this is the strict
     // invariant).
     const src = readFileSync(
-      join(legacyDocs, 'concepts', 'webassembly.en.mdx'),
+      join(contentDocs, 'concepts', 'webassembly.en.mdx'),
       'utf8',
     )
     const once = convert(src, 'WebAssembly', WEBASSEMBLY_ROUTE)
@@ -716,7 +716,7 @@ describe('webassembly slice', () => {
 })
 
 describe('blog slice', () => {
-  const legacyBlog = join(root, 'legacy_pages', 'blog')
+  const contentBlog = join(root, 'content', 'blog')
   const blogPage = (locale: string, leaf: string) =>
     readFileSync(join(pagesDir, locale, 'blog', `${leaf}.md`), 'utf8')
 
@@ -988,7 +988,10 @@ describe('blog slice', () => {
       ['announce-v2', 'Announce V2', '.cn'],
     ]
     for (const [leaf, title, suffix] of cases) {
-      const src = readFileSync(join(legacyBlog, `${leaf}${suffix}.mdx`), 'utf8')
+      const src = readFileSync(
+        join(contentBlog, `${leaf}${suffix}.mdx`),
+        'utf8',
+      )
       const once = convert(src, title, leaf, 'blog')
       const twice = convert(once, title, leaf, 'blog')
       expect(twice, `not idempotent: ${leaf}${suffix}`).toBe(once)

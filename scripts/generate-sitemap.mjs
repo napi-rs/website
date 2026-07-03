@@ -72,7 +72,7 @@ const PAGE_EXTS = ['.island.tsx', '.md']
  *   • any file named `layout.island.tsx` (theme layout, not a page)
  *   • any path segment starting with `_` (private / meta)
  *   • `*.server.ts` (route loader/action companion, not a page)
- *   • anything under `legacy_pages/` (never passed in, but defensive)
+ *   • anything under `content/` (never passed in, but defensive)
  *   • any extension other than `.md` / `.island.tsx`
  *
  * Route rules:
@@ -96,8 +96,8 @@ function fileToRoute(relPath) {
   // Normalise separators; tolerate a stray leading slash.
   let p = relPath.replace(/\\/g, '/').replace(/^\/+/, '')
 
-  // legacy_pages/ is never a route source.
-  if (p === 'legacy_pages' || p.startsWith('legacy_pages/')) return null
+  // content/ is never a route source.
+  if (p === 'content' || p.startsWith('content/')) return null
 
   // *.server.ts companions are loaders/actions, not pages.
   if (p.endsWith('.server.ts')) return null

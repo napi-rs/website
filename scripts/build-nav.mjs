@@ -1,5 +1,5 @@
 // scripts/build-nav.mjs
-// Reads legacy_pages/**/_meta.<locale>.json and generates lib/nav/index.ts
+// Reads content/**/_meta.<locale>.json and generates lib/nav/index.ts
 import {
   readFileSync,
   writeFileSync,
@@ -13,7 +13,7 @@ import { execSync } from 'node:child_process'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
-const legacyPages = join(root, 'legacy_pages')
+const contentRoot = join(root, 'content')
 const outFile = join(root, 'lib', 'nav', 'index.ts')
 
 const LOCALES = ['en', 'cn', 'pt-BR']
@@ -48,7 +48,7 @@ function metaTitle(meta, key) {
 /** True if `docs/<key>` is a real sub-directory (a group) rather than a leaf
  *  file like `docs/cross-build.en.mdx`. */
 function isGroupDir(key) {
-  const dir = join(legacyPages, 'docs', key)
+  const dir = join(contentRoot, 'docs', key)
   return existsSync(dir) && statSync(dir).isDirectory()
 }
 
@@ -72,7 +72,7 @@ function onDiskEnSlugs(dir) {
  * skipped (but still block an on-disk re-add).
  */
 function buildCanonicalDocsStructure() {
-  const docsMetaEn = readMeta(join(legacyPages, 'docs'), 'en')
+  const docsMetaEn = readMeta(join(contentRoot, 'docs'), 'en')
   if (!docsMetaEn) return []
   const structure = []
   for (const [key, value] of Object.entries(docsMetaEn)) {
@@ -81,7 +81,7 @@ function buildCanonicalDocsStructure() {
       structure.push({ key, kind: 'leaf' })
       continue
     }
-    const subDir = join(legacyPages, 'docs', key)
+    const subDir = join(contentRoot, 'docs', key)
     const subMetaEn = readMeta(subDir, 'en') ?? {}
     const seen = new Set()
     const slugs = []
@@ -108,8 +108,8 @@ const CANONICAL_DOCS_STRUCTURE = buildCanonicalDocsStructure()
 // EN content at the same URL via the verified i18n-fallback middleware. Labels
 // fall back _meta[locale] -> _meta.en -> humanize(slug).
 function buildDocsSidebar(locale) {
-  const topMeta = readMeta(join(legacyPages, 'docs'), locale) ?? {}
-  const topMetaEn = readMeta(join(legacyPages, 'docs'), 'en') ?? {}
+  const topMeta = readMeta(join(contentRoot, 'docs'), locale) ?? {}
+  const topMetaEn = readMeta(join(contentRoot, 'docs'), 'en') ?? {}
   const groups = []
   for (const entry of CANONICAL_DOCS_STRUCTURE) {
     const { key } = entry
@@ -125,7 +125,7 @@ function buildDocsSidebar(locale) {
       continue
     }
 
-    const subDir = join(legacyPages, 'docs', key)
+    const subDir = join(contentRoot, 'docs', key)
     const subMeta = readMeta(subDir, locale) ?? {}
     const subMetaEn = readMeta(subDir, 'en') ?? {}
     const items = entry.slugs.map((slug) => ({
@@ -152,9 +152,9 @@ function buildDocsSidebar(locale) {
 // known-page set to make /<locale>/changelog/* fall back too. Labels localize
 // `_meta[locale]` -> `_meta.en` -> humanize(slug); order follows EN `_meta`.
 function buildFlatSidebar(section, locale) {
-  const metaEn = readMeta(join(legacyPages, section), 'en')
+  const metaEn = readMeta(join(contentRoot, section), 'en')
   if (!metaEn) return []
-  const metaLocale = readMeta(join(legacyPages, section), locale) ?? {}
+  const metaLocale = readMeta(join(contentRoot, section), locale) ?? {}
   const items = []
   for (const [slug, vEn] of Object.entries(metaEn)) {
     if (typeof vEn === 'object' && vEn.display === 'hidden') continue
@@ -182,7 +182,7 @@ function buildChangelogSidebar(locale) {
 }
 
 function buildLocaleNav(locale) {
-  const topMeta = readMeta(legacyPages, locale)
+  const topMeta = readMeta(contentRoot, locale)
 
   // Tabs: type:page entries only (exclude display:hidden and raw layout)
   const tabs = []

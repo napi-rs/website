@@ -114,16 +114,6 @@
         "title": "NAPI-RS Blog",
         "href": "/rss.xml"
       }
-    ],
-    "script": [
-      {
-        "src": "https://www.googletagmanager.com/gtag/js?id=G-38WMNQBW8F",
-        "async": "",
-        "crossorigin": "anonymous"
-      },
-      {
-        "innerHTML": "window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-38WMNQBW8F');"
-      }
     ]
   },
   "worker": {

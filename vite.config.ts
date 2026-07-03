@@ -277,7 +277,7 @@ export default defineConfig({
       '.wrangler/**',
       'public/**',
       '.yarn/**',
-      'legacy_pages/**',
+      'content/**',
       // @void/md island markdown pages MUST start with their `<script>` island
       // block at byte 0 (the plugin's SCRIPT_RE is anchored, runs before
       // gray-matter), so frontmatter follows the script. Oxfmt assumes
@@ -310,7 +310,7 @@ export default defineConfig({
       '.void/**',
       '.wrangler/**',
       '.yarn/**',
-      'legacy_pages/**',
+      'content/**',
       'public/**',
     ],
   },

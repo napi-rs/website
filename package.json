@@ -34,7 +34,6 @@
     "lucide-react": "^1.22.0",
     "markdown-exit": "1.1.0-beta.2",
     "react": "^19",
-    "react-device-detect": "^2.2.3",
     "react-dom": "^19",
     "react-use": "^17.6.1",
     "tailwind-merge": "^3.6.0"
