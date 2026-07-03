@@ -20,7 +20,10 @@ import Luge from '../../components/landing/luge' with {
   island: 'media:(min-width:769px)',
 }
 import TransformImage from '../../components/transform-image/_Demo' with {
-  island: 'idle',
+  // 'visible' (IntersectionObserver), not 'idle': the demo is the 2nd section,
+  // below the fold. Deferring hydration until it scrolls into view defers the
+  // demo's 12.7 MB sample-image download — visitors who never reach it pay 0.
+  island: 'visible',
 }
 // The animated hero flow diagram (Rust → Node.js) + brand-chip logo watermark.
 // It only renders/animates after its useEffect runs, so it must hydrate: a plain

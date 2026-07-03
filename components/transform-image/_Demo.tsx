@@ -284,7 +284,13 @@ export default function TransformImage() {
             with @napi-rs/image) — this replaces the old Next `blurDataURL` and
             reads as a blurry "no result yet" placeholder until a transcode swaps
             in the real result blob (transformedRef.current.src = nextUrl). */}
-        <img alt="original image" width={4928} ref={imageRef} src={nasaImage} />
+        {/* Seeded with the no-network LQIP, NOT src={nasaImage}: the 12.7 MB
+            original is downloaded exactly ONCE by the fetch() above, which then
+            swaps the real bytes onto this <img> via a blob URL (imageRef.src).
+            An eager src={nasaImage} here would race that fetch and download the
+            PNG a second time (~25 MB on a cold visit). The demo still transcodes
+            the untouched original bytes — we only changed how the <img> is seeded. */}
+        <img alt="original image" width={4928} ref={imageRef} src={NASA_LQIP} />
         <span className="font-mono text-center pt-2">
           Original Size: {prettyBytes(imageSize)}
         </span>

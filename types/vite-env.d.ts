@@ -13,3 +13,11 @@ declare module 'virtual:changelog/*' {
   const html: string
   export default html
 }
+
+// `import inner from './x.svg?svgo'` → SVGO-optimized INNER markup (root <svg>
+// stripped) as a string, for inlining via dangerouslySetInnerHTML. See
+// lib/svg/svgo-plugin.ts.
+declare module '*.svg?svgo' {
+  const inner: string
+  export default inner
+}
