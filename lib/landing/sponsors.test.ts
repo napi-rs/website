@@ -14,8 +14,8 @@ const raw = {
   ],
   platinum: [
     {
-      login: 'web-infra-dev',
-      name: 'Web Infra',
+      login: 'github',
+      name: 'GitHub',
       avatarUrl: 'data:image/png;2',
     },
   ],
