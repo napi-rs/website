@@ -35,33 +35,44 @@ export default function Footer({ locale, className }: FooterProps) {
   return (
     <div
       className={cn(
-        'mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-6 py-10 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between',
+        'mx-auto w-full max-w-[1400px] px-6 py-10 text-sm text-muted-foreground',
         className,
       )}
     >
-      <div className="flex flex-col gap-2">
-        {locale ? (
-          <div className="mb-1 flex items-center gap-1">
-            {/* -ml-2.5 cancels the labeled button's left padding (size=sm +
-                has-[>svg] -> px-2.5) so the globe icon sits flush-left, aligned
-                with the Logo + license text stacked below it. */}
-            <LangSwitcher locale={locale} showLabel className="-ml-2.5" />
-          </div>
-        ) : null}
-        <Logo />
-        <p>Released under the MIT License.</p>
-        <p>Copyright © {year} NAPI-RS.</p>
-      </div>
+      {/* Landing only: the language switcher is its OWN top control zone with a
+          divider, matching live napi.rs (which sits the locale/theme controls in
+          a bordered top row, well clear of the brand block below). Stacking it
+          tight above the logo made the small globe's label ("English") sit
+          visibly out of line with the larger logo's wordmark ("NAPI-RS") — a
+          16px stagger, since the globe is 16px and the logo 32px at the same
+          icon->label gap. A dedicated, divided zone removes that entirely.
+          Docs pass no locale and skip this (their switcher lives in the sidebar
+          chrome), so the divider only ever renders in the dark landing footer. */}
+      {locale ? (
+        <div className="mb-8 border-b border-border pb-6">
+          {/* -ml-2.5 cancels the labeled button's left padding (size=sm +
+              has-[>svg] -> px-2.5) so the globe sits flush-left with the Logo. */}
+          <LangSwitcher locale={locale} showLabel className="-ml-2.5" />
+        </div>
+      ) : null}
 
-      <div className="flex flex-col gap-2 sm:items-end">
-        <a
-          href="https://void.cloud"
-          target="_blank"
-          rel="noreferrer noopener"
-          className="transition-colors hover:text-primary"
-        >
-          Built with Void
-        </a>
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2">
+          <Logo />
+          <p>Released under the MIT License.</p>
+          <p>Copyright © {year} NAPI-RS.</p>
+        </div>
+
+        <div className="flex flex-col gap-2 sm:items-end">
+          <a
+            href="https://void.cloud"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="transition-colors hover:text-primary"
+          >
+            Built with Void
+          </a>
+        </div>
       </div>
     </div>
   )
