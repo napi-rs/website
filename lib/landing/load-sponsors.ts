@@ -5,9 +5,10 @@ import { wash, type RawSponsor, type WashedSponsors } from './sponsors.ts'
 
 // The landing sponsor wall is sourced LIVE from the GitHub Sponsors GraphQL API
 // (was: the pre-baked sponsors.napi.rs/sponsor.json). We read the maintainer
-// sponsors of BOTH the `napi-rs` org and the `Brooooooklyn` user — a sponsor of
-// either supports the project — dedupe, bucket them into the site's tier ladder,
-// and wash them into the `{ name, img, url }` shape the UI consumes.
+// sponsors of the `napi-rs` ORG ONLY — the wall represents sponsors of the
+// project, not any individual maintainer's personal account — bucket them into
+// the site's tier ladder, and wash them into the `{ name, img, url }` shape the
+// UI consumes.
 //
 // Requires a CLASSIC PAT in `GITHUB_TOKEN` with `read:org` + `read:user`.
 // Fine-grained tokens CANNOT read the Sponsors API (tier data comes back
@@ -15,9 +16,8 @@ import { wash, type RawSponsor, type WashedSponsors } from './sponsors.ts'
 
 const GITHUB_GRAPHQL = 'https://api.github.com/graphql'
 
-// Sponsorable accounts whose maintainer-sponsors make up the wall.
+// The sponsorable org whose maintainer-sponsors make up the wall.
 const ORG_LOGIN = 'napi-rs'
-const USER_LOGIN = 'Brooooooklyn'
 
 // Hand-curated entry prepended to the GitHub-derived tiers (mirrors the upstream
 // sponsors.svg generator) — VoidZero is not a GitHub sponsor tier.
@@ -71,14 +71,10 @@ const SPONSOR_FIELDS = `
 
 // `includePrivate: false` -> only PUBLIC sponsorships are returned, so private
 // sponsors are never exposed on the public wall. `first: 100` covers the current
-// counts comfortably; if either ever exceeds 100 the overflow is logged (not
-// silently dropped) rather than paginated on the per-request hot path.
+// count comfortably; if it ever exceeds 100 the overflow is logged (not silently
+// dropped) rather than paginated on the per-request hot path.
 const QUERY = `{
   org: organization(login: "${ORG_LOGIN}") {
-    sponsorshipsAsMaintainer(first: 100, includePrivate: false) {${SPONSOR_FIELDS}
-    }
-  }
-  usr: user(login: "${USER_LOGIN}") {
     sponsorshipsAsMaintainer(first: 100, includePrivate: false) {${SPONSOR_FIELDS}
     }
   }
@@ -104,8 +100,9 @@ interface Merged {
   oneTime: boolean
 }
 
-// Dedupe (a sponsor of both the org and the user appears twice — keep the higher
-// monthly amount) then bucket into the four GitHub-derived tiers.
+// Bucket the org's public sponsorships into the four GitHub-derived tiers. The
+// `byLogin` map de-dupes defensively (a login should appear at most once) and
+// keeps the higher monthly amount if a duplicate ever shows up.
 function bucket(nodes: SponsorshipNode[]): {
   platinum: RawSponsor[]
   gold: RawSponsor[]
@@ -182,12 +179,6 @@ export async function loadSponsors(): Promise<WashedSponsors> {
             nodes?: SponsorshipNode[]
           }
         }
-        usr?: {
-          sponsorshipsAsMaintainer?: {
-            pageInfo?: { hasNextPage?: boolean }
-            nodes?: SponsorshipNode[]
-          }
-        }
         special?: SponsorEntity | null
       }
       errors?: unknown
@@ -200,15 +191,13 @@ export async function loadSponsors(): Promise<WashedSponsors> {
     }
 
     const org = body.data?.org?.sponsorshipsAsMaintainer
-    const usr = body.data?.usr?.sponsorshipsAsMaintainer
-    if (org?.pageInfo?.hasNextPage || usr?.pageInfo?.hasNextPage) {
+    if (org?.pageInfo?.hasNextPage) {
       logger.warn(
         'sponsors: >100 sponsorships; overflow dropped (add pagination)',
       )
     }
 
-    const nodes = [...(org?.nodes ?? []), ...(usr?.nodes ?? [])]
-    const tiers = bucket(nodes)
+    const tiers = bucket(org?.nodes ?? [])
     const special = body.data?.special
     const specialThanks: RawSponsor[] = special ? [toRaw(special)] : []
 
