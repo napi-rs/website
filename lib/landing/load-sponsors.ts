@@ -23,9 +23,16 @@ const ORG_LOGIN = 'napi-rs'
 // sponsors.svg generator) — VoidZero is not a GitHub sponsor tier.
 const SPECIAL_THANKS_LOGIN = 'voidzero-dev'
 
-// Never shown in the auto tiers: ArrayZoneYour (upstream-excluded) and
-// voidzero-dev (rendered under Special Thanks, so it must not also double-up).
-const EXCLUDED_LOGINS = new Set([SPECIAL_THANKS_LOGIN, 'ArrayZoneYour'])
+// Logins force-hidden from the auto tiers:
+//   - voidzero-dev  -> rendered under Special Thanks, must not also double-up
+//   - ArrayZoneYour -> upstream-excluded
+//   - web-infra-dev -> no longer sponsors the project; a past sponsorship still
+//                      surfaces via the live Sponsors API, so hide it explicitly
+const EXCLUDED_LOGINS = new Set([
+  SPECIAL_THANKS_LOGIN,
+  'ArrayZoneYour',
+  'web-infra-dev',
+])
 
 // Tier thresholds (monthly USD), matching the upstream sponsors.svg generator:
 //   platinum >= 1000 | gold >= 200 | sliver >= 10 (recurring only) | backers = rest
