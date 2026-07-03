@@ -11,6 +11,7 @@ import { convertFenceHighlightMeta } from './lib/md/fence-highlight.ts'
 import { markCodeFilenames } from './lib/md/code-filename.ts'
 import { sitemapPlugin } from './scripts/generate-sitemap.mjs'
 import { generateRss } from './scripts/generate-rss.mjs'
+import { svgoInline } from './lib/svg/svgo-plugin.ts'
 
 // Docs dark code theme. napi.rs / Nextra highlight code with Shiki's
 // `css-variables` theme (signature: GREEN string literals #4bb74a), NOT
@@ -174,8 +175,12 @@ export default defineConfig({
   },
 
   plugins: isVitest
-    ? []
+    ? // ?svgo imports (build-time SVGO, lib/svg/svgo-plugin.ts) must still
+      // resolve if a component is ever pulled into a Vitest run.
+      [svgoInline()]
     : [
+        // Build-time SVGO for `import … from './x.svg?svgo'` (inline SVG markup).
+        svgoInline(),
         {
           name: 'napi-rs-isolation-dev',
           apply: 'serve',
