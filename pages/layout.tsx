@@ -27,8 +27,8 @@
 // non-docs pages (every rule is scoped to .void-md, which only the rendered
 // markdown wrapper carries).
 //
-// Site-wide <head> (titleTemplate, favicons, OG defaults, GA gtag, the
-// data-theme dark default) is owned by void.json `head` (the config layer);
+// Site-wide <head> (titleTemplate, favicons, OG defaults, the data-theme
+// dark default) is owned by void.json `head` (the config layer);
 // the no-FOUC theme bootstrap is injected by middleware/01.head.ts. Head is NOT
 // managed from this body component in Void's model.
 import '../style.css'
