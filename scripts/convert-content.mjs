@@ -5,7 +5,7 @@
 //
 // Re-run: node scripts/convert-content.mjs   (or: oxnode scripts/convert-content.mjs)
 //
-// Reads ONLY legacy_pages/. Writes ONLY pages/<locale>/docs/. Never mutates source.
+// Reads ONLY content/. Writes ONLY pages/<locale>/docs/. Never mutates source.
 //
 // Model: scripts/build-nav.mjs (generator that emits committed output + runs vp fmt).
 //
@@ -36,8 +36,8 @@ import { execSync } from 'node:child_process'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
-const legacyDocs = join(root, 'legacy_pages', 'docs')
-const legacyBlog = join(root, 'legacy_pages', 'blog')
+const contentDocs = join(root, 'content', 'docs')
+const contentBlog = join(root, 'content', 'blog')
 const pagesDir = join(root, 'pages')
 
 // LinkPreview metadata fixture, baked from the legacy getStaticProps by
@@ -66,7 +66,7 @@ function linkPreviewFixture() {
 const LOCALES = ['en', 'cn', 'pt-BR']
 
 // Hard exclusions — handled by later island/dynamic tasks. Matched against the
-// legacy route path (relative to legacy_pages/docs, no locale/ext), so all three
+// legacy route path (relative to content/docs, no locale/ext), so all three
 // locales of each are excluded. (Currently empty: concepts/webassembly is now
 // converted with route-gated island rewrites below.)
 const EXCLUDED_ROUTES = new Set([])
@@ -91,7 +91,7 @@ const GETTING_STARTED_ROUTE = 'introduction/getting-started'
 const WEBASSEMBLY_ROUTE = 'concepts/webassembly'
 
 // ----------------------------------------------------------------------------
-// Blog section (legacy_pages/blog -> pages/<locale>/blog/<leaf>.md)
+// Blog section (content/blog -> pages/<locale>/blog/<leaf>.md)
 // ----------------------------------------------------------------------------
 //
 // Blog pages share the prose machinery with docs (Callouts, NodeLink, fences,
@@ -218,13 +218,13 @@ function walk(dir) {
 
 /**
  * Parse a legacy filename into { routePath, locale }, relative to `baseDir`
- * (legacy_pages/docs by default; pass legacyBlog for the blog section).
- *   legacy_pages/<section>/<routePath>.<locale>.{mdx,md}
+ * (content/docs by default; pass contentBlog for the blog section).
+ *   content/<section>/<routePath>.<locale>.{mdx,md}
  * Returns null if the filename does not match the <name>.<locale>.<ext> shape.
  * For blog, `routePath` is the bare leaf (e.g. `announce-v3`) — there is no
  * `docs/` prefix and no nested directories.
  */
-function parseLegacy(fullPath, baseDir = legacyDocs) {
+function parseLegacy(fullPath, baseDir = contentDocs) {
   const rel = relative(baseDir, fullPath).replace(/\\/g, '/') // e.g. concepts/class.en.mdx
   const m = rel.match(/^(.+)\.(en|cn|pt-BR)\.(mdx|md)$/)
   if (!m) return null
@@ -369,7 +369,7 @@ function phaseABlocks(src, routePath, section = 'docs') {
 
     // Rewrite the docs-relative package-template image reference to the
     // statically-served asset path. Legacy ref is `./package-template.png`
-    // (co-located in legacy_pages/, which is read-only and NOT served); the
+    // (co-located in content/, which is read-only and NOT served); the
     // asset is committed to `public/assets/package-template.png` so it resolves
     // at `/assets/package-template.png`, matching the same `/assets/...`
     // convention the video uses. Route-gated to GETTING_STARTED_ROUTE and
@@ -1167,13 +1167,13 @@ function convert(src, fallbackTitle, routePath, section = 'docs') {
 /**
  * Resolve the human title for a legacy route leaf from its directory's
  * `_meta.<locale>.json`, e.g. routePath `more/v2-v3-migration-guide`, locale
- * `en` -> legacy_pages/docs/more/_meta.en.json["v2-v3-migration-guide"].
- * `baseDir` is the section root (legacyDocs by default; legacyBlog for blog,
- * where routePath is a bare leaf -> legacy_pages/blog/_meta.<locale>.json[leaf]).
+ * `en` -> content/docs/more/_meta.en.json["v2-v3-migration-guide"].
+ * `baseDir` is the section root (contentDocs by default; contentBlog for blog,
+ * where routePath is a bare leaf -> content/blog/_meta.<locale>.json[leaf]).
  * Returns null when no meta entry exists. Cached per (dir, locale).
  */
 const metaCache = new Map()
-function legacyMetaTitle(routePath, locale, baseDir = legacyDocs) {
+function legacyMetaTitle(routePath, locale, baseDir = contentDocs) {
   const slashIdx = routePath.lastIndexOf('/')
   const dirRel = slashIdx === -1 ? '' : routePath.slice(0, slashIdx)
   const leaf = slashIdx === -1 ? routePath : routePath.slice(slashIdx + 1)
@@ -1325,8 +1325,8 @@ function cleanEmittedMarkdown(dir) {
 // its emitted `pages/<locale>/<outSubdir>` tree. Adding `blog` here is the entire
 // "blog walking" wiring; the docs entry is byte-for-byte the original behavior.
 const SECTIONS = [
-  { section: 'docs', baseDir: legacyDocs, outSubdir: 'docs' },
-  { section: 'blog', baseDir: legacyBlog, outSubdir: 'blog' },
+  { section: 'docs', baseDir: contentDocs, outSubdir: 'docs' },
+  { section: 'blog', baseDir: contentBlog, outSubdir: 'blog' },
 ]
 
 function main() {

@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vite-plus/test'
 import { nav, locales } from './index.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const legacyPages = join(__dirname, '..', '..', 'legacy_pages')
+const contentRoot = join(__dirname, '..', '..', 'content')
 
 describe('nav manifest', () => {
   it('has all three locales with non-empty tabs and docs sidebar', () => {
@@ -90,7 +90,7 @@ describe('nav manifest', () => {
       for (const [_section, groups] of Object.entries(localeNav.sidebar)) {
         for (const group of groups) {
           for (const leaf of group.items) {
-            const base = join(legacyPages, leaf.path)
+            const base = join(contentRoot, leaf.path)
             const localized =
               existsSync(`${base}.${locale}.mdx`) ||
               existsSync(`${base}.${locale}.md`)
@@ -103,7 +103,7 @@ describe('nav manifest', () => {
               existsSync(`${base}.en.mdx`) || existsSync(`${base}.en.md`)
             expect(
               localized || enFallback,
-              `dangling leaf: legacy_pages/${leaf.path} has neither ${locale} nor en source`,
+              `dangling leaf: content/${leaf.path} has neither ${locale} nor en source`,
             ).toBe(true)
           }
         }

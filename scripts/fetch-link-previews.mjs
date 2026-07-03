@@ -1,7 +1,7 @@
 // scripts/fetch-link-previews.mjs
 //
 // Reproduces the legacy `getStaticProps` from
-// legacy_pages/docs/concepts/webassembly.en.mdx and bakes its result into a
+// content/docs/concepts/webassembly.en.mdx and bakes its result into a
 // committed JSON fixture: lib/docs/link-preview-data.json, keyed by href.
 //
 // Run: node scripts/fetch-link-previews.mjs
@@ -30,7 +30,7 @@ const MOZILLA_HREF =
 const GITHUB_HREF = 'https://github.com/napi-rs/napi-rs/issues/1794'
 
 // announce-v3 hrefs (rendered <LinkPreview /> cards in
-// legacy_pages/blog/announce-v3.en.mdx — see its getStaticProps).
+// content/blog/announce-v3.en.mdx — see its getStaticProps).
 const WASM_BINDGEN_HREF = 'https://github.com/rustwasm/wasm-bindgen/pull/2209'
 const CROSS_TOOLCHAIN_HREF = 'https://github.com/napi-rs/cross-toolchain'
 const NPM_ISSUE_HREF = 'https://github.com/npm/cli/issues/4828'
@@ -128,7 +128,7 @@ async function main() {
     userAvatar: await fetchBase64(issue.user.avatar_url),
   }
 
-  // --- announce-v3 entries: reproduce legacy_pages/blog/announce-v3.en.mdx's
+  // --- announce-v3 entries: reproduce content/blog/announce-v3.en.mdx's
   // getStaticProps EXACTLY. The og-image URL scheme differs per source:
   //   • wasm-bindgen PR: og hash = the PR head SHA (NOT a sha256 of updated_at)
   //   • cross-toolchain repo / npm issue / typescript-go discussion:

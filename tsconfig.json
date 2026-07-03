@@ -38,5 +38,5 @@
     "vite.config.ts",
     ".void"
   ],
-  "exclude": ["node_modules", "dist", ".wrangler", "legacy_pages"]
+  "exclude": ["node_modules", "dist", ".wrangler", "content"]
 }
