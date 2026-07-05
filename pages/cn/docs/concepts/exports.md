@@ -1,5 +1,6 @@
 ---
 title: '导出'
+description: 使用 NAPI-RS 控制 Rust 函数、类和常量如何导出到 JavaScript。
 ---
 
 # 导出

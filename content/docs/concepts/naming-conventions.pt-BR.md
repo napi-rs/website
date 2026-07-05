@@ -1,5 +1,6 @@
 ---
 title: 'Naming conventions'
+description: Como o NAPI-RS converte identificadores snake_case de Rust para camelCase em JavaScript.
 ---
 
 # Convenções de nomenclatura

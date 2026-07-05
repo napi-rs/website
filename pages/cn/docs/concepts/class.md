@@ -1,5 +1,6 @@
 ---
 title: '类'
+description: 使用 NAPI-RS 将 Rust 结构体定义并导出为 JavaScript 类。
 ---
 
 # 类

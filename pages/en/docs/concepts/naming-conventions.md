@@ -1,5 +1,6 @@
 ---
 title: 'Naming conventions'
+description: How NAPI-RS converts Rust snake_case identifiers to JavaScript camelCase.
 ---
 
 # Naming conventions

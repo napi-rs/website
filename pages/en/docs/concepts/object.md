@@ -1,5 +1,6 @@
 ---
 title: 'Object'
+description: Pass plain JavaScript objects between Rust and Node.js with NAPI-RS.
 ---
 
 # Object

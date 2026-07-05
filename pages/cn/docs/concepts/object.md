@@ -1,5 +1,6 @@
 ---
 title: '对象'
+description: 使用 NAPI-RS 在 Rust 和 Node.js 之间传递普通 JavaScript 对象。
 ---
 
 # 对象

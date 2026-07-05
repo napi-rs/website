@@ -1,5 +1,6 @@
 ---
 title: '函数'
+description: 使用 NAPI-RS 在 Rust 中定义并调用 JavaScript 函数。
 ---
 
 # 函数
