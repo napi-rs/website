@@ -92,6 +92,22 @@ function getFonts() {
 const TITLE_SUFFIX_RE = /\s+[–—-]\s+NAPI-RS\s*$/
 
 /**
+ * Read the page `title` from the LEADING frontmatter block ONLY, so a `title:`
+ * that appears later in the body (prose or a fenced code sample) can never be
+ * mistaken for the page title. The `---…---` fence is the first thing in a
+ * normal page; on island blog pages a byte-0 `<script>…</script>` precedes it,
+ * so that prefix is tolerated. Falls back to `fallback` (the neutral route
+ * slug) when the block has no `title:`, and always strips the ` – NAPI-RS`
+ * HTML-<title> suffix. Pure — unit-testable in isolation.
+ */
+export function frontmatterTitle(src, fallback) {
+  const fm = src.match(/^(?:<script[\s\S]*?<\/script>\s*)?---([\s\S]*?)\n---/)
+  const block = fm ? fm[1] : ''
+  const m = block.match(/^title:\s*['"]?(.+?)['"]?\s*$/m)
+  return (m ? m[1] : fallback).replace(TITLE_SUFFIX_RE, '')
+}
+
+/**
  * The OG card as a React element tree (satori accepts a React node directly).
  * 1200×630 canvas, #111111 bg, an #e66000 accent bar, the page title in Manrope
  * 700 white, and the `napi.rs` wordmark in Inter 600 accent. Every leaf that
@@ -173,10 +189,9 @@ export function ogRoutes() {
     const [, rest] = splitLocale(route)
     if (!(rest.startsWith('docs/') || rest.startsWith('blog/'))) continue
     const src = readFileSync(join(pagesDir, rel), 'utf8')
-    // `/m` so `title:` is found even when a byte-0 `<script>` island block
-    // precedes the frontmatter (blog announce pages); optional quotes stripped.
-    const m = src.match(/^title:\s*['"]?(.+?)['"]?\s*$/m)
-    const title = (m ? m[1] : rest).replace(TITLE_SUFFIX_RE, '')
+    // Title from the leading frontmatter block only; falls back to the neutral
+    // route remainder when absent (see frontmatterTitle).
+    const title = frontmatterTitle(src, rest)
     out.push({ route, title })
   }
   return out

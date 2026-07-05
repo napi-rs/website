@@ -4,7 +4,7 @@
 // removing, or translating any page (and after editing a blog `date:`).
 //
 // Regenerate with: node scripts/build-route-map.mjs
-import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { join, dirname, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execSync } from 'node:child_process'

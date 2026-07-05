@@ -18,6 +18,18 @@ describe('hreflangAlternates', () => {
     ])
     expect(hreflangAlternates('/docs/only-en', MAP)).toEqual([])
   })
+  it('resolves alternates for a trailing-slash path (neutralPath trims it)', () => {
+    const alts = hreflangAlternates('/cn/docs/concepts/class/', MAP)
+    expect(alts.length).toBeGreaterThan(0)
+    expect(alts).toContainEqual({
+      hreflang: 'en',
+      href: 'https://napi.rs/docs/concepts/class',
+    })
+    expect(alts).toContainEqual({
+      hreflang: 'zh-CN',
+      href: 'https://napi.rs/cn/docs/concepts/class',
+    })
+  })
 })
 
 describe('hreflangLinks', () => {

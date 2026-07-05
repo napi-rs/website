@@ -11,6 +11,12 @@ describe('neutralPath', () => {
     expect(neutralPath('/pt-BR/blog/y')).toBe('/blog/y')
     expect(neutralPath('/cn')).toBe('/')
   })
+  it('trims trailing slash(es) so a slashed URL still matches the route-map key', () => {
+    expect(neutralPath('/cn/docs/concepts/class/')).toBe('/docs/concepts/class')
+    expect(neutralPath('/docs/x/')).toBe('/docs/x')
+    expect(neutralPath('/en/docs/x/')).toBe('/docs/x')
+    expect(neutralPath('/cn/')).toBe('/')
+  })
 })
 
 describe('localeUrl', () => {

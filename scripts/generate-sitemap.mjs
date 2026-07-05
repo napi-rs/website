@@ -39,7 +39,7 @@ import {
 } from 'node:fs'
 import { join, dirname, resolve, relative, basename } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 // Node 24 strips types on import, so the plain-ESM CLI can consume these `.ts`
 // modules directly (Vite/rolldown handle them in the plugin + Vitest contexts).
 import { nav } from '../lib/nav/index.ts'
@@ -195,15 +195,17 @@ function renderSitemap(entries) {
 
 /**
  * git commit time (%cI, ISO-8601) of the last change to `pages/<relFile>`, or
- * null on empty output (shallow clone) / any error. Node-only build-time shell
- * out — this generator NEVER runs on the edge, so `execSync` git is safe here.
+ * null on empty output (shallow clone) / any error. Node-only build-time git
+ * call — this generator NEVER runs on the edge. `execFileSync` (argv form, no
+ * shell) so a page path containing a quote / backtick / `$()` cannot inject.
  */
 function gitLastmod(relFile) {
   try {
-    const out = execSync(`git log -1 --format=%cI -- "pages/${relFile}"`, {
-      cwd: root,
-      stdio: ['ignore', 'pipe', 'ignore'],
-    })
+    const out = execFileSync(
+      'git',
+      ['log', '-1', '--format=%cI', '--', `pages/${relFile}`],
+      { cwd: root, stdio: ['ignore', 'pipe', 'ignore'] },
+    )
       .toString()
       .trim()
     return out || null

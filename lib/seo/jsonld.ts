@@ -96,5 +96,8 @@ export function jsonLdFor(
   }
 
   const ld = { '@context': 'https://schema.org', '@graph': graph }
-  return `<script type="application/ld+json">${JSON.stringify(ld)}</script>`
+  // Escape `<` so a title/description containing `</script>` cannot close the
+  // inline JSON-LD block early (the classic script-context XSS). `<` is a
+  // valid JSON escape for `<`, so the payload still parses byte-for-byte.
+  return `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`
 }

@@ -78,4 +78,48 @@ describe('buildSeoHead', () => {
     )
     expect(out).not.toContain('/og/cn/docs/cli/build.png')
   })
+  it('escapes " and < in title/description so they cannot break out of content="…"', () => {
+    const out = buildSeoHead({
+      ...base,
+      publicPath: '/docs/concepts/class',
+      title: 'Say "hi" <b>',
+      description: 'Tom & "Jerry" <x>',
+      hasDescriptionMeta: false,
+    })
+    expect(out).toContain(
+      '<meta property="og:title" content="Say &quot;hi&quot; &lt;b&gt;">',
+    )
+    expect(out).toContain(
+      '<meta name="twitter:title" content="Say &quot;hi&quot; &lt;b&gt;">',
+    )
+    expect(out).toContain(
+      '<meta name="description" content="Tom &amp; &quot;Jerry&quot; &lt;x&gt;">',
+    )
+    expect(out).toContain(
+      '<meta property="og:description" content="Tom &amp; &quot;Jerry&quot; &lt;x&gt;">',
+    )
+    // the raw (unescaped) forms never leak — no attribute breakout
+    expect(out).not.toContain('"hi"')
+    expect(out).not.toContain('<b>')
+    expect(out).not.toContain('<x>')
+  })
+  it('keeps JSON-LD url + inLanguage in sync with the canonical on an i18n-fallback page', () => {
+    const out = buildSeoHead({
+      ...base,
+      publicPath: '/cn/docs/deep-dive/release',
+      isFallback: true,
+    })
+    const m = out.match(
+      /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
+    )!
+    const ld = JSON.parse(m[1].replace(/\\u003c/g, '<'))
+    const article = ld['@graph'].find(
+      (n: { '@type': string }) => n['@type'] === 'TechArticle',
+    )
+    expect(article.url).toBe('https://napi.rs/docs/deep-dive/release')
+    expect(article.inLanguage).toBe('en')
+    expect(out).toContain(
+      '<link rel="canonical" href="https://napi.rs/docs/deep-dive/release">',
+    )
+  })
 })

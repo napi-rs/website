@@ -14,8 +14,13 @@ export function neutralPath(publicPath: string): string {
   const [, rest] = splitLocale(publicPath)
   // `splitLocale` only strips cn / pt-BR prefixes (en is served unprefixed), so
   // a public path may still carry an explicit `/en/…` prefix — normalise that
-  // to the unprefixed form too.
-  const neutral = rest === 'en' ? '' : rest.replace(/^en\//, '')
+  // to the unprefixed form too. Also drop any trailing slash(es) so a route
+  // that arrives as `/cn/docs/x/` still matches the (slash-free) route-map key
+  // used for canonical + hreflang; `/` and `/cn` collapse to root as before.
+  const neutral = (rest === 'en' ? '' : rest.replace(/^en\//, '')).replace(
+    /\/+$/,
+    '',
+  )
   return neutral ? `/${neutral}` : '/'
 }
 
