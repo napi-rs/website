@@ -1,0 +1,54 @@
+// @vitest-environment node
+import { describe, it, expect } from 'vitest'
+import { buildSeoHead } from './head.ts'
+
+const base = {
+  title: 'Class',
+  description: 'Define classes',
+  hasDescriptionMeta: true,
+  isFallback: false,
+  mdLink: '',
+}
+
+describe('buildSeoHead', () => {
+  it('emits one self-canonical and og:url equal to it', () => {
+    const out = buildSeoHead({ ...base, publicPath: '/docs/concepts/class' })
+    expect(out).toContain(
+      '<link rel="canonical" href="https://napi.rs/docs/concepts/class">',
+    )
+    expect(out).toContain(
+      '<meta property="og:url" content="https://napi.rs/docs/concepts/class">',
+    )
+    expect(out.match(/rel="canonical"/g)!.length).toBe(1)
+  })
+  it('canonicalises an i18n-fallback page to the en URL', () => {
+    const out = buildSeoHead({
+      ...base,
+      publicPath: '/cn/docs/deep-dive/release',
+      isFallback: true,
+    })
+    expect(out).toContain(
+      '<link rel="canonical" href="https://napi.rs/docs/deep-dive/release">',
+    )
+  })
+  it('adds a <meta name=description> only when the page had none', () => {
+    const withMeta = buildSeoHead({
+      ...base,
+      publicPath: '/docs/concepts/class',
+    })
+    expect(withMeta).not.toContain('<meta name="description"')
+    const without = buildSeoHead({
+      ...base,
+      publicPath: '/docs/concepts/class',
+      hasDescriptionMeta: false,
+    })
+    expect(without).toContain(
+      '<meta name="description" content="Define classes">',
+    )
+  })
+  it('includes hreflang for multi-locale pages and JSON-LD for docs', () => {
+    const out = buildSeoHead({ ...base, publicPath: '/docs/concepts/class' })
+    expect(out).toContain('rel="alternate" hreflang="zh-CN"')
+    expect(out).toContain('application/ld+json')
+  })
+})

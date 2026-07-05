@@ -41,7 +41,8 @@
 
 import { defineMiddleware } from 'void'
 import mdPages from '@void/md/pages'
-import { getLocale, htmlLang, splitLocale } from '../lib/docs/locale.ts'
+import { getLocale, htmlLang } from '../lib/docs/locale.ts'
+import { buildSeoHead } from '../lib/seo/head.ts'
 
 // Inlined, IIFE-wrapped, no external deps. Kept minimal so it parses + executes
 // before the browser paints. The try/catch guards ONLY the storage read; the
@@ -102,14 +103,6 @@ const DEFAULT_DESCRIPTION =
 // The void.json titleTemplate is `%s – NAPI-RS` (spaced en-dash). Tolerate any
 // dash variant defensively; anchored to the end so a page title is never eaten.
 const TITLE_SUFFIX_RE = /\s+[–—-]\s+NAPI-RS\s*$/
-
-/** Canonical, always-locale-prefixed og:url for a public route path. */
-function canonicalUrl(publicPath: string): string {
-  const [locale, rest] = splitLocale(publicPath)
-  return rest
-    ? `https://napi.rs/${locale}/${rest}`
-    : `https://napi.rs/${locale}/`
-}
 
 // Per-page `rel="alternate"` markdown hint (see the block comment above the og
 // block). The set of routes that HAVE an emitted `<path>.md` is exactly the
@@ -211,17 +204,27 @@ export default defineMiddleware(async (c, next) => {
     ? `<link rel="alternate" type="text/markdown" href="${mdHref}" title="Markdown">`
     : ''
 
-  const ogTags =
-    mdLink +
-    `<meta property="og:title" content="${ogTitle}">` +
-    `<meta property="og:description" content="${ogDescription}">` +
-    `<meta property="og:url" content="${canonicalUrl(publicPath)}">`
+  // Assemble the full head-injection block (canonical + hreflang + JSON-LD +
+  // description fallback + og tags) in one pure orchestrator. `hasDescriptionMeta`
+  // suppresses the fallback <meta name="description"> when the page already has
+  // one; `isFallback` (an i18n fallback response, rendered as en) canonicalises
+  // to the en URL rather than the requested cn/pt-BR path.
+  const hasDescriptionMeta = descMatch !== null
+  const isFallback = res.headers.get('x-i18n-fallback') === '1'
+  const seoTags = buildSeoHead({
+    publicPath,
+    title: ogTitle,
+    description: ogDescription,
+    hasDescriptionMeta,
+    isFallback,
+    mdLink,
+  })
 
   // Drop the now-stale Content-Length; the runtime recomputes it. All other
   // headers (Content-Type, the scoped COOP/COEP on landing routes) are kept.
   const headers = new Headers(res.headers)
   headers.delete('content-length')
-  c.res = new Response(html.slice(0, headEnd) + ogTags + html.slice(headEnd), {
+  c.res = new Response(html.slice(0, headEnd) + seoTags + html.slice(headEnd), {
     status: res.status,
     statusText: res.statusText,
     headers,
