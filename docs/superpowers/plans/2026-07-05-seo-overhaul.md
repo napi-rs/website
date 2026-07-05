@@ -1084,6 +1084,7 @@ git commit -m "feat(seo): add meta descriptions to concept + function + module-i
 
 **Notes:**
 
+- **DO NOT run `node scripts/convert-content.mjs` in this task.** Blog dates are maintained DIRECTLY in `pages/**/blog/*.md` (this matches the existing `announce-v2.md` / `function-and-callbacks.md`, whose `date:` already lives only in `pages/`, not in `content/`). A converter run would STRIP those dates (verified drift, Task 7). `build-route-map.mjs` and `generate-rss.mjs` both read `pages/`, so editing `pages/` directly is correct and sufficient. (The content↔pages date drift is a pre-existing maintainer follow-up, out of scope here.)
 - `announce-v3.md` is fmt-exempt (byte-0 `<script>`) — edit only the frontmatter `date`/lines, do not disturb the `<script>` block or the `---` fences.
 - Descriptions (en drafts; cn for the cn post):
   - announce-v2: `NAPI-RS v2 — a faster, safer framework for building Node.js addons in Rust.`
