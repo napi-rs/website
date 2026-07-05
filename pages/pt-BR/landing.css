@@ -25,6 +25,18 @@
   line-height: 1.7;
 }
 
+/* The localized title is an `<h1>` (see components/title.zh|pt-BR.jsx) so each
+ * page has a single top-level heading. Reset the browser-default h1 sizing,
+ * weight and margins back to the prose `p` values so the title renders exactly
+ * as it did when it was a `<p>` (the bold "NAPI-RS" span keeps its own inline
+ * font-size/weight). */
+.page-landing-locale h1 {
+  margin: fv(8, 12) 0;
+  font-size: fv(14, 18);
+  font-weight: 400;
+  line-height: 1.7;
+}
+
 .page-landing-locale code {
   padding: 2px 6px;
   border-radius: 4px;

@@ -66,6 +66,7 @@ export function LinkPreview({ href, data }: { href: string; data?: string }) {
   const logo = href.includes('mozilla') ? (
     <img
       src={mdnLogo}
+      alt="MDN"
       style={{ verticalAlign: 'text-bottom', marginRight: '4px' }}
       width={16}
       height={16}
