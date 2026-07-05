@@ -364,6 +364,7 @@ if (cliEntry && import.meta.url === pathToFileURL(cliEntry).href) {
 
 export {
   fileToRoute,
+  walkPages,
   renderSitemap,
   rawTargets,
   generateSitemap,

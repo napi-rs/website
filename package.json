@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "deploy": "void deploy",
     "prepare": "void prepare",
-    "sitemap": "node scripts/generate-sitemap.mjs"
+    "sitemap": "node scripts/generate-sitemap.mjs",
+    "route-map": "node scripts/build-route-map.mjs"
   },
   "dependencies": {
     "@napi-rs/image": "1.14.0",
