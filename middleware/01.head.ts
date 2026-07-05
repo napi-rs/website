@@ -43,6 +43,7 @@ import { defineMiddleware } from 'void'
 import mdPages from '@void/md/pages'
 import { getLocale, htmlLang } from '../lib/docs/locale.ts'
 import { buildSeoHead } from '../lib/seo/head.ts'
+import { htmlDecode } from '../lib/seo/escape.ts'
 
 // Inlined, IIFE-wrapped, no external deps. Kept minimal so it parses + executes
 // before the browser paints. The try/catch guards ONLY the storage read; the
@@ -95,8 +96,10 @@ else{try{var a=document.createElement("textarea");a.value=text;a.style.position=
 // finished document <head> after next(). The build prerenderer dispatches pages
 // through this same middleware, so the tags are baked into the static HTML too;
 // runtime-rendered pages (landing, changelog) get them per request. The values
-// are read straight from the already-escaped <title>/<meta>, so they are
-// re-injected verbatim (no double-escaping).
+// are read from the already-escaped <title>/<meta> and decoded ONCE (htmlDecode)
+// back to plaintext before buildSeoHead re-escapes them, so a `&`/`"`/`<`/`>` is
+// single-encoded in the og/twitter tags and plaintext in the JSON-LD — never
+// double-encoded (`&amp;amp;`).
 const DEFAULT_DESCRIPTION =
   'NAPI-RS, a framework for building pre-compiled Node.js addons in Rust'
 
@@ -183,14 +186,22 @@ export default defineMiddleware(async (c, next) => {
   }
 
   const head = html.slice(0, headEnd)
+  // Void pre-encodes head values (`&`, `"`, `<`, `>`) in <title> and <meta
+  // content>. Decode ONCE here so buildSeoHead receives PLAINTEXT: its escapeAttr
+  // then yields correct single-encoding for the og/twitter tags, and jsonLdFor
+  // gets real plaintext for its JSON strings (no `&amp;`/`&amp;amp;` leaks). The
+  // ` – NAPI-RS` suffix + en-dash are not entity-encoded, so strip on the encoded
+  // title first, then decode the remainder.
   const titleMatch = head.match(/<title>([\s\S]*?)<\/title>/i)
   const ogTitle = titleMatch
-    ? titleMatch[1].replace(TITLE_SUFFIX_RE, '').trim() || 'NAPI-RS'
+    ? htmlDecode(titleMatch[1].replace(TITLE_SUFFIX_RE, '').trim()) || 'NAPI-RS'
     : 'NAPI-RS'
   const descMatch = head.match(
     /<meta[^>]*name="description"[^>]*content="([^"]*)"/i,
   )
-  const ogDescription = descMatch ? descMatch[1] : DEFAULT_DESCRIPTION
+  const ogDescription = descMatch
+    ? htmlDecode(descMatch[1])
+    : DEFAULT_DESCRIPTION
 
   // Advertise the page's raw-markdown twin to agents (llms.txt ecosystem). Only
   // for routes that actually emit a `.md` (docs/blog); island pages (landing,
