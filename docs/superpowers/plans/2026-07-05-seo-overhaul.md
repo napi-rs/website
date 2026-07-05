@@ -478,12 +478,12 @@ git commit -m "feat(seo): add hreflang alternate link builder"
 
 **Interfaces:**
 
-- Consumes: `selfCanonical`, `neutralPath`, `localeUrl`, `BASE_URL` from `lib/seo/urls.ts`; `getLocale`, `htmlLang` from `lib/docs/locale.ts`; `nav` from `lib/nav/index.ts`; `getBreadcrumbCore` from `lib/docs/page-data.ts`; `routeMap`, `blogDates` from `lib/i18n/route-map.gen.ts`.
+- Consumes: `selfCanonical`, `neutralPath`, `BASE_URL` from `lib/seo/urls.ts`; `getLocale`, `htmlLang` from `lib/docs/locale.ts`; `nav`, `Locale` from `lib/nav/index.ts`; `getBreadcrumbCore` from `lib/docs/page-data.ts`; `routeMap`, `blogDates` from `lib/i18n/route-map.gen.ts`.
 - Produces: `jsonLdFor(publicPath: string, opts: { title: string; description: string }): string` — a single `<script type="application/ld+json">…</script>` (or `''` for route types that get none, e.g. changelog).
 
 **Notes for the implementer:**
 
-- `getBreadcrumbCore(leafPath, locale, localeNav, existsByPage)` (`lib/docs/page-data.ts:248-274`) returns `BreadcrumbItem[]` = `{ label, href }`; a group crumb has `href === ''`. `leafPath` is the unprefixed, no-leading-slash path (e.g. `docs/concepts/class`). Build `existsByPage` from `routeMap` keys: `new Set(Object.keys(routeMap).map((p) => p.replace(/^\//, '')))`, predicate `(p) => set.has(p)`.
+- `getBreadcrumbCore(leafPath, locale, localeNav, existsByPage)` (`lib/docs/page-data.ts:248-274`) returns `BreadcrumbItem[]` = `{ label, href }`; a group crumb has `href === ''`. `leafPath` is the unprefixed, no-leading-slash path (e.g. `docs/concepts/class`). **`existsByPage` is `Record<Locale, ReadonlySet<string>>`** (the helper indexes it `existsByPage[locale]?.has(leaf)` via `firstSectionLeafHref`), NOT a predicate — build it by bucketing `routeMap` keys (slash-stripped) per locale, else the Docs tab crumb's link is silently dropped.
 - `BreadcrumbList.itemListElement[].item` must be an absolute URL. `getBreadcrumbCore` hrefs are relative (`localizeHref` output, e.g. `/docs/…` or `/cn/docs/…`); prepend `BASE_URL`. Omit `item` for crumbs with empty href.
 - Blog `datePublished` = `blogDates[neutral]` when present; omit the field otherwise.
 
@@ -547,9 +547,9 @@ Expected: FAIL — cannot resolve `./jsonld.ts`.
 
 ```ts
 // Pure, edge-safe JSON-LD builder. Chooses schema by route shape.
-import { selfCanonical, neutralPath, localeUrl, BASE_URL } from './urls.ts'
+import { selfCanonical, neutralPath, BASE_URL } from './urls.ts'
 import { getLocale, htmlLang } from '../docs/locale.ts'
-import { nav } from '../nav/index.ts'
+import { nav, type Locale } from '../nav/index.ts'
 import { getBreadcrumbCore } from '../docs/page-data.ts'
 import { routeMap, blogDates } from '../i18n/route-map.gen.ts'
 
@@ -565,14 +565,25 @@ const ORGANIZATION = {
   ],
 }
 
-const EXISTS = new Set(Object.keys(routeMap).map((p) => p.replace(/^\//, '')))
+// getBreadcrumbCore does `existsByPage[locale]?.has(leaf)`, so it needs a
+// per-locale Record, NOT a predicate. Bucket routeMap keys (slash-stripped).
+const EXISTS_BY_PAGE: Record<Locale, ReadonlySet<string>> = (() => {
+  const sets: Record<Locale, Set<string>> = {
+    en: new Set(),
+    cn: new Set(),
+    'pt-BR': new Set(),
+  }
+  for (const [path, locales] of Object.entries(routeMap)) {
+    const leaf = path.replace(/^\//, '')
+    for (const locale of locales) sets[locale].add(leaf)
+  }
+  return sets
+})()
 
 function breadcrumbList(publicPath: string) {
   const locale = getLocale(publicPath)
   const leaf = neutralPath(publicPath).replace(/^\//, '')
-  const crumbs = getBreadcrumbCore(leaf, locale, nav[locale], (p) =>
-    EXISTS.has(p),
-  )
+  const crumbs = getBreadcrumbCore(leaf, locale, nav[locale], EXISTS_BY_PAGE)
   if (!crumbs.length) return null
   return {
     '@type': 'BreadcrumbList',
