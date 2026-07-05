@@ -103,7 +103,10 @@ export const BASE_URL = 'https://napi.rs'
  */
 export function neutralPath(publicPath: string): string {
   const [, rest] = splitLocale(publicPath)
-  return rest ? `/${rest}` : '/'
+  // splitLocale only strips cn / pt-BR prefixes (en is served unprefixed), so a
+  // public path may still carry an explicit `/en/…` prefix — normalise that too.
+  const neutral = rest === 'en' ? '' : rest.replace(/^en\//, '')
+  return neutral ? `/${neutral}` : '/'
 }
 
 /** Absolute URL of a neutral path in a given locale (en at root, others prefixed). */
