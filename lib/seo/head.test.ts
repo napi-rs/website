@@ -64,4 +64,18 @@ describe('buildSeoHead', () => {
       '<meta name="twitter:description" content="Define classes">',
     )
   })
+  it('uses the en OG image for an i18n-fallback page (no localized PNG exists)', () => {
+    const out = buildSeoHead({
+      ...base,
+      publicPath: '/cn/docs/cli/build',
+      isFallback: true,
+    })
+    expect(out).toContain(
+      '<meta property="og:image" content="https://napi.rs/og/docs/cli/build.png">',
+    )
+    expect(out).toContain(
+      '<meta name="twitter:image" content="https://napi.rs/og/docs/cli/build.png">',
+    )
+    expect(out).not.toContain('/og/cn/docs/cli/build.png')
+  })
 })

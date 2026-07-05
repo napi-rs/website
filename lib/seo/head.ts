@@ -24,6 +24,10 @@ export function buildSeoHead({
   const canonical = isFallback
     ? localeUrl(neutralPath(publicPath), 'en')
     : selfCanonical(publicPath)
+  // Per-page OG PNGs are generated only for routes with a real .md on disk. An
+  // i18n-fallback page keeps its cn/pt-BR URL but has no localized .md (and thus
+  // no localized PNG), so point og:image at the en image — mirror the canonical.
+  const imageUrl = ogImageUrl(isFallback ? neutralPath(publicPath) : publicPath)
   const descMeta = hasDescriptionMeta
     ? ''
     : `<meta name="description" content="${description}">`
@@ -36,8 +40,8 @@ export function buildSeoHead({
     `<meta property="og:title" content="${title}">` +
     `<meta property="og:description" content="${description}">` +
     `<meta property="og:url" content="${canonical}">` +
-    `<meta property="og:image" content="${ogImageUrl(publicPath)}">` +
-    `<meta name="twitter:image" content="${ogImageUrl(publicPath)}">` +
+    `<meta property="og:image" content="${imageUrl}">` +
+    `<meta name="twitter:image" content="${imageUrl}">` +
     `<meta name="twitter:title" content="${title}">` +
     `<meta name="twitter:description" content="${description}">`
   )
