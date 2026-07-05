@@ -57,5 +57,6 @@ export const routeMap: Record<string, Locale[]> = {
 
 export const blogDates: Record<string, string> = {
   '/blog/announce-v2': '2021-12-17',
+  '/blog/announce-v3': '2025-07-07',
   '/blog/function-and-callbacks': '2025-08-10',
 }
