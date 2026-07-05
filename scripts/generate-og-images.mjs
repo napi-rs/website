@@ -36,28 +36,56 @@ const pagesDir = join(root, 'pages')
 // weight in its own directory (…/700Bold/Manrope_700Bold.ttf). satori requires
 // a real .ttf/.otf buffer (NOT woff2) and throws without one, so these MUST
 // resolve at build time.
-const MANROPE = readFileSync(
-  join(
-    root,
-    'node_modules/@expo-google-fonts/manrope/700Bold/Manrope_700Bold.ttf',
-  ),
-)
-const INTER = readFileSync(
-  join(
-    root,
-    'node_modules/@expo-google-fonts/inter/600SemiBold/Inter_600SemiBold.ttf',
-  ),
-)
-// CJK fallback for the title. Manrope/Inter carry NO Han glyphs, so the `cn`
-// locale's Chinese titles would otherwise render as satori "NO GLYPH" tofu. This
-// full Noto Sans SC weight (~10 MB) is read ONCE at module init and satori uses
-// it only to fill glyphs the Latin title font lacks — Latin cards are unchanged.
-const NOTO_SC = readFileSync(
-  join(
-    root,
-    'node_modules/@expo-google-fonts/noto-sans-sc/700Bold/NotoSansSC_700Bold.ttf',
-  ),
-)
+//
+// Read lazily + memoized: these three TTFs total ~11 MB (incl the ~10 MB Noto
+// Sans SC), and this module is imported by vite.config.ts for EVERY dev server
+// start and `vp test` run — none of which render an OG image. Deferring the
+// reads to the first `renderOg` call keeps importing the module (or calling
+// `ogImagePlugin()`) allocation-free; the build path reads each file once.
+let fontsCache = null
+function getFonts() {
+  if (fontsCache) return fontsCache
+  fontsCache = [
+    {
+      name: 'Manrope',
+      data: readFileSync(
+        join(
+          root,
+          'node_modules/@expo-google-fonts/manrope/700Bold/Manrope_700Bold.ttf',
+        ),
+      ),
+      weight: 700,
+      style: 'normal',
+    },
+    {
+      name: 'Inter',
+      data: readFileSync(
+        join(
+          root,
+          'node_modules/@expo-google-fonts/inter/600SemiBold/Inter_600SemiBold.ttf',
+        ),
+      ),
+      weight: 600,
+      style: 'normal',
+    },
+    // CJK fallback for the title. Manrope/Inter carry NO Han glyphs, so the `cn`
+    // locale's Chinese titles would otherwise render as satori "NO GLYPH" tofu.
+    // satori uses this full Noto Sans SC weight only to fill glyphs the Latin
+    // title font lacks — Latin cards are unchanged.
+    {
+      name: 'Noto Sans SC',
+      data: readFileSync(
+        join(
+          root,
+          'node_modules/@expo-google-fonts/noto-sans-sc/700Bold/NotoSansSC_700Bold.ttf',
+        ),
+      ),
+      weight: 700,
+      style: 'normal',
+    },
+  ]
+  return fontsCache
+}
 
 // Defensive: strip the ` – NAPI-RS` HTML-<title> suffix. Frontmatter `title`
 // values do not carry it, but a title derived elsewhere might.
@@ -124,11 +152,7 @@ export async function renderOg(title) {
   const svg = await satori(ogTemplate(title), {
     width: 1200,
     height: 630,
-    fonts: [
-      { name: 'Manrope', data: MANROPE, weight: 700, style: 'normal' },
-      { name: 'Inter', data: INTER, weight: 600, style: 'normal' },
-      { name: 'Noto Sans SC', data: NOTO_SC, weight: 700, style: 'normal' },
-    ],
+    fonts: getFonts(),
   })
   return new Resvg(svg).render().asPng()
 }
