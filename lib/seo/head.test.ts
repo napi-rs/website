@@ -51,4 +51,17 @@ describe('buildSeoHead', () => {
     expect(out).toContain('rel="alternate" hreflang="zh-CN"')
     expect(out).toContain('application/ld+json')
   })
+  it('emits per-page og:image + twitter card fields', () => {
+    const out = buildSeoHead({ ...base, publicPath: '/docs/concepts/class' })
+    expect(out).toContain(
+      '<meta property="og:image" content="https://napi.rs/og/docs/concepts/class.png">',
+    )
+    expect(out).toContain(
+      '<meta name="twitter:image" content="https://napi.rs/og/docs/concepts/class.png">',
+    )
+    expect(out).toContain('<meta name="twitter:title" content="Class">')
+    expect(out).toContain(
+      '<meta name="twitter:description" content="Define classes">',
+    )
+  })
 })

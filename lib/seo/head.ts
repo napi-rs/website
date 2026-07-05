@@ -2,6 +2,7 @@
 import { selfCanonical, neutralPath, localeUrl } from './urls.ts'
 import { hreflangLinks } from './hreflang.ts'
 import { jsonLdFor } from './jsonld.ts'
+import { ogImageUrl } from './og-image.ts'
 
 export interface SeoHeadArgs {
   publicPath: string
@@ -34,6 +35,10 @@ export function buildSeoHead({
     mdLink +
     `<meta property="og:title" content="${title}">` +
     `<meta property="og:description" content="${description}">` +
-    `<meta property="og:url" content="${canonical}">`
+    `<meta property="og:url" content="${canonical}">` +
+    `<meta property="og:image" content="${ogImageUrl(publicPath)}">` +
+    `<meta name="twitter:image" content="${ogImageUrl(publicPath)}">` +
+    `<meta name="twitter:title" content="${title}">` +
+    `<meta name="twitter:description" content="${description}">`
   )
 }
