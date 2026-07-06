@@ -16,6 +16,12 @@ const TIERS = [
 
 const AVATAR_TIMEOUT_MS = 3000
 
+// Cloudflare Workers allow ~6 simultaneous outbound connections. Cap concurrent
+// avatar fetches at that so a queued fetch doesn't burn its timeout while waiting
+// for a slot — inlineOne (which starts the per-fetch timeout) only runs when a
+// slot frees. https://developers.cloudflare.com/workers/platform/limits/#simultaneous-open-connections
+export const AVATAR_CONCURRENCY = 6
+
 export type ImageFetcher = (
   url: string,
   signal?: AbortSignal,
@@ -74,17 +80,49 @@ async function inlineOne(
   }
 }
 
+// Run `fn` over `items` with at most `limit` concurrent calls, preserving order.
+async function mapLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let cursor = 0
+  async function worker(): Promise<void> {
+    while (cursor < items.length) {
+      const index = cursor++
+      results[index] = await fn(items[index])
+    }
+  }
+  const workers = Array.from({ length: Math.min(limit, items.length) }, () =>
+    worker(),
+  )
+  await Promise.all(workers)
+  return results
+}
+
 export async function inlineSponsorAvatars(
   sponsors: WashedSponsors,
   fetchImage: ImageFetcher = DEFAULT_FETCH,
   timeoutMs: number = AVATAR_TIMEOUT_MS,
 ): Promise<WashedSponsors> {
-  const result = {} as WashedSponsors
+  const flat: { tier: (typeof TIERS)[number]; sponsor: WashedSponsor }[] = []
   for (const tier of TIERS) {
-    const inlined = await Promise.all(
-      sponsors[tier].map((s) => inlineOne(s, fetchImage, timeoutMs)),
-    )
-    result[tier] = inlined.filter((s): s is WashedSponsor => s !== null)
+    for (const sponsor of sponsors[tier]) flat.push({ tier, sponsor })
   }
+  const inlined = await mapLimit(flat, AVATAR_CONCURRENCY, (item) =>
+    inlineOne(item.sponsor, fetchImage, timeoutMs),
+  )
+  const result: WashedSponsors = {
+    specialThanks: [],
+    platinum: [],
+    gold: [],
+    sliver: [],
+    backers: [],
+  }
+  flat.forEach((item, i) => {
+    const one = inlined[i]
+    if (one) result[item.tier].push(one)
+  })
   return result
 }

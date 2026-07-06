@@ -4,6 +4,7 @@ import { describe, it, expect, vi } from 'vitest'
 import {
   inlineSponsorAvatars,
   bytesToBase64,
+  AVATAR_CONCURRENCY,
   type ImageFetcher,
 } from './avatars.ts'
 import type { WashedSponsors } from '../landing/sponsors.ts'
@@ -108,5 +109,27 @@ describe('inlineSponsorAvatars', () => {
     }
     await inlineSponsorAvatars(sponsors, fetchImage)
     expect(seen[0]).toContain('s=120')
+  })
+
+  it('caps concurrent avatar fetches at AVATAR_CONCURRENCY and keeps all successes', async () => {
+    const many = Array.from({ length: 20 }, (_v, i) => ({
+      name: `b${i}`,
+      img: `https://x/${i}.png`,
+      url: `https://github.com/b${i}`,
+    }))
+    const sponsors: WashedSponsors = { ...emptyTiers(), backers: many }
+    let inFlight = 0
+    let maxInFlight = 0
+    const fetchImage: ImageFetcher = async () => {
+      inFlight += 1
+      maxInFlight = Math.max(maxInFlight, inFlight)
+      await new Promise((resolve) => setTimeout(resolve, 5))
+      inFlight -= 1
+      return pngResponse()
+    }
+    const out = await inlineSponsorAvatars(sponsors, fetchImage)
+    expect(out.backers).toHaveLength(20)
+    expect(maxInFlight).toBeGreaterThan(0)
+    expect(maxInFlight).toBeLessThanOrEqual(AVATAR_CONCURRENCY)
   })
 })
