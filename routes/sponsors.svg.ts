@@ -64,7 +64,10 @@ export const GET = defineHandler(async (c) => {
       refreshSponsorsCache({
         kv,
         r2,
-        loadFresh: () => loadSponsors({ bypassCache: true }),
+        // Reuse the good data we just rendered from — a second bypassed fetch
+        // could degrade to empty and (on a cold cache, no manifest) publish an
+        // empty first snapshot over a request that already had live data.
+        loadFresh: () => Promise.resolve(sponsors),
         loadFonts: () => loadFonts((p) => readAsset(e.ASSETS, c.req.url, p)),
         yogaWasm,
         resvgWasm,
