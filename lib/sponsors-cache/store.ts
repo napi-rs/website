@@ -55,12 +55,22 @@ export async function readManifest(
   kv: KVStore,
 ): Promise<SponsorsManifest | null> {
   const raw = await kv.get(MANIFEST_KEY, { type: 'text' })
-  return raw ? (JSON.parse(raw) as SponsorsManifest) : null
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as SponsorsManifest
+  } catch {
+    return null
+  }
 }
 
 export async function readData(kv: KVStore): Promise<WashedSponsors | null> {
   const raw = await kv.get(DATA_KEY, { type: 'text' })
-  return raw ? (JSON.parse(raw) as WashedSponsors) : null
+  if (!raw) return null
+  try {
+    return JSON.parse(raw) as WashedSponsors
+  } catch {
+    return null
+  }
 }
 
 export async function readImage(
@@ -105,8 +115,14 @@ export async function writeSnapshot(
   }
   await kv.put(DATA_KEY, JSON.stringify(data))
   await kv.put(MANIFEST_KEY, JSON.stringify(manifest))
+  // Best-effort cleanup of the previous version's blobs. Re-read the manifest and
+  // only delete if we are still the current published version — otherwise a
+  // concurrent refresh superseded us and those "previous" keys may be the winner's.
   if (previous && previous.version !== version) {
-    const oldKeys = Object.values(previous.images).map((e) => e.key)
-    if (oldKeys.length) await r2.delete(oldKeys).catch(() => {})
+    const now = await readManifest(kv)
+    if (now?.version === version) {
+      const oldKeys = Object.values(previous.images).map((e) => e.key)
+      if (oldKeys.length) await r2.delete(oldKeys).catch(() => {})
+    }
   }
 }

@@ -50,4 +50,13 @@ describe('getCachedSponsors', () => {
     const out = await getCachedSponsors(undefined, loadLive)
     expect(out.platinum[0].name).toBe('LIVE')
   })
+  it('corrupt KV data falls back to the live loader', async () => {
+    const loadLive = vi.fn(async () => live)
+    const out = await getCachedSponsors(
+      kvWith({ [DATA_KEY]: '{not json' }),
+      loadLive,
+    )
+    expect(out.platinum[0].name).toBe('LIVE')
+    expect(loadLive).toHaveBeenCalledOnce()
+  })
 })

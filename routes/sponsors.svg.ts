@@ -8,7 +8,6 @@ import { defineHandler } from 'void'
 import yogaWasm from 'satori/yoga.wasm'
 import resvgWasm from '@resvg/resvg-wasm/index_bg.wasm'
 import { loadSponsors } from '../lib/landing/load-sponsors.ts'
-import { getCachedSponsors } from '../lib/landing/get-sponsors.ts'
 import { parseTheme } from '../lib/sponsors-image/theme.ts'
 import {
   loadFonts,
@@ -50,7 +49,7 @@ export const GET = defineHandler(async (c) => {
 
   // Cold miss: render THIS request live, then warm all 4 blobs in the background.
   await ensureYoga(yogaWasm)
-  const sponsors = await getCachedSponsors(e.KV)
+  const sponsors = await loadSponsors()
   const fonts = await loadFonts((path) => readAsset(e.ASSETS, c.req.url, path))
   const { body, contentType } = await renderSponsorsImage({
     format: 'svg',

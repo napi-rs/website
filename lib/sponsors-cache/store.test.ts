@@ -1,6 +1,6 @@
 // @vitest-environment node
 // lib/sponsors-cache/store.test.ts
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import {
   readManifest,
   readData,
@@ -131,5 +131,48 @@ describe('store', () => {
 
   it('readImage returns null when nothing is cached', async () => {
     expect(await readImage(fakeKV(), fakeR2(), 'svg', 'light')).toBeNull()
+  })
+
+  it('does NOT delete previous keys when superseded concurrently', async () => {
+    const kv = fakeKV(),
+      r2 = fakeR2()
+    // Seed v1 (its manifest + 4 R2 blobs are the "previous" the writer would clean up).
+    await writeSnapshot(kv, r2, sample(), 'v1', images('a'))
+    const deleteSpy = vi.spyOn(r2, 'delete')
+
+    // Simulate a concurrent winner: after we flip the manifest to v2, the re-read
+    // returns a DIFFERENT version (another refresh superseded us). The initial
+    // "previous" read (before any put) still sees the seeded v1.
+    const realGet = kv.get.bind(kv)
+    const realPut = kv.put.bind(kv)
+    let flipped = false
+    kv.get = async (key: string, opts?: { type?: 'text' }) => {
+      if (key === MANIFEST_KEY && flipped) {
+        return JSON.stringify({
+          version: 'v3-winner',
+          updatedAt: '',
+          images: {},
+        })
+      }
+      return realGet(key, opts)
+    }
+    kv.put = async (key: string, value: string) => {
+      await realPut(key, value)
+      if (key === MANIFEST_KEY) flipped = true
+    }
+
+    await writeSnapshot(kv, r2, sample(), 'v2', images('b'))
+    expect(deleteSpy).not.toHaveBeenCalled()
+  })
+
+  it('readData / readManifest return null on corrupt JSON', async () => {
+    const kv: KVStore = {
+      async get() {
+        return '{not json'
+      },
+      async put() {},
+    }
+    expect(await readManifest(kv)).toBeNull()
+    expect(await readData(kv)).toBeNull()
   })
 })

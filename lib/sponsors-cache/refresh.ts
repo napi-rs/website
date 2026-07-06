@@ -58,17 +58,35 @@ export async function hashSponsors(data: WashedSponsors): Promise<string> {
     .join('')
 }
 
+// A healthy fetch always includes the Special Thanks entry, so an all-empty
+// washed list means loadSponsors degraded (no token / non-200 / GraphQL error
+// / timeout — it returns empty, never throws). Guards against clobbering a
+// good snapshot with that.
+function isEmpty(data: WashedSponsors): boolean {
+  return (
+    data.specialThanks.length === 0 &&
+    data.platinum.length === 0 &&
+    data.gold.length === 0 &&
+    data.sliver.length === 0 &&
+    data.backers.length === 0
+  )
+}
+
 export async function refreshSponsorsCache(
   deps: RefreshDeps,
 ): Promise<RefreshResult> {
   const data = await deps.loadFresh()
   const version = await hashSponsors(data)
+  const current = await readManifest(deps.kv)
 
-  if (!deps.force) {
-    const current = await readManifest(deps.kv)
-    if (current?.version === version) {
-      return { version, changed: false, imageCount: 0 }
-    }
+  // Degraded-fetch guard: don't clobber a good snapshot with an empty one.
+  if (isEmpty(data) && current) {
+    return { version: current.version, changed: false, imageCount: 0 }
+  }
+
+  // Unchanged content: skip re-render unless forced.
+  if (!deps.force && current?.version === version) {
+    return { version, changed: false, imageCount: 0 }
   }
 
   await ensureYoga(deps.yogaWasm)

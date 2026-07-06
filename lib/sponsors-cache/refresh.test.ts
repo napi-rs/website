@@ -1,6 +1,6 @@
 // @vitest-environment node
 // lib/sponsors-cache/refresh.test.ts
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import {
   refreshSponsorsCache,
@@ -18,7 +18,7 @@ import { ensureYoga } from '../sponsors-image/card.ts'
 import { ensureResvg } from '../sponsors-image/resvg.ts'
 import type { SatoriFont } from '../sponsors-image/fonts.ts'
 import type { ImageFetcher } from '../sponsors-image/avatars.ts'
-import type { WashedSponsors } from '../landing/sponsors.ts'
+import { wash, type WashedSponsors } from '../landing/sponsors.ts'
 
 const yogaMod = new WebAssembly.Module(
   readFileSync('node_modules/satori/yoga.wasm'),
@@ -164,6 +164,42 @@ describe('refreshSponsorsCache', () => {
     const forced = await refreshSponsorsCache(deps(kv, r2, { force: true }))
     expect(forced.changed).toBe(true)
     expect(forced.imageCount).toBe(4)
+  })
+
+  it('degraded (empty) loadFresh does NOT overwrite an existing snapshot', async () => {
+    const kv = fakeKV(),
+      r2 = fakeR2()
+    // Seed a good snapshot first.
+    const seeded = await refreshSponsorsCache(deps(kv, r2))
+    const putKv = vi.spyOn(kv, 'put')
+    const putR2 = vi.spyOn(r2, 'put')
+    // A degraded fetch (no token / non-200 / GraphQL error / timeout) washes to
+    // all-empty tiers; even with force it must NOT clobber the good snapshot.
+    const result = await refreshSponsorsCache(
+      deps(kv, r2, { loadFresh: async () => wash({}), force: true }),
+    )
+    expect(result.changed).toBe(false)
+    expect(result.imageCount).toBe(0)
+    expect(result.version).toBe(seeded.version)
+    // No write to DATA_KEY / MANIFEST_KEY and no R2 put happened.
+    expect(putKv).not.toHaveBeenCalled()
+    expect(putR2).not.toHaveBeenCalled()
+    // The good data + images are preserved.
+    expect((await readData(kv))?.platinum[0].name).toBe('A')
+    expect(r2.store.size).toBe(4)
+    expect((await readManifest(kv))?.version).toBe(seeded.version)
+  })
+
+  it('empty loadFresh on a cold cache (no manifest) still writes', async () => {
+    const kv = fakeKV(),
+      r2 = fakeR2()
+    // Nothing better to serve on a truly cold cache: render + write the empty wall.
+    const result = await refreshSponsorsCache(
+      deps(kv, r2, { loadFresh: async () => wash({}), force: true }),
+    )
+    expect(result.changed).toBe(true)
+    expect(result.imageCount).toBe(4)
+    expect(r2.store.size).toBe(4)
   })
 
   it('hashSponsors is stable for equal data and differs for different data', async () => {
