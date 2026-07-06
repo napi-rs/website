@@ -53,7 +53,7 @@ new NapiCli().build({
 | bin               | --bin                 | string   | false    |         | Build only the specified binary                                                                                           |
 | package           | --package,-p          | string   | false    |         | Build the specified library or the one at cwd                                                                             |
 | profile           | --profile             | string   | false    |         | Build artifacts with the specified profile                                                                                |
-| crossCompile      | --cross-compile,-x    | boolean  | false    |         | [experimental] cross compile by swapping the cargo subcommand: Windows MSVC targets from a non-Windows host use <Green>cargo-xwin</Green>; every other target uses <Green>cargo-zigbuild</Green> (requires <Green>zig</Green> on PATH). Both subcommands are auto-installed. Conflicts with <Green>--use-cross</Green> |
+| crossCompile      | --cross-compile,-x    | boolean  | false    |         | [experimental] cross compile by swapping the cargo subcommand: any Windows-platform target (every `*-windows-*` triple, not just MSVC) from a non-Windows host uses <Green>cargo-xwin</Green>; every other target uses <Green>cargo-zigbuild</Green> (requires <Green>zig</Green> on PATH). The selected subcommand is auto-installed on first use. Conflicts with <Green>--use-cross</Green> |
 | useCross          | --use-cross           | boolean  | false    |         | [experimental] <Warning>legacy, not recommended</Warning>: build inside a Docker/Podman container via <Green>cross</Green> (cross-rs); prefer <Green>--use-napi-cross</Green> or <Green>--cross-compile</Green>. Requires <Green>cross</Green> to be installed manually and a running container engine. Conflicts with <Green>--cross-compile</Green> |
 | useNapiCross      | --use-napi-cross      | boolean  | false    |         | [experimental] download a gcc cross toolchain from npm (<Green>@napi-rs/cross-toolchain</Green>) and set linker/CC env vars. Linux glibc targets only: x64, arm64, armv7, ppc64le, s390x (glibc 2.17). Host must be Linux x64/arm64; on failure it warns and falls back to plain <Green>cargo</Green> |
 | watch             | --watch,-w            | boolean  | false    |         | watch the crate changes and build continuously with <Green>cargo-watch</Green> crates                                    |
@@ -86,7 +86,7 @@ Each flag changes exactly one thing about the build:
 
 | Combination                            | What actually happens                                                                                                                                            |
 | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--use-cross` + `--cross-compile`      | Hard error: the CLI refuses to build (possibly after auto-installing cargo-xwin and cargo-zigbuild first).                                                        |
+| `--use-cross` + `--cross-compile`      | Hard error: the CLI refuses to build (possibly after auto-installing the selected helper — cargo-xwin or cargo-zigbuild — first).                                 |
 | `--use-napi-cross` + `--use-cross`     | The warning claims `--use-cross` will be ignored. It is not: `cross` still runs, with host paths injected into its env. Do not combine.                            |
 | `--use-napi-cross` + `--cross-compile` | The warning claims `--cross-compile` will be ignored. It is not: `cargo zigbuild` runs with the napi-cross env also set (the napi-cross linker wins over zig). Do not combine. |
 | `--watch` + `--cross-compile`          | Produces an invalid command (`cargo watch ... -- cargo build zigbuild`). Do not combine.                                                                           |
@@ -95,7 +95,7 @@ Each flag changes exactly one thing about the build:
 
 | Flag                     | Installed for you                                                                                                                                                                                  | You must provide                                                                                                                                                                                                                                          |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--cross-compile` / `-x` | <Green>cargo-xwin</Green> and <Green>cargo-zigbuild</Green>, via `cargo install` (the first run can be slow). For Windows targets, cargo-xwin downloads the Microsoft CRT and Windows SDK itself (the Microsoft license applies). | `zig` on `PATH`. The CLI never installs or checks zig; cargo-zigbuild errors if it is missing.                                                                                                                                                             |
+| `--cross-compile` / `-x` | The selected helper — <Green>cargo-xwin</Green> for Windows-platform targets, <Green>cargo-zigbuild</Green> for everything else — via `cargo install`, on first use (that run can be slow). For Windows targets, cargo-xwin downloads the Microsoft CRT and Windows SDK itself (the Microsoft license applies). | `zig` on `PATH`. The CLI never installs or checks zig; cargo-zigbuild errors if it is missing.                                                                                                                                                             |
 | `--use-cross`            | Nothing.                                                                                                                                                                                              | The `cross` binary (a missing binary fails with `spawn cross ENOENT`), plus a running Docker >= 20.10 or Podman >= 3.4.                                                                                                                                    |
 | `--use-napi-cross`       | The gcc toolchain, downloaded automatically from npm (<Green>@napi-rs/cross-toolchain</Green>) and cached under `~/.napi-rs/cross-toolchain`.                                                          | `npm` on `PATH`, and a Linux x64 or arm64 host. The CLI does not check the host: on macOS or Windows the download "succeeds" and the Linux gcc fails at link time. Any failure here only prints a warning and the build continues as plain `cargo build`. |
 
@@ -125,11 +125,11 @@ napi build --release --target x86_64-unknown-linux-gnu --use-cross
 | No cross flag                                                     | `cargo build --target <triple>`                                             |
 | `--use-napi-cross`                                                | `cargo build --target <triple>` (only the env changes)                      |
 | `--use-cross`                                                     | `cross build --target <triple>` (same args, same host-computed env)         |
-| `--cross-compile`, target is Windows MSVC, host is not Windows    | `cargo xwin build --target <triple>` (`XWIN_ARCH=x86` is set for `i686`)    |
+| `--cross-compile`, target platform is Windows, host is not Windows | `cargo xwin build --target <triple>` (`XWIN_ARCH=x86` is set for `i686`)    |
 | `--cross-compile`, any other target                               | `cargo zigbuild --target <triple>`                                          |
 | `--cross-compile`, target is Windows, host is Windows             | warns, then plain `cargo build --target <triple>`                           |
 
-`--cross-compile` picks cargo-xwin per **target** (a Windows MSVC target built from a non-Windows host), not per host. Every non-Windows target goes through cargo-zigbuild — there is no allowlist and no host == target check.
+`--cross-compile` picks cargo-xwin by the target's **platform**: every `*-windows-*` triple built from a non-Windows host routes through cargo-xwin — including `x86_64-pc-windows-gnu`, not just MSVC. Every non-Windows target goes through cargo-zigbuild — there is no allowlist and no host == target check.
 
 If the `CARGO` environment variable is set, the CLI spawns that binary instead — in every mode. It even replaces `cross` under `--use-cross`, without any warning.
 
@@ -158,7 +158,11 @@ Without `--cross-compile`, these targets get `CARGO_TARGET_<T>_LINKER` pointed a
 
 ### Android, WASI and OpenHarmony
 
-Android, WASI and OpenHarmony targets always get their toolchain env from `ANDROID_NDK_LATEST_HOME`, `WASI_SDK_PATH` and `OHOS_SDK_PATH` respectively — with or without any cross flag.
+These targets get their toolchain env from the CLI whenever the target platform matches — with or without any cross flag — but each platform has its own conditions:
+
+- **Android**: linker/CC/AR env is built from `ANDROID_NDK_LATEST_HOME`. A missing variable only prints a warning — the env vars are still set, with broken paths, and the build fails at link time. The whole setup is skipped when the host itself is Android.
+- **WASI**: `EMNAPI_LINK_DIR` is always set to the bundled emnapi (the CLI errors if the `emnapi`, `@emnapi/core` and `@emnapi/runtime` versions mismatch). The wasi-sdk linker/CC env is set only when `WASI_SDK_PATH` is set **and** the directory exists — otherwise linking falls back to cargo's default, rustup's bundled `rust-lld`.
+- **OpenHarmony**: env is built from `$OHOS_SDK_PATH/native`, or from `OHOS_SDK_NATIVE` when `OHOS_SDK_PATH` is unset. If neither is set, the CLI warns and sets nothing.
 
 ## Passing flags to Cargo
 

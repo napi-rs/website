@@ -117,7 +117,7 @@ tree -a
     └── lib.rs
 ```
 
-Your native code is in `src/lib.rs`. The `.cargo/config.toml` file carries the per-target linker configuration that cross-compiling in the `GitHub CI` depends on. In general, this file does not affect your development on your local machine, but don't delete it: without it, cross targets fail with confusing link errors — and a `zig: not found` line in the build log is a red herring, not the real problem. See the [Cross build](/docs/cross-build) guide for how cross-compilation works.
+Your native code is in `src/lib.rs`. The `.cargo/config.toml` file currently only sets `rustflags` that statically link the C runtime for Windows MSVC targets — don't delete it even though it looks trivial, or your Windows binaries will start depending on the MSVC runtime DLLs. Cross-compile linker and toolchain configuration does not live in this file: it comes from the `napi` CLI itself (see [napi build](/docs/cli/build)). In general, this file does not affect your development on your local machine. See the [Cross build](/docs/cross-build) guide for how cross-compilation works.
 The `.github/workflows/CI.yml` file is the configuration file for [`GitHub Actions`](https://docs.github.com/en/actions).
 The `build.rs` file is necessary for building a native addon for `Node.js`. Don't delete it or move it to another place.
 
@@ -284,7 +284,7 @@ In the project **Settings -> Secrets**, add your **_NPM_TOKEN_** into it.
 
 If everything works fine, you will see the following CI matrix:
 
-![](./CI.png)
+![](/assets/CI.png)
 
 This is just a test CI matrix, let's finally publish this package:
 
