@@ -25,7 +25,7 @@ export async function verifyGithubSignature(
   )
 }
 
-function hexToBytes(hex: string): Uint8Array | null {
+function hexToBytes(hex: string): Uint8Array<ArrayBuffer> | null {
   if (hex.length === 0 || hex.length % 2 !== 0 || /[^0-9a-f]/i.test(hex))
     return null
   const out = new Uint8Array(hex.length / 2)
