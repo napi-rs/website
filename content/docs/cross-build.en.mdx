@@ -75,7 +75,7 @@ flowchart TD
 | **Targets** | Exactly 5 Linux glibc triples: x64, arm64, armv7, ppc64le, s390x | Linux (gnu and musl) and macOS targets via zig; Windows MSVC via xwin | Whatever cross-rs has images for — Linux only, no macOS or Windows MSVC images |
 | **glibc floor** | 2.17 | zig's default (2.28 for zig 0.12–0.14) | The image's glibc (mostly 2.31; `:centos` variants 2.17) |
 | **Prerequisites** | Linux x64/arm64 host, `npm` on `PATH`; the toolchain is downloaded and cached automatically | `zig` on `PATH` (the CLI never installs it); cargo-zigbuild/cargo-xwin are auto-installed | `cross` installed manually, plus a running Docker >= 20.10 or Podman >= 3.4 |
-| **C/C++ dependencies** | Compiled with the bundled gcc; the aarch64 gcc is old — see [known limitation](#c-and-c-dependencies) | Compiled with `zig cc`; Apple-framework dependencies need a macOS SDK | Full container toolchain — last resort for autotools/CMake build scripts |
+| **C/C++ dependencies** | Compiled with the bundled gcc; the aarch64 gcc is old — see [known limitation](#native-dependencies) | Compiled with `zig cc`; Apple-framework dependencies need a macOS SDK | Full container toolchain — last resort for autotools/CMake build scripts |
 
 Pick exactly one flag per build — they do not combine, and two of the combinations misbehave despite a reassuring warning. See [the combination rules](./cli/build#pick-exactly-one).
 
@@ -183,7 +183,7 @@ objdump -T my-package.linux-arm64-gnu.node | grep -o 'GLIBC_[0-9.]*' | sort -Vu 
 
 Expect at most `GLIBC_2.17` when built with `--use-napi-cross`, and zig's default when built with `-x`.
 
-## C and C++ dependencies
+## Native dependencies
 
 C/C++ dependencies are the recurring wall in cross-compilation: crates like `ring`, `openssl-sys` or `zstd-sys` compile C source via a build script, which needs a C compiler that targets your *target* — configuring rustc alone is not enough.
 
