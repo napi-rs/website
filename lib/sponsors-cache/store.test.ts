@@ -108,9 +108,10 @@ describe('store', () => {
 
     const manifest = await readManifest(kv)
     expect(manifest?.version).toBe('v1')
-    expect(manifest?.images[imageSlot('png', 'dark')].key).toBe(
-      'sponsors/v1/png-dark',
-    )
+    // Blobs live under a per-render staging folder (sponsors/<version>/<id>/…).
+    const pngDarkKey = manifest?.images[imageSlot('png', 'dark')].key ?? ''
+    expect(pngDarkKey.startsWith('sponsors/v1/')).toBe(true)
+    expect(pngDarkKey.endsWith('/png-dark')).toBe(true)
 
     const img = await readImage(kv, r2, 'png', 'dark')
     expect([...img!.body]).toEqual([4, 5, 6])
@@ -175,6 +176,17 @@ describe('store', () => {
     const kv: KVStore = {
       async get() {
         return '{not json'
+      },
+      async put() {},
+    }
+    expect(await readManifest(kv)).toBeNull()
+    expect(await readData(kv)).toBeNull()
+  })
+
+  it('readData / readManifest return null when kv.get rejects', async () => {
+    const kv: KVStore = {
+      async get() {
+        throw new Error('KV transient failure')
       },
       async put() {},
     }

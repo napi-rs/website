@@ -51,23 +51,24 @@ export function imageSlot(format: ImageFormat, theme: ImageTheme): string {
   return `${format}:${theme}`
 }
 
+// Treat ANY cache-read failure — a rejected `kv.get` (transient KV error) or a
+// corrupt/unparseable value — as a miss (null), so every caller falls through to
+// its live/cold path instead of surfacing a 500.
 export async function readManifest(
   kv: KVStore,
 ): Promise<SponsorsManifest | null> {
-  const raw = await kv.get(MANIFEST_KEY, { type: 'text' })
-  if (!raw) return null
   try {
-    return JSON.parse(raw) as SponsorsManifest
+    const raw = await kv.get(MANIFEST_KEY, { type: 'text' })
+    return raw ? (JSON.parse(raw) as SponsorsManifest) : null
   } catch {
     return null
   }
 }
 
 export async function readData(kv: KVStore): Promise<WashedSponsors | null> {
-  const raw = await kv.get(DATA_KEY, { type: 'text' })
-  if (!raw) return null
   try {
-    return JSON.parse(raw) as WashedSponsors
+    const raw = await kv.get(DATA_KEY, { type: 'text' })
+    return raw ? (JSON.parse(raw) as WashedSponsors) : null
   } catch {
     return null
   }
@@ -106,13 +107,20 @@ export async function writeSnapshot(
   images: RenderedImage[],
   expectedVersion: string | null,
 ): Promise<void> {
+  // Stage the blobs under a per-render id so we NEVER overwrite the keys the live
+  // manifest currently serves — even a forced same-version re-render (the daily
+  // avatar refresh) writes a fresh folder. A partial write or an aborted CAS thus
+  // can't corrupt or roll back the live cache; readers only ever follow the
+  // manifest to a fully-written folder, which is published by the single atomic
+  // manifest flip below.
+  const renderId = crypto.randomUUID()
   const manifest: SponsorsManifest = {
     version,
     updatedAt: new Date().toISOString(),
     images: {},
   }
   for (const img of images) {
-    const key = `sponsors/${version}/${img.format}-${img.theme}`
+    const key = `sponsors/${version}/${renderId}/${img.format}-${img.theme}`
     await r2.put(key, img.body, {
       httpMetadata: { contentType: img.contentType },
     })
@@ -135,10 +143,14 @@ export async function writeSnapshot(
 
   await kv.put(DATA_KEY, JSON.stringify(data))
   await kv.put(MANIFEST_KEY, JSON.stringify(manifest))
-  // Best-effort cleanup of the version we just replaced (`latest`, which the CAS
-  // confirmed we own the transition from).
-  if (latest && latest.version !== version) {
-    const oldKeys = Object.values(latest.images).map((e) => e.key)
+  // Best-effort cleanup of the blobs the previous manifest referenced that our
+  // freshly-staged folder does not (staging ids are unique, so a same-version
+  // re-render still cleans up the old folder rather than leaking it).
+  if (latest) {
+    const ourKeys = new Set(Object.values(manifest.images).map((e) => e.key))
+    const oldKeys = Object.values(latest.images)
+      .map((e) => e.key)
+      .filter((k) => !ourKeys.has(k))
     if (oldKeys.length) await r2.delete(oldKeys).catch(() => {})
   }
 }

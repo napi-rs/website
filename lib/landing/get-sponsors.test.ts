@@ -59,4 +59,16 @@ describe('getCachedSponsors', () => {
     expect(out.platinum[0].name).toBe('LIVE')
     expect(loadLive).toHaveBeenCalledOnce()
   })
+  it('falls back to live when the KV read rejects', async () => {
+    const loadLive = vi.fn(async () => live)
+    const kv: KVStore = {
+      async get() {
+        throw new Error('KV transient failure')
+      },
+      async put() {},
+    }
+    const out = await getCachedSponsors(kv, loadLive)
+    expect(out.platinum[0].name).toBe('LIVE')
+    expect(loadLive).toHaveBeenCalledOnce()
+  })
 })
