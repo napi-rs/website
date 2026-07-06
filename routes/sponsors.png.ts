@@ -1,12 +1,13 @@
 // routes/sponsors.png.ts
 // GET /sponsors.png — the sponsor wall as a PNG (works everywhere: GitHub, npm,
 // crates.io). Serves the cron/webhook-warmed blob from R2 via the KV manifest;
-// on a cold cache miss it renders this one live AND kicks off a background
+// on a cold cache miss it renders this one from the cached sponsor list (KV
+// snapshot first, live GitHub only when KV has none) AND kicks off a background
 // refresh (force) that warms all 4 blobs (svg/png x light/dark) for next time.
 import { defineHandler } from 'void'
 import yogaWasm from 'satori/yoga.wasm'
 import resvgWasm from '@resvg/resvg-wasm/index_bg.wasm'
-import { loadSponsors } from '../lib/landing/load-sponsors.ts'
+import { getCachedSponsors } from '../lib/landing/get-sponsors.ts'
 import { parseTheme } from '../lib/sponsors-image/theme.ts'
 import {
   loadFonts,
@@ -47,10 +48,12 @@ export const GET = defineHandler(async (c) => {
     }
   }
 
-  // Cold miss: render THIS request live, then warm all 4 blobs in the background.
+  // Cold miss: render THIS request from the cached list, then warm all 4 blobs in
+  // the background. KV-first (not a bare live fetch) so a GitHub outage can't make
+  // us serve — and CDN-cache — an empty wall while good sponsor data sits in KV.
   await ensureYoga(yogaWasm)
   await ensureResvg(resvgWasm)
-  const sponsors = await loadSponsors()
+  const sponsors = await getCachedSponsors(e.KV)
   const fonts = await loadFonts((path) => readAsset(e.ASSETS, c.req.url, path))
   const { body, contentType } = await renderSponsorsImage({
     format: 'png',
@@ -65,9 +68,10 @@ export const GET = defineHandler(async (c) => {
       refreshSponsorsCache({
         kv,
         r2,
-        // Reuse the good data we just rendered from — a second bypassed fetch
-        // could degrade to empty and (on a cold cache, no manifest) publish an
-        // empty first snapshot over a request that already had live data.
+        // Reuse the data we just rendered from — a second bypassed fetch could
+        // degrade to empty; the refresh's isEmpty guard already refuses to
+        // publish empty, and reusing keeps the served image and warmed blob in
+        // sync.
         loadFresh: () => Promise.resolve(sponsors),
         loadFonts: () => loadFonts((p) => readAsset(e.ASSETS, c.req.url, p)),
         yogaWasm,
