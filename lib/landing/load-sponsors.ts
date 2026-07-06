@@ -149,8 +149,10 @@ function bucket(nodes: SponsorshipNode[]): {
 // Shared sponsor loader used by all three landing loaders (en/cn/pt-BR). On any
 // failure (no token, network, non-200, GraphQL error, timeout) returns empty
 // tiers so the landing page still renders — a broken wall never 500s the page.
-export async function loadSponsors(): Promise<WashedSponsors> {
-  if (cache && cache.expiresAt > Date.now()) {
+export async function loadSponsors(options?: {
+  bypassCache?: boolean
+}): Promise<WashedSponsors> {
+  if (!options?.bypassCache && cache && cache.expiresAt > Date.now()) {
     return cache.value
   }
 
