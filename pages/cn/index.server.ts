@@ -1,13 +1,14 @@
 import { defineHandler, defineHead, type InferProps } from 'void'
 
-import { loadSponsors } from '../../lib/landing/load-sponsors.ts'
+import { getCachedSponsors } from '../../lib/landing/get-sponsors.ts'
+import type { KVStore } from '../../lib/sponsors-cache/store.ts'
 
 // prerender=false keeps the scoped COOP/COEP headers (void.json routing.headers
 // `/cn`) applying on every request, matching `/en`.
 export const prerender = false
 
-export const loader = defineHandler(async () => ({
-  sponsors: await loadSponsors(),
+export const loader = defineHandler(async (c) => ({
+  sponsors: await getCachedSponsors((c.env as unknown as { KV?: KVStore }).KV),
 }))
 
 export type Props = InferProps<typeof loader>
