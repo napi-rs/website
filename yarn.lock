@@ -9562,8 +9562,8 @@ __metadata:
   linkType: hard
 
 "void@npm:^0.10.3":
-  version: 0.10.4
-  resolution: "void@npm:0.10.4"
+  version: 0.10.5
+  resolution: "void@npm:0.10.5"
   dependencies:
     "@cloudflare/sandbox": "npm:^0.10.0"
     "@cloudflare/vite-plugin": "npm:^1.36.3"
@@ -9585,7 +9585,7 @@ __metadata:
     pg: "npm:^8.20.0"
     wrangler: "npm:^4.90.0"
   peerDependencies:
-    "@void/md": 0.10.4
+    "@void/md": 0.10.5
     arktype: ">=2.0.0"
     valibot: ">=1.0.0-beta.7"
     vite: ^8.0.0
@@ -9601,7 +9601,7 @@ __metadata:
       optional: true
   bin:
     void: dist/cli/cli.mjs
-  checksum: 10c0/97dd0500c4e930a16e44a580cdfda4e023a4615894e913d8a5eff43c4308b0fa7225fadd5743c051a7806d7a76d7d7d788e31392a3e4aa9287ed4431dd53e785
+  checksum: 10c0/5f8c1f9ac824f908151ae5996fc06bd3cb815607e7293ce9ad49a3445df5390fc84ecc79a1acfa77c0284777eaea1b3836328ebc074493ac1a5121d07c3aa6ab
   languageName: node
   linkType: hard
 
