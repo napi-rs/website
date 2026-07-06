@@ -13,8 +13,8 @@ const dot =
 function fonts(): SatoriFont[] {
   const bold = readFileSync('public/fonts/Manrope_700Bold.ttf')
   const medium = readFileSync('public/fonts/Manrope_500Medium.ttf')
-  const toAB = (b: Buffer) =>
-    b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)
+  const toAB = (b: Buffer): ArrayBuffer =>
+    b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer
   return [
     { name: 'Manrope', data: toAB(bold), weight: 700, style: 'normal' },
     { name: 'Manrope', data: toAB(medium), weight: 500, style: 'normal' },

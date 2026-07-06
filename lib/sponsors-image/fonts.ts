@@ -4,10 +4,12 @@
 // fonts and needs raw TTF/OTF buffers (not woff2). Cached per isolate so we read
 // each font once. A failed load clears the cache so the next request can retry.
 
+import type { FontWeight } from 'satori/standalone'
+
 export interface SatoriFont {
   name: string
   data: ArrayBuffer
-  weight: number
+  weight: FontWeight
   style: 'normal'
 }
 

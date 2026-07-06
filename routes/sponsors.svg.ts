@@ -28,7 +28,7 @@ export const GET = defineHandler(async (c) => {
     sponsors,
     fonts,
   })
-  return new Response(body, {
+  return new Response(body as BodyInit, {
     headers: { 'Content-Type': contentType, 'Cache-Control': CACHE_CONTROL },
   })
 })
