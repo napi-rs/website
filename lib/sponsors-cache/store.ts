@@ -136,9 +136,20 @@ export async function writeSnapshot(
     }
   }
 
-  // CAS: re-read the pointer right before flipping. Abort if a concurrent
+  // "CAS": re-read the pointer right before flipping. Abort if a concurrent
   // refresh moved it to a version other than the one we started from (and other
   // than our own content) — else a stale writer would roll the cache back.
+  //
+  // NOTE: Cloudflare KV has no atomic compare-and-swap / conditional put, so a
+  // few-ms window between this read and the kv.put below cannot be closed at the
+  // KV layer. Two refreshes that both start from the same manifest, fetch
+  // DIFFERENT data, and both clear this check before either put can still let the
+  // staler one publish last. That requires two refreshes overlapping within ~ms
+  // (sources are a daily cron + rare webhooks + rare cold-warms) with changed
+  // data in between, and it self-heals on the next refresh. True serialization
+  // would need a Durable Object (or moving the manifest to R2 for an ETag
+  // conditional write); both are disproportionate for a wall that refreshes
+  // daily and on the odd sponsorship change. Deliberately accepted.
   const latest = await readManifest(kv)
   const latestVersion = latest?.version ?? null
   if (latestVersion !== expectedVersion && latestVersion !== version) {
