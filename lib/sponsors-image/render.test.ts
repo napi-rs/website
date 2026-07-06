@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeAll } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { renderSponsorsImage } from './render.ts'
-import { ensureYoga } from './card.ts'
+import { ensureYoga, MAX_BACKERS } from './card.ts'
 import { ensureResvg } from './resvg.ts'
 import type { SatoriFont } from './fonts.ts'
 import type { ImageFetcher } from './avatars.ts'
@@ -66,6 +66,37 @@ describe('renderSponsorsImage', () => {
     expect(typeof out.body).toBe('string')
     expect((out.body as string).startsWith('<svg')).toBe(true)
     expect(out.contentType).toBe('image/svg+xml; charset=utf-8')
+  })
+
+  it('caps backer avatar fetches at MAX_BACKERS', async () => {
+    const many = Array.from({ length: MAX_BACKERS + 50 }, (_v, i) => ({
+      name: `b${i}`,
+      img: `https://x/${i}.png`,
+      url: `https://github.com/b${i}`,
+    }))
+    const manySponsors: WashedSponsors = {
+      specialThanks: [],
+      platinum: [],
+      gold: [],
+      sliver: [],
+      backers: many,
+    }
+    let calls = 0
+    const counting: ImageFetcher = async () => {
+      calls += 1
+      return new Response(onePngBytes, {
+        status: 200,
+        headers: { 'content-type': 'image/png' },
+      })
+    }
+    await renderSponsorsImage({
+      format: 'svg',
+      theme: 'light',
+      sponsors: manySponsors,
+      fonts: fonts(),
+      fetchImage: counting,
+    })
+    expect(calls).toBe(MAX_BACKERS)
   })
 
   it('returns png bytes + content-type for format=png', async () => {

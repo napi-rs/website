@@ -13,7 +13,14 @@ import { THEMES, type Theme, type ThemeTokens } from './theme.ts'
 export const CARD_WIDTH = 800
 
 // Bound the backers row so a large tier can't explode avatar fan-out / image height.
-const MAX_BACKERS = 100
+export const MAX_BACKERS = 100
+
+// Cap the backers tier BEFORE avatar fetching, so an oversized list can't fan
+// out hundreds of avatar fetches on the edge (a resource bound, not just layout).
+export function capBackers(sponsors: WashedSponsors): WashedSponsors {
+  if (sponsors.backers.length <= MAX_BACKERS) return sponsors
+  return { ...sponsors, backers: sponsors.backers.slice(0, MAX_BACKERS) }
+}
 
 interface TierSpec {
   key: keyof WashedSponsors
@@ -32,7 +39,12 @@ const TIER_SPECS: TierSpec[] = [
 let yogaReady: Promise<void> | null = null
 
 export function ensureYoga(wasm: WebAssembly.Module): Promise<void> {
-  if (!yogaReady) yogaReady = init(wasm)
+  if (!yogaReady) {
+    yogaReady = init(wasm).catch((err) => {
+      yogaReady = null
+      throw err
+    })
+  }
   return yogaReady
 }
 
@@ -142,10 +154,7 @@ export function renderSvg(
   const t = THEMES[theme]
   const sections = TIER_SPECS.map((spec) => ({
     spec,
-    list:
-      spec.key === 'backers'
-        ? sponsors[spec.key].slice(0, MAX_BACKERS)
-        : sponsors[spec.key],
+    list: sponsors[spec.key],
   }))
     .filter(({ list }) => list.length > 0)
     .map(({ spec, list }) => tierSection(spec, list, t))

@@ -71,6 +71,25 @@ describe('inlineSponsorAvatars', () => {
     expect(out.gold.map((s) => s.name)).toEqual(['ok'])
   })
 
+  it('drops an avatar whose fetch hangs past the timeout', async () => {
+    const sponsors: WashedSponsors = {
+      ...emptyTiers(),
+      platinum: [
+        {
+          name: 'slow',
+          img: 'https://x/slow.png',
+          url: 'https://github.com/s',
+        },
+      ],
+    }
+    const hanging: ImageFetcher = (_url, signal) =>
+      new Promise((_resolve, reject) => {
+        signal?.addEventListener('abort', () => reject(new Error('aborted')))
+      })
+    const out = await inlineSponsorAvatars(sponsors, hanging, 20)
+    expect(out.platinum).toHaveLength(0)
+  })
+
   it('requests a sized avatar from githubusercontent hosts', async () => {
     const sponsors: WashedSponsors = {
       ...emptyTiers(),

@@ -14,11 +14,17 @@ const TIERS = [
   'backers',
 ] as const
 
-export type ImageFetcher = (url: string) => Promise<Response>
+const AVATAR_TIMEOUT_MS = 3000
 
-const DEFAULT_FETCH: ImageFetcher = (url) =>
+export type ImageFetcher = (
+  url: string,
+  signal?: AbortSignal,
+) => Promise<Response>
+
+const DEFAULT_FETCH: ImageFetcher = (url, signal) =>
   fetch(url, {
     headers: { accept: 'image/png,image/jpeg;q=0.9,image/*;q=0.8' },
+    signal,
   })
 
 // Uint8Array -> base64 using btoa (available in workerd + Node). Chunked so a
@@ -48,9 +54,13 @@ function sizedAvatarUrl(url: string): string {
 async function inlineOne(
   sponsor: WashedSponsor,
   fetchImage: ImageFetcher,
+  timeoutMs: number,
 ): Promise<WashedSponsor | null> {
   try {
-    const res = await fetchImage(sizedAvatarUrl(sponsor.img))
+    const res = await fetchImage(
+      sizedAvatarUrl(sponsor.img),
+      AbortSignal.timeout(timeoutMs),
+    )
     if (!res.ok) return null
     const contentType = res.headers.get('content-type') ?? ''
     if (!/^image\/(png|jpe?g|gif)/i.test(contentType)) return null
@@ -67,11 +77,12 @@ async function inlineOne(
 export async function inlineSponsorAvatars(
   sponsors: WashedSponsors,
   fetchImage: ImageFetcher = DEFAULT_FETCH,
+  timeoutMs: number = AVATAR_TIMEOUT_MS,
 ): Promise<WashedSponsors> {
   const result = {} as WashedSponsors
   for (const tier of TIERS) {
     const inlined = await Promise.all(
-      sponsors[tier].map((s) => inlineOne(s, fetchImage)),
+      sponsors[tier].map((s) => inlineOne(s, fetchImage, timeoutMs)),
     )
     result[tier] = inlined.filter((s): s is WashedSponsor => s !== null)
   }

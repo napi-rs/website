@@ -8,7 +8,7 @@ import type { WashedSponsors } from '../landing/sponsors.ts'
 import type { SatoriFont } from './fonts.ts'
 import type { Theme } from './theme.ts'
 import { inlineSponsorAvatars, type ImageFetcher } from './avatars.ts'
-import { renderSvg, CARD_WIDTH } from './card.ts'
+import { renderSvg, CARD_WIDTH, capBackers } from './card.ts'
 import { svgToPng } from './resvg.ts'
 
 const PNG_SCALE = 2
@@ -29,7 +29,8 @@ export interface RenderResult {
 export async function renderSponsorsImage(
   opts: RenderOptions,
 ): Promise<RenderResult> {
-  const inlined = await inlineSponsorAvatars(opts.sponsors, opts.fetchImage)
+  const capped = capBackers(opts.sponsors)
+  const inlined = await inlineSponsorAvatars(capped, opts.fetchImage)
   const svg = await renderSvg(inlined, opts.theme, opts.fonts)
   if (opts.format === 'svg') {
     return { body: svg, contentType: 'image/svg+xml; charset=utf-8' }
