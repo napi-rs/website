@@ -51,7 +51,7 @@ export function ensureYoga(wasm: WebAssembly.Module): Promise<void> {
 // satori node helpers (avoids a JSX runtime; matches the spike-verified shape).
 type Node = { type: string; props: Record<string, unknown> }
 
-function avatar(sponsor: WashedSponsor, size: number): Node {
+function avatar(sponsor: WashedSponsor, size: number, t: ThemeTokens): Node {
   return {
     type: 'img',
     props: {
@@ -62,9 +62,80 @@ function avatar(sponsor: WashedSponsor, size: number): Node {
         width: size,
         height: size,
         borderRadius: size / 2,
-        marginRight: 8,
-        marginBottom: 8,
+        // Faint ring so a logo matching the background still reads as present.
+        border: `1px solid ${t.ring}`,
+        // Symmetric horizontal margins so a centred, wrapping row stays centred.
+        marginLeft: 6,
+        marginRight: 6,
+        marginBottom: 12,
       },
+    },
+  }
+}
+
+function escapeXmlAttr(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+// satori strips <a> wrappers (it targets static images), so we wrap the rendered
+// avatars ourselves: each self-closing <image> is one avatar, emitted in the same
+// order as `urls`, so wrap the Nth in an SVG <a> to the Nth sponsor's page. Makes
+// sponsors clickable when the .svg is opened directly; README `![]()` embeds still
+// render as a flat image (anchors are ignored there).
+function linkAvatars(svg: string, urls: string[]): string {
+  let i = 0
+  return svg.replace(/<image[^>]*\/>/g, (image) => {
+    const url = urls[i++]
+    return url
+      ? `<a href="${escapeXmlAttr(url)}" target="_blank" rel="noopener">${image}</a>`
+      : image
+  })
+}
+
+// A centred tier label flanked by two short rules — "── SPECIAL THANKS ──".
+function tierLabel(label: string, t: ThemeTokens): Node {
+  const rule = (side: 'left' | 'right'): Node => ({
+    type: 'div',
+    props: {
+      style: {
+        display: 'flex',
+        width: 24,
+        height: 1,
+        background: t.border,
+        [side === 'left' ? 'marginRight' : 'marginLeft']: 14,
+      },
+    },
+  })
+  return {
+    type: 'div',
+    props: {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 18,
+      },
+      children: [
+        rule('left'),
+        {
+          type: 'div',
+          props: {
+            style: {
+              display: 'flex',
+              color: t.muted,
+              fontSize: 13,
+              fontWeight: 600,
+              letterSpacing: 2.5,
+            },
+            children: label,
+          },
+        },
+        rule('right'),
+      ],
     },
   }
 }
@@ -73,72 +144,30 @@ function tierSection(
   spec: TierSpec,
   list: WashedSponsor[],
   t: ThemeTokens,
+  first: boolean,
 ): Node {
-  return {
-    type: 'div',
-    props: {
-      style: { display: 'flex', flexDirection: 'column', marginTop: 20 },
-      children: [
-        {
-          type: 'div',
-          props: {
-            style: {
-              display: 'flex',
-              color: t.muted,
-              fontSize: 13,
-              fontWeight: 500,
-              letterSpacing: 1,
-              marginBottom: 10,
-            },
-            children: spec.label,
-          },
-        },
-        {
-          type: 'div',
-          props: {
-            style: { display: 'flex', flexWrap: 'wrap' },
-            children: list.map((s) => avatar(s, spec.size)),
-          },
-        },
-      ],
-    },
-  }
-}
-
-function header(t: ThemeTokens): Node {
   return {
     type: 'div',
     props: {
       style: {
         display: 'flex',
         flexDirection: 'column',
-        borderBottom: `1px solid ${t.border}`,
-        paddingBottom: 16,
+        alignItems: 'center',
+        width: '100%',
+        marginTop: first ? 0 : 40,
       },
       children: [
+        tierLabel(spec.label, t),
         {
           type: 'div',
           props: {
             style: {
               display: 'flex',
-              color: t.fg,
-              fontSize: 30,
-              fontWeight: 700,
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              alignItems: 'center',
             },
-            children: 'NAPI-RS Sponsors',
-          },
-        },
-        {
-          type: 'div',
-          props: {
-            style: {
-              display: 'flex',
-              color: t.accent,
-              fontSize: 15,
-              fontWeight: 500,
-              marginTop: 4,
-            },
-            children: 'napi.rs',
+            children: list.map((s) => avatar(s, spec.size, t)),
           },
         },
       ],
@@ -146,18 +175,21 @@ function header(t: ThemeTokens): Node {
   }
 }
 
-export function renderSvg(
+export async function renderSvg(
   sponsors: WashedSponsors,
   theme: Theme,
   fonts: SatoriFont[],
 ): Promise<string> {
   const t = THEMES[theme]
-  const sections = TIER_SPECS.map((spec) => ({
+  const rendered = TIER_SPECS.map((spec) => ({
     spec,
     list: sponsors[spec.key],
-  }))
-    .filter(({ list }) => list.length > 0)
-    .map(({ spec, list }) => tierSection(spec, list, t))
+  })).filter(({ list }) => list.length > 0)
+  const sections = rendered.map(({ spec, list }, i) =>
+    tierSection(spec, list, t, i === 0),
+  )
+  // Same order the avatars are emitted in, so linkAvatars can pair them 1:1.
+  const urls = rendered.flatMap(({ list }) => list.map((s) => s.url))
 
   const root: Node = {
     type: 'div',
@@ -166,17 +198,22 @@ export function renderSvg(
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
+        alignItems: 'center',
         background: t.bg,
-        padding: 40,
+        paddingTop: 48,
+        paddingBottom: 52,
+        paddingLeft: 48,
+        paddingRight: 48,
         fontFamily: 'Manrope',
       },
-      children: [header(t), ...sections],
+      children: sections,
     },
   }
 
   // satori accepts plain {type,props} nodes as ReactNode; cast keeps TS happy.
-  return satori(root as unknown as Parameters<typeof satori>[0], {
+  const svg = await satori(root as unknown as Parameters<typeof satori>[0], {
     width: CARD_WIDTH,
     fonts,
   })
+  return linkAvatars(svg, urls)
 }

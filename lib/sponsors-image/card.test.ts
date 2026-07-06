@@ -46,9 +46,39 @@ describe('renderSvg', () => {
     expect((svg.match(/<image/g) ?? []).length).toBe(3)
   })
 
-  it('renders header-only svg (no <image>) when there are no sponsors', async () => {
+  it('renders an svg with no <image> when there are no sponsors', async () => {
     const svg = await renderSvg(empty(), 'dark', fonts())
     expect(svg.startsWith('<svg')).toBe(true)
     expect(svg.includes('<image')).toBe(false)
+  })
+
+  it('wraps each avatar in an <a> link to its sponsor page', async () => {
+    const sponsors: WashedSponsors = {
+      ...empty(),
+      gold: [
+        { name: 'A', img: dot, url: 'https://github.com/a' },
+        { name: 'B', img: dot, url: 'https://github.com/b' },
+      ],
+    }
+    const svg = await renderSvg(sponsors, 'light', fonts())
+    const anchors = svg.match(/<a href="[^"]*"/g) ?? []
+    const images = svg.match(/<image/g) ?? []
+    // One clickable link per avatar, in sponsor order.
+    expect(images.length).toBe(2)
+    expect(anchors.length).toBe(images.length)
+    expect(svg).toContain(
+      '<a href="https://github.com/a" target="_blank" rel="noopener"><image',
+    )
+    expect(svg).toContain('href="https://github.com/b"')
+  })
+
+  it('escapes special characters in a link href', async () => {
+    const sponsors: WashedSponsors = {
+      ...empty(),
+      gold: [{ name: 'A', img: dot, url: 'https://github.com/a&b' }],
+    }
+    const svg = await renderSvg(sponsors, 'light', fonts())
+    expect(svg).toContain('href="https://github.com/a&amp;b"')
+    expect(svg).not.toContain('href="https://github.com/a&b"')
   })
 })
