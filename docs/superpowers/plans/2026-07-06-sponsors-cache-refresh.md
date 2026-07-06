@@ -25,7 +25,7 @@ Bind every task. Exact values, copied verbatim.
 - **Serve `Cache-Control` (both image routes, updated):** `public, s-maxage=600, max-age=600, stale-while-revalidate=86400` (shorter s-maxage than before — origin is now a cheap KV/R2 read, so webhook updates propagate faster).
 - **Consumers read cache:** `pages/{en,cn,pt-BR}/index.server.ts` load via `getCachedSponsors(c.env.KV)` (KV-first, live fallback). Image routes serve from R2 via manifest; cold miss → live render for this request + `waitUntil(refresh(force:true))` to warm.
 - **Preserve `sliver` misspelling** (real data key) everywhere.
-- **Test runner:** `corepack yarn vp test run <path>` (vitest). Add `// @vitest-environment node` to tests using `node:fs`/`WebAssembly`/`crypto`. `load-sponsors.test.ts` needs `GITHUB_TOKEN=dummy` in the command.
+- **Test runner:** `corepack yarn vp test run <path>` (vitest). Add `// @vitest-environment node` to tests using `node:fs`/`WebAssembly`/`crypto`. NOTE: `void/env` reads `globalThis.__env__` (not `process.env`) and THROWS `"Cloudflare env is unavailable"` outside a request — so a test that exercises code reading `env.GITHUB_TOKEN` (e.g. `load-sponsors.test.ts`) must seed `(globalThis as any).__env__ = { GITHUB_TOKEN: 'dummy' }` in `beforeEach` (the token is still required — not weakened); a `GITHUB_TOKEN=dummy` command prefix does NOT work.
 - **Never commit** `dist/`, `.env.local`, `.void/`, `node_modules` (gitignored). The build inlines the token into `dist/ssr/wrangler.json` → `rm -rf dist` after any local build.
 
 ## File Structure
