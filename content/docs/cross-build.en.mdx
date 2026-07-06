@@ -8,10 +8,10 @@ import { Callout } from 'nextra-theme-docs'
 
 Cross-compiling a **NAPI-RS** addon means producing a `.node` binary for a target platform (say `aarch64-unknown-linux-gnu`) on a different host (say a Linux x64 CI runner). `napi build` supports this with two recommended mechanisms:
 
-- **`--use-napi-cross`** for Linux glibc targets — a gcc cross toolchain downloaded from npm, pinned to a glibc 2.17 floor.
-- **`--cross-compile`** (**`-x`**) for everything else — `cargo-zigbuild` and `cargo-xwin` under the hood.
+- **`--use-napi-cross`** for Linux glibc targets on a Linux x64/arm64 host — a gcc cross toolchain downloaded from npm, pinned to a glibc 2.17 floor.
+- **`--cross-compile`** (**`-x`**) for Windows targets from a non-Windows host (`cargo-xwin` under the hood), and for musl — or glibc, macOS and FreeBSD targets when the options above are not available on your host — via `cargo-zigbuild`.
 
-The zig/xwin toolchain is the default because it is much more lightweight than container-based cross-compilation ([napi-rs#491](https://github.com/napi-rs/napi-rs/issues/491)).
+Android, WASI and OpenHarmony targets need no cross flag at all: the CLI configures their toolchains from platform environment variables (NDK / WASI SDK / OHOS SDK), with or without a cross flag — the [decision matrix](#decision-matrix) below carries the per-target detail. The zig/xwin toolchain is the default because it is much more lightweight than container-based cross-compilation ([napi-rs#491](https://github.com/napi-rs/napi-rs/issues/491)).
 
 This page tells you which mechanism to use for your host/target pair, and how to deal with the two things that actually go wrong in practice: glibc versions and C/C++ dependencies. For what each flag does exactly — spawned commands, environment variables, combination rules — see the [`napi build` flag reference](./cli/build#cross-compilation-flags). The [cross-build demo project](https://github.com/napi-rs/cross-build) shows these mechanisms building addons for many platforms from a single Linux CI host.
 
@@ -33,7 +33,7 @@ The **Generated CI** column shows what the CI workflow scaffolded by `napi new` 
 | `aarch64-unknown-linux-musl` | `ubuntu-latest`, `-x` + zig setup step | `-x` + zig | `-x` + zig | `-x` + zig |
 | `aarch64-linux-android` / `armv7-linux-androideabi` | `ubuntu-latest`, no flag (preinstalled NDK) | no flag + NDK env | no flag + NDK env | no flag + NDK env |
 | `wasm32-wasip1-threads` | `ubuntu-latest`, no flag | no flag | no flag | no flag |
-| `x86_64-unknown-freebsd` | FreeBSD 15 VM job, no flag (native) | VM only | VM only | VM only |
+| `x86_64-unknown-freebsd` | FreeBSD 15 VM job, no flag (native) | `-x` + zig ⁴ | `-x` + zig ⁴ | `-x` + zig ⁴ |
 | `powerpc64le` / `s390x` `-unknown-linux-gnu` | no generated job | `--use-napi-cross` | — | — |
 | `loongarch64` / `riscv64gc` `-unknown-linux-gnu` | no generated job | no flag + a cross gcc you install | — | — |
 
@@ -42,6 +42,7 @@ Notes:
 1. zig can link macOS binaries for **pure-Rust crates only** — dependencies that link Apple frameworks need a real macOS SDK (`SDKROOT`). Prefer a macOS runner.
 2. cargo-xwin downloads the Microsoft CRT and Windows SDK itself; the Microsoft license applies. It needs `clang` installed (e.g. `brew install llvm` on macOS).
 3. `--use-napi-cross` only works on Linux x64/arm64 hosts (the downloaded toolchain is a Linux binary), so from macOS or Windows use `-x` instead — but the glibc floor becomes zig's default, not 2.17. See [Glibc versions](#glibc-versions).
+4. Under `-x`, FreeBSD routes through cargo-zigbuild like every other non-Windows target — napi-rs' own CI cross-builds `x86_64-unknown-freebsd` this way from `ubuntu-latest` (proven for Linux hosts; the tests still run in a FreeBSD VM). See the [FreeBSD recipe](#freebsd).
 
 ## Decision tree
 
@@ -63,7 +64,7 @@ flowchart TD
     F -- no --> G{Is T Android, WASI or OpenHarmony?}
     G -- yes --> N3["no flag - set NDK / WASI_SDK / OHOS env"]
     G -- no --> H2{Is T FreeBSD?}
-    H2 -- yes --> VM[build natively in a FreeBSD VM]
+    H2 -- yes --> VM["FreeBSD VM (reference) or -x + zig"]
 ```
 
 The Windows branch routes by the target's *platform*, so it covers `x86_64-pc-windows-gnu` too — but as a matter of policy, prefer the `*-pc-windows-msvc` triples unless you specifically target MSYS2/MINGW Node; see the windows-gnu note in [Recipes per target](#recipes-per-target).
@@ -149,13 +150,13 @@ Proof: the generated CI builds `wasm32-wasip1-threads` on `ubuntu-latest` with n
 
 ### FreeBSD
 
-There is no cross-compilation story for FreeBSD — build natively inside a FreeBSD VM.
+Two working setups. The reference path is the generated CI's: build natively inside a FreeBSD 15 VM (via `cross-platform-actions/action`) on an `ubuntu-latest` runner — no cross flag, and the tests run on FreeBSD too. But FreeBSD can also be cross-compiled: under `-x` it routes through cargo-zigbuild like every other non-Windows target, and napi-rs' own CI builds `x86_64-unknown-freebsd` exactly this way — on `ubuntu-latest` with zig installed — before running the tests inside a FreeBSD VM. The usual zig caveats apply: C/C++ dependencies are compiled by `zig cc` (see [Native dependencies](#native-dependencies)).
 
 ```sh
-napi build --release --target x86_64-unknown-freebsd
+napi build --release --target x86_64-unknown-freebsd --cross-compile
 ```
 
-Proof: the generated CI runs this inside a FreeBSD 15 VM (via `cross-platform-actions/action`) on an `ubuntu-latest` runner.
+Proof: the generated CI builds (and tests) natively in the FreeBSD 15 VM; the `-x` command above is what napi-rs' own test workflow runs on Linux.
 
 ## Glibc versions
 
@@ -204,7 +205,7 @@ C/C++ dependencies are the recurring wall in cross-compilation: crates like `rin
 <Callout type="warning">
   The prebuilt Docker images (`ghcr.io/napi-rs/napi-rs/nodejs-rust:*`) and the
   `*.Dockerfile` based builds are **deprecated**. Migrate to
-  `--use-napi-cross` (Linux glibc targets) or `-x` (musl and everything else)
+  `--use-napi-cross` (Linux glibc targets) or `-x` (musl targets)
   on a plain `ubuntu-latest` runner.
 </Callout>
 
