@@ -90,14 +90,22 @@ export async function readImage(
   }
 }
 
+// Publish a snapshot with a compare-and-swap on the manifest pointer.
+// `expectedVersion` is the manifest version the caller observed when it STARTED
+// this refresh (null if the cache was cold). Rendering takes seconds, so a
+// faster concurrent refresh may publish in the meantime; we upload our blobs
+// (unique per-version keys, always safe), then re-read the manifest right before
+// flipping and only publish if it still matches what we based this render on.
+// If a DIFFERENT version was published while we rendered, a slower/staler writer
+// must not roll the cache back — we abort and drop the blobs we just uploaded.
 export async function writeSnapshot(
   kv: KVStore,
   r2: R2Store,
   data: WashedSponsors,
   version: string,
   images: RenderedImage[],
+  expectedVersion: string | null,
 ): Promise<void> {
-  const previous = await readManifest(kv)
   const manifest: SponsorsManifest = {
     version,
     updatedAt: new Date().toISOString(),
@@ -113,16 +121,24 @@ export async function writeSnapshot(
       contentType: img.contentType,
     }
   }
+
+  // CAS: re-read the pointer right before flipping. Abort if a concurrent
+  // refresh moved it to a version other than the one we started from (and other
+  // than our own content) — else a stale writer would roll the cache back.
+  const latest = await readManifest(kv)
+  const latestVersion = latest?.version ?? null
+  if (latestVersion !== expectedVersion && latestVersion !== version) {
+    const ourKeys = Object.values(manifest.images).map((e) => e.key)
+    if (ourKeys.length) await r2.delete(ourKeys).catch(() => {})
+    return
+  }
+
   await kv.put(DATA_KEY, JSON.stringify(data))
   await kv.put(MANIFEST_KEY, JSON.stringify(manifest))
-  // Best-effort cleanup of the previous version's blobs. Re-read the manifest and
-  // only delete if we are still the current published version — otherwise a
-  // concurrent refresh superseded us and those "previous" keys may be the winner's.
-  if (previous && previous.version !== version) {
-    const now = await readManifest(kv)
-    if (now?.version === version) {
-      const oldKeys = Object.values(previous.images).map((e) => e.key)
-      if (oldKeys.length) await r2.delete(oldKeys).catch(() => {})
-    }
+  // Best-effort cleanup of the version we just replaced (`latest`, which the CAS
+  // confirmed we own the transition from).
+  if (latest && latest.version !== version) {
+    const oldKeys = Object.values(latest.images).map((e) => e.key)
+    if (oldKeys.length) await r2.delete(oldKeys).catch(() => {})
   }
 }

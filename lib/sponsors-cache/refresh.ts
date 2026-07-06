@@ -119,6 +119,13 @@ export async function refreshSponsorsCache(
     images.push({ format: 'png', theme, body: png, contentType: 'image/png' })
   }
 
-  await writeSnapshot(deps.kv, deps.r2, data, version, images)
+  await writeSnapshot(
+    deps.kv,
+    deps.r2,
+    data,
+    version,
+    images,
+    current?.version ?? null,
+  )
   return { version, changed: true, imageCount: images.length }
 }
