@@ -39,6 +39,8 @@ The name that will be defined in `package.json`.
 
 Specify the target platforms you want to support with the native package.
 
+Every platform you pick here becomes one target in the generated CI matrix, and most of them are built by cross-compiling rather than on native hardware. You can also add a target later: edit `targets` in the napi config, run `napi create-npm-dirs`, and extend the CI matrix — see [Add a target to an existing project](/docs/cross-build#add-a-target-to-an-existing-project) for the full recipe. The [Cross build](/docs/cross-build) guide also explains the cross-compile flags the generated CI uses.
+
 #### Enable GitHub actions
 
 Opt in for generated GitHub actions that will help publish the native package to the npm registry.
