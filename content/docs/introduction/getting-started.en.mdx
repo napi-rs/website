@@ -44,7 +44,7 @@ The name that will be defined in `package.json`.
 
 Specify the target platforms you want to support with the native package.
 
-Every platform you pick here becomes one target in the generated CI matrix, and most of them are built by cross-compiling rather than on native hardware. You can also add a target later: edit `targets` in the napi config, run `napi create-npm-dirs`, and extend the CI matrix — see [Add a target to an existing project](/docs/cross-build#add-a-target-to-an-existing-project) for the full recipe. The [Cross build](/docs/cross-build) guide also explains the cross-compile flags the generated CI uses.
+The generated CI workflow is the template's workflow filtered down to the platforms you pick, so a build job appears only for targets the template ships a matrix row for: macOS (x64, arm64), Windows MSVC (x64, x86, arm64), Linux gnu and musl (x64, arm64), armv7 gnueabihf, Android (arm64, armv7), WASI and FreeBSD — most of them built by cross-compiling rather than on native hardware. The other accepted targets (OpenHarmony, `x86_64-pc-windows-gnu`, `armv7-unknown-linux-musleabihf`, loongarch64, riscv64gc, ppc64le, s390x) can be selected too — their npm packages are scaffolded — but no CI build job is generated for them: you add the matrix row yourself, the same way you add a target later. For either case — edit `targets` in the napi config, run `napi create-npm-dirs`, and extend the CI matrix — see [Add a target to an existing project](/docs/cross-build#add-a-target-to-an-existing-project) for the full recipe. The [Cross build](/docs/cross-build) guide also explains the cross-compile flags the generated CI uses.
 
 #### Enable GitHub actions
 
