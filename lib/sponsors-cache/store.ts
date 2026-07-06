@@ -83,11 +83,17 @@ export async function readImage(
   const manifest = await readManifest(kv)
   const entry = manifest?.images[imageSlot(format, theme)]
   if (!entry) return null
-  const obj = await r2.get(entry.key)
-  if (!obj) return null
-  return {
-    body: new Uint8Array(await obj.arrayBuffer()),
-    contentType: entry.contentType,
+  // A rejected R2 get / arrayBuffer (transient R2 error) is a cache miss too, so
+  // the image routes fall through to a live cold render instead of 500ing.
+  try {
+    const obj = await r2.get(entry.key)
+    if (!obj) return null
+    return {
+      body: new Uint8Array(await obj.arrayBuffer()),
+      contentType: entry.contentType,
+    }
+  } catch {
+    return null
   }
 }
 

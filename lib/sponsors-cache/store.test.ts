@@ -134,6 +134,16 @@ describe('store', () => {
     expect(await readImage(fakeKV(), fakeR2(), 'svg', 'light')).toBeNull()
   })
 
+  it('readImage returns null when the R2 get rejects (manifest present)', async () => {
+    const kv = fakeKV(),
+      r2 = fakeR2()
+    await writeSnapshot(kv, r2, sample(), 'v1', images('a'), null)
+    r2.get = async () => {
+      throw new Error('R2 transient failure')
+    }
+    expect(await readImage(kv, r2, 'png', 'dark')).toBeNull()
+  })
+
   it('aborts the flip (no rollback) when a newer version was published mid-render', async () => {
     const kv = fakeKV(),
       r2 = fakeR2()
