@@ -60,8 +60,8 @@ export async function hashSponsors(data: WashedSponsors): Promise<string> {
 
 // A healthy fetch always includes the Special Thanks entry, so an all-empty
 // washed list means loadSponsors degraded (no token / non-200 / GraphQL error
-// / timeout — it returns empty, never throws). Guards against clobbering a
-// good snapshot with that.
+// / timeout — it returns empty, never throws). Used to refuse publishing a
+// degraded snapshot (see the guard in refreshSponsorsCache).
 function isEmpty(data: WashedSponsors): boolean {
   return (
     data.specialThanks.length === 0 &&
@@ -79,9 +79,21 @@ export async function refreshSponsorsCache(
   const version = await hashSponsors(data)
   const current = await readManifest(deps.kv)
 
-  // Degraded-fetch guard: don't clobber a good snapshot with an empty one.
-  if (isEmpty(data) && current) {
-    return { version: current.version, changed: false, imageCount: 0 }
+  // Degraded-fetch guard: NEVER publish an all-empty (degraded) snapshot — not
+  // even on a cold cache. Rationale: (1) don't cache an outage — an empty wall
+  // written to R2 is sticky for s-maxage, whereas skipping keeps the cache cold
+  // so cold-misses live-render and self-heal the moment GitHub recovers; and
+  // (2) the manifest is read once here, BEFORE the slow render, so a "cold + no
+  // manifest" empty writer that later reached writeSnapshot could clobber a
+  // snapshot a concurrent good refresh published in the meantime. Skipping the
+  // write entirely closes that race. (A healthy fetch always includes the
+  // Special Thanks entry, so all-empty reliably means degraded.)
+  if (isEmpty(data)) {
+    return {
+      version: current?.version ?? version,
+      changed: false,
+      imageCount: 0,
+    }
   }
 
   // Unchanged content: skip re-render unless forced.

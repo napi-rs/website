@@ -190,16 +190,23 @@ describe('refreshSponsorsCache', () => {
     expect((await readManifest(kv))?.version).toBe(seeded.version)
   })
 
-  it('empty loadFresh on a cold cache (no manifest) still writes', async () => {
+  it('degraded (empty) loadFresh never publishes, even on a cold cache', async () => {
     const kv = fakeKV(),
       r2 = fakeR2()
-    // Nothing better to serve on a truly cold cache: render + write the empty wall.
+    const putKv = vi.spyOn(kv, 'put')
+    const putR2 = vi.spyOn(r2, 'put')
+    // Never cache an outage: an all-empty (degraded) fetch must NOT write a
+    // snapshot even on a cold cache. Cold-misses live-render instead, and no
+    // concurrent good publish can be clobbered by this writer's later write.
     const result = await refreshSponsorsCache(
       deps(kv, r2, { loadFresh: async () => wash({}), force: true }),
     )
-    expect(result.changed).toBe(true)
-    expect(result.imageCount).toBe(4)
-    expect(r2.store.size).toBe(4)
+    expect(result.changed).toBe(false)
+    expect(result.imageCount).toBe(0)
+    expect(putKv).not.toHaveBeenCalled()
+    expect(putR2).not.toHaveBeenCalled()
+    expect(r2.store.size).toBe(0)
+    expect(await readManifest(kv)).toBeNull()
   })
 
   it('hashSponsors is stable for equal data and differs for different data', async () => {
