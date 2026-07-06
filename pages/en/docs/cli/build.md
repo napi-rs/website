@@ -63,7 +63,7 @@ new NapiCli().build({
 
 `napi build` has three cross-compilation flags: `--use-napi-cross`, `--cross-compile` (`-x`) and `--use-cross`. All three are experimental: behavior may change between minor releases.
 
-The recommended flags are `--use-napi-cross` (Linux glibc targets) and `--cross-compile` (everything else). `--use-cross` is legacy and not recommended, and the Docker-image based builds are deprecated. This page is a reference for what each flag does. To pick the right flag for your host and target, see [Cross build](../cross-build). For Alpine/musl specifics, see the [FAQ](../more/faq#build-for-linux-alpine).
+The recommended flags are `--use-napi-cross` for Linux glibc targets on a Linux x64/arm64 host, and `--cross-compile` (`-x`) for Windows targets from a non-Windows host and for musl — or glibc, macOS and FreeBSD targets when the preferred option is not available on your host. Android, WASI and OpenHarmony targets need no cross flag at all: the CLI configures their toolchains from platform environment variables. `--use-cross` is legacy and not recommended, and the Docker-image based builds are deprecated. This page is a reference for what each flag does. To pick the right flag for your host and target, see [Cross build](../cross-build). For Alpine/musl specifics, see the [FAQ](../more/faq#build-for-linux-alpine).
 
 Each flag changes exactly one thing about the build:
 
@@ -107,7 +107,7 @@ One copy-paste command per flag:
 # Linux glibc targets, from a Linux x64/arm64 host
 napi build --release --target aarch64-unknown-linux-gnu --use-napi-cross
 
-# Everything else, e.g. musl, or Windows from a macOS/Linux host
+# Windows from a macOS/Linux host, musl, or the zigbuild fallback cases
 napi build --release --target x86_64-unknown-linux-musl --cross-compile
 
 # Legacy container build (not recommended)
