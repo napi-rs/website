@@ -14,4 +14,11 @@ export const prerender = false
 
 export const head = defineHead(() => ({
   title: 'Announcing NAPI-RS v3',
+  meta: [
+    {
+      name: 'description',
+      content:
+        'NAPI-RS v3 adds WebAssembly support, a safer API design, and new cross-compilation.',
+    },
+  ],
 }))

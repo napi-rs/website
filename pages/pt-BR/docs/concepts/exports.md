@@ -1,5 +1,6 @@
 ---
 title: 'Exportações'
+description: Controle como funções, classes e constantes de Rust são exportadas para JavaScript no NAPI-RS.
 ---
 
 # Exportações

@@ -10,6 +10,7 @@ import { shikiLightCssVars } from './lib/shiki-themes.ts'
 import { convertFenceHighlightMeta } from './lib/md/fence-highlight.ts'
 import { markCodeFilenames } from './lib/md/code-filename.ts'
 import { sitemapPlugin } from './scripts/generate-sitemap.mjs'
+import { ogImagePlugin } from './scripts/generate-og-images.mjs'
 import { generateRss } from './scripts/generate-rss.mjs'
 import { svgoInline } from './lib/svg/svgo-plugin.ts'
 
@@ -243,6 +244,13 @@ export default defineConfig({
         // Defined as a factory in scripts/generate-sitemap.mjs (co-located with
         // the generator), mirroring lib/changelog/plugin.ts.
         sitemapPlugin(),
+        // Emit a per-page Open Graph PNG (title on a branded 1200×630 card) for
+        // every docs + blog route into dist/client/og/<route>.png (satori →
+        // resvg). Same build-plugin rationale as the sitemap: `void deploy` runs
+        // `vp build`, so a plugin is what guarantees the images ship. Islands
+        // (home/changelog) keep the static /img/og-v2.png. Defined as a factory
+        // in scripts/generate-og-images.mjs (co-located with the generator).
+        ogImagePlugin(),
         // Emit the blog RSS 2.0 feed (rss.xml) into the CLIENT build output, the
         // same way (and for the same reasons) as the sitemap plugin above —
         // `void deploy` runs `vp build`, not `npm run build`, so a build plugin

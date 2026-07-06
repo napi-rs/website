@@ -1,5 +1,6 @@
 ---
 title: 'Module Initialization'
+description: Run custom setup when your NAPI-RS native module is loaded.
 ---
 
 # Module Initialization

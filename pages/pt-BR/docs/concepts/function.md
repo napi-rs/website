@@ -1,5 +1,6 @@
 ---
 title: 'Function'
+description: Defina e chame funções JavaScript a partir do Rust com NAPI-RS.
 ---
 
 # Function

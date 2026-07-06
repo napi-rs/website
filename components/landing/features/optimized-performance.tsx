@@ -143,7 +143,7 @@ export const OptimizedPerformanceCard: React.FC = ({
           </svg>
 
           <span className="brand-text">
-            <img src={logo} width={20} height={20} /> NAPI-RS
+            <img src={logo} alt="NAPI-RS logo" width={20} height={20} /> NAPI-RS
           </span>
 
           <div className="checkmark-container">

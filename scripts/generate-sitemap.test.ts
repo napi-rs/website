@@ -5,7 +5,7 @@
 // `fileToRoute(relPathFromPagesDir)` helper, which encodes the en-at-root vs
 // cn/pt-BR-prefixed routing asymmetry (lib/docs/locale.ts + void.json).
 import { describe, it, expect } from 'vitest'
-import { fileToRoute } from './generate-sitemap.mjs'
+import { fileToRoute, renderSitemap } from './generate-sitemap.mjs'
 
 describe('fileToRoute', () => {
   it('derives public routes from page file paths', () => {
@@ -35,5 +35,37 @@ describe('fileToRoute', () => {
     for (const [input, expected] of cases) {
       expect(fileToRoute(input), input).toBe(expected)
     }
+  })
+})
+
+describe('renderSitemap', () => {
+  it('emits lastmod and xhtml:link alternates', () => {
+    const xml = renderSitemap([
+      {
+        route: '/docs/concepts/class',
+        lastmod: '2026-04-20T10:00:00Z',
+        alternates: [
+          { hreflang: 'en', href: 'https://napi.rs/docs/concepts/class' },
+          { hreflang: 'zh-CN', href: 'https://napi.rs/cn/docs/concepts/class' },
+          {
+            hreflang: 'x-default',
+            href: 'https://napi.rs/docs/concepts/class',
+          },
+        ],
+      },
+    ])
+    expect(xml).toContain('xmlns:xhtml="http://www.w3.org/1999/xhtml"')
+    expect(xml).toContain('<loc>https://napi.rs/docs/concepts/class</loc>')
+    expect(xml).toContain('<lastmod>2026-04-20T10:00:00Z</lastmod>')
+    expect(xml).toContain(
+      '<xhtml:link rel="alternate" hreflang="zh-CN" href="https://napi.rs/cn/docs/concepts/class"/>',
+    )
+  })
+  it('omits lastmod when null and alternates when single-locale', () => {
+    const xml = renderSitemap([
+      { route: '/blog/only-en', lastmod: null, alternates: [] },
+    ])
+    expect(xml).not.toContain('<lastmod>')
+    expect(xml).not.toContain('xhtml:link')
   })
 })

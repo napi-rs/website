@@ -1,5 +1,6 @@
 ---
 title: 'Naming conventions'
+description: NAPI-RS 如何将 Rust 的 snake_case 标识符转换为 JavaScript 的 camelCase。
 ---
 
 # 命名约定

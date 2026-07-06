@@ -39,10 +39,12 @@ import {
 } from 'node:fs'
 import { join, dirname, resolve, relative, basename } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { execFileSync } from 'node:child_process'
 // Node 24 strips types on import, so the plain-ESM CLI can consume these `.ts`
 // modules directly (Vite/rolldown handle them in the plugin + Vitest contexts).
 import { nav } from '../lib/nav/index.ts'
 import { buildLlmsIndex } from '../lib/docs/llms-index.ts'
+import { hreflangAlternates } from '../lib/seo/hreflang.ts'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
@@ -163,16 +165,53 @@ function walkPages(dir) {
 // Sitemap rendering
 // ----------------------------------------------------------------------------
 
-/** Render the urlset XML for a sorted, deduped list of routes. */
-function renderSitemap(routes) {
-  const urls = routes.map((r) => `  <url><loc>${BASE_URL}${r}</loc></url>`)
+/** Render the urlset XML for prepared entries (route + lastmod + alternates). */
+function renderSitemap(entries) {
+  const urls = entries.map((e) => {
+    const alts = e.alternates
+      .map(
+        (a) =>
+          `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${a.href}"/>`,
+      )
+      .join('\n')
+    return [
+      '  <url>',
+      `    <loc>${BASE_URL}${e.route}</loc>`,
+      e.lastmod ? `    <lastmod>${e.lastmod}</lastmod>` : null,
+      alts || null,
+      '  </url>',
+    ]
+      .filter((l) => l !== null)
+      .join('\n')
+  })
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
     ...urls,
     '</urlset>',
     '',
   ].join('\n')
+}
+
+/**
+ * git commit time (%cI, ISO-8601) of the last change to `pages/<relFile>`, or
+ * null on empty output (shallow clone) / any error. Node-only build-time git
+ * call — this generator NEVER runs on the edge. `execFileSync` (argv form, no
+ * shell) so a page path containing a quote / backtick / `$()` cannot inject.
+ */
+function gitLastmod(relFile) {
+  try {
+    const out = execFileSync(
+      'git',
+      ['log', '-1', '--format=%cI', '--', `pages/${relFile}`],
+      { cwd: root, stdio: ['ignore', 'pipe', 'ignore'] },
+    )
+      .toString()
+      .trim()
+    return out || null
+  } catch {
+    return null
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -264,16 +303,27 @@ function generateSitemap(outDir = distClient) {
   const files = walkPages(pagesDir)
 
   // --- routes (sitemap) ---
+  // Track each route's underlying source file (prefer the `en` file — that is
+  // the content actually served at the root) so we can date it via git.
+  const routeFile = new Map()
   const routeSet = new Set()
   for (const rel of files) {
     const route = fileToRoute(rel)
-    if (route !== null) routeSet.add(route)
+    if (route === null) continue
+    routeSet.add(route)
+    if (!routeFile.has(route) || rel.startsWith('en/'))
+      routeFile.set(route, rel)
   }
   const routes = [...routeSet].sort()
+  const entries = routes.map((route) => ({
+    route,
+    lastmod: gitLastmod(routeFile.get(route)),
+    alternates: hreflangAlternates(route),
+  }))
 
   mkdirSync(outDir, { recursive: true })
   const sitemapPath = join(outDir, 'sitemap.xml')
-  writeFileSync(sitemapPath, renderSitemap(routes), 'utf8')
+  writeFileSync(sitemapPath, renderSitemap(entries), 'utf8')
 
   // --- raw markdown assets ---
   // Only `.md` SOURCE files have raw markdown to serve (islands have none).
@@ -364,6 +414,7 @@ if (cliEntry && import.meta.url === pathToFileURL(cliEntry).href) {
 
 export {
   fileToRoute,
+  walkPages,
   renderSitemap,
   rawTargets,
   generateSitemap,

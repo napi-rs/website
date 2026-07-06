@@ -1,5 +1,6 @@
 ---
 title: 'Enum'
+description: Mapeie enums de Rust para uniões de strings e enums numéricos em JavaScript com NAPI-RS.
 ---
 
 # Enum

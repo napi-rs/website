@@ -1,5 +1,6 @@
 ---
 title: 'Class'
+description: Define and export Rust structs as JavaScript classes with NAPI-RS.
 ---
 
 # Class

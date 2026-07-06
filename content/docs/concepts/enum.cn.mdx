@@ -1,5 +1,6 @@
 ---
 title: '枚举'
+description: 使用 NAPI-RS 将 Rust 枚举映射为 JavaScript 字符串联合类型和数字枚举。
 ---
 
 # 枚举

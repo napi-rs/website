@@ -1,6 +1,7 @@
 ---
 title: 'Functions and Callbacks in NAPI-RS'
 date: '2025-08-10'
+description: 'Define JavaScript functions and callbacks in Rust with NAPI-RS.'
 ---
 
 # Functions and Callbacks in NAPI-RS

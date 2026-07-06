@@ -7,4 +7,10 @@ import { defineHead } from 'void'
 
 export const head = defineHead(() => ({
   title: 'NAPI-RS v2 发布',
+  meta: [
+    {
+      name: 'description',
+      content: 'NAPI-RS v2 —— 更快、更安全的 Rust 构建 Node.js 原生插件框架。',
+    },
+  ],
 }))
