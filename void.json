@@ -70,8 +70,8 @@
   "inference": {
     "bindings": {
       "db": false,
-      "kv": false,
-      "storage": false,
+      "kv": true,
+      "storage": true,
       "ai": false
     }
   },

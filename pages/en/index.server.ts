@@ -1,6 +1,7 @@
 import { defineHandler, defineHead, type InferProps } from 'void'
 
-import { loadSponsors } from '../../lib/landing/load-sponsors.ts'
+import { getCachedSponsors } from '../../lib/landing/get-sponsors.ts'
+import type { KVStore } from '../../lib/sponsors-cache/store.ts'
 
 // Opt OUT of auto-prerender so the per-request COOP/COEP isolation headers from
 // void.json (routing.headers `/en`) are applied on every request — a prerendered
@@ -9,8 +10,8 @@ import { loadSponsors } from '../../lib/landing/load-sponsors.ts'
 export const prerender = false
 
 // Loader runs on GET; its return becomes the page (default export) props.
-export const loader = defineHandler(async () => ({
-  sponsors: await loadSponsors(),
+export const loader = defineHandler(async (c) => ({
+  sponsors: await getCachedSponsors((c.env as unknown as { KV?: KVStore }).KV),
 }))
 
 export type Props = InferProps<typeof loader>
