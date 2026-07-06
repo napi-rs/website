@@ -23,4 +23,10 @@ describe('THEMES', () => {
     }
     expect(THEMES.light.bg).not.toBe(THEMES.dark.bg)
   })
+  it('has a non-empty ring token per theme (avatar outline)', () => {
+    for (const theme of ['light', 'dark'] as const) {
+      expect(typeof THEMES[theme].ring).toBe('string')
+      expect(THEMES[theme].ring.length).toBeGreaterThan(0)
+    }
+  })
 })

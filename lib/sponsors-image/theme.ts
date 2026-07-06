@@ -10,6 +10,10 @@ export interface ThemeTokens {
   muted: string
   accent: string
   border: string
+  // Faint outline drawn around every avatar so a logo that matches the
+  // background (a black circle on dark, a white mark on light) still reads as
+  // present instead of vanishing. Light outline on dark, dark outline on light.
+  ring: string
 }
 
 export const THEMES: Record<Theme, ThemeTokens> = {
@@ -19,6 +23,7 @@ export const THEMES: Record<Theme, ThemeTokens> = {
     muted: '#64748b',
     accent: '#e66000',
     border: '#e2e8f0',
+    ring: 'rgba(15, 23, 42, 0.12)',
   },
   dark: {
     bg: '#0b0d10',
@@ -26,6 +31,7 @@ export const THEMES: Record<Theme, ThemeTokens> = {
     muted: '#94a3b8',
     accent: '#f97316',
     border: '#1f2937',
+    ring: 'rgba(248, 250, 252, 0.24)',
   },
 }
 
