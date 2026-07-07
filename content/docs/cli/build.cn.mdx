@@ -87,7 +87,7 @@ new NapiCli().build({
 | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--use-cross` + `--cross-compile`      | 硬错误：CLI 拒绝构建。（报错之前它可能仍会自动安装 cargo-xwin 或 cargo-zigbuild。）                                                                               |
 | `--use-napi-cross` + `--use-cross`     | 打印警告说 `--use-cross` 将被忽略 —— 但 `cross` 仍然会运行，且宿主机路径被注入到它的环境中。不要组合使用。                                                        |
-| `--use-napi-cross` + `--cross-compile` | 打印警告说 `--cross-compile` 将被忽略 —— 但 `cargo zigbuild` 仍然会运行，同时 napi-cross 的环境变量也被设置（napi-cross 的 linker 会压过 zig）。不要组合使用。   |
+| `--use-napi-cross` + `--cross-compile` | 打印警告说 `--cross-compile` 将被忽略 —— 但 `cargo zigbuild` 仍然会运行，同时 napi-cross 的环境变量也被设置（napi-cross 的 linker 会覆盖 zig 的）。不要组合使用。   |
 | `--watch` + `--cross-compile`          | 产生一条无效命令（`cargo watch ... -- cargo build zigbuild`）。不要组合使用。                                                                                     |
 
 ### 前置条件
@@ -160,7 +160,7 @@ napi build --release --target x86_64-unknown-linux-gnu --use-cross
 
 只要目标平台匹配，这些目标就会从 CLI 获得工具链环境变量 —— 无论是否传入任何交叉编译标志 —— 但每个平台有自己的条件：
 
-- **Android**：linker/CC/AR 环境变量由 `ANDROID_NDK_LATEST_HOME` 构造。变量缺失只会打印警告 —— 环境变量仍会被设置成坏掉的路径，构建在链接阶段失败。当宿主机本身就是 Android 时，整套设置会被跳过。
+- **Android**：linker/CC/AR 环境变量由 `ANDROID_NDK_LATEST_HOME` 构造。变量缺失只会打印警告 —— 环境变量仍会被设置成无效的路径，构建在链接阶段失败。当宿主机本身就是 Android 时，整套设置会被跳过。
 - **WASI**：`EMNAPI_LINK_DIR` 始终被设置为自带的 emnapi（当 `emnapi`、`@emnapi/core` 和 `@emnapi/runtime` 的版本不匹配时 CLI 会报错）。只有当设置了 `WASI_SDK_PATH` **且**该目录存在时，才会设置 wasi-sdk 的 linker/CC 环境变量 —— 否则链接回退到 cargo 的默认值，即 rustup 自带的 `rust-lld`。
 - **OpenHarmony**：环境变量由 `$OHOS_SDK_PATH/native` 构造，当 `OHOS_SDK_PATH` 未设置时改用 `OHOS_SDK_NATIVE`。两者都未设置时，CLI 打印警告且什么都不设置。
 

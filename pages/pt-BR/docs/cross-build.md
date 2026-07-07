@@ -10,13 +10,13 @@ Compilar de forma cruzada um complemento (addon) **NAPI-RS** significa produzir 
 - **`--use-napi-cross`** para targets Linux glibc em um host Linux x64/arm64 — uma toolchain cruzada gcc baixada do npm, fixada em um piso de glibc 2.17.
 - **`--cross-compile`** (**`-x`**) para targets Windows MSVC a partir de um host não-Windows (via `cargo-xwin`) e para targets musl (via `cargo-zigbuild`). Ele também cobre targets glibc, macOS e FreeBSD através do `cargo-zigbuild` quando `--use-napi-cross` ou um runner nativo não está disponível no seu host.
 
-Targets Android, WASI e OpenHarmony não precisam de nenhuma flag de cross: a CLI configura as toolchains deles a partir de variáveis de ambiente da plataforma (NDK / WASI SDK / OHOS SDK), independentemente de qual flag de cross, se alguma, for passada. A [matriz de decisão](#matriz-de-decis%C3%A3o) abaixo tem o detalhe por target. O NAPI-RS padronizou nas toolchains zig/xwin porque elas são muito mais leves do que a compilação cruzada baseada em contêineres ([napi-rs#491](https://github.com/napi-rs/napi-rs/issues/491)).
+Targets Android, WASI e OpenHarmony não precisam de nenhuma flag de cross: a CLI configura as toolchains deles a partir de variáveis de ambiente da plataforma (NDK / WASI SDK / OHOS SDK), independentemente de qual flag de cross for passada (se houver). A [matriz de decisão](#matriz-de-decis%C3%A3o) abaixo tem o detalhe por target. O NAPI-RS padronizou nas toolchains zig/xwin porque elas são muito mais leves do que a compilação cruzada baseada em contêineres ([napi-rs#491](https://github.com/napi-rs/napi-rs/issues/491)).
 
 Esta página diz qual mecanismo usar para o seu par host/target e como lidar com as duas coisas que mais dão errado: versões de glibc e dependências C/C++. Para o que cada flag faz exatamente — comandos executados, variáveis de ambiente, regras de combinação — veja a [referência de flags do `napi build`](./cli/build#flags-de-compila%C3%A7%C3%A3o-cruzada). O [projeto de demonstração cross-build](https://github.com/napi-rs/cross-build) mostra esses mecanismos compilando addons para muitas plataformas a partir de um único host de CI Linux.
 
 ## Matriz de decisão
 
-A coluna **CI gerada** mostra o que o workflow de CI gerado pelo `napi new` faz para aquele target. É a configuração de referência que se sabe que funciona — na dúvida, copie-a.
+A coluna **CI gerada** mostra o que o workflow de CI gerado pelo `napi new` faz para aquele target. É a configuração de referência comprovadamente funcional — na dúvida, copie-a.
 
 | Target                                              | CI gerada (configuração de referência)        | A partir de Linux x64/arm64                | A partir de macOS     | A partir de Windows   |
 | --------------------------------------------------- | --------------------------------------------- | ------------------------------------------ | --------------------- | --------------------- |
@@ -41,7 +41,7 @@ Notas:
 1. o zig consegue linkar binários macOS **apenas para crates Rust puros** — dependências que linkam frameworks da Apple precisam de um SDK macOS real (`SDKROOT`). Prefira um runner macOS.
 2. o cargo-xwin baixa por conta própria a CRT da Microsoft e o SDK do Windows; a licença da Microsoft se aplica. Ele precisa do `clang` instalado (por exemplo, `brew install llvm` no macOS).
 3. `--use-napi-cross` só funciona em hosts Linux x64/arm64 (a toolchain baixada é um binário Linux); portanto, a partir de macOS ou Windows use `-x` — mas o piso de glibc passa a ser o padrão do zig, não 2.17. Veja [Versões de glibc](#vers%C3%B5es-de-glibc).
-4. Sob `-x`, o FreeBSD passa pelo cargo-zigbuild como qualquer outro target não-Windows — tenha o `zig` no `PATH`; hosts Linux são a rota mais testada em batalha. Se você quiser que seus testes também rodem no FreeBSD, execute-os em uma VM FreeBSD. Veja a [receita do FreeBSD](#freebsd).
+4. Sob `-x`, o FreeBSD passa pelo cargo-zigbuild como qualquer outro target não-Windows — tenha o `zig` no `PATH`; hosts Linux são a rota mais comprovada na prática. Se você quiser que seus testes também rodem no FreeBSD, execute-os em uma VM FreeBSD. Veja a [receita do FreeBSD](#freebsd).
 
 ## Árvore de decisão
 
@@ -159,7 +159,7 @@ A CI gerada compila nativamente na VM FreeBSD 15; o comando `-x` acima é a alte
 
 ## Versões de glibc
 
-Um binário `*-linux-gnu` linka a glibc dinamicamente e, na hora de carregar, exige pelo menos a versão de glibc contra a qual foi compilado. **Seu binário herda a glibc do host de build como piso**: compile em uma distro de ponta sem flag de cross, e os usuários em distros mais antigas recebem:
+Um binário `*-linux-gnu` linka a glibc dinamicamente e, na hora de carregar, exige pelo menos a versão de glibc contra a qual foi compilado. **Seu binário herda a glibc do host de build como piso**: compile em uma distro recente sem flag de cross, e os usuários em distros mais antigas recebem:
 
 ```
 Error: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.38' not found
@@ -216,7 +216,7 @@ em um runner `ubuntu-latest` comum.
 | `nodejs-rust:lts-alpine`                        | instale o zig e então `napi build --release --target x86_64-unknown-linux-musl -x`                                                  |
 | `nodejs-rust:lts-debian-zig` / `lts-alpine-zig` | instale o zig e então `napi build --release --target <triple> -x`                                                                   |
 
-Se você ainda está nas imagens, siga duas regras. Primeiro, rode um `napi build --target <triple>` puro dentro delas, **sem flags de cross** — a imagem já fixa a toolchain e a glibc, e adicionar flags de cross por cima disso é o que quebra as builds. Segundo, fixe a imagem por digest (`nodejs-rust@sha256:...`), porque as tags `lts-*` mudam com o tempo.
+Se você ainda usa as imagens, siga duas regras. Primeiro, rode um `napi build --target <triple>` puro dentro delas, **sem flags de cross** — a imagem já fixa a toolchain e a glibc, e adicionar flags de cross por cima disso é o que quebra as builds. Segundo, fixe a imagem por digest (`nodejs-rust@sha256:...`), porque as tags `lts-*` mudam com o tempo.
 
 ## Adicionar um target a um projeto existente
 

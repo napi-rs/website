@@ -66,7 +66,7 @@ flowchart TD
     H2 -- "是" --> VM["FreeBSD 虚拟机 (参考配置) 或 -x + zig"]
 ```
 
-Windows 分支按目标的*平台*路由，因此 `x86_64-pc-windows-gnu` 也会落进 xwin 分支 —— 但 cargo-xwin 只支持 MSVC，对这个 triple 使用 `-x` 会失败。优先使用 `*-pc-windows-msvc` triple；如果确实需要 windows-gnu，请不加任何交叉编译标志构建 —— 参见[各目标的构建方法](#%E5%90%84%E7%9B%AE%E6%A0%87%E7%9A%84%E6%9E%84%E5%BB%BA%E6%96%B9%E6%B3%95)中的 windows-gnu 说明。
+Windows 分支按目标的*平台*路由，因此 `x86_64-pc-windows-gnu` 也会落入 xwin 分支 —— 但 cargo-xwin 只支持 MSVC，对这个 triple 使用 `-x` 会失败。优先使用 `*-pc-windows-msvc` triple；如果确实需要 windows-gnu，请不加任何交叉编译标志构建 —— 参见[各目标的构建方法](#%E5%90%84%E7%9B%AE%E6%A0%87%E7%9A%84%E6%9E%84%E5%BB%BA%E6%96%B9%E6%B3%95)中的 windows-gnu 说明。
 
 ## 三个标志一览
 
@@ -167,13 +167,13 @@ Error: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.38' not found
 
 这个错误的含义是：请针对更老的 glibc 构建。它**不**意味着：换成 musl 目标。
 
-- `--use-napi-cross` 把下限固定在 **glibc 2.17**（manylinux2014 一系），与宿主机发行版无关。
+- `--use-napi-cross` 把下限固定在 **glibc 2.17**（与 manylinux2014 一致），与宿主机发行版无关。
 - `-x` 针对 **zig 的默认 glibc** 构建 —— zig 0.12–0.14 为 2.28 —— 而不是 2.17。
 - 通过给 triple 加后缀来固定明确版本（`--target aarch64-unknown-linux-gnu.2.17`）**目前尚不支持**：该后缀会破坏 CLI 的产物查找。请关注 [napi-rs#3176](https://github.com/napi-rs/napi-rs/issues/3176)。
 
 ## 校验构建产物
 
-发布之前，检查二进制的架构是否符合预期、要求的 glibc 是否没有超出你的目标：
+发布之前，确认二进制属于预期的架构、所需的 glibc 版本没有超出你的目标范围：
 
 ```sh
 # CPU architecture and file format
@@ -197,7 +197,7 @@ C/C++ 依赖是交叉编译中最常见的障碍：`ring`、`openssl-sys`、`zst
 
 - **已知限制 —— `aws-lc-sys`**：默认的 rustls 后端（由 `reqwest`、`hyper-rustls` 等间接引入）在用 `--use-napi-cross` 为 aarch64 构建时会失败，因为自带的 gcc 太老（[cross-toolchain#4](https://github.com/napi-rs/cross-toolchain/issues/4)）。可以用 `TARGET_CC=clang` 绕过，或改用 `-x`。
 - **TLS / OpenSSL**：优先使用带 `ring` 后端的 rustls，或启用 `openssl-sys` 的 `vendored` feature，让 OpenSSL 用交叉工具链从源码编译，而不是链接宿主机的库。
-- **最后手段**：构建脚本运行 autotools 或 CMake 并拾取宿主机 binutils 的依赖，可能只有在遗留的容器路径（`--use-cross`）中才能构建成功 —— 那里的整套工具链都与目标一致。
+- **最后手段**：构建脚本运行 autotools 或 CMake 并连带使用宿主机 binutils 的依赖，可能只有在遗留的容器路径（`--use-cross`）中才能构建成功 —— 那里的整套工具链都与目标一致。
 
 ## Docker 镜像已弃用
 

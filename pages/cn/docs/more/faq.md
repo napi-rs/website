@@ -13,7 +13,7 @@ description: 关于 napi-rs 的常见问题。
 
 如果想这么做，你需要向 `rustc` 传递 `-C target-feature=-crt-static`。
 
-**NAPI-RS** CLI 已经为你处理了这一点：对于任何 `*musl*` 目标，`napi build` 会自动把 `-C target-feature=-crt-static` 追加到 `RUSTFLAGS` 环境变量，`napi new` 生成的项目开箱即用地以这种方式构建它的 musl 目标。
+**NAPI-RS** CLI 已经为你处理了这一点：对于任何 `*musl*` 目标，`napi build` 会自动把 `-C target-feature=-crt-static` 追加到 `RUSTFLAGS` 环境变量；`napi new` 生成的项目默认就以这种方式构建 musl 目标。
 
 由于 CLI 通过 `RUSTFLAGS` 环境变量导出这个设置，musl 构建会忽略你 `.cargo/config.toml` 里的任何 `rustflags`（Cargo 中环境变量优先）。如果 musl 目标需要额外的 `rustc` 标志，请把它们加到 `RUSTFLAGS` 环境变量，而不是 `.cargo/config.toml`。
 
