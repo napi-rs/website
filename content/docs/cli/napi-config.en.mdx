@@ -38,7 +38,7 @@ The config schema of **NAPI-RS**.
 | Field                    |            Default            | Description                                                                                                                                                                            |
 | ------------------------ | :---------------------------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `binaryName`             |    <Green>`index`</Green>     | The binary file name of generated `.node` file. Eg <Green>`[NAME].[TRIPLE?].node`</Green> becomes <Green>`index.win32-x64-msvc.node`</Green>                                           |
-| `targets`                |      <Green>`[]`</Green>      | The target triples your project ships for — drives scaffolding and packaging; not a multi-target build switch, though `napi build` does read it to generate the WASI bindings (see below). Target triples could be found in the output of `rustup target list` command. |
+| `targets`                |      <Green>`[]`</Green>      | The target triples your project ships for, used for scaffolding and packaging. Setting it does not make `napi build` compile multiple targets — see the note below for the one thing `napi build` reads from it. Target triples could be found in the output of `rustup target list` command. |
 | `packageName`            |  <Green>`undefined`</Green>   | Override the `name` field in `package.json`. See [Build#js-package-name](./build#note-for---js-package-name) for usage.                                                                |
 | `npmClient`              |     <Green>`npm`</Green>      | Specify a different NPM client for usage when executing NPM actions such as publishing.                                                                                                |
 | `constEnum`              |    <Green>`false`</Green>     | Whether to generate `const enum` for the generated `index.d.ts` file.                                                                                                                  |
@@ -58,7 +58,7 @@ The config schema of **NAPI-RS**.
   invocation, selected with its `--target` flag. The one thing `napi build`
   does read from `targets` is the WASI entry: it derives the `.wasm` binding
   filename from the WASI target listed there, and skips emitting the WASI
-  binding files (`<binaryName>.wasi.cjs` and friends) entirely when no WASI
+  binding files (`<binaryName>.wasi.cjs` and the related files) entirely when no WASI
   target is listed. The cross-compilation flags
   (`--use-napi-cross`, `--cross-compile`, `--use-cross`) have no config-file
   equivalent either: they can only be passed on the `napi build` command line.

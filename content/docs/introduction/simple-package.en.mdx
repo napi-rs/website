@@ -117,7 +117,7 @@ tree -a
     └── lib.rs
 ```
 
-Your native code is in `src/lib.rs`. The `.cargo/config.toml` file currently only sets `rustflags` that statically link the C runtime for some Windows MSVC targets — `x86_64-pc-windows-msvc` in this template (the pnpm template also covers `i686`) — don't delete it even though it looks trivial, or those Windows builds will start depending on the MSVC runtime DLLs. Cross-compile linker and toolchain configuration does not live in this file: it comes from the `napi` CLI itself (see [napi build](/docs/cli/build)). In general, this file does not affect your development on your local machine. See the [Cross build](/docs/cross-build) guide for how cross-compilation works.
+Your native code is in `src/lib.rs`. The `.cargo/config.toml` file only sets `rustflags` that statically link the C runtime for `x86_64-pc-windows-msvc` (the pnpm template also covers `i686`). It looks trivial, but don't delete it: without it, those Windows builds depend on the MSVC runtime DLLs. Cross-compile linker and toolchain configuration does not live in this file — it comes from the `napi` CLI itself (see [napi build](/docs/cli/build)). In general, this file does not affect your development on your local machine. See the [Cross build](/docs/cross-build) guide for how cross-compilation works.
 The `.github/workflows/CI.yml` file is the configuration file for [`GitHub Actions`](https://docs.github.com/en/actions).
 The `build.rs` file is necessary for building a native addon for `Node.js`. Don't delete it or move it to another place.
 

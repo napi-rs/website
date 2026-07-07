@@ -82,7 +82,7 @@ These tools need to manage the entire addon flow through the development -> loca
 
 The native addon with the 3rd distribution method (**distribution of native addons for different platforms via different npm packages**) is the easiest to use and the least mentally taxing for the developers who use it, but this distribution method imposes additional maintenance costs on the native addon authors.
 
-**NAPI-RS** takes over exactly this workload:
+**NAPI-RS** takes over this workload:
 
 - [Cross build](../cross-build) — build every target platform from a handful of CI hosts.
 - [`napi artifacts`](../cli/artifacts) — copy the binaries built in CI into the per-platform npm packages.

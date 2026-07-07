@@ -53,7 +53,7 @@ new NapiCli().build({
 | bin               | --bin                 | string   | false    |         | Build only the specified binary                                                                                           |
 | package           | --package,-p          | string   | false    |         | Build the specified library or the one at cwd                                                                             |
 | profile           | --profile             | string   | false    |         | Build artifacts with the specified profile                                                                                |
-| crossCompile      | --cross-compile,-x    | boolean  | false    |         | [experimental] cross compile by swapping the cargo subcommand: any Windows-platform target from a non-Windows host uses <Green>cargo-xwin</Green> (which supports MSVC triples only; windows-gnu fails — see below); every other target uses <Green>cargo-zigbuild</Green> (requires <Green>zig</Green> on PATH). The selected subcommand is auto-installed on first use. Conflicts with <Green>--use-cross</Green> |
+| crossCompile      | --cross-compile,-x    | boolean  | false    |         | [experimental] cross-compile by swapping the cargo subcommand: any Windows-platform target from a non-Windows host uses <Green>cargo-xwin</Green> (which supports MSVC triples only; windows-gnu fails — see below); every other target uses <Green>cargo-zigbuild</Green> (requires <Green>zig</Green> on PATH). The selected subcommand is auto-installed on first use. Conflicts with <Green>--use-cross</Green> |
 | useCross          | --use-cross           | boolean  | false    |         | [experimental] <Warning>legacy, not recommended</Warning>: build inside a Docker/Podman container via <Green>cross</Green> (cross-rs); prefer <Green>--use-napi-cross</Green> or <Green>--cross-compile</Green>. Requires <Green>cross</Green> to be installed manually and a running container engine. Conflicts with <Green>--cross-compile</Green> |
 | useNapiCross      | --use-napi-cross      | boolean  | false    |         | [experimental] download a gcc cross toolchain from npm (<Green>@napi-rs/cross-toolchain</Green>) and set linker/CC env vars. Linux glibc targets only: x64, arm64, armv7, ppc64le, s390x (glibc 2.17). Host must be Linux x64/arm64; on failure it warns and falls back to plain <Green>cargo</Green> |
 | watch             | --watch,-w            | boolean  | false    |         | watch the crate changes and build continuously with <Green>cargo-watch</Green> crates                                    |
@@ -65,7 +65,7 @@ new NapiCli().build({
 
 `napi build` has three cross-compilation flags: `--use-napi-cross`, `--cross-compile` (`-x`) and `--use-cross`. All three are experimental: behavior may change between minor releases.
 
-The recommended flags are `--use-napi-cross` for Linux glibc targets on a Linux x64/arm64 host, and `--cross-compile` (`-x`) for Windows MSVC targets from a non-Windows host and for musl — or glibc, macOS and FreeBSD targets when the preferred option is not available on your host. Android, WASI and OpenHarmony targets need no cross flag at all: the CLI configures their toolchains from platform environment variables. `--use-cross` is legacy and not recommended, and the Docker-image based builds are deprecated. This page is a reference for what each flag does. To pick the right flag for your host and target, see [Cross build](../cross-build). For Alpine/musl specifics, see the [FAQ](../more/faq#build-for-linux-alpine).
+The recommended flags are `--use-napi-cross` for Linux glibc targets on a Linux x64/arm64 host, and `--cross-compile` (`-x`) for Windows MSVC targets from a non-Windows host and for musl targets. `-x` is also the fallback for glibc, macOS and FreeBSD targets when the preferred setup is not available on your host. Android, WASI and OpenHarmony targets need no cross flag at all: the CLI configures their toolchains from platform environment variables. `--use-cross` is legacy and not recommended, and the Docker-image based builds are deprecated. This page is a reference for what each flag does. To pick the right flag for your host and target, see [Cross build](../cross-build). For Alpine/musl specifics, see the [FAQ](../more/faq#build-for-linux-alpine).
 
 Each flag changes exactly one thing about the build:
 
@@ -80,25 +80,25 @@ Each flag changes exactly one thing about the build:
 
 <Callout type="warning">
   These flags do not combine. Pick exactly one. Two of the combinations print a
-  warning that claims one flag will be ignored — the warning is misleading:
-  both mechanisms stay active.
+  warning saying one flag will be ignored, but both mechanisms actually stay
+  active.
 </Callout>
 
 | Combination                            | What actually happens                                                                                                                                            |
 | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--use-cross` + `--cross-compile`      | Hard error: the CLI refuses to build (possibly after auto-installing the selected helper — cargo-xwin or cargo-zigbuild — first).                                 |
-| `--use-napi-cross` + `--use-cross`     | The warning claims `--use-cross` will be ignored. It is not: `cross` still runs, with host paths injected into its env. Do not combine.                            |
-| `--use-napi-cross` + `--cross-compile` | The warning claims `--cross-compile` will be ignored. It is not: `cargo zigbuild` runs with the napi-cross env also set (the napi-cross linker wins over zig). Do not combine. |
+| `--use-cross` + `--cross-compile`      | Hard error: the CLI refuses to build. (It may still auto-install cargo-xwin or cargo-zigbuild before erroring.)                                 |
+| `--use-napi-cross` + `--use-cross`     | Prints a warning saying `--use-cross` will be ignored — but `cross` still runs, with host paths injected into its environment. Do not combine.                            |
+| `--use-napi-cross` + `--cross-compile` | Prints a warning saying `--cross-compile` will be ignored — but `cargo zigbuild` still runs, with the napi-cross env also set (the napi-cross linker wins over zig). Do not combine. |
 | `--watch` + `--cross-compile`          | Produces an invalid command (`cargo watch ... -- cargo build zigbuild`). Do not combine.                                                                           |
 
 ### Prerequisites
 
 | Flag                     | Installed for you                                                                                                                                                                                  | You must provide                                                                                                                                                                                                                                          |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `-x`, non-Windows target (cargo-zigbuild) | <Green>cargo-zigbuild</Green> via `cargo install`, on first use (that run can be slow). | `zig` on `PATH`. The CLI never installs or checks zig; cargo-zigbuild errors if it is missing.                                                                                                                                                             |
+| `-x`, non-Windows target (cargo-zigbuild) | <Green>cargo-zigbuild</Green> via `cargo install` on first use (which can be slow). | `zig` on `PATH`. The CLI never installs or checks zig; cargo-zigbuild errors if it is missing.                                                                                                                                                             |
 | `-x`, Windows target (cargo-xwin) | <Green>cargo-xwin</Green> via `cargo install`, on first use. It downloads the Microsoft CRT and Windows SDK itself (the Microsoft license applies). | `clang` (e.g. `apt install clang` / `brew install llvm`) — zig is **not** used on this path. For dependencies that compile assembly, also the LLVM tools (`rustup component add llvm-tools`). The CLI checks none of these.                                                                                                                                                             |
 | `--use-cross`            | Nothing.                                                                                                                                                                                              | The `cross` binary (a missing binary fails with `spawn cross ENOENT`), plus a running Docker >= 20.10 or Podman >= 3.4.                                                                                                                                    |
-| `--use-napi-cross`       | The gcc toolchain, downloaded automatically from npm (<Green>@napi-rs/cross-toolchain</Green>) and cached under `~/.napi-rs/cross-toolchain`.                                                          | `npm` on `PATH`, and a Linux x64 or arm64 host. The CLI does not check the host: on macOS or Windows the download "succeeds" and the Linux gcc fails at link time. Any failure here only prints a warning and the build continues as plain `cargo build`. |
+| `--use-napi-cross`       | The gcc toolchain, downloaded automatically from npm (<Green>@napi-rs/cross-toolchain</Green>) and cached under `~/.napi-rs/cross-toolchain`.                                                          | `npm` on `PATH`, and a Linux x64 or arm64 host. The CLI does not check the host: on macOS or Windows the toolchain still downloads without error, and the Linux gcc then fails at link time. Any failure here only prints a warning and the build continues as plain `cargo build`. |
 
 ### Examples
 
@@ -115,7 +115,7 @@ napi build --release --target x86_64-unknown-linux-musl --cross-compile
 napi build --release --target x86_64-unknown-linux-gnu --use-cross
 ```
 
-## What napi build actually runs
+## What `napi build` runs
 
 `napi build` is a wrapper around one spawned command plus a set of environment variables. This section spells both out.
 
@@ -130,9 +130,9 @@ napi build --release --target x86_64-unknown-linux-gnu --use-cross
 | `--cross-compile`, any other target                               | `cargo zigbuild --target <triple>`                                          |
 | `--cross-compile`, target is Windows, host is Windows             | warns, then plain `cargo build --target <triple>`                           |
 
-`--cross-compile` picks cargo-xwin by the target's **platform**: every `*-windows-*` triple built from a non-Windows host routes through cargo-xwin — including `x86_64-pc-windows-gnu`, not just MSVC. Routing is not support, though: cargo-xwin handles MSVC only, so for windows-gnu it configures nothing and the build fails at link time with ``error: linker `x86_64-w64-mingw32-gcc` not found`` (upcoming CLI releases reject the combination upfront). Build that target without `-x`, with a mingw-w64 toolchain — see the windows-gnu note in [Recipes per target](../cross-build#recipes-per-target). Every non-Windows target goes through cargo-zigbuild — there is no allowlist and no host == target check.
+`--cross-compile` picks cargo-xwin by the target's **platform**: every `*-windows-*` triple built from a non-Windows host routes through cargo-xwin — including `x86_64-pc-windows-gnu`, not just MSVC. Being routed is not the same as being supported, though: cargo-xwin handles MSVC only, so for windows-gnu it configures nothing and the build fails at link time with ``error: linker `x86_64-w64-mingw32-gcc` not found`` (a future release of the CLI will reject this combination up front). Build that target without `-x`, with a mingw-w64 toolchain — see the windows-gnu note in [Recipes per target](../cross-build#recipes-per-target). Every non-Windows target goes through cargo-zigbuild — the CLI keeps no list of supported targets, and it uses zigbuild even when the target matches the host.
 
-If the `CARGO` environment variable is set, the CLI spawns that binary instead — in every mode. It even replaces `cross` under `--use-cross`, without any warning.
+If the `CARGO` environment variable is set, the CLI spawns that binary instead — in every mode, including `--use-cross`, where it silently replaces `cross`.
 
 ### RUSTFLAGS
 

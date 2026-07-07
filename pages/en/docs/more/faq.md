@@ -17,7 +17,7 @@ The **NAPI-RS** CLI handles this for you: for any `*musl*` target, `napi build` 
 
 Because the CLI exports this via the `RUSTFLAGS` environment variable, any `rustflags` in your `.cargo/config.toml` are ignored for musl builds (environment variables take precedence in Cargo). If you need extra `rustc` flags for a musl target, add them to the `RUSTFLAGS` environment variable instead of `.cargo/config.toml`.
 
-If you use the [`mimalloc`](https://github.com/purpleprotocol/mimalloc_rust) allocator, enable its `local_dynamic_tls` feature for musl targets, otherwise the addon can fail at runtime with a thread-local storage allocation error.
+If you use the [`mimalloc`](https://github.com/purpleprotocol/mimalloc_rust) allocator, enable its `local_dynamic_tls` feature for musl targets; otherwise the addon can fail at runtime with a thread-local storage allocation error.
 
 See [Cross build](../cross-build) for how to build musl targets from any host.
 
