@@ -19,6 +19,9 @@ import Toc from '../../../components/docs/Toc' with { island: 'visible' }
 import NotTranslatedBanner from '../../../components/docs/NotTranslatedBanner' with {
   island: 'load',
 }
+import MermaidBlocks from '../../../components/docs/MermaidBlocks' with {
+  island: 'load',
+}
 import Breadcrumb from '../../../components/docs/Breadcrumb'
 import Pager from '../../../components/docs/Pager'
 import EditOnGithub from '../../../components/docs/EditOnGithub'
@@ -34,17 +37,24 @@ export default function PtBrDocsLayout({
   const fallback = shared?.i18nFallback ?? false
 
   return (
-    <DocsLayout
-      navbar={<Navbar locale="pt-BR" currentPath={currentPath} />}
-      sidebar={<Sidebar locale="pt-BR" currentPath={currentPath} />}
-      toc={<Toc locale="pt-BR" currentPath={currentPath} />}
-      banner={<NotTranslatedBanner locale="pt-BR" fallback={fallback} />}
-      breadcrumb={<Breadcrumb locale="pt-BR" currentPath={currentPath} />}
-      pager={<Pager locale="pt-BR" currentPath={currentPath} />}
-      editOnGithub={<EditOnGithub locale="pt-BR" currentPath={currentPath} />}
-      footer={<Footer />}
-    >
-      {children}
-    </DocsLayout>
+    <>
+      {/* Renders null; after hydration it swaps ```mermaid fences for SVG
+          diagrams (lazy — mermaid is only fetched when a page has one). Placed
+          outside DocsLayout so its empty island wrapper never affects the
+          content flow. */}
+      <MermaidBlocks />
+      <DocsLayout
+        navbar={<Navbar locale="pt-BR" currentPath={currentPath} />}
+        sidebar={<Sidebar locale="pt-BR" currentPath={currentPath} />}
+        toc={<Toc locale="pt-BR" currentPath={currentPath} />}
+        banner={<NotTranslatedBanner locale="pt-BR" fallback={fallback} />}
+        breadcrumb={<Breadcrumb locale="pt-BR" currentPath={currentPath} />}
+        pager={<Pager locale="pt-BR" currentPath={currentPath} />}
+        editOnGithub={<EditOnGithub locale="pt-BR" currentPath={currentPath} />}
+        footer={<Footer />}
+      >
+        {children}
+      </DocsLayout>
+    </>
   )
 }

@@ -21,28 +21,29 @@ The **Generated CI** column shows what the CI workflow scaffolded by `napi new` 
 
 | Target | Generated CI (reference setup) | From Linux x64/arm64 | From macOS | From Windows |
 | --- | --- | --- | --- | --- |
-| `x86_64-apple-darwin` | `macos-latest`, no flag | `-x`¹ | no flag | not supported |
-| `aarch64-apple-darwin` | `macos-latest`, no flag (native) | `-x`¹ | no flag | not supported |
-| `x86_64-pc-windows-msvc` | `windows-latest`, no flag | `-x`² | `-x`² | no flag |
-| `i686-pc-windows-msvc` | `windows-latest`, no flag | `-x`² | `-x`² | no flag |
-| `aarch64-pc-windows-msvc` | `windows-latest` (x64), no flag | `-x`² | `-x`² | no flag |
-| `x86_64-unknown-linux-gnu` | `ubuntu-latest`, `--use-napi-cross` | `--use-napi-cross` | `-x`³ | `-x`³ |
-| `aarch64-unknown-linux-gnu` | `ubuntu-latest`, `--use-napi-cross` | `--use-napi-cross` | `-x`³ | `-x`³ |
-| `armv7-unknown-linux-gnueabihf` | `ubuntu-latest`, `--use-napi-cross` | `--use-napi-cross` | `-x`³ | `-x`³ |
+| `x86_64-apple-darwin` | `macos-latest`, no flag | `-x`[^1] | no flag | not supported |
+| `aarch64-apple-darwin` | `macos-latest`, no flag (native) | `-x`[^1] | no flag | not supported |
+| `x86_64-pc-windows-msvc` | `windows-latest`, no flag | `-x`[^2] | `-x`[^2] | no flag |
+| `i686-pc-windows-msvc` | `windows-latest`, no flag | `-x`[^2] | `-x`[^2] | no flag |
+| `aarch64-pc-windows-msvc` | `windows-latest` (x64), no flag | `-x`[^2] | `-x`[^2] | no flag |
+| `x86_64-unknown-linux-gnu` | `ubuntu-latest`, `--use-napi-cross` | `--use-napi-cross` | `-x`[^3] | `-x`[^3] |
+| `aarch64-unknown-linux-gnu` | `ubuntu-latest`, `--use-napi-cross` | `--use-napi-cross` | `-x`[^3] | `-x`[^3] |
+| `armv7-unknown-linux-gnueabihf` | `ubuntu-latest`, `--use-napi-cross` | `--use-napi-cross` | `-x`[^3] | `-x`[^3] |
 | `x86_64-unknown-linux-musl` | `ubuntu-latest`, `-x` + zig setup step | `-x` + zig | `-x` + zig | `-x` + zig |
 | `aarch64-unknown-linux-musl` | `ubuntu-latest`, `-x` + zig setup step | `-x` + zig | `-x` + zig | `-x` + zig |
 | `aarch64-linux-android` / `armv7-linux-androideabi` | `ubuntu-latest`, no flag (preinstalled NDK) | no flag + NDK env | no flag + NDK env | no flag + NDK env |
 | `wasm32-wasip1-threads` | `ubuntu-latest`, no flag | no flag | no flag | no flag |
-| `x86_64-unknown-freebsd` | FreeBSD 15 VM job, no flag (native) | `-x` + zig⁴ | `-x` + zig⁴ | `-x` + zig⁴ |
+| `x86_64-unknown-freebsd` | FreeBSD 15 VM job, no flag (native) | `-x` + zig[^4] | `-x` + zig[^4] | `-x` + zig[^4] |
 | `powerpc64le` / `s390x` `-unknown-linux-gnu` | no generated job | `--use-napi-cross` | — | — |
 | `loongarch64` / `riscv64gc` `-unknown-linux-gnu` | no generated job | no flag + a cross gcc you install | — | — |
 
-Notes:
+[^1]: zig can link macOS binaries for **pure-Rust crates only** — dependencies that link Apple frameworks need a real macOS SDK (`SDKROOT`). Prefer a macOS runner.
 
-1. zig can link macOS binaries for **pure-Rust crates only** — dependencies that link Apple frameworks need a real macOS SDK (`SDKROOT`). Prefer a macOS runner.
-2. cargo-xwin downloads the Microsoft CRT and Windows SDK itself; the Microsoft license applies. It needs `clang` installed (e.g. `brew install llvm` on macOS).
-3. `--use-napi-cross` only works on Linux x64/arm64 hosts (the downloaded toolchain is a Linux binary), so from macOS or Windows use `-x` instead — but the glibc floor becomes zig's default, not 2.17. See [Glibc versions](#glibc-versions).
-4. Under `-x`, FreeBSD routes through cargo-zigbuild like every other non-Windows target — have `zig` on `PATH`; Linux hosts are the most battle-tested route. If you want your tests to run on FreeBSD too, run them in a FreeBSD VM. See the [FreeBSD recipe](#freebsd).
+[^2]: cargo-xwin downloads the Microsoft CRT and Windows SDK itself; the Microsoft license applies. It needs `clang` installed (e.g. `brew install llvm` on macOS).
+
+[^3]: `--use-napi-cross` only works on Linux x64/arm64 hosts (the downloaded toolchain is a Linux binary), so from macOS or Windows use `-x` instead — but the glibc floor becomes zig's default, not 2.17. See [Glibc versions](#glibc-versions).
+
+[^4]: Under `-x`, FreeBSD routes through cargo-zigbuild like every other non-Windows target — have `zig` on `PATH`; Linux hosts are the most battle-tested route. If you want your tests to run on FreeBSD too, run them in a FreeBSD VM. See the [FreeBSD recipe](#freebsd).
 
 ## Decision tree
 

@@ -21,28 +21,29 @@ A coluna **CI gerada** mostra o que o workflow de CI gerado pelo `napi new` faz 
 
 | Target | CI gerada (configuração de referência) | A partir de Linux x64/arm64 | A partir de macOS | A partir de Windows |
 | --- | --- | --- | --- | --- |
-| `x86_64-apple-darwin` | `macos-latest`, sem flag | `-x`¹ | sem flag | não suportado |
-| `aarch64-apple-darwin` | `macos-latest`, sem flag (nativo) | `-x`¹ | sem flag | não suportado |
-| `x86_64-pc-windows-msvc` | `windows-latest`, sem flag | `-x`² | `-x`² | sem flag |
-| `i686-pc-windows-msvc` | `windows-latest`, sem flag | `-x`² | `-x`² | sem flag |
-| `aarch64-pc-windows-msvc` | `windows-latest` (x64), sem flag | `-x`² | `-x`² | sem flag |
-| `x86_64-unknown-linux-gnu` | `ubuntu-latest`, `--use-napi-cross` | `--use-napi-cross` | `-x`³ | `-x`³ |
-| `aarch64-unknown-linux-gnu` | `ubuntu-latest`, `--use-napi-cross` | `--use-napi-cross` | `-x`³ | `-x`³ |
-| `armv7-unknown-linux-gnueabihf` | `ubuntu-latest`, `--use-napi-cross` | `--use-napi-cross` | `-x`³ | `-x`³ |
+| `x86_64-apple-darwin` | `macos-latest`, sem flag | `-x`[^1] | sem flag | não suportado |
+| `aarch64-apple-darwin` | `macos-latest`, sem flag (nativo) | `-x`[^1] | sem flag | não suportado |
+| `x86_64-pc-windows-msvc` | `windows-latest`, sem flag | `-x`[^2] | `-x`[^2] | sem flag |
+| `i686-pc-windows-msvc` | `windows-latest`, sem flag | `-x`[^2] | `-x`[^2] | sem flag |
+| `aarch64-pc-windows-msvc` | `windows-latest` (x64), sem flag | `-x`[^2] | `-x`[^2] | sem flag |
+| `x86_64-unknown-linux-gnu` | `ubuntu-latest`, `--use-napi-cross` | `--use-napi-cross` | `-x`[^3] | `-x`[^3] |
+| `aarch64-unknown-linux-gnu` | `ubuntu-latest`, `--use-napi-cross` | `--use-napi-cross` | `-x`[^3] | `-x`[^3] |
+| `armv7-unknown-linux-gnueabihf` | `ubuntu-latest`, `--use-napi-cross` | `--use-napi-cross` | `-x`[^3] | `-x`[^3] |
 | `x86_64-unknown-linux-musl` | `ubuntu-latest`, `-x` + etapa de setup do zig | `-x` + zig | `-x` + zig | `-x` + zig |
 | `aarch64-unknown-linux-musl` | `ubuntu-latest`, `-x` + etapa de setup do zig | `-x` + zig | `-x` + zig | `-x` + zig |
 | `aarch64-linux-android` / `armv7-linux-androideabi` | `ubuntu-latest`, sem flag (NDK pré-instalado) | sem flag + env do NDK | sem flag + env do NDK | sem flag + env do NDK |
 | `wasm32-wasip1-threads` | `ubuntu-latest`, sem flag | sem flag | sem flag | sem flag |
-| `x86_64-unknown-freebsd` | job em VM FreeBSD 15, sem flag (nativo) | `-x` + zig⁴ | `-x` + zig⁴ | `-x` + zig⁴ |
+| `x86_64-unknown-freebsd` | job em VM FreeBSD 15, sem flag (nativo) | `-x` + zig[^4] | `-x` + zig[^4] | `-x` + zig[^4] |
 | `powerpc64le` / `s390x` `-unknown-linux-gnu` | nenhum job gerado | `--use-napi-cross` | — | — |
 | `loongarch64` / `riscv64gc` `-unknown-linux-gnu` | nenhum job gerado | sem flag + um gcc cruzado que você instala | — | — |
 
-Notas:
+[^1]: o zig consegue linkar binários macOS **apenas para crates Rust puros** — dependências que linkam frameworks da Apple precisam de um SDK macOS real (`SDKROOT`). Prefira um runner macOS.
 
-1. o zig consegue linkar binários macOS **apenas para crates Rust puros** — dependências que linkam frameworks da Apple precisam de um SDK macOS real (`SDKROOT`). Prefira um runner macOS.
-2. o cargo-xwin baixa por conta própria a CRT da Microsoft e o SDK do Windows; a licença da Microsoft se aplica. Ele precisa do `clang` instalado (por exemplo, `brew install llvm` no macOS).
-3. `--use-napi-cross` só funciona em hosts Linux x64/arm64 (a toolchain baixada é um binário Linux); portanto, a partir de macOS ou Windows use `-x` — mas o piso de glibc passa a ser o padrão do zig, não 2.17. Veja [Versões de glibc](#vers%C3%B5es-de-glibc).
-4. Sob `-x`, o FreeBSD passa pelo cargo-zigbuild como qualquer outro target não-Windows — tenha o `zig` no `PATH`; hosts Linux são a rota mais comprovada na prática. Se você quiser que seus testes também rodem no FreeBSD, execute-os em uma VM FreeBSD. Veja a [receita do FreeBSD](#freebsd).
+[^2]: o cargo-xwin baixa por conta própria a CRT da Microsoft e o SDK do Windows; a licença da Microsoft se aplica. Ele precisa do `clang` instalado (por exemplo, `brew install llvm` no macOS).
+
+[^3]: `--use-napi-cross` só funciona em hosts Linux x64/arm64 (a toolchain baixada é um binário Linux); portanto, a partir de macOS ou Windows use `-x` — mas o piso de glibc passa a ser o padrão do zig, não 2.17. Veja [Versões de glibc](#vers%C3%B5es-de-glibc).
+
+[^4]: Sob `-x`, o FreeBSD passa pelo cargo-zigbuild como qualquer outro target não-Windows — tenha o `zig` no `PATH`; hosts Linux são a rota mais comprovada na prática. Se você quiser que seus testes também rodem no FreeBSD, execute-os em uma VM FreeBSD. Veja a [receita do FreeBSD](#freebsd).
 
 ## Árvore de decisão
 

@@ -442,3 +442,17 @@
 .void-md ul ul {
   list-style-type: circle;
 }
+
+/* ── Mermaid diagrams ──────────────────────────────────────────────────────────
+ *
+ * The MermaidBlocks island (components/docs/MermaidBlocks.tsx) swaps a
+ * ```mermaid fence for a `.mermaid-diagram` host holding the rendered SVG.
+ * Match the fence's vertical rhythm (@void/md's code.css gives code blocks
+ * `margin: 1em 0`) and keep wide diagrams inside the content column. */
+.void-md .mermaid-diagram {
+  margin: 1em 0;
+}
+.void-md .mermaid-diagram svg {
+  max-width: 100%;
+  height: auto;
+}
