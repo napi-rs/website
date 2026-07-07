@@ -1,0 +1,61 @@
+---
+description: 关于 napi-rs 的常见问题。
+---
+
+# 常见问题
+
+## 为 `Linux alpine` 构建
+
+> https://github.com/rust-lang/rust/pull/40113#issuecomment-323193341
+
+当编译目标是 `*-unknown-linux-musl` 时，默认情况下不能把 `crate-type` 设置为 `cdylib`。
+
+如果想这么做，你需要向 `rustc` 传递 `-C target-feature=-crt-static`。
+
+**NAPI-RS** CLI 已经为你处理了这一点：对于任何 `*musl*` 目标，`napi build` 会自动把 `-C target-feature=-crt-static` 追加到 `RUSTFLAGS` 环境变量，`napi new` 生成的项目开箱即用地以这种方式构建它的 musl 目标。
+
+由于 CLI 通过 `RUSTFLAGS` 环境变量导出这个设置，musl 构建会忽略你 `.cargo/config.toml` 里的任何 `rustflags`（Cargo 中环境变量优先）。如果 musl 目标需要额外的 `rustc` 标志，请把它们加到 `RUSTFLAGS` 环境变量，而不是 `.cargo/config.toml`。
+
+如果你使用 [`mimalloc`](https://github.com/purpleprotocol/mimalloc_rust) 分配器，请为 musl 目标启用它的 `local_dynamic_tls` feature；否则 addon 可能在运行时因线程本地存储（thread-local storage）分配错误而失败。
+
+参见[交叉编译](../cross-build)了解如何从任意宿主机构建 musl 目标。
+
+## `GLIBC_x.yy` not found
+
+```
+Error: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.38' not found
+```
+
+`*-linux-gnu` addon 动态链接 glibc，要求运行环境的 glibc 至少达到**构建**它的那台机器的版本。如果构建宿主机运行的发行版比部署宿主机新，addon 加载时就会报这个错误。
+
+解决办法是针对更老的 glibc 构建：
+
+- 在 Linux x64/arm64 宿主机上，用 `--use-napi-cross` 构建 —— 它把 glibc 下限固定在 **2.17**，几乎可以在所有 glibc 发行版上加载。
+- 在 macOS 或 Windows 宿主机上，用 `--cross-compile`（`-x`）构建 —— 下限变成 zig 的默认 glibc：比 2.17 新，但与你的宿主机发行版无关。
+
+**不要**为了解决这个错误而换成 `*-musl` 目标 —— musl 是 Alpine 系发行版使用的另一种 libc，不是降低 glibc 版本要求的手段。详见 [Glibc 版本](../cross-build#glibc-%E7%89%88%E6%9C%AC)。
+
+## rustls / `aws-lc-sys` 在 aarch64 上使用 `--use-napi-cross` 构建失败
+
+如果你的 crate 依赖 `rustls` —— 常常是通过 `reqwest` 或 `hyper-rustls` 间接依赖 —— 它的默认后端 `aws-lc-sys` 在用 `--use-napi-cross` 交叉编译 `aarch64-unknown-linux-gnu` 时会失败：[`@napi-rs/cross-toolchain`](https://github.com/napi-rs/cross-toolchain) 自带的 gcc 对 `aws-lc-sys` 来说太老了（[cross-toolchain#4](https://github.com/napi-rs/cross-toolchain/issues/4)）。
+
+两种绕过方式：
+
+- 用 `clang` 代替自带的 gcc 编译 C 语言部分：
+
+  ```sh
+  TARGET_CC=clang TARGET_CXX=clang++ napi build --release --target aarch64-unknown-linux-gnu --use-napi-cross
+  ```
+
+- 用 `--cross-compile`（`-x`）代替 `--use-napi-cross`。
+
+其他常见的 C/C++ 交叉编译问题，参见交叉编译指南的[原生依赖](../cross-build#%E5%8E%9F%E7%94%9F%E4%BE%9D%E8%B5%96)一节。
+
+## 为 `Windows i686` 构建
+
+当编译目标是 `i686-windows-*` 时会出现 `codegen` 错误：[Rust issue 67497](https://github.com/rust-lang/rust/issues/67497)。
+
+有一个可以避开该问题的变通办法：
+
+- 把 `lto` 设为 false。如果你没有在 `Cargo.toml` 中设置过 lto，它的默认值就是 false，可以忽略这一步。
+- 把 `codegen-units` 设为 `32`（或更高）。编译目标为 release 时，`codegen-units` 的默认值是 `16`。你可以设置 `CARGO_PROFILE_RELEASE_CODEGEN_UNITS=32` 和 `CARGO_PROFILE_RELEASE_LTO='false'`，让编译器在面向 `i686-windows-*` 时正常工作。这里有一个[示例](https://github.com/napi-rs/package-template/blob/50ecdec7c7d31c60b693d5d52be6e13ba9b32bf8/.github/workflows/CI.yaml#L89-L91)。

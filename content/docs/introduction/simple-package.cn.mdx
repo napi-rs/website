@@ -115,7 +115,7 @@ tree -a
     └── lib.rs
 ```
 
-你的本地代码在 `src/lib.rs`中。`.cargo/config.toml`文件用于`GitHub CI`的交叉编译。一般来说，这个文件不会影响你在本地机器上的开发。
+你的本地代码在 `src/lib.rs`中。`.cargo/config.toml` 文件只设置了为 `x86_64-pc-windows-msvc` 静态链接 C 运行时的 `rustflags`（pnpm 模板还覆盖了 `i686`）。它看起来无关紧要，但不要删除它：没有它，这些 Windows 构建就会依赖 MSVC 运行时 DLL。交叉编译的链接器和工具链配置并不在这个文件里 —— 它们来自 `napi` CLI 本身（参见 [napi build](/docs/cli/build)）。一般来说，这个文件不会影响你在本地机器上的开发。交叉编译的工作方式参见[交叉编译](/docs/cross-build)指南。
 `.github/workflows/CI.yml`文件是[`GitHub Actions`](https://docs.github.com/en/actions) 的配置文件。
 `build.rs` 文件对于构建 `Node.js` 的 native addon 是必要的，不要删除它或把它移到其他地方。
 
