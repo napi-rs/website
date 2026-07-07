@@ -90,4 +90,8 @@ Essas ferramentas precisam gerenciar todo o fluxo do complemento através das fa
 
 O complemento nativo com o terceiro método de distribuição (**distribuição de complementos nativos para diferentes plataformas por meio de pacotes npm diferentes**) é o mais fácil de usar e o menos mentalmente cansativo para os desenvolvedores que o utilizam, mas esse método de distribuição impõe custos adicionais de manutenção aos autores de complementos nativos.
 
-Mais tarde, descreveremos como o `napi-rs` pode ajudar os desenvolvedores de complementos nativos a resolver o problema dos altos custos de manutenção de CI/CD com essa distribuição.
+O **NAPI-RS** assume essa carga de trabalho:
+
+- [Compilação cruzada](../cross-build) — compile todas as plataformas-alvo a partir de poucos hosts de CI.
+- [`napi artifacts`](../cli/artifacts) — copia os binários compilados na CI para os pacotes npm de cada plataforma.
+- [`napi pre-publish`](../cli/pre-publish) — atualiza o `package.json` e publica os pacotes de cada plataforma.
