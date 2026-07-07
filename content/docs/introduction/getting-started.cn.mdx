@@ -39,6 +39,10 @@ napi new
 
 你想要支持的平台。
 
+生成的 CI workflow 是把模板自带的 workflow 按你选择的平台过滤后的结果，因此只有模板本身带有 matrix 记录的目标才会出现构建任务：macOS（x64、arm64）、Windows MSVC（x64、x86、arm64）、Linux gnu 和 musl（x64、arm64）、armv7 gnueabihf、Android（arm64、armv7）、WASI 和 FreeBSD —— 其中大多数通过交叉编译构建，而不是在原生硬件上构建。
+
+其余可以接受的目标（OpenHarmony、`x86_64-pc-windows-gnu`、`armv7-unknown-linux-musleabihf`、loongarch64、riscv64gc、ppc64le、s390x）虽然可以在提示中选中，但 `napi new` 从不添加模板中不存在的任务。这些目标既不会进入生成的 workflow，也不会进入 `napi create-npm-dirs` 和发布流程所读取的脚手架 `napi.targets` 列表，因此它们既没有 CI 构建任务，也没有 npm 包。要发布其中的某个目标，请把它加入 napi 配置的 `targets`，运行 `napi create-npm-dirs`，并自行添加 CI matrix 记录 —— 完整步骤参见[向现有项目添加新目标](../cross-build#%E5%90%91%E7%8E%B0%E6%9C%89%E9%A1%B9%E7%9B%AE%E6%B7%BB%E5%8A%A0%E6%96%B0%E7%9B%AE%E6%A0%87)。[交叉编译](../cross-build)指南还介绍了生成的 CI 所使用的交叉编译标志。
+
 #### Enable GitHub actions
 
 是否生成 GitHub actions 配置文件。

@@ -1,0 +1,79 @@
+---
+description: NAPI-RS 的配置结构。
+---
+
+# NAPI 配置
+
+import { Callout } from 'nextra-theme-docs'
+import { Green } from '../../../components/chalk'
+
+**NAPI-RS** 的配置结构。
+
+<Callout>`napi` 中的所有字段都是可选的。</Callout>
+
+## Schema
+
+```ts
+{
+  napi?: {
+    binaryName?: string
+    targets?: string[],
+    packageName?: string,
+    npmClient?: string
+    constEnum?: boolean
+    dtsHeader?: string
+    dtsHeaderFile?: string
+    wasm?: {
+      initialMemory?: number
+      maximumMemory?: number
+      browser?: {
+        fs?: boolean
+        asyncInit?: boolean
+      }
+    }
+  }
+}
+```
+
+| 字段                     |            默认值             | 描述                                                                                                                                                                                   |
+| ------------------------ | :---------------------------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `binaryName`             |    <Green>`index`</Green>     | 生成的 `.node` 文件的二进制文件名。例如 <Green>`[NAME].[TRIPLE?].node`</Green> 会变成 <Green>`index.win32-x64-msvc.node`</Green>                                                       |
+| `targets`                |      <Green>`[]`</Green>      | 项目要发布的 target triple 列表，用于脚手架和打包。设置它并不会让 `napi build` 编译多个目标 —— `napi build` 从中读取的唯一一项内容见下方说明。target triple 可以在 `rustup target list` 命令的输出中找到。 |
+| `packageName`            |  <Green>`undefined`</Green>   | 覆盖 `package.json` 中的 `name` 字段。用法参见 [Build#js-package-name](./build#%E5%85%B3%E4%BA%8E---js-package-name-%E7%9A%84%E8%AF%B4%E6%98%8E)。                                     |
+| `npmClient`              |     <Green>`npm`</Green>      | 指定执行 NPM 操作（例如发布）时使用的其他 NPM 客户端。                                                                                                                                 |
+| `constEnum`              |    <Green>`false`</Green>     | 是否在生成的 `index.d.ts` 文件中生成 `const enum`。                                                                                                                                    |
+| `dtsHeader`              |  <Green>`undefined`</Green>   | 前置到生成的 `index.d.ts` 文件开头的文件头字符串。                                                                                                                                     |
+| `dtsHeaderFile`          |  <Green>`undefined`</Green>   | 包含前置到生成的 `index.d.ts` 文件开头的文件头字符串的文件路径。如果同时提供了 `dtsHeader` 和 `dtsHeaderFile`，则使用 `dtsHeaderFile`                                                  |
+| `wasm.initialMemory`     | <Green>`4000` (256mb)</Green> | 生成的 WebAssembly 模块的初始内存大小。详见 [WebAssembly.Memory](https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Memory)。                                   |
+| `wasm.maximumMemory`     | <Green>`65536` (4GiB)</Green> | 生成的 WebAssembly 模块的最大内存大小。详见 [WebAssembly.Memory](https://developer.mozilla.org/en-US/docs/WebAssembly/JavaScript_interface/Memory)。                                   |
+| `wasm.browser.fs`        |    <Green>`false`</Green>     | 是否为生成的 WebAssembly 模块启用 `node:fs` 模块 polyfill。                                                                                                                            |
+| `wasm.browser.asyncInit` |    <Green>`false`</Green>     | 是否为生成的 WebAssembly 模块启用异步初始化。                                                                                                                                          |
+
+<Callout type="info">
+  `targets` 驱动的是脚手架和打包：`napi new` 用它生成 CI
+  matrix，[`napi create-npm-dirs`](/docs/cli/create-npm-dirs) 为每个目标创建一个 npm
+  包，[`napi artifacts`](/docs/cli/artifacts) 收集为这些目标构建的二进制。设置它并**不会**让
+  `napi build` 编译多个目标 —— `napi build` 每次调用只构建一个目标，由它的
+  `--target` 标志选定。`napi build` 从 `targets` 中读取的唯一一项内容是 WASI
+  条目：它根据其中列出的 WASI 目标推导 `.wasm`
+  绑定文件名；当其中没有列出任何 WASI 目标时，则完全跳过 WASI
+  绑定文件（`<binaryName>.wasi.cjs` 及相关文件）的生成。交叉编译标志
+  （`--use-napi-cross`、`--cross-compile`、`--use-cross`）同样没有配置文件中的等价物：
+  它们只能在 `napi build` 命令行上传入。
+</Callout>
+
+## 什么是 `target triple`
+
+参见 [rustc/platform-support](https://doc.rust-lang.org/nightly/rustc/platform-support.html) 和 [LLVM/CrossCompilation](https://clang.llvm.org/docs/CrossCompilation.html#target-triple)
+
+> 目标由它的「target triple」标识，这个字符串用来告知编译器应该产出何种输出。
+
+> triple 的一般格式为 `<arch><sub>-<vendor>-<sys>-<abi>`，其中：
+>
+> - `arch` = `x86_64`、`i386`、`arm`、`thumb`、`mips` 等
+> - `sub` = 例如在 ARM 上有 `v5`、`v6m`、`v7a`、`v7m` 等
+> - `vendor` = `pc`、`apple`、`nvidia`、`ibm` 等
+> - `sys` = `none`、`linux`、`win32`、`darwin`、`cuda` 等
+> - `abi` = `eabi`、`gnu`、`android`、`macho`、`elf` 等
+
+一旦确定了你要发布哪些 triple，参见[交叉编译](../cross-build)了解如何在你的宿主机上构建它们。

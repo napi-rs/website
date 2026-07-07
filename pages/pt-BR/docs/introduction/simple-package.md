@@ -116,7 +116,7 @@ tree -a
     └── lib.rs
 ```
 
-Seus códigos nativos estão em `src/lib.rs`. O arquivo `.cargo/config.toml` é usado no `GitHub CI` para compilação cruzada. Em geral, este arquivo não afeta seu desenvolvimento em sua máquina local.
+Seus códigos nativos estão em `src/lib.rs`. O arquivo `.cargo/config.toml` apenas define `rustflags` que fazem o link estático do runtime C para `x86_64-pc-windows-msvc` (o template pnpm também cobre `i686`). Ele parece trivial, mas não o exclua: sem ele, essas builds para Windows passam a depender das DLLs do runtime MSVC. A configuração de linker e toolchain para compilação cruzada não fica neste arquivo — ela vem da própria CLI do `napi` (veja [napi build](../cli/build)). Em geral, este arquivo não afeta seu desenvolvimento em sua máquina local. Veja o guia [Compilação cruzada](../cross-build) para entender como a compilação cruzada funciona.
 O arquivo `.github/workflows/CI.yml` é o arquivo de configuração para [`GitHub Actions`](https://docs.github.com/en/actions).
 O arquivo `build.rs` é necessário para construir um complemento(Addon) nativo para o `Node.js`. Não o exclua ou mova para outro lugar.
 
@@ -187,11 +187,10 @@ O comando `new` gerou uma simples função `sum` para você no `src/lib.rs`:
 ```rust {7}
 #![deny(clippy::all)]
 
-#[macro_use]
-extern crate napi_derive;
+use napi_derive::napi;
 
 #[napi]
-fn sum(a: i32, b: i32) -> i32 {
+pub fn sum(a: i32, b: i32) -> i32 {
   a + b
 }
 ```
@@ -200,21 +199,15 @@ E você pode inspecionar o arquivo `index.d.ts` e ver a função `sum` que foi g
 
 **index.d.ts**
 
-```ts {9}
+```ts {3}
 /* eslint-disable */
 
-export class ExternalObject<T> {
-  readonly '': {
-    readonly '': unique symbol
-    [K: symbol]: T
-  }
-}
 export function sum(a: number, b: number): number
 ```
 
-Vamos criar um arquivo `test.mjs` para testar a função `sum` gerada:
+Vamos criar um arquivo `main.mjs` para testar a função `sum` gerada:
 
-**test.mjs**
+**main.mjs**
 
 ```js
 import { sum } from './index.js'
@@ -225,7 +218,7 @@ console.log('From native', sum(40, 2))
 Execute isso!
 
 ```bash
-node test.mjs
+node main.mjs
 From native 42
 ```
 

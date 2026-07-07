@@ -12,7 +12,7 @@ description: 使用 NAPI-RS 编写并发布一个简单的包.
 
 ```bash {2}
 napi new
-? Package name: (The name filed in your package.json)
+? Package name: (The name field in your package.json)
 ```
 
 让我们给这个包起一个酷一点的名字: **@napi-rs/cool**
@@ -28,7 +28,7 @@ import { Callout } from 'nextra-theme-docs'
 
 ```bash {3}
 napi new
-? Package name: (The name filed in your package.json) @napi-rs/cool
+? Package name: (The name field in your package.json) @napi-rs/cool
 ? Dir name: (cool)
 ```
 
@@ -36,7 +36,7 @@ napi new
 
 ```bash {4}
 napi new
-? Package name: (The name filed in your package.json) @napi-rs/cool
+? Package name: (The name field in your package.json) @napi-rs/cool
 ? Dir name: cool
 ? Choose targets you want to support (Press <space> to select, <a> to toggle all, <i> to invert selection,
 and <enter> to proceed)
@@ -54,7 +54,7 @@ and <enter> to proceed)
 
 ```bash {8}
 napi new
-? Package name: (The name filed in your package.json) @napi-rs/cool
+? Package name: (The name field in your package.json) @napi-rs/cool
 ? Dir name: cool
 ? Choose targets you want to support aarch64-apple-darwin, aarch64-linux-android, aarch64-unknown-linux-gnu
 , aarch64-unknown-linux-musl, aarch64-pc-windows-msvc, armv7-unknown-linux-gnueabihf, x86_64-apple-darwin,
@@ -67,7 +67,7 @@ c-windows-msvc, armv7-linux-androideabi
 
 ```bash {9-16}
 napi new
-? Package name: (The name filed in your package.json) @napi-rs/cool
+? Package name: (The name field in your package.json) @napi-rs/cool
 ? Dir name: cool
 ? Choose targets you want to support aarch64-apple-darwin, aarch64-linux-android, aarch64-unknown-linux-gnu
 , aarch64-unknown-linux-musl, aarch64-pc-windows-msvc, armv7-unknown-linux-gnueabihf, x86_64-apple-darwin,
@@ -115,7 +115,7 @@ tree -a
     └── lib.rs
 ```
 
-你的本地代码在 `src/lib.rs`中。`.cargo/config.toml`文件用于`GitHub CI`的交叉编译。一般来说，这个文件不会影响你在本地机器上的开发。
+你的本地代码在 `src/lib.rs`中。`.cargo/config.toml` 文件只设置了为 `x86_64-pc-windows-msvc` 静态链接 C 运行时的 `rustflags`（pnpm 模板还覆盖了 `i686`）。它看起来无关紧要，但不要删除它：没有它，这些 Windows 构建就会依赖 MSVC 运行时 DLL。交叉编译的链接器和工具链配置并不在这个文件里 —— 它们来自 `napi` CLI 本身（参见 [napi build](../cli/build)）。一般来说，这个文件不会影响你在本地机器上的开发。交叉编译的工作方式参见[交叉编译](../cross-build)指南。
 `.github/workflows/CI.yml`文件是[`GitHub Actions`](https://docs.github.com/en/actions) 的配置文件。
 `build.rs` 文件对于构建 `Node.js` 的 native addon 是必要的，不要删除它或把它移到其他地方。
 
@@ -184,32 +184,25 @@ tree -a -I target
 ```rust {7} filename="lib.rs"
 #![deny(clippy::all)]
 
-#[macro_use]
-extern crate napi_derive;
+use napi_derive::napi;
 
 #[napi]
-fn sum(a: i32, b: i32) -> i32 {
+pub fn sum(a: i32, b: i32) -> i32 {
   a + b
 }
 ```
 
 查看 `index.d.ts` 文件内容你可以看到 `sum` 函数的 TypeScript 定义已经帮你自动生成:
 
-```ts {9} filename="index.d.ts"
+```ts {3} filename="index.d.ts"
 /* eslint-disable */
 
-export class ExternalObject<T> {
-  readonly '': {
-    readonly '': unique symbol
-    [K: symbol]: T
-  }
-}
 export function sum(a: number, b: number): number
 ```
 
-让我们创建一个 `test.mjs` 文件来测试生成的 `sum` 函数:
+让我们创建一个 `main.mjs` 文件来测试生成的 `sum` 函数:
 
-```js filename="test.mjs"
+```js filename="main.mjs"
 import { sum } from './index.js'
 
 console.log('From native', sum(40, 2))
@@ -218,7 +211,7 @@ console.log('From native', sum(40, 2))
 执行!
 
 ```bash
-node test.mjs
+node main.mjs
 From native 42
 ```
 
@@ -286,7 +279,7 @@ git push
 
 如果所有步骤都完成了，你可以在 GitHub 上看到如下的 CI 流程:
 
-![](./CI.png)
+![](/assets/CI.png)
 
 这是一个测试 CI，让我们来发布它吧:
 

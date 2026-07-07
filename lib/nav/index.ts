@@ -480,10 +480,10 @@ export const nav: Record<Locale, LocaleNav> = {
         },
         {
           group: 'cross-build',
-          title: 'Cross build',
+          title: '交叉编译',
           items: [
             {
-              title: 'Cross build',
+              title: '交叉编译',
               path: 'docs/cross-build',
             },
           ],

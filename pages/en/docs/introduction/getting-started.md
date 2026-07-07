@@ -39,6 +39,10 @@ The name that will be defined in `package.json`.
 
 Specify the target platforms you want to support with the native package.
 
+The generated CI workflow is the template's workflow filtered down to the platforms you pick, so a build job appears only for targets the template ships a matrix row for: macOS (x64, arm64), Windows MSVC (x64, x86, arm64), Linux gnu and musl (x64, arm64), armv7 gnueabihf, Android (arm64, armv7), WASI and FreeBSD — most of them built by cross-compiling rather than on native hardware.
+
+The other accepted targets (OpenHarmony, `x86_64-pc-windows-gnu`, `armv7-unknown-linux-musleabihf`, loongarch64, riscv64gc, ppc64le, s390x) can be selected at the prompt, but `napi new` never adds jobs the template does not have. These targets end up in neither the generated workflow nor the scaffolded `napi.targets` list that `napi create-npm-dirs` and the publish flow read, so they get no CI build job and no npm package. To ship one of them, add it to `targets` in the napi config, run `napi create-npm-dirs`, and add the CI matrix row yourself — see [Add a target to an existing project](/docs/cross-build#add-a-target-to-an-existing-project) for the full recipe. The [Cross build](/docs/cross-build) guide also explains the cross-compilation flags the generated CI uses.
+
 #### Enable GitHub actions
 
 Opt in for generated GitHub actions that will help publish the native package to the npm registry.
