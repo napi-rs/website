@@ -3913,9 +3913,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@void/md@npm:0.10.7":
-  version: 0.10.7
-  resolution: "@void/md@npm:0.10.7"
+"@void/md@npm:0.10.8":
+  version: 0.10.8
+  resolution: "@void/md@npm:0.10.8"
   dependencies:
     "@shikijs/engine-javascript": "npm:^4.3.1"
     "@shikijs/transformers": "npm:^4.3.1"
@@ -3931,22 +3931,22 @@ __metadata:
     tinyglobby: "npm:^0.2.17"
   peerDependencies:
     vite: ^8.0.0
-    void: 0.10.7
-  checksum: 10c0/9cdae9594375b38eda8cfa6fa215f6a6b52e991b04bdf1fea4a44f8a33e952d86d6a94b5224a8eb53a3a5202ce7dd072168de51eddb7e180ca833e66c567be34
+    void: 0.10.8
+  checksum: 10c0/54fdf1cd52b67c0122bb3187c0b4ab272a703e3a8856bafdfae7138ad7d465bfe8085e08adbe4a359367b0af22465ec6fe8e83ff0b89dbcf3733761990e7d85a
   languageName: node
   linkType: hard
 
-"@void/react@npm:0.10.7":
-  version: 0.10.7
-  resolution: "@void/react@npm:0.10.7"
+"@void/react@npm:0.10.8":
+  version: 0.10.8
+  resolution: "@void/react@npm:0.10.8"
   dependencies:
     "@vitejs/plugin-react": "npm:^6.0.3"
   peerDependencies:
     react: ^19.0.0
     react-dom: ^19.0.0
     vite: ^8.0.0
-    void: 0.10.7
-  checksum: 10c0/09ce2c7989e23399ecbeea1695768305e11c316e5a013f6721b571b9c5e0d96a080f4671a4ad53b713baff401783bc56faa4ce7c6d500986ed49fa17fa6f9f47
+    void: 0.10.8
+  checksum: 10c0/faebec64755dc5d4043b0787e94e71e5e2ffbe210c7c363b8eca4b6320b36f46aa9ab14a9ab863380eb8518f9acad6bba2d3fd33f270a48e0dbb420b34f99e46
   languageName: node
   linkType: hard
 
@@ -7881,8 +7881,8 @@ __metadata:
     "@types/postcss-functions": "npm:^4"
     "@types/react": "npm:^19.0.0"
     "@types/react-dom": "npm:^19.0.0"
-    "@void/md": "npm:0.10.7"
-    "@void/react": "npm:0.10.7"
+    "@void/md": "npm:0.10.8"
+    "@void/react": "npm:0.10.8"
     "@waaark/luge": "npm:^0.6.20-beta"
     autoprefixer: "npm:^10.5.2"
     buffer: "npm:^6.0.3"
