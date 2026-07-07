@@ -13,7 +13,7 @@ description: 使用 NAPI-RS 编写并发布一个简单的包.
 
 ```bash {2}
 napi new
-? Package name: (The name filed in your package.json)
+? Package name: (The name field in your package.json)
 ```
 
 让我们给这个包起一个酷一点的名字: **@napi-rs/cool**
@@ -28,7 +28,7 @@ detection_**](https://stackoverflow.com/a/54135900/5684750)。
 
 ```bash {3}
 napi new
-? Package name: (The name filed in your package.json) @napi-rs/cool
+? Package name: (The name field in your package.json) @napi-rs/cool
 ? Dir name: (cool)
 ```
 
@@ -36,7 +36,7 @@ napi new
 
 ```bash {4}
 napi new
-? Package name: (The name filed in your package.json) @napi-rs/cool
+? Package name: (The name field in your package.json) @napi-rs/cool
 ? Dir name: cool
 ? Choose targets you want to support (Press <space> to select, <a> to toggle all, <i> to invert selection,
 and <enter> to proceed)
@@ -54,7 +54,7 @@ and <enter> to proceed)
 
 ```bash {8}
 napi new
-? Package name: (The name filed in your package.json) @napi-rs/cool
+? Package name: (The name field in your package.json) @napi-rs/cool
 ? Dir name: cool
 ? Choose targets you want to support aarch64-apple-darwin, aarch64-linux-android, aarch64-unknown-linux-gnu
 , aarch64-unknown-linux-musl, aarch64-pc-windows-msvc, armv7-unknown-linux-gnueabihf, x86_64-apple-darwin,
@@ -67,7 +67,7 @@ c-windows-msvc, armv7-linux-androideabi
 
 ```bash {9-16}
 napi new
-? Package name: (The name filed in your package.json) @napi-rs/cool
+? Package name: (The name field in your package.json) @napi-rs/cool
 ? Dir name: cool
 ? Choose targets you want to support aarch64-apple-darwin, aarch64-linux-android, aarch64-unknown-linux-gnu
 , aarch64-unknown-linux-musl, aarch64-pc-windows-msvc, armv7-unknown-linux-gnueabihf, x86_64-apple-darwin,
@@ -186,11 +186,10 @@ tree -a -I target
 ```rust {7}
 #![deny(clippy::all)]
 
-#[macro_use]
-extern crate napi_derive;
+use napi_derive::napi;
 
 #[napi]
-fn sum(a: i32, b: i32) -> i32 {
+pub fn sum(a: i32, b: i32) -> i32 {
   a + b
 }
 ```
@@ -199,21 +198,15 @@ fn sum(a: i32, b: i32) -> i32 {
 
 **index.d.ts**
 
-```ts {9}
+```ts {3}
 /* eslint-disable */
 
-export class ExternalObject<T> {
-  readonly '': {
-    readonly '': unique symbol
-    [K: symbol]: T
-  }
-}
 export function sum(a: number, b: number): number
 ```
 
-让我们创建一个 `test.mjs` 文件来测试生成的 `sum` 函数:
+让我们创建一个 `main.mjs` 文件来测试生成的 `sum` 函数:
 
-**test.mjs**
+**main.mjs**
 
 ```js
 import { sum } from './index.js'
@@ -224,7 +217,7 @@ console.log('From native', sum(40, 2))
 执行!
 
 ```bash
-node test.mjs
+node main.mjs
 From native 42
 ```
 
