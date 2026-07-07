@@ -177,6 +177,33 @@ export function firstSectionLeafHref(
 }
 
 /**
+ * The localized href of the FIRST reachable leaf of the GROUP that owns
+ * `leafPath` (in sidebar order). The group crumb renders as plain, non-link
+ * text (a docs group has no index page), but Google's BreadcrumbList still
+ * requires an `item` URL on every non-last ListItem — so the JSON-LD builder
+ * points the group crumb here, the same index-less convention the tab crumb
+ * uses via `firstSectionLeafHref`. Returns null when the group has no reachable
+ * page (never happens for a page rendered inside that group — its own leaf is a
+ * reachable member).
+ */
+export function firstGroupLeafHref(
+  leafPath: string,
+  locale: Locale,
+  localeNav: LocaleNav,
+  existsByPage: Record<Locale, ReadonlySet<string>>,
+): string | null {
+  const groups = localeNav.sidebar[leafSection(leafPath)] ?? []
+  const found = findGroupAndLeaf(groups, leafPath)
+  if (!found) return null
+  for (const item of found.group.items) {
+    if (isLeafReachable(item.path, locale, existsByPage)) {
+      return localizeHref(item.path, locale)
+    }
+  }
+  return null
+}
+
+/**
  * Whether a section has at least one reachable page in `locale`. Drives tab
  * visibility: only tabs whose section currently has migrated content show.
  */

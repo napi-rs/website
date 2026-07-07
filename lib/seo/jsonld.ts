@@ -2,7 +2,7 @@
 import { selfCanonical, neutralPath, BASE_URL } from './urls.ts'
 import { getLocale, htmlLang } from '../docs/locale.ts'
 import { nav, type Locale } from '../nav/index.ts'
-import { getBreadcrumbCore } from '../docs/page-data.ts'
+import { getBreadcrumbCore, firstGroupLeafHref } from '../docs/page-data.ts'
 import { routeMap, blogDates } from '../i18n/route-map.gen.ts'
 
 const ORGANIZATION = {
@@ -41,16 +41,29 @@ function breadcrumbList(publicPath: string) {
   const leaf = neutralPath(publicPath).replace(/^\//, '')
   const crumbs = getBreadcrumbCore(leaf, locale, nav[locale], EXISTS_BY_PAGE)
   if (!crumbs.length) return null
+  // The middle "group" crumb renders as plain text (a docs group has no index
+  // page), so getBreadcrumbCore leaves its href empty — but Google requires an
+  // `item` on every non-last ListItem. Fall back to the group's first reachable
+  // leaf, mirroring how the tab crumb resolves its own index-less level.
+  const groupHref = firstGroupLeafHref(
+    leaf,
+    locale,
+    nav[locale],
+    EXISTS_BY_PAGE,
+  )
+  const abs = (h: string) => (h.startsWith('http') ? h : `${BASE_URL}${h}`)
   return {
     '@type': 'BreadcrumbList',
-    itemListElement: crumbs.map((c, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name: c.label,
-      ...(c.href
-        ? { item: c.href.startsWith('http') ? c.href : `${BASE_URL}${c.href}` }
-        : {}),
-    })),
+    itemListElement: crumbs.map((c, i) => {
+      const isLast = i === crumbs.length - 1
+      const href = c.href || (isLast ? '' : (groupHref ?? ''))
+      return {
+        '@type': 'ListItem',
+        position: i + 1,
+        name: c.label,
+        ...(href ? { item: abs(href) } : {}),
+      }
+    }),
   }
 }
 
