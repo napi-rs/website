@@ -27,9 +27,16 @@ describe('jsonLdFor', () => {
     expect(g.some((n: any) => n['@type'] === 'TechArticle')).toBe(true)
     const bc = g.find((n: any) => n['@type'] === 'BreadcrumbList')
     expect(bc).toBeTruthy()
-    for (const li of bc.itemListElement) {
-      if (li.item) expect(li.item).toMatch(/^https:\/\/napi\.rs\//)
-    }
+    // Every non-last crumb MUST carry an absolute `item` URL — including the
+    // middle "group" crumb, which renders as plain text but still needs an
+    // `item` or Google flags "missing field item (in itemListElement)".
+    bc.itemListElement.forEach((li: any, i: number) => {
+      if (i < bc.itemListElement.length - 1) {
+        expect(li.item, `crumb ${i} "${li.name}" needs item`).toMatch(
+          /^https:\/\/napi\.rs\//,
+        )
+      }
+    })
   })
   it('blog emits BlogPosting; datePublished present only when known', () => {
     const withDate = parse(
