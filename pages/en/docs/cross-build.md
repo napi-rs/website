@@ -115,7 +115,7 @@ napi build --release --target x86_64-pc-windows-msvc --cross-compile
 
 The generated CI builds all three MSVC targets on `windows-latest` with no flag; use `-x` when you have no Windows runner.
 
-What about `*-pc-windows-gnu`? `x86_64-pc-windows-gnu` is an accepted CLI target since [napi-rs#2935](https://github.com/napi-rs/napi-rs/pull/2935) (the generated JS loader picks the `win32-x64-gnu` binary when Node itself is a MINGW build); the other windows-gnu arches are not accepted. Do **not** use `-x` for it: cargo-xwin supports MSVC triples only, so for windows-gnu it configures nothing and the build later fails with ``error: linker `x86_64-w64-mingw32-gcc` not found`` (a future release of the CLI will reject this combination up front). Build it with no cross flag instead: `rustup target add x86_64-pc-windows-gnu`, install a mingw-w64 toolchain (`apt install mingw-w64` / `brew install mingw-w64`), and set `LIBNODE_PATH` to a directory containing `libnode.dll` from MSYS2's Node — napi-build links windows-gnu addons directly against it. This target is usually built inside MSYS2/MINGW, where both prerequisites are already available. There are still no official Node.js windows-gnu builds, so unless you specifically target MSYS2/MINGW Node, build for the `*-pc-windows-msvc` triple instead — historical context in [napi-rs#2001](https://github.com/napi-rs/napi-rs/issues/2001).
+What about `*-pc-windows-gnu`? `x86_64-pc-windows-gnu` is an accepted CLI target since [napi-rs#2935](https://github.com/napi-rs/napi-rs/pull/2935) (the generated JS loader picks the `win32-x64-gnu` binary when Node itself is a MINGW build); the other windows-gnu arches are not accepted. Do **not** use `-x` for it: cargo-xwin supports MSVC triples only, so for windows-gnu it configures nothing and the build later fails with ``error: linker `x86_64-w64-mingw32-gcc` not found``. Build it with no cross flag instead: `rustup target add x86_64-pc-windows-gnu`, install a mingw-w64 toolchain (`apt install mingw-w64` / `brew install mingw-w64`), and set `LIBNODE_PATH` to a directory containing `libnode.dll` from MSYS2's Node — napi-build links windows-gnu addons directly against it. This target is usually built inside MSYS2/MINGW, where both prerequisites are already available. There are still no official Node.js windows-gnu builds, so unless you specifically target MSYS2/MINGW Node, build for the `*-pc-windows-msvc` triple instead — historical context in [napi-rs#2001](https://github.com/napi-rs/napi-rs/issues/2001).
 
 ### macOS
 
@@ -139,7 +139,7 @@ The generated CI builds `aarch64-linux-android` and `armv7-linux-androideabi` on
 
 ### WASI
 
-No cross flag. Linking is handled by rustup's bundled `rust-lld`. `WASI_SDK_PATH` is optional; the CLI only uses it when it points to an existing directory, and reads it whether or not a cross flag is passed.
+No cross flag. Linking is handled by rustup's bundled `rust-lld`. `WASI_SDK_PATH` is optional — but if set, it must point to an existing directory — and the CLI reads it whether or not a cross flag is passed.
 
 ```sh
 napi build --release --target wasm32-wasip1-threads
@@ -149,13 +149,13 @@ The generated CI already builds `wasm32-wasip1-threads` on `ubuntu-latest` — n
 
 ### FreeBSD
 
-There are two working setups. The reference setup is the generated CI's: build natively inside a FreeBSD 15 VM (via `cross-platform-actions/action`) on an `ubuntu-latest` runner — no cross flag. The generated job only builds and uploads the artifact; if you want your tests to run on FreeBSD too, add that step to the VM script yourself. FreeBSD can also be cross-compiled: under `-x` it routes through cargo-zigbuild like every other non-Windows target — this is how the napi-rs repository builds `x86_64-unknown-freebsd` on `ubuntu-latest` with zig installed, before running the tests inside a FreeBSD VM. The usual zig caveats apply: C/C++ dependencies are compiled by `zig cc` (see [Native dependencies](#native-dependencies)).
+There are two working setups. The reference setup is the generated CI's: build natively inside a FreeBSD 15 VM (via `cross-platform-actions/action`) on an `ubuntu-latest` runner — no cross flag. The generated job only builds and uploads the artifact; if you want your tests to run on FreeBSD too, add that step to the VM script yourself. FreeBSD can also be cross-compiled from Linux: under `-x` it routes through cargo-zigbuild like every other non-Windows target — run it on a Linux host with zig installed. The usual zig caveats apply: C/C++ dependencies are compiled by `zig cc` (see [Native dependencies](#native-dependencies)).
 
 ```sh
 napi build --release --target x86_64-unknown-freebsd --cross-compile
 ```
 
-The generated CI builds natively in the FreeBSD 15 VM; the `-x` command above is what the napi-rs repository's own test workflow runs on Linux.
+The generated CI builds natively in the FreeBSD 15 VM; the `-x` command above is the cross-compile alternative from a Linux host.
 
 ## Glibc versions
 
