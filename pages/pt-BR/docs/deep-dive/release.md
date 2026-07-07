@@ -37,7 +37,7 @@ Este método de distribuição parece impecável, mas existem vários problemas 
 
 A nova ferramenta de compilação da geração [esbuild](https://github.com/evanw/esbuild), que é muito popular no front-end, usa essa abordagem. Cada complemento nativo corresponde a um pacote npm e, em seguida, o script `postinstall` instala o pacote do complemento nativo para o sistema atual.
 
-Outra maneira é expor os pacotes a serem instalados pelo usuário, usar todos os pacotes nativos como `optionalDependencies
+Outra maneira é expor os pacotes a serem instalados pelo usuário: usar todos os pacotes nativos como `optionalDependencies` e, em seguida, usar os campos `os` e `cpu` no `package.json` para que o `npm/yarn/pnpm` _escolha automaticamente qual pacote nativo instalar (a instalação na verdade falha se o pacote não corresponder aos requisitos do sistema)_ na hora da instalação, por exemplo:
 
 ```json
 {

@@ -51,8 +51,8 @@ description: NAPI-RS 的配置结构。
 
 ::: info
 `targets` 驱动的是脚手架和打包：`napi new` 用它生成 CI
-matrix，[`napi create-npm-dirs`](./create-npm-dirs) 为每个目标创建一个 npm
-包，[`napi artifacts`](./artifacts) 收集为这些目标构建的二进制。设置它并**不会**让
+matrix，[`napi create-npm-dirs`](/docs/cli/create-npm-dirs) 为每个目标创建一个 npm
+包，[`napi artifacts`](/docs/cli/artifacts) 收集为这些目标构建的二进制。设置它并**不会**让
 `napi build` 编译多个目标 —— `napi build` 每次调用只构建一个目标，由它的
 `--target` 标志选定。`napi build` 从 `targets` 中读取的唯一一项内容是 WASI
 条目：它根据其中列出的 WASI 目标推导 `.wasm`
