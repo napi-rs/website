@@ -41,7 +41,7 @@ Notes:
 1. zig can link macOS binaries for **pure-Rust crates only** — dependencies that link Apple frameworks need a real macOS SDK (`SDKROOT`). Prefer a macOS runner.
 2. cargo-xwin downloads the Microsoft CRT and Windows SDK itself; the Microsoft license applies. It needs `clang` installed (e.g. `brew install llvm` on macOS).
 3. `--use-napi-cross` only works on Linux x64/arm64 hosts (the downloaded toolchain is a Linux binary), so from macOS or Windows use `-x` instead — but the glibc floor becomes zig's default, not 2.17. See [Glibc versions](#glibc-versions).
-4. Under `-x`, FreeBSD routes through cargo-zigbuild like every other non-Windows target — run it on a Linux host with `zig` installed; if you want your tests to run on FreeBSD too, run them in a FreeBSD VM. See the [FreeBSD recipe](#freebsd).
+4. Under `-x`, FreeBSD routes through cargo-zigbuild like every other non-Windows target — have `zig` on `PATH`; Linux hosts are the most battle-tested route. If you want your tests to run on FreeBSD too, run them in a FreeBSD VM. See the [FreeBSD recipe](#freebsd).
 
 ## Decision tree
 
