@@ -25,6 +25,9 @@ import Toc from '../../../components/docs/Toc' with { island: 'visible' }
 import NotTranslatedBanner from '../../../components/docs/NotTranslatedBanner' with {
   island: 'load',
 }
+import MermaidBlocks from '../../../components/docs/MermaidBlocks' with {
+  island: 'load',
+}
 import Breadcrumb from '../../../components/docs/Breadcrumb'
 import Pager from '../../../components/docs/Pager'
 import EditOnGithub from '../../../components/docs/EditOnGithub'
@@ -60,17 +63,28 @@ export default function EnDocsLayout({
   // splitLocale would treat a leading `en` segment as part of the leaf.)
 
   return (
-    <DocsLayout
-      navbar={<Navbar locale={routeLocale} currentPath={currentPath} />}
-      sidebar={<Sidebar locale={routeLocale} currentPath={currentPath} />}
-      toc={<Toc locale="en" currentPath={currentPath} />}
-      banner={<NotTranslatedBanner locale={routeLocale} fallback={fallback} />}
-      breadcrumb={<Breadcrumb locale={routeLocale} currentPath={currentPath} />}
-      pager={<Pager locale={routeLocale} currentPath={currentPath} />}
-      editOnGithub={<EditOnGithub locale="en" currentPath={currentPath} />}
-      footer={<Footer />}
-    >
-      {children}
-    </DocsLayout>
+    <>
+      {/* Renders null; after hydration it swaps ```mermaid fences for SVG
+          diagrams (lazy — mermaid is only fetched when a page has one). Placed
+          outside DocsLayout so its empty island wrapper never affects the
+          content flow. */}
+      <MermaidBlocks />
+      <DocsLayout
+        navbar={<Navbar locale={routeLocale} currentPath={currentPath} />}
+        sidebar={<Sidebar locale={routeLocale} currentPath={currentPath} />}
+        toc={<Toc locale="en" currentPath={currentPath} />}
+        banner={
+          <NotTranslatedBanner locale={routeLocale} fallback={fallback} />
+        }
+        breadcrumb={
+          <Breadcrumb locale={routeLocale} currentPath={currentPath} />
+        }
+        pager={<Pager locale={routeLocale} currentPath={currentPath} />}
+        editOnGithub={<EditOnGithub locale="en" currentPath={currentPath} />}
+        footer={<Footer />}
+      >
+        {children}
+      </DocsLayout>
+    </>
   )
 }

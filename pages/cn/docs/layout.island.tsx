@@ -19,6 +19,9 @@ import Toc from '../../../components/docs/Toc' with { island: 'visible' }
 import NotTranslatedBanner from '../../../components/docs/NotTranslatedBanner' with {
   island: 'load',
 }
+import MermaidBlocks from '../../../components/docs/MermaidBlocks' with {
+  island: 'load',
+}
 import Breadcrumb from '../../../components/docs/Breadcrumb'
 import Pager from '../../../components/docs/Pager'
 import EditOnGithub from '../../../components/docs/EditOnGithub'
@@ -34,17 +37,24 @@ export default function CnDocsLayout({
   const fallback = shared?.i18nFallback ?? false
 
   return (
-    <DocsLayout
-      navbar={<Navbar locale="cn" currentPath={currentPath} />}
-      sidebar={<Sidebar locale="cn" currentPath={currentPath} />}
-      toc={<Toc locale="cn" currentPath={currentPath} />}
-      banner={<NotTranslatedBanner locale="cn" fallback={fallback} />}
-      breadcrumb={<Breadcrumb locale="cn" currentPath={currentPath} />}
-      pager={<Pager locale="cn" currentPath={currentPath} />}
-      editOnGithub={<EditOnGithub locale="cn" currentPath={currentPath} />}
-      footer={<Footer />}
-    >
-      {children}
-    </DocsLayout>
+    <>
+      {/* Renders null; after hydration it swaps ```mermaid fences for SVG
+          diagrams (lazy — mermaid is only fetched when a page has one). Placed
+          outside DocsLayout so its empty island wrapper never affects the
+          content flow. */}
+      <MermaidBlocks />
+      <DocsLayout
+        navbar={<Navbar locale="cn" currentPath={currentPath} />}
+        sidebar={<Sidebar locale="cn" currentPath={currentPath} />}
+        toc={<Toc locale="cn" currentPath={currentPath} />}
+        banner={<NotTranslatedBanner locale="cn" fallback={fallback} />}
+        breadcrumb={<Breadcrumb locale="cn" currentPath={currentPath} />}
+        pager={<Pager locale="cn" currentPath={currentPath} />}
+        editOnGithub={<EditOnGithub locale="cn" currentPath={currentPath} />}
+        footer={<Footer />}
+      >
+        {children}
+      </DocsLayout>
+    </>
   )
 }
