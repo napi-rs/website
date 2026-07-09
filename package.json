@@ -66,5 +66,5 @@
     "vite-plus": "^0.2.1",
     "void": "^0.10.3"
   },
-  "packageManager": "yarn@4.17.0"
+  "packageManager": "yarn@4.17.1"
 }
