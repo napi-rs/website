@@ -11,7 +11,7 @@ description: Chame um callback JavaScript a partir de outras threads.
 [`napi_env`](https://nodejs.org/api/n-api.html#napi_env), [`napi_value`](https://nodejs.org/api/n-api.html#napi_value) e [`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref)
 são conceitos de baixo nível do `Node-API`, sobre os quais o macro `#[napi]` do
 **NAPI-RS** é construído. O **NAPI-RS** também fornece uma [API de baixo
-nível](/docs/concepts/env) para acessar o `Node-API` original.
+nível](/pt-BR/docs/concepts/env) para acessar o `Node-API` original.
 
 :::
 

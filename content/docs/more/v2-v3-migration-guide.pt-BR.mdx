@@ -88,7 +88,7 @@ A flag `--locked` será passada para `cargo build`, resultando em
 
 ### `create-npm-dir` foi renomeado para `create-npm-dirs`
 
-Veja [**create-npm-dirs**](/docs/cli/create-npm-dirs) para mais detalhes.
+Veja [**create-npm-dirs**](/pt-BR/docs/cli/create-npm-dirs) para mais detalhes.
 
 Além das mudanças no nome do comando e nas flags, não é mais recomendado fazer
 commit de todos os arquivos `npm/*`. Você pode usar `napi create-npm-dirs` para
@@ -97,7 +97,7 @@ https://github.com/napi-rs/package-template/blob/main/.github/workflows/CI.yml#L
 
 ### `napi universal` foi renomeado para `napi universalize`
 
-Veja [**universalize**](/docs/cli/universalize) para mais detalhes.
+Veja [**universalize**](/pt-BR/docs/cli/universalize) para mais detalhes.
 
 ## Crate `napi`
 
@@ -118,24 +118,24 @@ Esta é a lista completa desses valores:
 - `JsBigint`
 - `Ref`
 
-Essas APIs não são seguras; veja [**Lifetime in V3**](/blog/announce-v3#lifetime)
+Essas APIs não são seguras; veja [**Lifetime in V3**](/pt-BR/blog/announce-v3#lifetime)
 para mais detalhes.
 
 Se você estiver usando essas APIs, precisará habilitar a feature flag
 `compat-mode`, mas isso não é recomendado.
 
-Você pode migrar dessas APIs para as novas APIs. Veja [Values](/docs/concepts/values),
-[Function](/docs/concepts/function), [Reference](/docs/concepts/reference) e
-[TypedArray](/docs/concepts/typed-array) para mais detalhes.
+Você pode migrar dessas APIs para as novas APIs. Veja [Values](/pt-BR/docs/concepts/values),
+[Function](/pt-BR/docs/concepts/function), [Reference](/pt-BR/docs/concepts/reference) e
+[TypedArray](/pt-BR/docs/concepts/typed-array) para mais detalhes.
 
 ### `ThreadsafeFunction`
 
-[`ThreadsafeFunction`](/docs/concepts/threadsafe-function) foi totalmente
-reescrita. Veja [**ThreadsafeFunction in V3**](/blog/announce-v3#threadsafefunction)
+[`ThreadsafeFunction`](/pt-BR/docs/concepts/threadsafe-function) foi totalmente
+reescrita. Veja [**ThreadsafeFunction in V3**](/pt-BR/blog/announce-v3#threadsafefunction)
 para o contexto.
 
 A nova documentação da API está aqui:
-[`ThreadsafeFunction`](/docs/concepts/threadsafe-function)
+[`ThreadsafeFunction`](/pt-BR/docs/concepts/threadsafe-function)
 
 ### `napi::module_init` foi movido para `napi_derive::module_init`
 

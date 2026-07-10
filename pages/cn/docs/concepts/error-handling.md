@@ -116,7 +116,7 @@ pub async fn read_text(path: String) -> Result<String> {
 ```
 
 该示例需要启用 `napi` 的 `async`（或 `tokio_rt`）以及 `tokio_fs`
-特性。有关运行时和生命周期规则，请参阅 [async fn](/docs/concepts/async-fn)。
+特性。有关运行时和生命周期规则，请参阅 [async fn](/cn/docs/concepts/async-fn)。
 
 ### 异步堆栈跟踪
 
@@ -168,7 +168,7 @@ impl Task for Lookup {
 }
 ```
 
-如果在 libuv 开始任务前取消，Promise 会被一个名称为 `AbortError` 的错误拒绝。任务一旦启动，取消并不保证能停止计算。参阅 [AsyncTask](/docs/concepts/async-task)。
+如果在 libuv 开始任务前取消，Promise 会被一个名称为 `AbortError` 的错误拒绝。任务一旦启动，取消并不保证能停止计算。参阅 [AsyncTask](/cn/docs/concepts/async-task)。
 
 ## ThreadsafeFunction 错误
 
@@ -179,7 +179,7 @@ ThreadsafeFunction 有两种错误策略：
 
 `call_with_return_value` 会把回调结果报告给 Rust 完成回调。当 `CalleeHandled = true` 时，`call_async` 也会把 JavaScript throw 作为 `Err` 返回。当 `CalleeHandled = false` 时，请使用 `call_async_catch`；普通 `call_async` 会改为通过 `napi_fatal_exception` 处理同步 throw。即发即弃调用无法把之后发生的 JavaScript throw 变成原始 Rust 调用的返回值。
 
-ThreadsafeFunction 队列与生命周期失败会使用 `QueueFull` 或 `Closing` 等 Node-API 状态；如果非阻塞或异步调用方法提供返回值，务必检查它。有关完整泛型参数和调用模式，请参阅 [ThreadsafeFunction](/docs/concepts/threadsafe-function)。
+ThreadsafeFunction 队列与生命周期失败会使用 `QueueFull` 或 `Closing` 等 Node-API 状态；如果非阻塞或异步调用方法提供返回值，务必检查它。有关完整泛型参数和调用模式，请参阅 [ThreadsafeFunction](/cn/docs/concepts/threadsafe-function)。
 
 ## 自定义错误代码
 

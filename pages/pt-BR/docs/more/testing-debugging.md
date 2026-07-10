@@ -230,7 +230,7 @@ test('process exits after async work', async () => {
 ```
 
 Se uma ThreadsafeFunction não deve manter o event loop vivo, construa-a em modo
-fraco. Veja [Assíncrono e concorrência](/docs/more/async-concurrency) para o
+fraco. Veja [Assíncrono e concorrência](/pt-BR/docs/more/async-concurrency) para o
 trade-off de ciclo de vida.
 
 ## Teste coleta de lixo e vazamentos
@@ -409,4 +409,4 @@ Verifique estes pontos nesta ordem:
 
 Para falhas de loader, erros de símbolo, incompatibilidades de libc e
 TypeScript desatualizado, use a [árvore de decisão de solução de
-problemas](/docs/more/troubleshooting).
+problemas](/pt-BR/docs/more/troubleshooting).

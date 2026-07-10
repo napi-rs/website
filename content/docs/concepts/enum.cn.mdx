@@ -57,7 +57,7 @@ export const enum Kind {
 }
 ```
 
-使用 `string_enum = "case"` 可以转换所有变体名称，也可以在单个变体上使用 `#[napi(value = "...")]` 来指定确切的 JavaScript 值。支持的大小写形式列在 [`#[napi]` 属性参考](/docs/concepts/napi-attributes#enums)中。
+使用 `string_enum = "case"` 可以转换所有变体名称，也可以在单个变体上使用 `#[napi(value = "...")]` 来指定确切的 JavaScript 值。支持的大小写形式列在 [`#[napi]` 属性参考](/cn/docs/concepts/napi-attributes#enums)中。
 
 ```rust filename="lib.rs"
 #[napi(string_enum = "kebab-case")]
@@ -90,6 +90,6 @@ export type Event =
 
 判别字段默认为 `type`。使用 `discriminant = "kind"` 可以改变它，使用 `discriminant_case = "camelCase"` 或其他支持的形式可以转换变体值。具名变体字段会保留其名称；元组字段会变成 `field0`、`field1`，依此类推。字段的 JavaScript 名称不能与判别字段相同。
 
-结构化枚举转换拥有所有权：接收枚举时会读取其字段并将其转换为 Rust 枚举值，返回枚举时则会创建新的 JavaScript 对象。`object_from_js = false` 或 `object_to_js = false` 可以让类型变为单向转换。参阅[类型转换](/docs/concepts/type-conversions#objects-classes-and-custom-shapes)。
+结构化枚举转换拥有所有权：接收枚举时会读取其字段并将其转换为 Rust 枚举值，返回枚举时则会创建新的 JavaScript 对象。`object_from_js = false` 或 `object_to_js = false` 可以让类型变为单向转换。参阅[类型转换](/cn/docs/concepts/type-conversions#objects-classes-and-custom-shapes)。
 
 **NAPI-RS** 不支持将 Rust `enum` 的 `impl` 生成到 JavaScript 中。

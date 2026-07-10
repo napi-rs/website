@@ -315,7 +315,7 @@ pub async fn async_works(buffer: Buffer) -> Result<Buffer> {
 ```
 
 Para mais detalhes sobre padrões de uso de Buffer e TypedArray, veja a
-[documentação de TypedArray](/docs/concepts/typed-array).
+[documentação de TypedArray](/pt-BR/docs/concepts/typed-array).
 
 ## Referência a valores JavaScript
 
@@ -328,5 +328,5 @@ seguras para chamar de qualquer thread. Recupere o valor com escopo usando o
 liberam no `Drop`, enquanto `ObjectRef`, `UnknownRef` e `SymbolRef` exigem um
 `unref(env)` explícito (ou precisam ser retornados ao JavaScript).
 
-Veja [Reference](/docs/concepts/reference#javascript-value-reference) para mais
+Veja [Reference](/pt-BR/docs/concepts/reference#javascript-value-reference) para mais
 detalhes.

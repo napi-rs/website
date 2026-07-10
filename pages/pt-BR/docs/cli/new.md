@@ -106,7 +106,7 @@ lista `napi.targets` gerada só consegue manter targets presentes na configuraç
 do pacote daquele template. Portanto, um target adicional aceito pode exigir
 configuração manual, criação de diretórios npm, CI e testes de runtime.
 
-Leia [Suporte e compatibilidade](/docs/more/support-compatibility) antes de usar
+Leia [Suporte e compatibilidade](/pt-BR/docs/more/support-compatibility) antes de usar
 `--enable-all-targets` e siga [Adicionar um target a um projeto
-existente](/docs/cross-build#add-a-target-to-an-existing-project) para ver o
+existente](/pt-BR/docs/cross-build#add-a-target-to-an-existing-project) para ver o
 fluxo completo.

@@ -315,7 +315,7 @@ fn catch(
 
 自定义 `catch` 可以用 `Ok(Some(value))` 恢复。在当前实验性适配器中，恢复得到的 `Ok(None)` 会表示为非终止结果，其值为 null；要重新抛出，请使用 `Err`，要恢复，请使用 `Ok(Some(...))`，并用 `return()`/显式类状态表示完成。
 
-有关跨异步工作保留 JavaScript 错误的信息，请参阅[错误处理](/docs/concepts/error-handling)。
+有关跨异步工作保留 JavaScript 错误的信息，请参阅[错误处理](/cn/docs/concepts/error-handling)。
 
 ## 生命周期与垃圾回收
 

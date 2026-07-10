@@ -307,9 +307,9 @@ Um fluxo confiável é:
 5. Iniciar o artefato final na imagem base do provedor e chamar uma exportação
    nativa como smoke test.
 
-Para seleção de libc Linux e target, siga [Compilação cruzada](/docs/cross-build).
+Para seleção de libc Linux e target, siga [Compilação cruzada](/pt-BR/docs/cross-build).
 Se o provedor não permitir addons nativos, mas oferecer os recursos de runtime
-WASI exigidos, considere o [fallback WASI](/docs/concepts/webassembly)
+WASI exigidos, considere o [fallback WASI](/pt-BR/docs/concepts/webassembly)
 documentado e teste explicitamente esse host.
 
 ## Diagnostique uma implantação com bundle
@@ -327,5 +327,5 @@ Depois importe o pacote external com Node puro. Se ele funciona antes do
 bundling, mas não a partir do bundle final, inspecione se o bundler realocou o
 loader, renomeou o arquivo `.node`, removeu uma dependência opcional ou
 selecionou um runtime Edge/browser. O [guia de solução de
-problemas](/docs/more/troubleshooting) mostra como imprimir as falhas nativas
+problemas](/pt-BR/docs/more/troubleshooting) mostra como imprimir as falhas nativas
 no encadeamento `cause` e como forçar um diagnóstico WASI separado.

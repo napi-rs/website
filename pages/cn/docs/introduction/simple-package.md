@@ -203,11 +203,11 @@ git push -u origin main
 
 :::
 
-请阅读[发布原生包](/docs/deep-dive/release)，了解完整的发布前检查、发布与恢复流程。确切的副作用和标志见 [`napi pre-publish`](/docs/cli/pre-publish)。
+请阅读[发布原生包](/cn/docs/deep-dive/release)，了解完整的发布前检查、发布与恢复流程。确切的副作用和标志见 [`napi pre-publish`](/cn/docs/cli/pre-publish)。
 
 ## 后续阅读
 
-- [值](/docs/concepts/values)：Rust 到 JavaScript 的转换。
-- [异步函数](/docs/concepts/async-fn)：异步导出。
-- [支持与兼容性](/docs/more/support-compatibility)：扩展目标矩阵前阅读。
-- [交叉编译](/docs/cross-build)：非宿主目标构建。
+- [值](/cn/docs/concepts/values)：Rust 到 JavaScript 的转换。
+- [异步函数](/cn/docs/concepts/async-fn)：异步导出。
+- [支持与兼容性](/cn/docs/more/support-compatibility)：扩展目标矩阵前阅读。
+- [交叉编译](/cn/docs/cross-build)：非宿主目标构建。

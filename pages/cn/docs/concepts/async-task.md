@@ -50,7 +50,7 @@ impl Task for AsyncFib {
 
 :::
 
-你可以使用底层 API `Env::spawn` 在 libuv 线程池中生成一个定义的 `Task`，参见[引用](/docs/concepts/reference)中的示例。
+你可以使用底层 API `Env::spawn` 在 libuv 线程池中生成一个定义的 `Task`，参见[引用](/cn/docs/concepts/reference)中的示例。
 
 除了 `compute` 和 `resolve`，您还可以提供 `reject` 方法，当 `Task` 遇到错误时，可以执行一些清理工作，例如 `unref` 一些对象：
 

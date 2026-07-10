@@ -72,7 +72,7 @@ napi build \
   --platform
 ```
 
-各选项含义参见[手动设置](/docs/introduction/manual-setup)。
+各选项含义参见[手动设置](/cn/docs/introduction/manual-setup)。
 
 ### Cargo 成功，但 NAPI-RS 无法复制产物
 
@@ -91,7 +91,7 @@ crate-type = ["cdylib"]
 
 安装 Rust target 只是原生交叉构建的一部分。`openssl-sys`、`ring`、`zstd-sys` 等 crate 的构建脚本还需要目标对应的 C 编译器和库。不要让它们指向宿主机库。
 
-使用[交叉编译决策矩阵](/docs/cross-build)，然后检查第一个失败的编译器调用。记录 `CC`、目标特定 `CC_*`、链接器、SDK、sysroot 和 `pkg-config` 变量。WASI C/C++ 依赖请按照 [WebAssembly](/docs/concepts/webassembly) 配置 `WASI_SDK_PATH`。
+使用[交叉编译决策矩阵](/cn/docs/cross-build)，然后检查第一个失败的编译器调用。记录 `CC`、目标特定 `CC_*`、链接器、SDK、sysroot 和 `pkg-config` 变量。WASI C/C++ 依赖请按照 [WebAssembly](/cn/docs/concepts/webassembly) 配置 `WASI_SDK_PATH`。
 
 ## 加载器故障
 
@@ -153,7 +153,7 @@ NAPI_RS_NATIVE_LIBRARY_PATH="$PWD/addon.linux-x64-gnu.node" node load-repro.cjs
 - 通过转译测试运行器导入 CommonJS wrapper，与使用普通 Node 测试不同。
 - 原生包应保持在服务器 bundle 之外。
 
-经过验证的包形状与 externalize 配方参见[集成与打包器](/docs/more/integrations)。
+经过验证的包形状与 externalize 配方参见[集成与打包器](/cn/docs/more/integrations)。
 
 ## 二进制文件与平台故障
 
@@ -188,7 +188,7 @@ dumpbin /DEPENDENTS addon.win32-x64-msvc.node
 
 不要把 musl 二进制文件重命名为 `gnu` 后缀，也不要把 x64 二进制文件重命名为 arm64 后缀。后缀是选择契约，不是转换。
 
-对于 `GLIBC_x.y not found`，请按[交叉编译：glibc 版本](/docs/cross-build#glibc-版本)所述，针对更旧 glibc 重新构建。只有部署实际使用 musl 时，切换到 musl 目标才是正确方案。
+对于 `GLIBC_x.y not found`，请按[交叉编译：glibc 版本](/cn/docs/cross-build#glibc-版本)所述，针对更旧 glibc 重新构建。只有部署实际使用 musl 时，切换到 musl 目标才是正确方案。
 
 ## TypeScript 生成
 
@@ -240,13 +240,13 @@ napi-derive = { version = "3", default-features = false, features = ["strict", "
 
 活动原生异步工作期间突然终止仍是运行时敏感限制；Bun 的未解决报告见 [napi-rs#2938](https://github.com/napi-rs/napi-rs/issues/2938)。请分别在普通 Node 和目标 Bun/Electron 运行时中复现。
 
-生命周期测试参见[异步与并发](/docs/more/async-concurrency)和[测试与调试](/docs/more/testing-debugging)。
+生命周期测试参见[异步与并发](/cn/docs/more/async-concurrency)和[测试与调试](/cn/docs/more/testing-debugging)。
 
 ### 原生 panic 或进程 abort
 
 使用 `RUST_BACKTRACE=full` 运行调试构建并附加原生调试器。panic 不一定能安全地跨 FFI 边界恢复。将预期故障转换为 `napi::Result`；panic 只应用于内部不变量被破坏，并应说明是否使用 `#[napi(catch_unwind)]`。
 
-CodeLLDB、LLDB、GDB、worker 压力测试与泄漏测试参见[测试与调试](/docs/more/testing-debugging)。
+CodeLLDB、LLDB、GDB、worker 压力测试与泄漏测试参见[测试与调试](/cn/docs/more/testing-debugging)。
 
 ## WASI 故障
 
@@ -269,7 +269,7 @@ console.log(globalThis.crossOriginIsolated, typeof SharedArrayBuffer)
 
 ### 未安装 WASI 可选包
 
-WASI 包使用 `cpu: ["wasm32"]`，默认会被跳过。请按照 [WebAssembly：安装包](/docs/concepts/webassembly#安装-webassembly-包)配置包管理器支持的架构，或使用 npm 的 `--cpu=wasm32` 安装。
+WASI 包使用 `cpu: ["wasm32"]`，默认会被跳过。请按照 [WebAssembly：安装包](/cn/docs/concepts/webassembly#安装-webassembly-包)配置包管理器支持的架构，或使用 npm 的 `--cpu=wasm32` 安装。
 
 对于 `@napi-rs/cli` 3.7 或更新版本生成的加载器：
 

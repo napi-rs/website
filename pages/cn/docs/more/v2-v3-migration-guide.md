@@ -89,13 +89,13 @@ CLI 已经重写。
 
 ### `create-npm-dir` 重命名为 `create-npm-dirs`
 
-更多细节参见 [**create-npm-dirs**](/docs/cli/create-npm-dirs)。
+更多细节参见 [**create-npm-dirs**](/cn/docs/cli/create-npm-dirs)。
 
 除命令名和标志变化外，现在也不再建议提交所有 `npm/*` 文件。可以在 CI 中使用 `napi create-npm-dirs` 创建 `npm/` 文件，例如：https://github.com/napi-rs/package-template/blob/main/.github/workflows/CI.yml#L358
 
 ### `napi universal` 重命名为 `napi universalize`
 
-更多细节参见 [**universalize**](/docs/cli/universalize)。
+更多细节参见 [**universalize**](/cn/docs/cli/universalize)。
 
 ## `napi` crate
 
@@ -116,17 +116,17 @@ CLI 已经重写。
 - `JsBigint`
 - `Ref`
 
-这些 API 不安全；详情参见 [**V3 中的生命周期**](/blog/announce-v3#lifetime)。
+这些 API 不安全；详情参见 [**V3 中的生命周期**](/cn/blog/announce-v3#lifetime)。
 
 如果正在使用这些 API，需要启用 `compat-mode` feature flag，但不推荐这样做。
 
-可以迁移到新 API。更多细节参见[值](/docs/concepts/values)、[函数](/docs/concepts/function)、[引用](/docs/concepts/reference)和 [TypedArray](/docs/concepts/typed-array)。
+可以迁移到新 API。更多细节参见[值](/cn/docs/concepts/values)、[函数](/cn/docs/concepts/function)、[引用](/cn/docs/concepts/reference)和 [TypedArray](/cn/docs/concepts/typed-array)。
 
 ### `ThreadsafeFunction`
 
-[`ThreadsafeFunction`](/docs/concepts/threadsafe-function) 已经完全重写。背景参见 [**V3 中的 ThreadsafeFunction**](/blog/announce-v3#threadsafefunction)。
+[`ThreadsafeFunction`](/cn/docs/concepts/threadsafe-function) 已经完全重写。背景参见 [**V3 中的 ThreadsafeFunction**](/cn/blog/announce-v3#threadsafefunction)。
 
-新 API 文档见 [`ThreadsafeFunction`](/docs/concepts/threadsafe-function)。
+新 API 文档见 [`ThreadsafeFunction`](/cn/docs/concepts/threadsafe-function)。
 
 ### `napi::module_init` 移至 `napi_derive::module_init`
 

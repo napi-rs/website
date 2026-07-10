@@ -332,7 +332,7 @@ O WASI usa o mesmo fluxo de release com pacote separado que os alvos nativos:
    WASI.
 5. Execute testes no Node com `NAPI_RS_FORCE_WASI=error` e testes no navegador
    com isolamento entre origens.
-6. Siga o [guia normal de release](/docs/deep-dive/release).
+6. Siga o [guia normal de release](/pt-BR/docs/deep-dive/release).
 
 Inspecione a saída final de `npm pack --dry-run` para o pacote raiz e para o
 pacote de plataforma WASI. Este último precisa conter os arquivos `.wasm`,
@@ -392,4 +392,4 @@ Antes de publicar um alvo WASI, teste:
 - todo runtime não Node que você listar como suportado.
 
 Para assinaturas de falha e sondas exatas, veja
-[Troubleshooting: WASI failures](/docs/more/troubleshooting#wasi-failures).
+[Troubleshooting: WASI failures](/pt-BR/docs/more/troubleshooting#wasi-failures).

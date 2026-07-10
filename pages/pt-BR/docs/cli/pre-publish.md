@@ -169,5 +169,5 @@ publicado enquanto um pacote de plataforma está ausente, publique o pacote
 faltante imediatamente ou descontinue a versão raiz quebrada; o npm não oferece
 rollback atômico.
 
-Consulte [Publicar pacotes nativos](/docs/deep-dive/release) para o runbook
+Consulte [Publicar pacotes nativos](/pt-BR/docs/deep-dive/release) para o runbook
 completo de CI.

@@ -11,12 +11,12 @@ description: 创建、构建并测试一个 napi-rs v3 包。
 
 ## 前置条件
 
-- 当前 `@napi-rs/cli` 工具链**推荐在 Node 22 系列使用 Node.js 22.13 或更高版本，或者使用 Node.js 24+**。CLI 声明 `>=23.5.0 || ^22.13.0 || ^20.17.0`，与其交互式提示依赖一致。该构建期要求与生成插件的运行时要求彼此独立。参见[支持与兼容性](/docs/more/support-compatibility#cli-与-rust-要求)。
+- 当前 `@napi-rs/cli` 工具链**推荐在 Node 22 系列使用 Node.js 22.13 或更高版本，或者使用 Node.js 24+**。CLI 声明 `>=23.5.0 || ^22.13.0 || ^20.17.0`，与其交互式提示依赖一致。该构建期要求与生成插件的运行时要求彼此独立。参见[支持与兼容性](/cn/docs/more/support-compatibility#cli-与-rust-要求)。
 - **Rust 1.88 或更高版本**，包括 Cargo。推荐通过 [rustup](https://rustup.rs/) 安装 Rust。
 - **Git**，因为 `napi new` 会通过 Git 下载并更新模板。
 - 开发平台上可用的链接器：macOS 使用 Xcode Command Line Tools，Windows 使用 MSVC Build Tools，Linux 使用常见的 C 构建工具。
 
-Node-API 让原生二进制文件与之后提供相同或更高 Node-API 级别的 Node.js 版本保持 ABI 兼容。这与 napi-rs CI 实际覆盖的 Node.js 版本和 target triples 并不是一回事。选择运行时或发布矩阵前，请阅读[支持与兼容性](/docs/more/support-compatibility)。
+Node-API 让原生二进制文件与之后提供相同或更高 Node-API 级别的 Node.js 版本保持 ABI 兼容。这与 napi-rs CI 实际覆盖的 Node.js 版本和 target triples 并不是一回事。选择运行时或发布矩阵前，请阅读[支持与兼容性](/cn/docs/more/support-compatibility)。
 
 ## 创建项目
 
@@ -42,7 +42,7 @@ pnpm dlx @napi-rs/cli new cool --package-manager pnpm
 5. 是否生成 TypeScript 声明。
 6. 是否保留模板中的 GitHub Actions 工作流。
 
-目前仅支持持续维护的 **Yarn** 和 **pnpm** 模板。模板会固定自身使用的包管理器版本，因此项目创建后请使用对应命令。如果希望无提示创建项目，请传入所有需要修改的值并添加 `--no-interactive`；参见 [`napi new`](/docs/cli/new)。
+目前仅支持持续维护的 **Yarn** 和 **pnpm** 模板。模板会固定自身使用的包管理器版本，因此项目创建后请使用对应命令。如果希望无提示创建项目，请传入所有需要修改的值并添加 `--no-interactive`；参见 [`napi new`](/cn/docs/cli/new)。
 
 ## 安装、构建与测试
 
@@ -106,7 +106,7 @@ napi-rs 通常发布一个很小的根包，并为每个平台分别发布一个
 
 推荐使用 [npm scope](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/)，因为每个受支持目标都需要一个不同的包名。
 
-`napi.targets` 数组描述项目要打包哪些目标；它**不会**让一次 `napi build` 调用编译所有目标。脚手架只能保留其模板中已有的构建任务。若要添加其他可接受目标，需要显式添加配置项、npm 目录和 CI 构建。参见[支持与兼容性](/docs/more/support-compatibility)和[交叉编译](/docs/cross-build)。
+`napi.targets` 数组描述项目要打包哪些目标；它**不会**让一次 `napi build` 调用编译所有目标。脚手架只能保留其模板中已有的构建任务。若要添加其他可接受目标，需要显式添加配置项、npm 目录和 CI 构建。参见[支持与兼容性](/cn/docs/more/support-compatibility)和[交叉编译](/cn/docs/cross-build)。
 
 ## 直接从模板开始
 
@@ -121,6 +121,6 @@ napi-rs 通常发布一个很小的根包，并为每个平台分别发布一个
 
 ## 后续阅读
 
-- [`napi new`](/docs/cli/new)：查看所有脚手架选项。
-- [构建](/docs/cli/build)和[交叉编译](/docs/cross-build)：了解其他目标。
-- [发布原生包](/docs/deep-dive/release)：在向 npm 发布任何内容前阅读。
+- [`napi new`](/cn/docs/cli/new)：查看所有脚手架选项。
+- [构建](/cn/docs/cli/build)和[交叉编译](/cn/docs/cross-build)：了解其他目标。
+- [发布原生包](/cn/docs/deep-dive/release)：在向 npm 发布任何内容前阅读。

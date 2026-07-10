@@ -7,7 +7,7 @@ description: Converta valores com segurança entre tipos Rust e JavaScript.
 
 Conversões entre tipos Rust e JavaScript.
 
-Esta página apresenta valores comuns. Para consultar a matriz completa baseada no código-fonte — incluindo direção de conversão, propriedade, recursos do Cargo, `Option`, `Either`, coleções, caminhos, funções, Promises, streams e níveis do Node-API — veja [Conversões de tipos](/docs/concepts/type-conversions).
+Esta página apresenta valores comuns. Para consultar a matriz completa baseada no código-fonte — incluindo direção de conversão, propriedade, recursos do Cargo, `Option`, `Either`, coleções, caminhos, funções, Promises, streams e níveis do Node-API — veja [Conversões de tipos](/pt-BR/docs/concepts/type-conversions).
 
 ### Undefined
 
@@ -55,7 +55,7 @@ export function getNull(): null
 export function getEnv(env: string): string | null
 ```
 
-`Option<T>` aceita `T`, `null` ou `undefined` como argumento, mas retorna `null` para `None`. Em um campo `#[napi(object)]`, a representação padrão é uma propriedade opcional, e `None` é omitido na saída; `#[napi(use_nullable)]` a transforma em uma propriedade obrigatória `T | null`. Consulte [`Option`, `null` e `undefined`](/docs/concepts/type-conversions#option-null-and-undefined) para o mapeamento completo, que depende da posição.
+`Option<T>` aceita `T`, `null` ou `undefined` como argumento, mas retorna `null` para `None`. Em um campo `#[napi(object)]`, a representação padrão é uma propriedade opcional, e `None` é omitido na saída; `#[napi(use_nullable)]` a transforma em uma propriedade obrigatória `T | null`. Consulte [`Option`, `null` e `undefined`](/pt-BR/docs/concepts/type-conversions#option-null-and-undefined) para o mapeamento completo, que depende da posição.
 
 ### Numbers
 
@@ -211,7 +211,7 @@ A estrutura `#[napi(object)]` passada na função Rust `fn` é clonada do **_Jav
 
 </Callout>
 
-`#[napi(object)]` é uma forma de objeto simples e própria, não uma classe. Use `#[napi] struct` para identidade e métodos de classe nativa, `#[napi(transparent)]` para um newtype Rust com a representação JavaScript do valor interno ou `#[napi(array)]` para um array em forma de tupla. Consulte [Conversões de tipos](/docs/concepts/type-conversions#objects-classes-and-custom-shapes).
+`#[napi(object)]` é uma forma de objeto simples e própria, não uma classe. Use `#[napi] struct` para identidade e métodos de classe nativa, `#[napi(transparent)]` para um newtype Rust com a representação JavaScript do valor interno ou `#[napi(array)]` para um array em forma de tupla. Consulte [Conversões de tipos](/pt-BR/docs/concepts/type-conversions#objects-classes-and-custom-shapes).
 
 ```rust filename="lib.rs"
 /// #[napi(object)] requer que todos os campos da struct sejam públicos

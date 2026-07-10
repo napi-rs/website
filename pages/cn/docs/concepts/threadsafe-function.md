@@ -10,7 +10,7 @@ description: 从其他线程调用 JavaScript 回调。
 ::: tip
 [`napi_env`](https://nodejs.org/api/n-api.html#napi_env)、[`napi_value`](https://nodejs.org/api/n-api.html#napi_value) 和 [`napi_ref`](https://nodejs.org/api/n-api.html#napi_ref)
 是 `Node-API` 中的底层概念，**NAPI-RS** 的 `#[napi]` 宏构建在这些概念之上。
-**NAPI-RS** 也提供了[底层 API](/docs/concepts/env)，用于访问原始 `Node-API`。
+**NAPI-RS** 也提供了[底层 API](/cn/docs/concepts/env)，用于访问原始 `Node-API`。
 
 :::
 

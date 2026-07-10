@@ -18,7 +18,7 @@ targets, e opcionalmente cria um workflow do GitHub Actions.
   `>=23.5.0 || ^22.13.0 || ^20.17.0`, em conformidade com sua dependência de
   prompts interativos. Esse requisito de build é separado do requisito de
   runtime do addon que você produzir. Consulte [Suporte e
-  compatibilidade](/docs/more/support-compatibility#cli-and-rust-requirements).
+  compatibilidade](/pt-BR/docs/more/support-compatibility#cli-and-rust-requirements).
 - **Rust 1.88 ou mais recente**, incluindo Cargo. Recomenda-se instalar o Rust
   com [rustup](https://rustup.rs/).
 - **Git**, porque `napi new` baixa e atualiza o template usando Git.
@@ -29,7 +29,7 @@ targets, e opcionalmente cria um workflow do GitHub Actions.
 O Node-API torna um binário nativo ABI-compatível com versões posteriores do
 Node.js que forneçam o nível de Node-API contra o qual ele foi compilado. Isso
 é diferente das versões de Node e dos target triples exercitados pela CI do
-napi-rs. Leia [Suporte e compatibilidade](/docs/more/support-compatibility)
+napi-rs. Leia [Suporte e compatibilidade](/pt-BR/docs/more/support-compatibility)
 antes de escolher um runtime ou definir a matriz de distribuição.
 
 ## Crie um projeto
@@ -62,7 +62,7 @@ Só os templates mantidos de **Yarn** e **pnpm** são compatíveis. O template
 fixa sua própria versão do gerenciador de pacotes, então use os comandos
 correspondentes depois que o projeto for criado. Para criar um projeto sem
 prompts, passe todos os valores que quiser alterar e adicione
-`--no-interactive`; veja [`napi new`](/docs/cli/new).
+`--no-interactive`; veja [`napi new`](/pt-BR/docs/cli/new).
 
 ## Instale, compile e teste
 
@@ -141,8 +141,8 @@ uma única execução de `napi build` compile todos os targets. O scaffold só p
 manter jobs de build que já existam em seu template. Para targets aceitos
 adicionais, adicione explicitamente a entrada de configuração, o diretório npm
 e a build da CI. Veja [Suporte e
-compatibilidade](/docs/more/support-compatibility) e [Compilação
-cruzada](/docs/cross-build).
+compatibilidade](/pt-BR/docs/more/support-compatibility) e [Compilação
+cruzada](/pt-BR/docs/cross-build).
 
 #### Problema de suporte ao IDE
 
@@ -190,8 +190,8 @@ pacote.
 
 ## Próximos passos
 
-- [`napi new`](/docs/cli/new) para todas as opções de scaffold.
-- [Build](/docs/cli/build) e [Compilação cruzada](/docs/cross-build) para
+- [`napi new`](/pt-BR/docs/cli/new) para todas as opções de scaffold.
+- [Build](/pt-BR/docs/cli/build) e [Compilação cruzada](/pt-BR/docs/cross-build) para
   targets adicionais.
-- [Publicar pacotes nativos](/docs/deep-dive/release) antes de publicar
+- [Publicar pacotes nativos](/pt-BR/docs/deep-dive/release) antes de publicar
   qualquer coisa no npm.

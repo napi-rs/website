@@ -106,7 +106,7 @@ Os recursos de componentes habilitam recursos na dependência Tokio. Nem todos i
 napi = { version = "3", features = ["async", "tokio_fs", "tokio_time"] }
 ```
 
-Para trabalho limitado por CPU, prefira [AsyncTask](/docs/concepts/async-task), que usa o pool de workers do libuv, em vez de bloquear o runtime Tokio.
+Para trabalho limitado por CPU, prefira [AsyncTask](/pt-BR/docs/concepts/async-task), que usa o pool de workers do libuv, em vez de bloquear o runtime Tokio.
 
 ## Recursos de conversão
 
@@ -120,7 +120,7 @@ Para trabalho limitado por CPU, prefira [AsyncTask](/docs/concepts/async-task), 
 | `web_stream`         | `ReadableStream` e `WriteableStream`; habilita `futures-core`, `tokio-stream`, `tokio_rt` e `napi4`. | O runtime também deve fornecer globais de Web Streams compatíveis.                                                                     |
 | `error_anyhow`       | Conversão de `anyhow::Error` e a dependência opcional `anyhow`.                                      | A conversão usa `GenericFailure`; mapeie erros manualmente para obter códigos de domínio estáveis.                                     |
 
-Consulte [Conversões de tipos](/docs/concepts/type-conversions) para direcionalidade e comportamento de cópia de dados.
+Consulte [Conversões de tipos](/pt-BR/docs/concepts/type-conversions) para direcionalidade e comportamento de cópia de dados.
 
 ## Linkedição e detecção do runtime
 

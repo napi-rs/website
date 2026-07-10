@@ -78,7 +78,7 @@ napi build \
   --platform
 ```
 
-Veja [Configuração manual](/docs/introduction/manual-setup) para o significado
+Veja [Configuração manual](/pt-BR/docs/introduction/manual-setup) para o significado
 de cada opção.
 
 ### Cargo passa, mas o NAPI-RS não consegue copiar o artefato
@@ -103,11 +103,11 @@ Build scripts de crates como `openssl-sys`, `ring`, `zstd-sys` e semelhantes
 também precisam de um compilador C e bibliotecas para o target. Não os aponte
 para bibliotecas do host.
 
-Use a [matriz de decisão de compilação cruzada](/docs/cross-build), depois
+Use a [matriz de decisão de compilação cruzada](/pt-BR/docs/cross-build), depois
 inspecione a primeira invocação de compilador que falhou. Registre `CC`,
 `CC_*` específicos do target, linker, SDK, sysroot e variáveis de
 `pkg-config`. Para dependências C/C++ em WASI, configure `WASI_SDK_PATH` como
-descrito em [WebAssembly](/docs/concepts/webassembly).
+descrito em [WebAssembly](/pt-BR/docs/concepts/webassembly).
 
 ## Falhas do loader {#loader-failures}
 
@@ -187,7 +187,7 @@ normal do pacote.
   que testar com Node puro.
 - Mantenha pacotes nativos como external em bundles de servidor.
 
-Veja [Integrações e bundlers](/docs/more/integrations) para formatos de pacote
+Veja [Integrações e bundlers](/pt-BR/docs/more/integrations) para formatos de pacote
 testados e receitas de externalização.
 
 ## Falhas de binário e plataforma {#binary-and-platform-failures}
@@ -226,7 +226,7 @@ sufixo arm64. O sufixo é um contrato de seleção, não uma conversão.
 
 Para `GLIBC_x.y not found`, recompile contra uma glibc mais antiga como
 documentado em [Compilação cruzada: versões de
-glibc](/docs/cross-build#glibc-versions). Mudar para um target musl só é
+glibc](/pt-BR/docs/cross-build#glibc-versions). Mudar para um target musl só é
 correto quando o deployment realmente usa musl.
 
 ## Geração de TypeScript {#typescript-generation}
@@ -299,8 +299,8 @@ uma limitação sensível ao runtime, com um relatório aberto no Bun em
 [napi-rs#2938](https://github.com/napi-rs/napi-rs/issues/2938). Reproduza em
 Node puro e separadamente no runtime Bun/Electron alvo.
 
-Veja [Assíncrono e concorrência](/docs/more/async-concurrency) e
-[Testes e depuração](/docs/more/testing-debugging) para testes de ciclo de
+Veja [Assíncrono e concorrência](/pt-BR/docs/more/async-concurrency) e
+[Testes e depuração](/pt-BR/docs/more/testing-debugging) para testes de ciclo de
 vida.
 
 ### Panic nativo ou abort do processo
@@ -310,7 +310,7 @@ nativo. Um panic nem sempre pode ser recuperado com segurança ao cruzar uma
 fronteira FFI. Converta falhas esperadas em `napi::Result`; reserve panics para
 invariantes internas violadas e documente se `#[napi(catch_unwind)]` é usado.
 
-Siga [Testes e depuração](/docs/more/testing-debugging) para CodeLLDB, LLDB,
+Siga [Testes e depuração](/pt-BR/docs/more/testing-debugging) para CodeLLDB, LLDB,
 GDB, estresse com workers e testes de vazamento.
 
 ## Falhas de WASI {#wasi-failures}
@@ -340,7 +340,7 @@ correta falhar.
 Pacotes WASI usam `cpu: ["wasm32"]` e são ignorados por padrão. Configure as
 arquiteturas suportadas do gerenciador de pacotes ou instale com
 `--cpu=wasm32` do npm, como mostrado em [WebAssembly: install the WebAssembly
-package](/docs/concepts/webassembly#install-the-webassembly-package).
+package](/pt-BR/docs/concepts/webassembly#install-the-webassembly-package).
 
 Com um loader gerado por `@napi-rs/cli` 3.7 ou mais recente:
 

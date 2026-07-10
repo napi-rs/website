@@ -83,7 +83,7 @@ import { Green } from '../../../components/chalk'
 
 设置 `targets` **不会**让 `napi build` 编译其中每一项。每次构建只生成一个由 `--target`、`CARGO_BUILD_TARGET` 或宿主机默认值选择的目标。同样，交叉编译标志（`--use-napi-cross`、`--cross-compile` 和 `--use-cross`）没有对应的配置字段。
 
-目标列表也不会创建任意 CI 任务。`napi new` 只会过滤所选模板中已经存在的任务。如果添加其他可接受目标，请同时添加其构建任务，并单独验证运行时。参见[支持与兼容性](/docs/more/support-compatibility)和[交叉编译](../cross-build)。
+目标列表也不会创建任意 CI 任务。`napi new` 只会过滤所选模板中已经存在的任务。如果添加其他可接受目标，请同时添加其构建任务，并单独验证运行时。参见[支持与兼容性](/cn/docs/more/support-compatibility)和[交叉编译](../cross-build)。
 
 ## 已弃用的 v2 字段
 

@@ -119,7 +119,7 @@ pub async fn read_text(path: String) -> Result<String> {
 ```
 
 Este exemplo exige os recursos `async` (ou `tokio_rt`) e `tokio_fs` de `napi`.
-Consulte [async fn](/docs/concepts/async-fn) para as regras de runtime e ciclo de vida.
+Consulte [async fn](/pt-BR/docs/concepts/async-fn) para as regras de runtime e ciclo de vida.
 
 ### Stack traces assíncronos
 
@@ -171,7 +171,7 @@ impl Task for Lookup {
 }
 ```
 
-O cancelamento antes de o libuv iniciar a tarefa rejeita com um erro cujo nome é `AbortError`. Depois que a tarefa começa, não há garantia de que o cancelamento interrompa a computação. Consulte [AsyncTask](/docs/concepts/async-task).
+O cancelamento antes de o libuv iniciar a tarefa rejeita com um erro cujo nome é `AbortError`. Depois que a tarefa começa, não há garantia de que o cancelamento interrompa a computação. Consulte [AsyncTask](/pt-BR/docs/concepts/async-task).
 
 ## Erros de ThreadsafeFunction
 
@@ -187,7 +187,7 @@ comum encaminha um throw síncrono para `napi_fatal_exception`. Chamadas
 fire-and-forget não podem transformar um throw JavaScript posterior no valor de
 retorno da chamada Rust original.
 
-Falhas de fila e ciclo de vida da ThreadsafeFunction usam status do Node-API, como `QueueFull` ou `Closing`; sempre inspecione o valor de retorno de métodos de chamada não bloqueantes ou assíncronos quando a API fornecer um. Consulte [ThreadsafeFunction](/docs/concepts/threadsafe-function) para os parâmetros genéricos completos e modos de chamada.
+Falhas de fila e ciclo de vida da ThreadsafeFunction usam status do Node-API, como `QueueFull` ou `Closing`; sempre inspecione o valor de retorno de métodos de chamada não bloqueantes ou assíncronos quando a API fornecer um. Consulte [ThreadsafeFunction](/pt-BR/docs/concepts/threadsafe-function) para os parâmetros genéricos completos e modos de chamada.
 
 ## Códigos de erro personalizados
 

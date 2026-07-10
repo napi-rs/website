@@ -199,7 +199,7 @@ test('process exits after async work', async () => {
 })
 ```
 
-如果 ThreadsafeFunction 不应让 event loop 保持活动，请以 weak 模式构建。生命周期权衡参见[异步与并发](/docs/more/async-concurrency)。
+如果 ThreadsafeFunction 不应让 event loop 保持活动，请以 weak 模式构建。生命周期权衡参见[异步与并发](/cn/docs/more/async-concurrency)。
 
 ## 测试垃圾回收与泄漏
 
@@ -351,4 +351,4 @@ thread apply all bt
 5. 只有 `require()` 或 `import` 加载插件后才能命中断点。
 6. 在 macOS 上，二进制文件与 Node 进程架构匹配。
 
-加载器故障、符号错误、libc 不匹配和陈旧 TypeScript，请使用[故障排除决策树](/docs/more/troubleshooting)。
+加载器故障、符号错误、libc 不匹配和陈旧 TypeScript，请使用[故障排除决策树](/cn/docs/more/troubleshooting)。

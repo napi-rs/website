@@ -7,7 +7,7 @@ description: Matriz de conversão entre Rust e JavaScript, direcionalidade, prop
 
 Todo argumento exportado deve implementar `FromNapiValue` (ou um dos traits de conversão por referência), e todo valor retornado deve implementar `ToNapiValue`. O tipo TypeScript gerado é uma documentação útil, mas é a implementação do trait Rust que determina se uma conversão está realmente disponível.
 
-Esta referência descreve o runtime bindgen do napi-rs v3. Para handles de baixo nível, como `JsString` e `JsObject`, consulte [Env e valores de baixo nível](/docs/concepts/env).
+Esta referência descreve o runtime bindgen do napi-rs v3. Para handles de baixo nível, como `JsString` e `JsObject`, consulte [Env e valores de baixo nível](/pt-BR/docs/concepts/env).
 
 ## Legenda de direção
 
@@ -144,7 +144,7 @@ A conversão de `Vec<T>` e coleções é O(n). Use `Array`, `Object`, views de t
 
 Não trate uma classe como uma forma de objeto. Um campo público normal de leitura e escrita precisa de conversão de saída para o getter e de entrada para o setter; um campo `readonly` precisa apenas de saída, e um campo de classe ignorado não tem accessor. Para valores de classe aninhados, aceite `&T`, `ClassInstance<T>` ou use `Array::get_ref`; `Vec<T>` exige uma implementação própria de `FromNapiValue` e, portanto, não é a forma de aceitar uma lista de instâncias de classe.
 
-Consulte [Classes](/docs/concepts/class), [Objetos](/docs/concepts/object), [Enums](/docs/concepts/enum) e [Atributos `#[napi]`](/docs/concepts/napi-attributes) para exemplos específicos de cada forma.
+Consulte [Classes](/pt-BR/docs/concepts/class), [Objetos](/pt-BR/docs/concepts/object), [Enums](/pt-BR/docs/concepts/enum) e [Atributos `#[napi]`](/pt-BR/docs/concepts/napi-attributes) para exemplos específicos de cada forma.
 
 ## Buffers, ArrayBuffers e typed arrays
 
@@ -157,7 +157,7 @@ Consulte [Classes](/docs/concepts/class), [Objetos](/docs/concepts/object), [Enu
 | `Int8ArraySlice<'env>`, `Uint8ArraySlice<'env>`, … | Typed array correspondente | Ambas dentro do escopo | Views emprestadas para código síncrono. | Variantes de array BigInt requerem `napi6` |
 | `&[i8]`, `&[u8]`, `&[i16]`, … | Typed array correspondente | JS → Rust em um callback síncrono | Slice emprestado; não pode sobreviver ao callback. | Slices BigInt requerem `napi6` |
 
-Buffers e ArrayBuffers externos podem ser zero-copy quando o runtime aceita armazenamentos subjacentes externos. Um runtime pode rejeitar buffers externos; construtores como `BufferSlice::from_data` então recorrem a uma cópia. Não prometa comportamento zero-copy em todo runtime compatível com Node. Consulte [Typed arrays](/docs/concepts/typed-array) e [Entendendo o ciclo de vida](/docs/concepts/understanding-lifetime).
+Buffers e ArrayBuffers externos podem ser zero-copy quando o runtime aceita armazenamentos subjacentes externos. Um runtime pode rejeitar buffers externos; construtores como `BufferSlice::from_data` então recorrem a uma cópia. Não prometa comportamento zero-copy em todo runtime compatível com Node. Consulte [Typed arrays](/pt-BR/docs/concepts/typed-array) e [Entendendo o ciclo de vida](/pt-BR/docs/concepts/understanding-lifetime).
 
 ## Datas e JSON com serde
 
@@ -179,7 +179,7 @@ Buffers e ArrayBuffers externos podem ser zero-copy quando o runtime aceita arma
 | --- | --- | --- | --- |
 | `Function<'env, Args, Return>` | Função JavaScript tipada | JS → Rust no escopo; pode ser repassada no escopo | Chama JavaScript somente na thread à qual pertence. Use `FnArgs<(...)>` para vários argumentos posicionais. |
 | `FunctionRef<Args, Return>` | Função JavaScript tipada | JS → Rust / referência retida | Possui uma referência Node-API, mas não implementa `ToNapiValue`. Para devolvê-la, chame `borrow_back(env)` e obtenha uma `Function` com escopo; use-a apenas no ambiente/thread ao qual pertence. |
-| `ThreadsafeFunction<...>` | Callback tipado | JS → Rust e depois chamável de outras threads | `napi4`; consulte [ThreadsafeFunction](/docs/concepts/threadsafe-function). |
+| `ThreadsafeFunction<...>` | Callback tipado | JS → Rust e depois chamável de outras threads | `napi4`; consulte [ThreadsafeFunction](/pt-BR/docs/concepts/threadsafe-function). |
 | `Promise<T>` | `Promise<T>` | Somente JS → Rust | Future Rust aguardável. Requer o runtime assíncrono para uso normal em uma exportação async. |
 | `PromiseRaw<'env, T>` | `Promise<T>` | Handle de promise JS com escopo | Aceita `then`, `catch` e `finally` sem mover a promise para outra thread. |
 | Retorno de `async fn` Rust | `Promise<T>` | Rust → JS | `async` ou `tokio_rt`; `Result::Err` rejeita. |
@@ -198,13 +198,13 @@ Buffers e ArrayBuffers externos podem ser zero-copy quando o runtime aceita arma
 - Use `ExternalRef<T>` quando o Rust precisar manter uma referência JavaScript para o external.
 - `External::new_with_size_hint` informa ao coletor de lixo JavaScript o tamanho da alocação nativa; o número é uma dica contábil para o GC, não um limite de memória.
 
-Consulte [External](/docs/concepts/external) para detalhes do ciclo de vida.
+Consulte [External](/pt-BR/docs/concepts/external) para detalhes do ciclo de vida.
 
 ## Validação não é coerção
 
 A maioria das funções geradas converte de acordo com sua implementação de `FromNapiValue`. Adicionar `#[napi(strict)]` primeiro chama `ValidateNapiValue` e rejeita um tipo JavaScript incompatível no nível superior. Isso não converte strings em números nem valida recursivamente cada propriedade antes da conversão.
 
-`#[napi(return_if_invalid)]` faz a mesma validação, mas retorna `undefined` para uma entrada inválida em vez de lançar uma exceção. Consulte [Atributos `#[napi]`](/docs/concepts/napi-attributes) para conhecer suas restrições.
+`#[napi(return_if_invalid)]` faz a mesma validação, mas retorna `undefined` para uma entrada inválida em vez de lançar uma exceção. Consulte [Atributos `#[napi]`](/pt-BR/docs/concepts/napi-attributes) para conhecer suas restrições.
 
 ## Escolhendo um modelo de propriedade
 
@@ -216,4 +216,4 @@ Use esta ordem de preferência:
 4. Use `ThreadsafeFunction` para invocar JavaScript de outra thread; nunca mova para lá um handle JavaScript com escopo.
 5. Use um stream quando os dados precisarem ser produzidos de forma incremental, em vez de copiados para uma única coleção.
 
-O compilador impõe muitos desses limites por meio de lifetimes e `Send`, mas um método `unsafe` ou handle bruto do Node-API pode ignorá-los. Leia [Entendendo o ciclo de vida](/docs/concepts/understanding-lifetime) antes de fazer isso.
+O compilador impõe muitos desses limites por meio de lifetimes e `Send`, mas um método `unsafe` ou handle bruto do Node-API pode ignorá-los. Leia [Entendendo o ciclo de vida](/pt-BR/docs/concepts/understanding-lifetime) antes de fazer isso.

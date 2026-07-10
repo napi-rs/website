@@ -98,7 +98,7 @@ configuração.
 A lista de targets também não cria jobs de CI arbitrários. `napi new` filtra os
 jobs que já existem no template escolhido. Ao adicionar outro target aceito,
 adicione o job de build e valide seu runtime separadamente. Consulte [Suporte e
-compatibilidade](/docs/more/support-compatibility) e [Compilação
+compatibilidade](/pt-BR/docs/more/support-compatibility) e [Compilação
 cruzada](../cross-build).
 
 ## Campos v2 descontinuados

@@ -315,7 +315,7 @@ fn catch(
 
 Um `catch` personalizado pode recuperar com `Ok(Some(value))`. No adaptador experimental atual, um `Ok(None)` recuperado é representado como um resultado não terminal com valor null; use `Err` para relançar ou `Ok(Some(...))` para recuperar e use `return()`/estado explícito da classe para modelar a conclusão.
 
-Consulte [Tratamento de erros](/docs/concepts/error-handling) para preservar erros JavaScript em trabalho assíncrono.
+Consulte [Tratamento de erros](/pt-BR/docs/concepts/error-handling) para preservar erros JavaScript em trabalho assíncrono.
 
 ## Ciclo de vida e coleta de lixo
 

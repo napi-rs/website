@@ -21,7 +21,7 @@ description: Defina e exporte structs de Rust como classes JavaScript com NAPI-R
 | `#[napi(transparent)] struct Wrapper(T)` | O valor interno `T` | Newtypes Rust que não devem adicionar um wrapper JavaScript |
 | Struct de tupla `#[napi(array)]` | Array JavaScript / tupla TypeScript | Dados posicionais fixos |
 
-Consulte [Conversões de tipos](/docs/concepts/type-conversions) para as regras de direção e propriedade e [Atributos `#[napi]`](/docs/concepts/napi-attributes) para todos os controles de forma.
+Consulte [Conversões de tipos](/pt-BR/docs/concepts/type-conversions) para as regras de direção e propriedade e [Atributos `#[napi]`](/pt-BR/docs/concepts/napi-attributes) para todos os controles de forma.
 
 ## `Constructor`
 
@@ -247,7 +247,7 @@ export class QueryEngine {
 
 `Class` é diferente de [`Object`](./object). O valor Rust é encapsulado por uma instância JavaScript e gerenciado pelo coletor de lixo desse ambiente. Passe a instância de volta ao Rust como `&T` para acesso compartilhado ou `&mut T` para acesso mutável; o valor não é clonado de um objeto simples.
 
-Somente campos públicos da struct se tornam propriedades JavaScript. Eles são graváveis por padrão porque o napi-rs gera os dois acessores; `#[napi(readonly)]` elimina o setter, e `#[napi(skip)]` elimina ambos. Campos privados continuam sendo detalhes da implementação nativa. Um campo gravável precisa de `ToNapiValue` e `FromNapiValue`; um campo readonly precisa apenas de `ToNapiValue`. Consulte a [referência de atributos de campo](/docs/concepts/napi-attributes#fields), inclusive a limitação da forma abreviada `#[napi(constructor)]`.
+Somente campos públicos da struct se tornam propriedades JavaScript. Eles são graváveis por padrão porque o napi-rs gera os dois acessores; `#[napi(readonly)]` elimina o setter, e `#[napi(skip)]` elimina ambos. Campos privados continuam sendo detalhes da implementação nativa. Um campo gravável precisa de `ToNapiValue` e `FromNapiValue`; um campo readonly precisa apenas de `ToNapiValue`. Consulte a [referência de atributos de campo](/pt-BR/docs/concepts/napi-attributes#fields), inclusive a limitação da forma abreviada `#[napi(constructor)]`.
 
 ```rust {1,5} filename="lib.rs"
 #[napi]
@@ -266,7 +266,7 @@ export function acceptClass(engine: QueryEngine): void
 export function acceptClassMut(engine: QueryEngine): void
 ```
 
-Para instâncias de classe aninhadas, arrays de instâncias de classe e `ClassInstance<T>`, consulte a [seção de classes da referência de conversão](/docs/concepts/type-conversions#objects-classes-and-custom-shapes).
+Para instâncias de classe aninhadas, arrays de instâncias de classe e `ClassInstance<T>`, consulte a [seção de classes da referência de conversão](/pt-BR/docs/concepts/type-conversions#objects-classes-and-custom-shapes).
 
 ## Atributos de propriedade
 

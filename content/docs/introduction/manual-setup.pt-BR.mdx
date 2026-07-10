@@ -7,7 +7,7 @@ description: Adicione NAPI-RS a um crate Rust, pacote JavaScript ou workspace ex
 Use este guia quando você já tiver um crate Rust ou pacote JavaScript, precisar
 de um projeto mínimo, ou quiser colocar os pacotes Rust e JavaScript em partes
 diferentes de um monorepo. Se você está começando um pacote independente e quer
-o workflow completo de release, [`napi new`](/docs/cli/new) geralmente é mais
+o workflow completo de release, [`napi new`](/pt-BR/docs/cli/new) geralmente é mais
 rápido.
 
 A CLI é uma ferramenta de build e empacotamento. Seu addon continua sendo um
@@ -163,7 +163,7 @@ napi-derive = "3"
 tokio = { version = "1", features = ["fs"] }
 ```
 
-Veja [Assíncrono e concorrência](/docs/more/async-concurrency) antes de
+Veja [Assíncrono e concorrência](/pt-BR/docs/more/async-concurrency) antes de
 escolher entre Tokio, `AsyncTask`, ThreadsafeFunction e streams.
 
 ### Um diretório de saída personalizado
@@ -257,19 +257,19 @@ opcional separado para cada target:
 
 1. Adicione todos os release triples a `napi.targets`.
 2. Compile um artefato `--platform --release --target <triple>` por job de CI.
-3. Execute [`napi create-npm-dirs`](/docs/cli/create-npm-dirs).
-4. Baixe os artefatos da CI e execute [`napi artifacts`](/docs/cli/artifacts).
-5. Siga o [guia de release](/docs/deep-dive/release) e leia todos os efeitos
-   colaterais de [`napi pre-publish`](/docs/cli/pre-publish) antes de publicar.
+3. Execute [`napi create-npm-dirs`](/pt-BR/docs/cli/create-npm-dirs).
+4. Baixe os artefatos da CI e execute [`napi artifacts`](/pt-BR/docs/cli/artifacts).
+5. Siga o [guia de release](/pt-BR/docs/deep-dive/release) e leia todos os efeitos
+   colaterais de [`napi pre-publish`](/pt-BR/docs/cli/pre-publish) antes de publicar.
 
 Não publique um binário compilado na sua máquina de desenvolvimento como se ele
 desse suporte a outros sistemas operacionais. Use o [guia de compilação
-cruzada](/docs/cross-build) e teste o pacote final em cada runtime que você
+cruzada](/pt-BR/docs/cross-build) e teste o pacote final em cada runtime que você
 afirma suportar.
 
 ## O que ler em seguida
 
-- [Testes e depuração](/docs/more/testing-debugging)
-- [Integrações com aplicações e bundlers](/docs/more/integrations)
-- [Solução de problemas](/docs/more/troubleshooting)
-- [Configuração do NAPI-RS](/docs/cli/napi-config)
+- [Testes e depuração](/pt-BR/docs/more/testing-debugging)
+- [Integrações com aplicações e bundlers](/pt-BR/docs/more/integrations)
+- [Solução de problemas](/pt-BR/docs/more/troubleshooting)
+- [Configuração do NAPI-RS](/pt-BR/docs/cli/napi-config)

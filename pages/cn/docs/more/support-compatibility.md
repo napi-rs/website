@@ -111,7 +111,7 @@ OpenHarmony、Windows GNU、armv7 musl、macOS universal、loongarch64、riscv64
 6. 测试你声称支持的最旧操作系统、libc、部署目标和 Node.js 版本。
 7. 验证在干净环境中安装根包时，会选择并加载预期的可选包。
 
-宿主/目标决策树参见[交叉编译](/docs/cross-build)，完整打包流程参见[向现有项目添加目标](/docs/cross-build#向现有项目添加新目标)。
+宿主/目标决策树参见[交叉编译](/cn/docs/cross-build)，完整打包流程参见[向现有项目添加目标](/cn/docs/cross-build#向现有项目添加新目标)。
 
 ## 如何准确描述支持范围
 

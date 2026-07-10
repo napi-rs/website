@@ -21,7 +21,7 @@ Rust 中没有类的概念。我们使用 `struct` 来表示 JavaScript 的 `Cla
 | `#[napi(transparent)] struct Wrapper(T)` | 内部值 `T`                                   | 不应添加 JavaScript 包装层的 Rust newtype |
 | `#[napi(array)]` 元组结构体              | JavaScript Array / TypeScript 元组           | 固定的位置数据                            |
 
-有关方向和所有权规则，请参阅[类型转换](/docs/concepts/type-conversions)；有关完整的形状控制，请参阅 [`#[napi]` 属性](/docs/concepts/napi-attributes)。
+有关方向和所有权规则，请参阅[类型转换](/cn/docs/concepts/type-conversions)；有关完整的形状控制，请参阅 [`#[napi]` 属性](/cn/docs/concepts/napi-attributes)。
 
 ## `Constructor`
 
@@ -280,7 +280,7 @@ export class QueryEngine {
 
 `Class` 与 [`Object`](./object) 不同。Rust 值由 JavaScript 实例包装，并由该环境的垃圾回收器管理。将实例传回 Rust 时，使用 `&T` 进行共享访问，或使用 `&mut T` 进行可变访问；该值不是从普通对象克隆而来的。
 
-只有公开的结构体字段会成为 JavaScript 属性。它们默认可写，因为 napi-rs 会生成两种访问器；`#[napi(readonly)]` 会禁止生成 setter，`#[napi(skip)]` 会禁止生成两个访问器。私有字段仍然是原生实现细节。可写字段同时需要 `ToNapiValue` 和 `FromNapiValue`，只读字段只需要 `ToNapiValue`。请参阅[字段属性参考](/docs/concepts/napi-attributes#fields)，其中也说明了 `#[napi(constructor)]` 结构体简写的限制。
+只有公开的结构体字段会成为 JavaScript 属性。它们默认可写，因为 napi-rs 会生成两种访问器；`#[napi(readonly)]` 会禁止生成 setter，`#[napi(skip)]` 会禁止生成两个访问器。私有字段仍然是原生实现细节。可写字段同时需要 `ToNapiValue` 和 `FromNapiValue`，只读字段只需要 `ToNapiValue`。请参阅[字段属性参考](/cn/docs/concepts/napi-attributes#fields)，其中也说明了 `#[napi(constructor)]` 结构体简写的限制。
 
 **lib.rs**
 
@@ -303,7 +303,7 @@ export function acceptClass(engine: QueryEngine): void
 export function acceptClassMut(engine: QueryEngine): void
 ```
 
-有关嵌套类实例、类实例数组和 `ClassInstance<T>`，请参阅[转换参考中的类章节](/docs/concepts/type-conversions#objects-classes-and-custom-shapes)。
+有关嵌套类实例、类实例数组和 `ClassInstance<T>`，请参阅[转换参考中的类章节](/cn/docs/concepts/type-conversions#objects-classes-and-custom-shapes)。
 
 ## 属性描述
 

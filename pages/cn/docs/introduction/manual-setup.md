@@ -5,7 +5,7 @@ description: 不使用模板，将 NAPI-RS 添加到现有 Rust crate、JavaScri
 
 # 手动设置
 
-如果你已有 Rust crate 或 JavaScript 包、需要最小化项目，或希望将 Rust 与 JavaScript 包放在 monorepo 的不同位置，请使用本指南。如果要创建一个独立包并需要完整发布工作流，[`napi new`](/docs/cli/new) 通常更快捷。
+如果你已有 Rust crate 或 JavaScript 包、需要最小化项目，或希望将 Rust 与 JavaScript 包放在 monorepo 的不同位置，请使用本指南。如果要创建一个独立包并需要完整发布工作流，[`napi new`](/cn/docs/cli/new) 通常更快捷。
 
 CLI 是构建与打包工具。你的插件仍是普通 Cargo crate，因此可以继续使用现有的工作区布局和包管理器。
 
@@ -157,7 +157,7 @@ napi-derive = "3"
 tokio = { version = "1", features = ["fs"] }
 ```
 
-选择 Tokio、`AsyncTask`、ThreadsafeFunction 或 stream 前，请阅读[异步与并发](/docs/more/async-concurrency)。
+选择 Tokio、`AsyncTask`、ThreadsafeFunction 或 stream 前，请阅读[异步与并发](/cn/docs/more/async-concurrency)。
 
 ### 自定义输出目录
 
@@ -240,15 +240,15 @@ napi build \
 
 1. 将所有 target triples 添加到 `napi.targets`。
 2. 每个 CI 任务构建一个 `--platform --release --target <triple>` 产物。
-3. 运行 [`napi create-npm-dirs`](/docs/cli/create-npm-dirs)。
-4. 下载 CI 产物并运行 [`napi artifacts`](/docs/cli/artifacts)。
-5. 遵循[发布指南](/docs/deep-dive/release)，并在发布前阅读 [`napi pre-publish`](/docs/cli/pre-publish) 的所有副作用。
+3. 运行 [`napi create-npm-dirs`](/cn/docs/cli/create-npm-dirs)。
+4. 下载 CI 产物并运行 [`napi artifacts`](/cn/docs/cli/artifacts)。
+5. 遵循[发布指南](/cn/docs/deep-dive/release)，并在发布前阅读 [`napi pre-publish`](/cn/docs/cli/pre-publish) 的所有副作用。
 
-不要把开发机器上构建的二进制文件当作支持其他操作系统的产物发布。请使用[交叉编译指南](/docs/cross-build)，并在你声称支持的每个运行时上测试最终包。
+不要把开发机器上构建的二进制文件当作支持其他操作系统的产物发布。请使用[交叉编译指南](/cn/docs/cross-build)，并在你声称支持的每个运行时上测试最终包。
 
 ## 后续阅读
 
-- [测试与调试](/docs/more/testing-debugging)
-- [与应用和打包器集成](/docs/more/integrations)
-- [故障排除](/docs/more/troubleshooting)
-- [NAPI-RS 配置](/docs/cli/napi-config)
+- [测试与调试](/cn/docs/more/testing-debugging)
+- [与应用和打包器集成](/cn/docs/more/integrations)
+- [故障排除](/cn/docs/more/troubleshooting)
+- [NAPI-RS 配置](/cn/docs/cli/napi-config)

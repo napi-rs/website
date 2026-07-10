@@ -49,7 +49,7 @@ chamá-lo de volta em JavaScript.
 
 :::
 
-Você pode usar a API de baixo nível `Env::spawn` para iniciar uma `Task` definida no pool de threads libuv. Veja um exemplo na [Referência](/docs/concepts/reference).
+Você pode usar a API de baixo nível `Env::spawn` para iniciar uma `Task` definida no pool de threads libuv. Veja um exemplo na [Referência](/pt-BR/docs/concepts/reference).
 
 Além de `compute` e `resolve`, você também pode fornecer o método `reject` para fazer alguma limpeza quando a `Task` apresenta erro, como `unref` algum objeto:
 

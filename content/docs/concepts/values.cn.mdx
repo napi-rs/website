@@ -7,7 +7,7 @@ description: Rust 和 JavaScript 类型之间的转换。
 
 Rust 和 JavaScript 类型之间的转换。
 
-本页介绍常见值。有关完整的源码依据矩阵，包括转换方向、所有权、Cargo 特性、`Option`、`Either`、集合、路径、函数、Promise、stream 和 Node-API 级别，请参阅[类型转换](/docs/concepts/type-conversions)。
+本页介绍常见值。有关完整的源码依据矩阵，包括转换方向、所有权、Cargo 特性、`Option`、`Either`、集合、路径、函数、Promise、stream 和 Node-API 级别，请参阅[类型转换](/cn/docs/concepts/type-conversions)。
 
 ### Undefined
 
@@ -55,7 +55,7 @@ export function getNull(): null
 export function getEnv(env: string): string | null
 ```
 
-`Option<T>` 作为参数时接受 `T`、`null` 或 `undefined`，但返回值为 `None` 时会返回 `null`。在 `#[napi(object)]` 字段中，默认表示是可选属性，输出时会省略 `None`；`#[napi(use_nullable)]` 则会将其变为必需的 `T | null` 属性。有关随位置变化的完整映射，请参阅 [`Option`、`null` 与 `undefined`](/docs/concepts/type-conversions#option-null-and-undefined)。
+`Option<T>` 作为参数时接受 `T`、`null` 或 `undefined`，但返回值为 `None` 时会返回 `null`。在 `#[napi(object)]` 字段中，默认表示是可选属性，输出时会省略 `None`；`#[napi(use_nullable)]` 则会将其变为必需的 `T | null` 属性。有关随位置变化的完整映射，请参阅 [`Option`、`null` 与 `undefined`](/cn/docs/concepts/type-conversions#option-null-and-undefined)。
 
 ### Numbers
 
@@ -213,7 +213,7 @@ Rust `fn` 中传入的 `#[napi(object)]` 结构体是从 **_JavaScript Object_**
 
 </Callout>
 
-`#[napi(object)]` 是拥有所有权的普通对象形状，不是类。需要原生类身份和方法时使用 `#[napi] struct`；需要使用内部 JavaScript 表示的 Rust newtype 时使用 `#[napi(transparent)]`；需要元组形状的数组时使用 `#[napi(array)]`。参阅[类型转换](/docs/concepts/type-conversions#objects-classes-and-custom-shapes)。
+`#[napi(object)]` 是拥有所有权的普通对象形状，不是类。需要原生类身份和方法时使用 `#[napi] struct`；需要使用内部 JavaScript 表示的 Rust newtype 时使用 `#[napi(transparent)]`；需要元组形状的数组时使用 `#[napi(array)]`。参阅[类型转换](/cn/docs/concepts/type-conversions#objects-classes-and-custom-shapes)。
 
 ```rust filename="lib.rs"
 /// #[napi(object)] 需要所有的结构体字段都是对外可见的

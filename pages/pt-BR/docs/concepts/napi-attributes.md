@@ -83,7 +83,7 @@ pub fn initialize(mut exports: Object) -> Result<()> {
 }
 ```
 
-Para uma inicialização que não precise do objeto exports, consulte [Inicialização de módulo](/docs/concepts/module-init).
+Para uma inicialização que não precise do objeto exports, consulte [Inicialização de módulo](/pt-BR/docs/concepts/module-init).
 
 ## Funções e métodos
 
@@ -112,7 +112,7 @@ alteram o tipo de retorno assíncrono gerado; documente esse caminho excepcional
 ::: warning
 `catch_unwind` não é um limite de segurança do processo. Ele não pode capturar
 um panic que aborta o processo, e o Rust não garante que todo panic possa ser
-desenrolado. Use `Result` para falhas esperadas. Consulte [Tratamento de erros](/docs/concepts/error-handling).
+desenrolado. Use `Result` para falhas esperadas. Consulte [Tratamento de erros](/pt-BR/docs/concepts/error-handling).
 
 :::
 
@@ -234,7 +234,7 @@ Essas strings são inseridas na declaração gerada; o napi-rs não as analisa c
 
 ## Iteradores
 
-`iterator` e `async_iterator` são mutuamente exclusivos. Uma classe geradora não pode expor campos públicos chamados `next`, `return` ou `throw`, pois o napi-rs instala esses métodos de protocolo. Consulte [Iteradores e iteradores assíncronos](/docs/concepts/iterators) para ver os traits obrigatórios e as restrições de ciclo de vida.
+`iterator` e `async_iterator` são mutuamente exclusivos. Uma classe geradora não pode expor campos públicos chamados `next`, `return` ou `throw`, pois o napi-rs instala esses métodos de protocolo. Consulte [Iteradores e iteradores assíncronos](/pt-BR/docs/concepts/iterators) para ver os traits obrigatórios e as restrições de ciclo de vida.
 
 ## Índice de opções
 

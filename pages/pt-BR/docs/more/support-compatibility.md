@@ -155,9 +155,9 @@ Antes de listar um target como suportado:
 7. Verifique que uma instalação limpa do pacote raiz seleciona e carrega o
    pacote opcional esperado.
 
-Use [Compilação cruzada](/docs/cross-build) para a árvore de decisão entre host
+Use [Compilação cruzada](/pt-BR/docs/cross-build) para a árvore de decisão entre host
 e target e [Adicionar um target a um projeto
-existente](/docs/cross-build#add-a-target-to-an-existing-project) para o fluxo
+existente](/pt-BR/docs/cross-build#add-a-target-to-an-existing-project) para o fluxo
 completo de empacotamento.
 
 ## Como declarar suporte com precisão

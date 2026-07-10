@@ -77,7 +77,7 @@ Antes do primeiro release:
 6. Execute com sucesso o workflow normal de branch/PR antes de habilitar um
    release.
 
-Veja [Support and compatibility](/docs/more/support-compatibility) e [Cross
+Veja [Support and compatibility](/pt-BR/docs/more/support-compatibility) e [Cross
 build](../cross-build) antes de expandir a matriz gerada.
 
 ## Checklist prévio para cada versão

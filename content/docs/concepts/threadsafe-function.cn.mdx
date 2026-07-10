@@ -11,7 +11,7 @@ import NodeLink from '../../../components/node-link'
 <Callout>
   <NodeLink href="https://nodejs.org/api/n-api.html#napi_env">`napi_env`</NodeLink>、<NodeLink href="https://nodejs.org/api/n-api.html#napi_value">`napi_value`</NodeLink> 和 <NodeLink href="https://nodejs.org/api/n-api.html#napi_ref">`napi_ref`</NodeLink>
   是 `Node-API` 中的底层概念，**NAPI-RS** 的 `#[napi]` 宏构建在这些概念之上。
-  **NAPI-RS** 也提供了[底层 API](/docs/concepts/env)，用于访问原始 `Node-API`。
+  **NAPI-RS** 也提供了[底层 API](/cn/docs/concepts/env)，用于访问原始 `Node-API`。
 </Callout>
 
 `Node-API` 提供了复杂的 `Threadsafe Function` API，用于从其他线程调用 JavaScript 函数。这套 API 非常复杂，许多开发者并不了解如何正确使用。**NAPI-RS** 提供了功能受限的 `Threadsafe Function` API，使其更易于使用：

@@ -283,7 +283,7 @@ WASI 使用与原生目标相同的独立包发布流程：
 3. 运行 `napi create-npm-dirs`；生成的 WASI 包会得到 `cpu: ["wasm32"]`、与加载器兼容的最低 Node engine，以及 emnapi/runtime 依赖。
 4. 下载所有目标产物并运行 `napi artifacts`。这会把 WASM 模块、Node/浏览器加载器和两个 worker 复制到 WASI 包。
 5. 使用 `NAPI_RS_FORCE_WASI=error` 运行 Node 测试，并在跨源隔离环境中运行浏览器测试。
-6. 遵循普通[发布指南](/docs/deep-dive/release)。
+6. 遵循普通[发布指南](/cn/docs/deep-dive/release)。
 
 检查根包和 WASI 平台包最终的 `npm pack --dry-run` 输出。后者必须包含 `.wasm`、`.wasi.cjs`、`.wasi-browser.js` 和 worker 文件。
 
@@ -326,4 +326,4 @@ Bun/Deno 限制记录在 [napi-rs#2965](https://github.com/napi-rs/napi-rs/issue
 - 文件系统 API 属于公开契约时的 memfs 行为；
 - 你列为受支持的每个非 Node 运行时。
 
-故障特征和精确探针参见[故障排除：WASI 故障](/docs/more/troubleshooting#wasi-故障)。
+故障特征和精确探针参见[故障排除：WASI 故障](/cn/docs/more/troubleshooting#wasi-故障)。

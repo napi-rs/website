@@ -73,7 +73,7 @@ pub fn initialize(mut exports: Object) -> Result<()> {
 }
 ```
 
-如果初始化不需要 exports 对象，请参阅[模块初始化](/docs/concepts/module-init)。
+如果初始化不需要 exports 对象，请参阅[模块初始化](/cn/docs/concepts/module-init)。
 
 ## 函数与方法
 
@@ -100,7 +100,7 @@ pub fn initialize(mut exports: Object) -> Result<()> {
 
 <Callout type="warning">
   `catch_unwind` 不是进程安全边界。它无法捕获会中止进程的 panic，而且 Rust
-  明确不保证每个 panic 都可以展开。预期内的失败应使用 `Result`。参阅[错误处理](/docs/concepts/error-handling)。
+  明确不保证每个 panic 都可以展开。预期内的失败应使用 `Result`。参阅[错误处理](/cn/docs/concepts/error-handling)。
 </Callout>
 
 ## 类与值形状
@@ -215,7 +215,7 @@ pub fn calculate(operation: String, a: i32, b: i32) -> i32 {
 
 ## 迭代器
 
-`iterator` 与 `async_iterator` 互斥。生成器类不能暴露名为 `next`、`return` 或 `throw` 的公开字段，因为 napi-rs 会安装这些协议方法。有关所需 trait 和生命周期约束，请参阅[迭代器与异步迭代器](/docs/concepts/iterators)。
+`iterator` 与 `async_iterator` 互斥。生成器类不能暴露名为 `next`、`return` 或 `throw` 的公开字段，因为 napi-rs 会安装这些协议方法。有关所需 trait 和生命周期约束，请参阅[迭代器与异步迭代器](/cn/docs/concepts/iterators)。
 
 ## 选项索引
 

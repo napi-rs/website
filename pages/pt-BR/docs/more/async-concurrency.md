@@ -28,7 +28,7 @@ Duas regras valem para todas as linhas:
    possuídos por tempo suficiente; valores JavaScript emprestados têm escopo de
    função.
 
-Veja [Understanding lifetime](/docs/concepts/understanding-lifetime) antes de
+Veja [Understanding lifetime](/pt-BR/docs/concepts/understanding-lifetime) antes de
 mover buffers, objetos ou instâncias de classe para trabalho em segundo plano.
 
 ## `async fn` com Tokio
@@ -85,7 +85,7 @@ desligamento.
 
 ## `AsyncTask` e o pool de workers do libuv
 
-Use [`AsyncTask`](/docs/concepts/async-task) para trabalho bloqueante limitado
+Use [`AsyncTask`](/pt-BR/docs/concepts/async-task) para trabalho bloqueante limitado
 que caiba no pool de threads compartilhado do libuv do Node. `Task::compute`
 roda fora da thread JavaScript; `resolve`, `reject` e `finally` rodam depois da
 conclusão, quando `Env` está disponível.
@@ -134,7 +134,7 @@ pool Rust dedicado quando isso fizer parte do seu desenho de desempenho.
 
 ## ThreadsafeFunction
 
-Use uma [`ThreadsafeFunction`](/docs/concepts/threadsafe-function) quando uma
+Use uma [`ThreadsafeFunction`](/pt-BR/docs/concepts/threadsafe-function) quando uma
 thread Rust precisar agendar um callback JavaScript. A thread produtora envia
 dados Rust possuídos; a conversão e o callback executam no ambiente JavaScript
 dono.
@@ -260,7 +260,7 @@ reinício suportado ([napi-rs#3251](https://github.com/napi-rs/napi-rs/issues/32
 O WASI tem restrições diferentes de teardown de runtime. Se sua API WASI inicia
 o runtime explicitamente ou expõe uma função de desligamento, teste
 inicialização e desligamento repetidos no host WASI real. Veja
-[WebAssembly](/docs/concepts/webassembly).
+[WebAssembly](/pt-BR/docs/concepts/webassembly).
 
 ## Protocolo de desligamento de worker
 

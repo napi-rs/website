@@ -66,7 +66,7 @@ export const enum Kind {
 }
 ```
 
-Use `string_enum = "case"` para transformar o nome de todas as variantes ou `#[napi(value = "...")]` em uma variante para escolher seu valor JavaScript exato. Os cases compatíveis estão listados na [referência de atributos `#[napi]`](/docs/concepts/napi-attributes#enums).
+Use `string_enum = "case"` para transformar o nome de todas as variantes ou `#[napi(value = "...")]` em uma variante para escolher seu valor JavaScript exato. Os cases compatíveis estão listados na [referência de atributos `#[napi]`](/pt-BR/docs/concepts/napi-attributes#enums).
 
 **lib.rs**
 
@@ -105,6 +105,6 @@ export type Event =
 
 O discriminador padrão é `type`. Altere-o com `discriminant = "kind"` e transforme os valores das variantes com `discriminant_case = "camelCase"` ou outro case compatível. Campos nomeados de variantes mantêm seus nomes; campos de tupla se tornam `field0`, `field1` e assim por diante. Um campo não pode ter o mesmo nome JavaScript do discriminador.
 
-A conversão de enum estruturado é própria: aceitar um enum lê e converte seus campos em um valor enum Rust, enquanto retorná-lo cria um novo objeto JavaScript. `object_from_js = false` ou `object_to_js = false` pode tornar o tipo unidirecional. Consulte [Conversões de tipos](/docs/concepts/type-conversions#objects-classes-and-custom-shapes).
+A conversão de enum estruturado é própria: aceitar um enum lê e converte seus campos em um valor enum Rust, enquanto retorná-lo cria um novo objeto JavaScript. `object_from_js = false` ou `object_to_js = false` pode tornar o tipo unidirecional. Consulte [Conversões de tipos](/pt-BR/docs/concepts/type-conversions#objects-classes-and-custom-shapes).
 
 **NAPI-RS** não suporta a geração de `impl` de `enum` Rust em JavaScript.

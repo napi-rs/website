@@ -105,7 +105,7 @@ console.log(process.versions.napi)
 napi = { version = "3", features = ["async", "tokio_fs", "tokio_time"] }
 ```
 
-对于 CPU 密集型工作，应优先使用 [AsyncTask](/docs/concepts/async-task)，它使用 libuv worker pool，避免阻塞 Tokio 运行时。
+对于 CPU 密集型工作，应优先使用 [AsyncTask](/cn/docs/concepts/async-task)，它使用 libuv worker pool，避免阻塞 Tokio 运行时。
 
 ## 转换特性
 
@@ -119,7 +119,7 @@ napi = { version = "3", features = ["async", "tokio_fs", "tokio_time"] }
 | `web_stream`         | `ReadableStream` 与 `WriteableStream`；启用 `futures-core`、`tokio-stream`、`tokio_rt` 与 `napi4`。 | 运行时还必须提供兼容的 Web Streams 全局对象。                                     |
 | `error_anyhow`       | 从 `anyhow::Error` 转换，以及可选的 `anyhow` 依赖。                                                 | 转换使用 `GenericFailure`；如需稳定的领域代码，请手动映射错误。                   |
 
-有关方向性与数据复制行为，请参阅[类型转换](/docs/concepts/type-conversions)。
+有关方向性与数据复制行为，请参阅[类型转换](/cn/docs/concepts/type-conversions)。
 
 ## 链接与运行时检测
 
