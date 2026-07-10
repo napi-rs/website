@@ -67,11 +67,11 @@ O tipo de retorno acima é `bigint` porque `u64` é um tipo BigInt de saída.
 
 | Posição | JavaScript aceito ou produzido | TypeScript gerado |
 | --- | --- | --- |
-| Argumento de função | `T`, `null` ou `undefined`; os dois valores nullish se tornam `None` | `T | null | undefined` e normalmente um parâmetro final opcional |
-| Retorno de função | `Some(T)` se torna `T`; `None` se torna `null` | `T | null` |
+| Argumento de função | `T`, `null` ou `undefined`; os dois valores nullish se tornam `None` | `T \| null \| undefined` e normalmente um parâmetro final opcional |
+| Retorno de função | `Some(T)` se torna `T`; `None` se torna `null` | `T \| null` |
 | Campo de `#[napi(object)]` ou forma estruturada com o padrão `use_nullable = false` | Ausente ou `undefined` se torna `None`; `null` explícito é passado à conversão de `T` interno e normalmente falha; `None` é omitido na saída | `field?: T` |
-| Campo de `#[napi(object)]` ou forma estruturada com `use_nullable = true` | Ausente ou `undefined` é um erro; `null` se torna `None`; `None` é emitido como `null` | `field: T | null` |
-| Campo público de classe | O accessor sempre existe. Um getter de `Option` emite `null` para `None`, e um setter gravável aceita as entradas nullish normais de `Option`. `use_nullable` muda a forma gerada da propriedade/construtor, não a existência do accessor. | Padrão: `field?: T`; com `use_nullable`: `field: T | null` |
+| Campo de `#[napi(object)]` ou forma estruturada com `use_nullable = true` | Ausente ou `undefined` é um erro; `null` se torna `None`; `None` é emitido como `null` | `field: T \| null` |
+| Campo público de classe | O accessor sempre existe. Um getter de `Option` emite `null` para `None`, e um setter gravável aceita as entradas nullish normais de `Option`. `use_nullable` muda a forma gerada da propriedade/construtor, não a existência do accessor. | Padrão: `field?: T`; com `use_nullable`: `field: T \| null` |
 
 Use `Null` ou `Undefined` quando a própria distinção fizer parte da API. Use `Either<T, Null>` ou `Either<T, Undefined>` quando exatamente um valor nullish for aceito.
 

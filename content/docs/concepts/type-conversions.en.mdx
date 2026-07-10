@@ -66,11 +66,11 @@ The return type above is `bigint` because `u64` is a BigInt output type.
 
 | Position | JavaScript accepted or produced | Generated TypeScript |
 | --- | --- | --- |
-| Function argument | `T`, `null`, or `undefined`; both nullish values become `None` | `T | null | undefined` and normally an optional trailing parameter |
-| Function return | `Some(T)` becomes `T`; `None` becomes `null` | `T | null` |
+| Function argument | `T`, `null`, or `undefined`; both nullish values become `None` | `T \| null \| undefined` and normally an optional trailing parameter |
+| Function return | `Some(T)` becomes `T`; `None` becomes `null` | `T \| null` |
 | `#[napi(object)]` or structured-shape field with default `use_nullable = false` | Missing or `undefined` becomes `None`; explicit `null` is passed to the inner `T` conversion and normally fails; `None` is omitted on output | `field?: T` |
-| `#[napi(object)]` or structured-shape field with `use_nullable = true` | Missing or `undefined` is an error; `null` becomes `None`; `None` is emitted as `null` | `field: T | null` |
-| Public class field | The accessor always exists. An `Option` getter emits `null` for `None`, and a writable setter accepts the normal nullish `Option` inputs. `use_nullable` changes the generated property/constructor shape, not whether the accessor exists. | Default: `field?: T`; with `use_nullable`: `field: T | null` |
+| `#[napi(object)]` or structured-shape field with `use_nullable = true` | Missing or `undefined` is an error; `null` becomes `None`; `None` is emitted as `null` | `field: T \| null` |
+| Public class field | The accessor always exists. An `Option` getter emits `null` for `None`, and a writable setter accepts the normal nullish `Option` inputs. `use_nullable` changes the generated property/constructor shape, not whether the accessor exists. | Default: `field?: T`; with `use_nullable`: `field: T \| null` |
 
 Use `Null` or `Undefined` when the distinction itself is part of the API. Use `Either<T, Null>` or `Either<T, Undefined>` when exactly one nullish value is accepted.
 

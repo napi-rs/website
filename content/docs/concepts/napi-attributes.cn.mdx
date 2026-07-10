@@ -112,7 +112,7 @@ pub fn initialize(mut exports: Object) -> Result<()> {
 | `transparent` | 仅含一个字段的元组结构体 | 将转换委托给内部字段，而不是创建包装对象。 | 生成内部 TypeScript 类型的别名。 | 支持 |
 | `object_from_js = false` | object、array、transparent 结构体；枚举 | 不生成 `FromNapiValue`；该类型不能通过生成的转换从 JavaScript 传入。 | 无。 | 支持 |
 | `object_to_js = false` | object、array、transparent 结构体；枚举 | 不生成 `ToNapiValue`；该类型不能通过生成的转换返回给 JavaScript。 | 无。 | 支持 |
-| `use_nullable` 或 `use_nullable = true` | 类、object、array、结构化枚举 | 对 object 和结构化枚举字段，以 `null` 输出 `None`，而不是省略字段，并要求输入必须有该属性。对 array，会写入并要求元组索引，而不是留下或接受空位。类访问器和构造函数转换不变。 | 生成必需的 `T | null` 属性或元组元素。用于类时，这是唯一效果。 | 支持；默认为 `false` |
+| `use_nullable` 或 `use_nullable = true` | 类、object、array、结构化枚举 | 对 object 和结构化枚举字段，以 `null` 输出 `None`，而不是省略字段，并要求输入必须有该属性。对 array，会写入并要求元组索引，而不是留下或接受空位。类访问器和构造函数转换不变。 | 生成必需的 `T \| null` 属性或元组元素。用于类时，这是唯一效果。 | 支持；默认为 `false` |
 | `custom_finalize` | 类结构体 | 阻止 napi-derive 生成默认的空 `ObjectFinalize` 实现，因此该类必须自行实现它。 | 无。 | 支持 |
 | `iterator` | 类结构体 | 使每个实例实现同步迭代器协议。 | 扩展 `Iterator<Yield, Return, Next>`。 | **实验性** |
 | `async_iterator` | 类结构体 | 使每个实例实现异步迭代器协议。 | 添加 `[Symbol.asyncIterator](): AsyncGenerator<...>`。 | `napi/tokio_rt`；**实验性** |
@@ -157,7 +157,7 @@ pub struct Point(pub f64, pub f64);
 | `value = "literal"` | `string_enum` 的变体 | 覆盖某个变体的 JavaScript 字符串。 | 使用该字面值。 | 支持 |
 | `discriminant = "key"` | 结构化枚举 | 将判别属性从默认的 `type` 改为指定键。 | 在可辨识联合中使用同一个属性。 | 支持 |
 | `discriminant_case = "case"` | 结构化枚举 | 改变变体名称在判别字段中的编码形式。 | 使用相同的编码值。 | 支持 |
-| `use_nullable` | 结构化枚举 | 将 nullable 字段行为应用到变体字段。 | 控制可选字段与 `T | null` 字段。 | 支持 |
+| `use_nullable` | 结构化枚举 | 将 nullable 字段行为应用到变体字段。 | 控制可选字段与 `T \| null` 字段。 | 支持 |
 | `object_from_js`、`object_to_js` | 任意枚举 | 启用或禁用某个方向的生成转换。 | 无。 | 支持 |
 
 接受的大小写名称为 `lowercase`、`UPPERCASE`、`PascalCase`、`camelCase`、`snake_case`、`UPPER_SNAKE`、`kebab-case` 和 `UPPER-KEBAB-CASE`。
