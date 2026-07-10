@@ -4,8 +4,6 @@ description: Escolha o mecanismo certo de compilação cruzada para cada host e 
 
 # Compilação cruzada
 
-import { Callout } from 'nextra-theme-docs'
-
 Compilar de forma cruzada um complemento (addon) **NAPI-RS** significa produzir um binário `.node` para uma plataforma-alvo (digamos `aarch64-unknown-linux-gnu`) em um host diferente (digamos um runner de CI Linux x64). O `napi build` suporta isso com dois mecanismos recomendados:
 
 - **`--use-napi-cross`** para targets Linux glibc em um host Linux x64/arm64 — uma toolchain cruzada gcc baixada do npm, fixada em um piso de glibc 2.17.

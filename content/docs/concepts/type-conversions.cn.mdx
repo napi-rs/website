@@ -3,8 +3,6 @@ title: '类型转换'
 description: Rust 到 JavaScript 的转换矩阵、方向性、所有权与特性要求。
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 # 类型转换
 
 每个导出参数都必须实现 `FromNapiValue`（或某个引用转换 trait），每个返回值都必须实现 `ToNapiValue`。生成的 TypeScript 类型是有用的文档，但真正决定转换是否可用的是 Rust trait 实现。

@@ -2,8 +2,6 @@
 description: 选择异步 NAPI-RS API，并安全管理取消、JavaScript 访问、worker 与运行时关闭。
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 # 异步与并发
 
 正确的抽象取决于工作必须在哪里运行，以及 Rust 运行期间是否需要调用 JavaScript。从能满足任务的最小抽象开始；把同步函数移到另一个线程，并不会让其依赖自动变得线程安全。

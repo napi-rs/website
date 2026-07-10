@@ -4,8 +4,6 @@ description: Pick the right cross-compilation mechanism for every host and targe
 
 # Cross build
 
-import { Callout } from 'nextra-theme-docs'
-
 Cross-compiling a **NAPI-RS** addon means producing a `.node` binary for a target platform (say `aarch64-unknown-linux-gnu`) on a different host (say a Linux x64 CI runner). `napi build` supports this with two recommended mechanisms:
 
 - **`--use-napi-cross`** for Linux glibc targets on a Linux x64/arm64 host — a gcc cross toolchain downloaded from npm, pinned to a glibc 2.17 floor.

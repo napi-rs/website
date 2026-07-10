@@ -37,8 +37,6 @@ impl Task for AsyncFib {
 
 Você pode notar que existem dois tipos associados no trait `Task`. O `type Output` e o `type JsValue`. `Output` é o tipo de retorno do método `compute`. `JsValue` é o tipo de retorno do método `resolve`.
 
-import { Callout } from 'nextra-theme-docs'
-
 <Callout>
   Precisamos de `type Output` e `type JsValue` separados porque não podemos
   chamar a função JavaScript de volta em `fn compute`, pois ela não é executada

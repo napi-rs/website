@@ -3,8 +3,6 @@ title: 'Tratamento de erros'
 description: Lance, rejeite, preserve e classifique erros em APIs napi-rs síncronas e assíncronas.
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 # Tratamento de erros
 
 Falhas esperadas devem atravessar o limite nativo como `napi::Result<T>`, um alias para `std::result::Result<T, napi::Error>`. O napi-rs transforma o `Err` em uma exceção síncrona ou em uma rejeição de Promise, de acordo com a API exportada.

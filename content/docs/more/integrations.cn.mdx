@@ -2,8 +2,6 @@
 description: 从 CommonJS、ESM、打包器、框架、Electron 和 serverless 部署加载 NAPI-RS 插件。
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 # 集成与打包器
 
 `.node` 文件是 JavaScript 运行时加载的共享库。它不是 JavaScript，不应被转换、拼接进 bundle 或发送到浏览器。只要保持生成的加载器完整，并让 Node 在运行时执行，大多数集成问题都会消失。

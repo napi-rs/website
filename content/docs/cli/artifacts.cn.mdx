@@ -4,7 +4,6 @@ description: 将 CI 构建产物收集到 napi-rs 平台包中。
 
 # Artifacts
 
-import { Callout } from 'nextra-theme-docs'
 import { Green } from '../../../components/chalk'
 
 `napi artifacts` 会递归查找已构建的 `.node` 和 `.wasm` 文件，验证其二进制名称和目标后缀，再把它们复制到对应的各平台 npm 包。原生文件也会复制到根包目录，使生成的加载器能够解析本地绑定。

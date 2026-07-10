@@ -3,8 +3,6 @@ title: 'Type conversions'
 description: Rust to JavaScript conversion matrix, directionality, ownership, and feature requirements.
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 # Type conversions
 
 Every exported argument must implement `FromNapiValue` (or one of the reference conversion traits), and every returned value must implement `ToNapiValue`. The generated TypeScript type is useful documentation, but the Rust trait implementation is what determines whether a conversion is actually available.

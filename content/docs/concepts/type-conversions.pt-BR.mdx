@@ -3,8 +3,6 @@ title: 'Conversões de tipos'
 description: Matriz de conversão entre Rust e JavaScript, direcionalidade, propriedade e requisitos de recursos.
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 # Conversões de tipos
 
 Todo argumento exportado deve implementar `FromNapiValue` (ou um dos traits de conversão por referência), e todo valor retornado deve implementar `ToNapiValue`. O tipo TypeScript gerado é uma documentação útil, mas é a implementação do trait Rust que determina se uma conversão está realmente disponível.

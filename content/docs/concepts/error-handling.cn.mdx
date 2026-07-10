@@ -3,8 +3,6 @@ title: '错误处理'
 description: 在同步与异步 napi-rs API 之间抛出、拒绝、保留并分类错误。
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 # 错误处理
 
 预期内的失败应以 `napi::Result<T>` 跨越原生边界；它是 `std::result::Result<T, napi::Error>` 的别名。napi-rs 会根据导出 API 的类型，将 `Err` 转换为同步异常或 Promise 拒绝。

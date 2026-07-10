@@ -3,8 +3,6 @@ title: 'Error handling'
 description: Throw, reject, preserve, and classify errors across synchronous and asynchronous napi-rs APIs.
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 # Error handling
 
 Expected failures should cross the native boundary as `napi::Result<T>`, an alias for `std::result::Result<T, napi::Error>`. napi-rs turns the `Err` into a synchronous exception or a Promise rejection according to the exported API.
