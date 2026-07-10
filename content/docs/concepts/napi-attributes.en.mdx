@@ -115,7 +115,7 @@ generated async return type, so document that exceptional path explicitly.
 | `transparent` | Single-field tuple struct | Delegates conversion to the inner field instead of creating a wrapper object. | Emits an alias of the inner TypeScript type. | Supported |
 | `object_from_js = false` | Object, array, transparent struct; enum | Omits `FromNapiValue`; the type cannot be accepted from JavaScript through generated conversion. | None. | Supported |
 | `object_to_js = false` | Object, array, transparent struct; enum | Omits `ToNapiValue`; the type cannot be returned to JavaScript through generated conversion. | None. | Supported |
-| `use_nullable` or `use_nullable = true` | Class, object, array, structured enum | For object and structured-enum fields, emits `None` as `null` instead of omitting it and requires the input property. For arrays, writes/requires the tuple index instead of leaving/accepting a hole. Class accessor and constructor conversion is unchanged. | Emits a required `T | null` property or tuple element. For a class, this is the option's only effect. | Supported; default is `false` |
+| `use_nullable` or `use_nullable = true` | Class, object, array, structured enum | For object and structured-enum fields, emits `None` as `null` instead of omitting it and requires the input property. For arrays, writes/requires the tuple index instead of leaving/accepting a hole. Class accessor and constructor conversion is unchanged. | Emits a required `T \| null` property or tuple element. For a class, this is the option's only effect. | Supported; default is `false` |
 | `custom_finalize` | Class struct | Stops napi-derive from generating the default empty `ObjectFinalize` implementation, so the class must implement it itself. | None. | Supported |
 | `iterator` | Class struct | Makes each instance implement the synchronous iterator protocol. | Extends `Iterator<Yield, Return, Next>`. | **Experimental** |
 | `async_iterator` | Class struct | Makes each instance implement the async iterator protocol. | Adds `[Symbol.asyncIterator](): AsyncGenerator<...>`. | `napi/tokio_rt`; **experimental** |
@@ -160,7 +160,7 @@ For a normal class, `skip` removes the generated JavaScript accessor, while `ski
 | `value = "literal"` | Variant of a `string_enum` | Overrides the JavaScript string for one variant. | Uses the literal value. | Supported |
 | `discriminant = "key"` | Structured enum | Changes the discriminating property from the default `type`. | Uses the same property in the discriminated union. | Supported |
 | `discriminant_case = "case"` | Structured enum | Changes how variant names are encoded in the discriminator. | Uses the same encoded values. | Supported |
-| `use_nullable` | Structured enum | Applies nullable-field behavior to variant fields. | Controls optional versus `T | null` fields. | Supported |
+| `use_nullable` | Structured enum | Applies nullable-field behavior to variant fields. | Controls optional versus `T \| null` fields. | Supported |
 | `object_from_js`, `object_to_js` | Any enum | Enables or disables generated conversion in one direction. | None. | Supported |
 
 Accepted case names are `lowercase`, `UPPERCASE`, `PascalCase`, `camelCase`, `snake_case`, `UPPER_SNAKE`, `kebab-case`, and `UPPER-KEBAB-CASE`.

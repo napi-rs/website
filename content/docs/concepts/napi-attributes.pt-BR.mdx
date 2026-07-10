@@ -115,7 +115,7 @@ alteram o tipo de retorno assíncrono gerado; documente esse caminho excepcional
 | `transparent` | Struct de tupla com um único campo | Delega a conversão ao campo interno em vez de criar um objeto wrapper. | Emite um alias do tipo TypeScript interno. | Compatível |
 | `object_from_js = false` | Struct object, array ou transparent; enum | Omite `FromNapiValue`; o tipo não pode ser aceito do JavaScript pela conversão gerada. | Nenhum. | Compatível |
 | `object_to_js = false` | Struct object, array ou transparent; enum | Omite `ToNapiValue`; o tipo não pode ser retornado ao JavaScript pela conversão gerada. | Nenhum. | Compatível |
-| `use_nullable` ou `use_nullable = true` | Classe, object, array, enum estruturado | Para campos de object e enum estruturado, emite `None` como `null` em vez de omiti-lo e exige a propriedade na entrada. Para arrays, escreve/exige o índice da tupla em vez de deixar/aceitar uma lacuna. A conversão de acessores e construtor de classe não muda. | Emite uma propriedade ou elemento de tupla obrigatório `T | null`. Em uma classe, esse é o único efeito. | Compatível; o padrão é `false` |
+| `use_nullable` ou `use_nullable = true` | Classe, object, array, enum estruturado | Para campos de object e enum estruturado, emite `None` como `null` em vez de omiti-lo e exige a propriedade na entrada. Para arrays, escreve/exige o índice da tupla em vez de deixar/aceitar uma lacuna. A conversão de acessores e construtor de classe não muda. | Emite uma propriedade ou elemento de tupla obrigatório `T \| null`. Em uma classe, esse é o único efeito. | Compatível; o padrão é `false` |
 | `custom_finalize` | Struct de classe | Impede que o napi-derive gere a implementação vazia padrão de `ObjectFinalize`, portanto a classe deve implementá-la. | Nenhum. | Compatível |
 | `iterator` | Struct de classe | Faz cada instância implementar o protocolo de iterador síncrono. | Estende `Iterator<Yield, Return, Next>`. | **Experimental** |
 | `async_iterator` | Struct de classe | Faz cada instância implementar o protocolo de iterador assíncrono. | Adiciona `[Symbol.asyncIterator](): AsyncGenerator<...>`. | `napi/tokio_rt`; **experimental** |
@@ -160,7 +160,7 @@ Em uma classe normal, `skip` remove o acessor JavaScript gerado, enquanto `skip_
 | `value = "literal"` | Variante de um `string_enum` | Substitui a string JavaScript de uma variante. | Usa o valor literal. | Compatível |
 | `discriminant = "key"` | Enum estruturado | Altera a propriedade discriminadora do padrão `type`. | Usa a mesma propriedade na união discriminada. | Compatível |
 | `discriminant_case = "case"` | Enum estruturado | Altera como os nomes das variantes são codificados no discriminador. | Usa os mesmos valores codificados. | Compatível |
-| `use_nullable` | Enum estruturado | Aplica o comportamento de campos nullable aos campos das variantes. | Controla campos opcionais versus `T | null`. | Compatível |
+| `use_nullable` | Enum estruturado | Aplica o comportamento de campos nullable aos campos das variantes. | Controla campos opcionais versus `T \| null`. | Compatível |
 | `object_from_js`, `object_to_js` | Qualquer enum | Habilita ou desabilita a conversão gerada em uma direção. | Nenhum. | Compatível |
 
 Os nomes de case aceitos são `lowercase`, `UPPERCASE`, `PascalCase`, `camelCase`, `snake_case`, `UPPER_SNAKE`, `kebab-case` e `UPPER-KEBAB-CASE`.
