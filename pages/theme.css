@@ -456,3 +456,26 @@
   max-width: 100%;
   height: auto;
 }
+
+/* Thin, subtle scrollbar for horizontally-scrolling wide tables. @void/md makes
+ * `.void-md table` a `display:block; overflow-x:auto` scroll container
+ * (prose.css), which otherwise shows the browser's thick, bright system
+ * scrollbar under the table. Mirror the sidebar's `.thin-scrollbar` (style.css)
+ * so the table scrollbar matches the rest of the docs. */
+.void-md table {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(115, 115, 115, 0.4) transparent;
+}
+.void-md table::-webkit-scrollbar {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+.void-md table::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+.void-md table::-webkit-scrollbar-thumb {
+  background-color: rgba(115, 115, 115, 0.4);
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
