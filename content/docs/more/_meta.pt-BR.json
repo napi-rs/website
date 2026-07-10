@@ -1,5 +1,6 @@
 {
   "support-compatibility": "Suporte e compatibilidade",
+  "support-matrix-badge": "Badge da matriz de suporte",
   "testing-debugging": "Testes e depuração",
   "async-concurrency": "Guia de async e concorrência",
   "integrations": "Bundlers e frameworks",

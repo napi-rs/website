@@ -1,5 +1,6 @@
 {
   "support-compatibility": "支持与兼容性",
+  "support-matrix-badge": "支持矩阵徽章",
   "testing-debugging": "测试与调试",
   "async-concurrency": "异步与并发指南",
   "integrations": "打包工具与框架",
