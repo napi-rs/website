@@ -1,180 +1,164 @@
 ---
 title: 'Getting started'
-description: Learn how to get started with napi-rs.
+description: Create, build, and test a napi-rs v3 package.
 ---
 
 # Getting started
 
 import Video from '../../../public/assets/napi-rs-guide.mp4'
 
-## Start from `@napi-rs/cli`
-
-> The recommended way.
-
-<br />
+The quickest way to start a napi-rs v3 package is `napi new`. It copies the
+maintained package template, applies your package name and target selection,
+and optionally creates a GitHub Actions workflow.
 
 <video controls style={{ width: '100%' }}>
   <source src={Video} type="video/mp4" />
   <track kind="captions" srcLang="en" />
 </video>
 
-### Install cli
+## Prerequisites
 
-```bash
-yarn global add @napi-rs/cli
-# or
-npm install -g @napi-rs/cli
-# or
-pnpm add -g @napi-rs/cli
+- **Node.js 22.13 or newer on the Node 22 line, or Node.js 24+, is
+  recommended** for the current `@napi-rs/cli` toolchain. The CLI declares
+  `>=23.5.0 || ^22.13.0 || ^20.17.0`, matching its interactive-prompt
+  dependency. This build-time requirement is separate from the runtime
+  requirement of the addon you produce. See [Support and
+  compatibility](/docs/more/support-compatibility#cli-and-rust-requirements).
+- **Rust 1.88 or newer**, including Cargo. Installing Rust through
+  [rustup](https://rustup.rs/) is recommended.
+- **Git**, because `napi new` downloads and updates its template with Git.
+- A working linker for your development platform: Xcode Command Line Tools on
+  macOS, MSVC Build Tools on Windows, or the usual C build tools on Linux.
+
+Node-API makes a native binary ABI-compatible with later Node.js releases that
+provide the Node-API level it was compiled against. That is different from the
+Node versions and target triples exercised by napi-rs CI. Read [Support and
+compatibility](/docs/more/support-compatibility) before choosing a runtime or
+shipping matrix.
+
+## Create a project
+
+You do not need a global CLI installation. Run the package directly with your
+preferred package runner:
+
+```sh
+# Yarn template (the default)
+npx @napi-rs/cli new cool
+
+# The same template through Yarn
+yarn dlx @napi-rs/cli new cool
+
+# pnpm template
+pnpm dlx @napi-rs/cli new cool --package-manager pnpm
 ```
 
-### Create project
+The command is interactive by default. It asks for:
 
-```bash
-napi new
+1. The package name written to `package.json`.
+2. The minimum Node-API level used for the generated Cargo feature and package
+   Node.js engine requirement.
+3. The target triples to keep from the selected template.
+4. The license.
+5. Whether to generate TypeScript declarations.
+6. Whether to keep the template's GitHub Actions workflow.
+
+Only the maintained **Yarn** and **pnpm** templates are supported. The template
+pins its own package-manager version, so use the matching commands after the
+project is created. To create a project without prompts, pass every value you
+want to change and add `--no-interactive`; see [`napi new`](/docs/cli/new).
+
+## Install, build, and test
+
+For the default Yarn template:
+
+```sh
+cd cool
+yarn install
+yarn build
+yarn test
 ```
 
-This will then prompt you for some variables, including:
+For the pnpm template:
 
-#### Package name
+```sh
+cd cool
+pnpm install
+pnpm build
+pnpm test
+```
 
-The name that will be defined in `package.json`.
+The local build compiles one native target: your host unless you pass
+`--target`. It produces:
 
-#### Target platforms
+- `<binaryName>.<platform-arch-abi>.node`, the native addon.
+- `index.js`, the generated loader.
+- `index.d.ts`, the generated TypeScript declarations when type generation is
+  enabled.
 
-Specify the target platforms you want to support with the native package.
+The important source files in the generated project are:
 
-The generated CI workflow is the template's workflow filtered down to the platforms you pick, so a build job appears only for targets the template ships a matrix row for: macOS (x64, arm64), Windows MSVC (x64, x86, arm64), Linux gnu and musl (x64, arm64), armv7 gnueabihf, Android (arm64, armv7), WASI and FreeBSD — most of them built by cross-compiling rather than on native hardware.
+| Path | Purpose |
+| --- | --- |
+| `src/lib.rs` | Rust functions, structs, and classes exported with `#[napi]` |
+| `Cargo.toml` | Rust crate metadata and napi-rs dependencies |
+| `build.rs` | Required napi-rs build setup |
+| `package.json` | JavaScript scripts, package metadata, and the `napi` config |
+| `.github/workflows/CI.yml` | Multi-target build, test, artifact, and publish workflow |
 
-The other accepted targets (OpenHarmony, `x86_64-pc-windows-gnu`, `armv7-unknown-linux-musleabihf`, loongarch64, riscv64gc, ppc64le, s390x) can be selected at the prompt, but `napi new` never adds jobs the template does not have. These targets end up in neither the generated workflow nor the scaffolded `napi.targets` list that `napi create-npm-dirs` and the publish flow read, so they get no CI build job and no npm package. To ship one of them, add it to `targets` in the napi config, run `napi create-npm-dirs`, and add the CI matrix row yourself — see [Add a target to an existing project](/docs/cross-build#add-a-target-to-an-existing-project) for the full recipe. The [Cross build](/docs/cross-build) guide also explains the cross-compilation flags the generated CI uses.
+The templates do not check in `npm/`. The publish job creates its per-target
+package directories with `napi create-npm-dirs` after the platform builds.
 
-#### Enable GitHub actions
+Continue with [A simple package](./simple-package) to edit the Rust API and
+call it from Node.js.
 
-Opt in for generated GitHub actions that will help publish the native package to the npm registry.
+## Deep dive
 
-### Deep dive
+### How the generated package is distributed
 
-It is recommended to distribute your package under [npm scope](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) because `@napi-rs/cli` will, by default, append different platform suffixes to the npm package name for different platform binary distributions. Using npm scope will help reduce the chance that the package name was already taken.
-
-For example if you want publish package `@cool/core`, with the `macOS x64`, `Windows x64` and `Linux aarch64` supported, `@napi-rs/cli` will create and publish four packages for you:
-
-- `@cool/core` includes just `JavaScript` code, which actually loads the native binary from each platform.
-- `@cool/core-darwin-x64` for `macOS x64` platform.
-- `@cool/core-win32-x64` for `Windows x64` platform.
-- `@cool/core-linux-arm64-gnu` for `Linux aarch64` platform.
-
-In each platform binary package, there are `cpu` and `os` fields in the `package.json`:
+napi-rs normally publishes a small root package plus one optional package per
+platform. For example, `@cool/core` might depend on:
 
 ```json filename="package.json"
 {
-  "name": "@cool/core-darwin-x64",
-  "version": "1.0.0",
-  "os": ["darwin"],
-  "cpu": ["x64"]
-}
-```
-
-And `@cool/core` will be using these native packages as `optionalDependencies`:
-
-```json filename="package.json"
-{
-  "name": "@cool/core",
-  "version": "1.0.0",
   "optionalDependencies": {
-    "@cool/core-darwin-x64": "^1.0.0",
-    "@cool/core-win32-x64": "^1.0.0",
-    "@cool/core-linux-arm64": "^1.0.0"
+    "@cool/core-darwin-x64": "1.0.0",
+    "@cool/core-win32-x64-msvc": "1.0.0",
+    "@cool/core-linux-arm64-gnu": "1.0.0"
   }
 }
 ```
 
-And the `index.js` in `@cool/core` will be:
+The generated `index.js` first looks for a local addon produced during
+development. In an installed package, it loads the optional package matching
+the current operating system, CPU, and Linux libc. The package manager uses
+the platform package's `os`, `cpu`, and, where applicable, `libc` fields to
+avoid installing incompatible binaries.
 
-```js filename="index.js"
-const { existsSync, readFileSync } = require('fs')
-const { join } = require('path')
+Using an [npm scope](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/)
+is recommended because every supported target needs a distinct package name.
 
-const { platform, arch } = process
+The `napi.targets` array defines what the project packages; it does **not** make
+one `napi build` invocation compile every target. The scaffold can only retain
+build jobs already present in its template. For additional accepted targets,
+add the config entry, npm directory, and CI build explicitly. See [Support and
+compatibility](/docs/more/support-compatibility) and [Cross build](/docs/cross-build).
 
-let nativeBinding = null
-let localFileExisted = false
-let isMusl = false
-let loadError = null
-
-switch (platform) {
-  case 'darwin':
-    switch (arch) {
-      case 'x64':
-        localFileExisted = existsSync(join(__dirname, 'core.darwin-x64.node'))
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./core.darwin-x64.node')
-          } else {
-            nativeBinding = require('@cool/core-darwin-x64')
-          }
-        } catch (e) {
-          loadError = e
-        }
-        break
-      case 'arm64':
-        localFileExisted = existsSync(join(__dirname, 'core.darwin-arm64.node'))
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./core.darwin-arm64.node')
-          } else {
-            nativeBinding = require('@cool/core-darwin-arm64')
-          }
-        } catch (e) {
-          loadError = e
-        }
-        break
-      default:
-        throw new Error(`Unsupported architecture on macOS: ${arch}`)
-    }
-    break
-  // ...
-  default:
-    throw new Error(`Unsupported OS: ${platform}, architecture: ${arch}`)
-}
-
-if (!nativeBinding) {
-  if (loadError) {
-    throw loadError
-  }
-  throw new Error(`Failed to load native binding`)
-}
-
-const { plus100 } = nativeBinding
-
-module.exports.plus100 = plus100
-```
-
-The generated `index.js` file is responsible for loading the **_right_** binary file depending on the target platform that is executing the package. The `index.js` also handles two cases:
-
-#### Package installed in users `node_modules`
-
-To load the correct binary, the `index.js` function tries to load all possible packages for that platform (there may be multiple possible binary packages for a given system and CPU architecture), for example, on the `Linux x64` platform, `index.js` tries to load `@cool/core-linux-x64-gnu` and `@cool/core-linux-x64-musl`. The package `@cool/core-linux-x64-gnu` will be loaded if the user is using an operating system like `Ubuntu` `Debian` with `gnu libc` pre-installed. And if the user is using an operating system like `Alpine` with `musl libc` pre-installed, then `@cool/core-linux-x64-musl` will be loaded.
-
-#### Local development
-
-The `build` command in package.json in the project generated by the `@napi-rs/cli` new command will generate the binary dynamic link library compiled from the `Rust` code into the current directory for debugging purposes. `index.js` will also try to load the corresponding binary from the current directory in this case. Again using `Linux x64` as an example, the `index.js` function will try to load the `core.linux-x64-gnu.node` and `core.linux-x64-musl.node` files in turn.
-
-## Start from **GitHub template project**
-
-### `yarn`
+## Start directly from a template
 
 ![package-template](./package-template.png)
 
-1. Go to [GitHub template project](https://github.com/napi-rs/package-template)
-2. **Click Use this template**.
-3. Clone your project.
-4. Run `yarn install` to install dependencies.
-5. Run `yarn napi rename` command under the project folder to rename your package.
+If you prefer GitHub's **Use this template** flow, choose the matching project:
 
-### `pnpm`
+- [Yarn package template](https://github.com/napi-rs/package-template)
+- [pnpm package template](https://github.com/napi-rs/package-template-pnpm)
 
-1. Go to [GitHub template project](https://github.com/napi-rs/package-template-pnpm)
-2. **Click Use this template**.
-3. Clone your project.
-4. Run `pnpm install` to install dependencies.
-5. Run `pnpx napi rename` command under the project folder to rename your package.
+After cloning, install dependencies and run `napi rename` through the selected
+package manager before publishing under your own package name.
+
+## Next steps
+
+- [`napi new`](/docs/cli/new) for every scaffold option.
+- [Build](/docs/cli/build) and [Cross build](/docs/cross-build) for additional
+  targets.
+- [Release native packages](/docs/deep-dive/release) before publishing anything
+  to npm.

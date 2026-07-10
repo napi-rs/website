@@ -10,36 +10,33 @@ description: 使用 tokio 运行时运行一个 Rust 异步函数。
 
 **Cargo.toml**
 
-```toml {3}
+```toml {2}
 [dependencies]
-napi = { version = "2", features = ["async"] }
+napi = { version = "3", features = ["async", "tokio_fs"] }
+napi-derive = "3"
 ```
+
+下面的例子使用 `tokio_fs` 子特性。只启用 addon 实际使用的 Tokio API。
 
 :::
 
 你可以通过 `AsyncTask` 和 `ThreadsafeFunction` 做很多 异步/多线程 的工作，但有时你可能想直接使用 Rust 异步生态系统中的包。
 
-**NAPI-RS** 默认支持 `tokio` 运行时，如果你在 `async fn` 中 `await` 一个 tokio `future`，
-**NAPI-RS** 将在 tokio 运行时中执行它，并将其转换为 JavaScript `Promise`。
+启用 `async` 或 `tokio_rt` 后，**NAPI-RS** 会提供 Tokio 运行时。如果你在导出的
+`async fn` 中 `await` 一个 Tokio future，**NAPI-RS** 会在该运行时中执行它，
+并把结果转换为 JavaScript `Promise`。
 
 **lib.rs**
 
 ```rust {6}
-use futures::prelude::*;
 use napi::bindgen_prelude::*;
-use tokio::fs;
+use napi::tokio::fs;
+use napi_derive::napi;
 
 #[napi]
-async fn read_file_async(path: String) -> Result<Buffer> {
-  fs::read(path)
-    .map(|r| match r {
-      Ok(content) => Ok(content.into()),
-      Err(e) => Err(Error::new(
-        Status::GenericFailure,
-        format!("failed to read file, {}", e),
-      )),
-    })
-    .await
+pub async fn read_file_async(path: String) -> Result<Buffer> {
+  let content = fs::read(path).await?;
+  Ok(content.into())
 }
 ```
 

@@ -1,0 +1,266 @@
+---
+title: '模块初始化'
+description: 在 NAPI-RS 原生模块加载时运行自定义设置。
+---
+
+# 模块初始化
+
+NAPI-RS 提供两个模块初始化 API：`#[napi_derive::module_init]` 和 `#[napi(module_exports)]`。它们看起来相似，但用途不同，执行时机也不同。
+
+## 执行时间线
+
+要正确使用这两个 API，关键是理解各自何时执行：
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Node.js loads .node file                     │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  1. #[napi_derive::module_init] runs                            │
+│     (via ctor - runs at dynamic library load time)              │
+│     Runs once for this native library load                     │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  2. napi_register_module_v1 called by Node.js                   │
+│     - Registers all #[napi] exports (functions, classes, etc.)  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  3. #[napi(module_exports)] runs                                │
+│     Receives the exports object, can customize it               │
+│     Runs ONCE per Node.js thread/context                        │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  4. Module is ready for use in JavaScript                       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## `#[napi_derive::module_init]`
+
+该宏标记一个函数，使其在原生模块加载时运行。它内部使用
+[`ctor`](https://crates.io/crates/ctor) crate，在 Node-API 注册 JavaScript 导出之前执行。
+
+### 时机
+
+- 在**动态库加载时**运行（早于 `napi_register_module_v1`）
+- 每次原生动态库加载执行一次，而不是每个 Node-API 环境执行一次；
+  同一进程中的 worker 通常共享已加载的动态库
+- 无法访问 Node.js 环境或 exports 对象
+
+### 签名
+
+```rust
+#[napi_derive::module_init]
+fn init() {
+  // initialization code
+}
+```
+
+该函数不能有参数或返回值。
+
+### 使用场景
+
+以下情况适合使用 `#[napi_derive::module_init]`：
+
+- **设置异步运行时**（例如 tokio）
+- **初始化全局状态**，供所有线程共享
+- 在注册任何导出之前必须完成的**一次性设置**
+- **配置日志或 tracing**
+
+### 示例：自定义 Tokio Runtime
+
+**lib.rs**
+
+```rust
+use napi::bindgen_prelude::create_custom_tokio_runtime;
+
+#[napi_derive::module_init]
+fn init() {
+  let runtime = napi::tokio::runtime::Builder::new_multi_thread()
+    .enable_all()
+    .thread_name("my-native-module")
+    .build();
+  match runtime {
+    Ok(rt) => create_custom_tokio_runtime(rt),
+    Err(err) => eprintln!("failed to create custom Tokio runtime: {err}"),
+  }
+}
+```
+
+::: warning
+上例配置的多线程 Tokio 运行时依赖具体目标。请对该运行时设置进行条件编译，或选择
+WebAssembly 目标支持的运行时配置。`module_init` 宏本身支持 WebAssembly 构建。
+
+:::
+
+## `#[napi(module_exports)]`
+
+该宏标记一个接收模块 `exports` 对象的函数，使你能在模块返回给 JavaScript 前自定义该对象。
+
+### 时机
+
+- 在注册所有 `#[napi]` 导出**之后**运行
+- 在 `napi_register_module_v1`（Node.js 模块注册）**期间**运行
+- 每个 Node.js 上下文执行**一次**（主线程和每个 worker thread）
+
+### 签名
+
+函数可返回 `()` 或 `Result<()>`。如果存在参数，每个参数必须是
+`Env`、`Object` 或对它们的引用。`Object` 接收模块的 exports 对象，
+`Env` 接收当前 Node-API 环境。常见签名如下：
+
+```rust
+// With just the exports object
+#[napi(module_exports)]
+pub fn init(mut exports: Object) -> Result<()> {
+  // customize exports
+  Ok(())
+}
+
+// With exports and Env
+#[napi(module_exports)]
+pub fn init(mut exports: Object, env: Env) -> Result<()> {
+  // customize exports with access to Env
+  Ok(())
+}
+```
+
+### 使用场景
+
+以下情况适合使用 `#[napi(module_exports)]`：
+
+- 向 exports 对象**添加自定义属性**
+- **创建需要导出的 symbol**
+- **以程序化方式注册导出**（不使用 `#[napi]`）
+- 需要 Node.js 环境的**每线程初始化**
+
+### 示例：添加 Symbol
+
+**lib.rs**
+
+```rust
+use napi::bindgen_prelude::*;
+
+#[napi(module_exports)]
+pub fn init(mut exports: Object) -> Result<()> {
+  // Add a unique symbol to exports
+  let symbol = Symbol::new("MY_MODULE_SYMBOL");
+  exports.set_named_property("MY_SYMBOL", symbol)?;
+
+  // Add a version string
+  exports.set_named_property("VERSION", "1.0.0")?;
+
+  Ok(())
+}
+```
+
+**index.js**
+
+```js
+const native = require('./index.node')
+
+console.log(native.MY_SYMBOL) // Symbol(MY_MODULE_SYMBOL)
+console.log(native.VERSION) // "1.0.0"
+```
+
+## 主要区别
+
+| 方面                 | `#[napi_derive::module_init]` | `#[napi(module_exports)]` |
+| -------------------- | ----------------------------- | ------------------------- |
+| **执行时间**         | 加载 `.node` 文件时           | 模块注册期间              |
+| **执行频率**         | 每次原生库/模块加载           | 每个 Node-API 环境/上下文 |
+| **接收 exports**     | 否                            | 是                        |
+| **可以修改 exports** | 否                            | 是                        |
+| **访问 Env**         | 否                            | 是（可选）                |
+| **WebAssembly 支持** | 是（通过我们的 JS 绑定）      | 是                        |
+
+## 配合使用
+
+这两个 API 彼此补充，可以同时使用：
+
+**lib.rs**
+
+```rust
+use napi::bindgen_prelude::*;
+
+// Runs once at module load - setup tokio runtime
+#[cfg(not(target_family = "wasm"))]
+#[napi_derive::module_init]
+fn setup_runtime() {
+  let runtime = napi::tokio::runtime::Builder::new_multi_thread()
+    .enable_all()
+    .build();
+  match runtime {
+    Ok(rt) => create_custom_tokio_runtime(rt),
+    Err(err) => eprintln!("failed to create custom Tokio runtime: {err}"),
+  }
+}
+
+// Runs per thread - customize exports
+#[napi(module_exports)]
+pub fn customize_exports(mut exports: Object) -> Result<()> {
+  exports.set_named_property("THREAD_SAFE_SYMBOL", Symbol::new("THREAD_SAFE"))?;
+  Ok(())
+}
+
+// Regular export via #[napi]
+#[napi]
+pub async fn do_async_work() -> String {
+  // This uses the tokio runtime set up in module_init
+  napi::tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+  "done".to_string()
+}
+```
+
+自定义 runtime 示例需要启用 `napi` 的 `async`（或 `tokio_rt`）feature。
+sleep 示例还需要 `tokio_time`：
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = { version = "3", features = ["async", "tokio_time"] }
+napi-derive = "3"
+```
+
+## Worker Thread 行为
+
+在 Node.js 中使用 worker thread 时，两个 API 的行为不同：
+
+**main.js**
+
+```js
+const { Worker } = require('worker_threads')
+
+// Main thread loads module
+const native = require('./index.node')
+// -> module_init runs (first time)
+// -> module_exports runs (main thread)
+
+// Worker thread loads same module
+new Worker(
+  `
+  const native = require('./index.node')
+  // -> module_init does NOT run again (already ran)
+  // -> module_exports DOES run again (new thread context)
+`,
+  { eval: true },
+)
+```
+
+这意味着：
+
+- 全局资源（例如 tokio runtime）只初始化一次并共享
+- 可以在 `module_exports` 中为每个上下文设置线程状态
+
+::: info
+`#[napi_derive::module_init]` 函数通过 `ctor` crate 运行；该 crate 使用平台特定机制（Unix 上的 `.init_array`、Windows 上的特殊构造函数）在动态库加载时执行。
+
+:::

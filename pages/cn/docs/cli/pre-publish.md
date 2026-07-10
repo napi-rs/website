@@ -1,0 +1,129 @@
+---
+title: '发布前准备'
+description: 安全地设置版本、发布并附加 napi-rs 平台包。
+---
+
+# 发布前准备
+
+`napi pre-publish`（别名 `napi prepublish`）会根据根包的当前版本准备并发布各平台包。它还可以创建 GitHub release，并将原生二进制文件作为 release 产物上传。
+
+::: warning
+该命令默认会产生网络和 registry 副作用。它不是打包预览：在根包发布之前，它就可能发布多个不可覆盖的 npm 版本。请只在受控的发布任务中运行。
+
+:::
+
+该命令**不会**收集或复制构建产物。请先运行 [`napi artifacts`](./artifacts)。
+
+## 用法
+
+```sh
+napi pre-publish [--options]
+```
+
+```ts
+import { NapiCli } from '@napi-rs/cli'
+
+await new NapiCli().prePublish({
+  tagStyle: 'npm',
+  ghRelease: true,
+})
+```
+
+布尔选项接受 `--no-` 前缀。例如，不在 GitHub 上发布时使用 `--no-gh-release`。
+
+## 选项
+
+| 选项                  | CLI 语法                    | 类型           | 必填 | 默认值                                          | 描述                                                                                                 |
+| --------------------- | --------------------------- | -------------- | :--: | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `cwd`                 | `--cwd`                     | `string`       |  否  | `process.cwd()`                                 | 工作目录。其他所有相对路径都从这里解析。                                                             |
+| `configPath`          | `--config-path,-c`          | `string`       |  否  |                                                 | 独立 napi 配置 JSON 文件。                                                                           |
+| `packageJsonPath`     | `--package-json-path`       | `string`       |  否  | <span class="chalk-green">`package.json`</span> | 根包元数据与发布版本。                                                                               |
+| `npmDir`              | `--npm-dir,-p`              | `string`       |  否  | <span class="chalk-green">`npm`</span>          | 每个已配置目标各有一个准备好的包的目录。                                                             |
+| `tagStyle`            | `--tag-style,--tagstyle,-t` | `npm \| lerna` |  否  | <span class="chalk-green">`lerna`</span>        | GitHub release tag 的解析方式。`npm` 使用 `v<package version>`；`lerna` 从最新发布提交中读取包 tag。 |
+| `ghRelease`           | `--gh-release`              | `boolean`      |  否  | `true`                                          | 有 GitHub 仓库元数据时创建/查找 GitHub release 并上传目标二进制文件。                                |
+| `ghReleaseName`       | `--gh-release-name`         | `string`       |  否  |                                                 | 创建 GitHub release 时传入的名称。                                                                   |
+| `ghReleaseId`         | `--gh-release-id`           | `string`       |  否  |                                                 | 用于接收产物的现有 release 数字 ID。不会创建新 release。                                             |
+| `skipOptionalPublish` | `--skip-optional-publish`   | `boolean`      |  否  | `false`                                         | 不对各平台包运行包管理器的 publish 命令。元数据更新和启用的 GitHub 产物上传仍会执行。                |
+| `dryRun`              | `--dry-run`                 | `boolean`      |  否  | `false`                                         | 跳过包文件修改、npm 发布、GitHub release 创建与产物上传。                                            |
+
+## 确切副作用
+
+不使用 `--dry-run` 时，命令依次执行以下阶段：
+
+1. 读取根包和 napi 配置。
+2. 将每个已配置平台包的 `version` 设为根包版本。
+3. 把每个已配置目标的精确版本平台包条目合并到根包的 `optionalDependencies`。现有条目会被保留，包括已经废弃的目标包。
+4. 启用 GitHub release 时，从最新 Git 提交和 `GITHUB_REPOSITORY` 解析 release 元数据，并创建 release；除非 `--gh-release-id` 选择了现有 release。
+5. 对 npm 目录中存在预期 `.node` 或 `.wasm` 文件的每个目标，运行 `<npmClient> publish`；设置 `--skip-optional-publish` 时除外。
+6. 启用 GitHub release 时，将该目标文件作为 release 产物上传。
+
+预期目标文件缺失时只会产生警告并被跳过，不会使命令失败。GitHub release 创建和产物上传失败也只会被记录，并可能不会阻止 npm 发布。因此 CI 必须独立验证完整产物集和最终外部状态。
+
+`napi pre-publish` 从不发布根包本身。在生成的模板中，它作为 `prepublishOnly` 运行；返回成功后，外层 `npm publish` 操作才会发布根包。
+
+## 发布所需状态
+
+使用真实凭据运行命令前，请确认以下所有事项：
+
+- 根 `package.json` 版本已最终确定且从未发布。
+- `repository` 指向真实 GitHub 仓库。npm provenance 会验证仓库与工作流身份。
+- `napi.targets` 只包含本次发布计划中的包。
+- 已检查现有 `optionalDependencies`。该命令会添加或更新已配置目标，但不会删除陈旧的平台条目。
+- [`napi create-npm-dirs`](./create-npm-dirs) 已创建每个目标包。
+- [`napi artifacts`](./artifacts) 已把每个预期二进制文件放入目标包和根工作区。
+- 每个目标都已在它声称支持的环境中通过运行时测试。
+- 配置的 npm 客户端已获得根包和所有目标包的认证。
+- 启用 GitHub release 时，可以使用 `GITHUB_TOKEN`、`GITHUB_REPOSITORY` 和 `contents: write`。
+- 如果发布需要 provenance，工作流具有 `id-token: write` 且已启用 npm provenance。
+
+生成的单包工作流应使用 npm tag 风格：
+
+**package.json**
+
+```json
+{
+  "scripts": {
+    "prepublishOnly": "napi prepublish -t npm"
+  }
+}
+```
+
+默认的 `lerna` 风格仅适用于提交正文列出待发布包 tag 的 Lerna release 提交。
+
+## 安全预览
+
+直接运行该命令自己的 dry-run 模式：
+
+```sh
+DEBUG=napi:* yarn napi prepublish -t npm --dry-run
+```
+
+这会确认配置和 Git release 元数据可读取，但不会验证目标二进制文件存在，也不会测试 registry 授权。
+
+如果想检查 npm tarball 而不触发真实的 `prepublishOnly` 脚本，请显式禁用生命周期脚本：
+
+```sh
+npm pack --dry-run --ignore-scripts
+```
+
+::: danger
+不要把 `npm publish --dry-run` 当作安全替代方案。npm 仍可能运行生命周期脚本，而包含 `napi prepublish` 的 `prepublishOnly` 脚本可能使用真实凭据发布平台包。
+
+:::
+
+## 部分失败与恢复
+
+发布不是事务操作。npm 不允许覆盖已发布的名称和版本，该命令也无法回滚已存在的包。
+
+如果一次运行失败：
+
+1. 在弄清哪些包和产物已存在之前，停止自动重试。
+2. 对每个目标运行 `npm view <package>@<version> version`，单独检查根包，并检查 GitHub release 产物。
+3. 保留同一组构建产物。绝不能在另一目标已经发布某版本后，用更改过的二进制文件发布同一版本。
+4. 以相同版本重新运行，发布缺失目标。CLI 会识别 npm 标准的“previously published versions”错误并跳过这些包；其他 registry 错误仍会使运行失败。
+5. 传入 `--gh-release-id <id>` 复用现有 GitHub release；如果 release 产物有意在其他地方管理，则使用 `--no-gh-release`。
+6. 只有在确认**所有**平台包已经存在后才使用 `--skip-optional-publish`。它不会替你验证这一条件。
+
+如果所有平台包都存在但根包发布失败，请在可信发布任务中禁用生命周期脚本并发布未更改的根 tarball，例如 `npm publish --ignore-scripts --access public`。保持相同的 provenance 配置。如果根包已经发布而某个平台包缺失，请立即发布缺失包，或弃用损坏的根版本；npm 不提供原子回滚。
+
+完整 CI 操作手册参见[发布原生包](/docs/deep-dive/release)。

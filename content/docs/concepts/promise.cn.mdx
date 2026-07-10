@@ -9,16 +9,24 @@ description: 在 Rust 中 await 一个 JavaScript Promise。
 import { Callout } from 'nextra-theme-docs'
 
 <Callout>
-  Await JavaScript `Promise` 需要启用 `tokio_rt` 和 `napi4` 特性。
+  Await JavaScript `Promise` 需要启用 `async` 或 `tokio_rt` 特性；
+  `tokio_rt` 会自动启用 `napi4`。
+</Callout>
+
+<Callout type="info">
+  当 `T: Send` 时 `Promise<T>` 才是 `Send`，因此编译器会阻止非 `Send` 的
+  resolve 值跨 Tokio worker thread 移动。
 </Callout>
 
 ```rust filename="lib.rs"
 use napi::bindgen_prelude::*;
+use napi_derive::napi;
 
 #[napi]
 pub async fn async_plus_100(p: Promise<u32>) -> Result<u32> {
   let v = p.await?;
-  Ok(v + 100)
+  v.checked_add(100)
+    .ok_or_else(|| Error::new(Status::InvalidArg, "result exceeds u32"))
 }
 ```
 

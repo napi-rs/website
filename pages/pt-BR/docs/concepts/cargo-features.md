@@ -1,0 +1,240 @@
+---
+title: 'Recursos do Cargo'
+description: Configure o nível do Node-API, suporte assíncrono, conversões, diagnósticos e recursos de compatibilidade.
+---
+
+# Recursos do Cargo
+
+O conjunto de recursos de `napi` controla quais símbolos do Node-API e APIs Rust de alto nível são compilados no addon. Escolha o nível mais baixo do Node-API que forneça as APIs usadas e habilite somente as integrações opcionais necessárias para sua crate.
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = { version = "3", features = ["napi6", "async", "serde-json"] }
+napi-derive = "3"
+```
+
+## Padrões
+
+`napi` habilita estes recursos por padrão:
+
+```toml
+default = ["napi4", "dyn-symbols"]
+```
+
+Isso significa que adicionar `features = ["napi2"]` sem desabilitar os padrões ainda compila para o Node-API 4. Para usar um nível abaixo de 4, desabilite explicitamente os padrões e decida se quer manter o carregamento dinâmico de símbolos:
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = {
+  version = "3",
+  default-features = false,
+  features = ["napi3", "dyn-symbols"]
+}
+```
+
+::: warning
+Um recurso do Cargo é uma capacidade de compilação, não um polyfill em tempo
+de execução. Chamar uma função Node-API que o host não fornece é incompatível,
+mesmo quando `dyn-symbols` permite que a própria biblioteca nativa seja carregada.
+
+:::
+
+## Níveis do Node-API
+
+Os recursos `napi1` a `napi10` são cumulativos. Por exemplo, `napi8` habilita `napi7`, que habilita todos os níveis inferiores. O nível escolhido é a capacidade mínima do Node-API da qual seu addon pode depender.
+
+| Recurso  | APIs representativas do napi-rs condicionadas a este nível                                                                                    |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `napi1`  | Valores, funções, objetos, arrays e buffers básicos, trabalho assíncrono, Promises e referências.                                             |
+| `napi2`  | Acesso ao event loop do libuv com `Env::get_uv_event_loop` em alvos nativos.                                                                  |
+| `napi3`  | Hooks de limpeza do ambiente.                                                                                                                 |
+| `napi4`  | ThreadsafeFunction, integração deferred/runtime assíncrono e o mecanismo de limpeza de referências entre threads do napi-rs. Este é o padrão. |
+| `napi5`  | `Date` JavaScript, finalizers e APIs relacionadas de objetos/propriedades.                                                                    |
+| `napi6`  | BigInt e typed arrays de BigInt, dados de instância por ambiente e APIs adicionais de objeto/ArrayBuffer.                                     |
+| `napi7`  | Desanexar e testar ArrayBuffers desanexados.                                                                                                  |
+| `napi8`  | Hooks de limpeza assíncrona, freeze/seal de objetos e APIs de tag de tipo.                                                                    |
+| `napi9`  | Symbols globais, nomes de arquivo de módulos e criação/lançamento de `SyntaxError` JavaScript.                                                |
+| `napi10` | Strings externas Latin-1/UTF-16 e APIs dedicadas de criação de chaves de propriedade.                                                         |
+
+A tabela lista gates representativos de alto nível, não todas as funções brutas reexportadas por `napi-sys`.
+
+O Node.js fez backport de alguns níveis do Node-API para várias linhas de lançamento, portanto uma única versão principal do Node não é um teste de compatibilidade preciso. Consulte a [matriz oficial de versões do Node-API](https://nodejs.org/api/n-api.html#node-api-version-matrix) e o valor real do runtime:
+
+```js
+console.log(process.versions.napi)
+```
+
+No código nativo, `Env::get_napi_version()` lê o mesmo valor. A declaração de runtimes compatíveis do seu pacote não deve ser mais ampla do que o nível Node-API escolhido e as versões de runtime que você realmente testa.
+
+### Escolhendo um nível
+
+1. Comece com o `napi4` do template/padrão, a menos que uma dependência ou API necessária exija outra coisa.
+2. Aumente o nível quando o compilador indicar que uma API necessária é condicionada a um recurso.
+3. Teste o runtime mais antigo no intervalo de compatibilidade resultante.
+4. Mantenha `minNodeApiVersion` da CLI, recursos do Cargo, `engines` do pacote e a matriz de CI consistentes.
+
+Aumentar o recurso pode tornar o addon resultante impossível de carregar ou usar em runtimes mais antigos. Diminuí-lo remove APIs Rust durante a compilação e é a maneira mais segura de descobrir dependências acidentais de um nível mais novo.
+
+## Async e Tokio
+
+| Recurso           | Habilita                                                                                   | Compensação importante                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `tokio_rt`        | Integração com o runtime Tokio do napi-rs e `napi4`; reexporta `tokio` a partir de `napi`. | Adiciona código do runtime Tokio e gestão de ciclo de vida. Obrigatório para `async fn` Rust exportada.        |
+| `async`           | Alias para `tokio_rt`.                                                                     | Use qualquer um dos nomes; habilitar os dois é redundante.                                                     |
+| `tokio_full`      | O conjunto `full` de recursos do Tokio.                                                    | Grande aumento de dependências e tamanho do binário; **não** substitui `tokio_rt` na integração com o napi-rs. |
+| `tokio_fs`        | APIs de sistema de arquivos do Tokio.                                                      | Habilite também `tokio_rt`/`async` para funções assíncronas exportadas.                                        |
+| `tokio_io_std`    | stdin/stdout/stderr assíncronos do Tokio.                                                  | Mesmo requisito de runtime.                                                                                    |
+| `tokio_io_util`   | Traits e adaptadores utilitários de I/O do Tokio.                                          | Mesmo requisito de runtime.                                                                                    |
+| `tokio_macros`    | Macros procedurais do Tokio.                                                               | Não é necessário apenas para exportar uma `async fn` com `#[napi]`.                                            |
+| `tokio_net`       | Rede do Tokio.                                                                             | Mesmo requisito de runtime.                                                                                    |
+| `tokio_process`   | Suporte a processos filhos do Tokio.                                                       | O comportamento específico da plataforma continua se aplicando.                                                |
+| `tokio_signal`    | Tratamento de sinais do Tokio.                                                             | As interações de sinal no processo inteiro continuam se aplicando.                                             |
+| `tokio_sync`      | Tipos de sincronização do Tokio.                                                           | Mesmo requisito de runtime.                                                                                    |
+| `tokio_test_util` | Utilitários de tempo/teste do Tokio.                                                       | Principalmente para testes.                                                                                    |
+| `tokio_time`      | Timers e timeouts do Tokio.                                                                | Mesmo requisito de runtime.                                                                                    |
+
+Os recursos de componentes habilitam recursos na dependência Tokio. Nem todos implicam o `tokio_rt` do napi-rs; liste-o explicitamente, a menos que outro recurso selecionado, como `web_stream`, já o habilite.
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = { version = "3", features = ["async", "tokio_fs", "tokio_time"] }
+```
+
+Para trabalho limitado por CPU, prefira [AsyncTask](/docs/concepts/async-task), que usa o pool de workers do libuv, em vez de bloquear o runtime Tokio.
+
+## Recursos de conversão
+
+| Recurso              | Adiciona                                                                                             | Observações                                                                                                                            |
+| -------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `serde-json`         | Conversão de `serde_json::Value`, `Map` e `Number`; habilita `serde` e `serde_json`.                 | Valores JavaScript fora do modelo de dados do JSON são rejeitados ou exigem uma representação explícita.                               |
+| `serde-json-ordered` | `serde-json` mais `serde_json/preserve_order`.                                                       | Preserva a ordem de inserção do map na representação do serde_json; as regras de ordem de propriedades do JavaScript ainda se aplicam. |
+| `chrono_date`        | Conversão de `chrono::DateTime` e `NaiveDateTime`; habilita `chrono` e `napi5`.                      | A precisão do Date JavaScript é de milissegundos.                                                                                      |
+| `latin1`             | Decodificação/exibição de Latin-1 para UTF-8 por meio de `encoding_rs`.                              | A conversão de `Latin1String` existe sem esse recurso; o suporte de formatação/decodificação é condicionado a ele.                     |
+| `object_indexmap`    | Conversões de `IndexMap` e `IndexSet`.                                                               | Adiciona a dependência `indexmap`. Maps ainda usam objetos JavaScript simples; sets usam `Set` JavaScript.                             |
+| `web_stream`         | `ReadableStream` e `WriteableStream`; habilita `futures-core`, `tokio-stream`, `tokio_rt` e `napi4`. | O runtime também deve fornecer globais de Web Streams compatíveis.                                                                     |
+| `error_anyhow`       | Conversão de `anyhow::Error` e a dependência opcional `anyhow`.                                      | A conversão usa `GenericFailure`; mapeie erros manualmente para obter códigos de domínio estáveis.                                     |
+
+Consulte [Conversões de tipos](/docs/concepts/type-conversions) para direcionalidade e comportamento de cópia de dados.
+
+## Linkedição e detecção do runtime
+
+### `dyn-symbols`
+
+Em alvos nativos compatíveis, `dyn-symbols` resolve funções do Node-API a partir do processo host quando o addon inicializa, em vez de exigir que todos os símbolos sejam resolvidos pelo linker da plataforma. Ele é habilitado por padrão.
+
+Isso é especialmente útil entre sistemas operacionais e hosts compatíveis com Node que têm comportamentos diferentes de linkedição nativa. Funções ausentes usam stubs gerados para que o carregamento de símbolos continue, mas chamar uma API ausente ainda falha. `dyn-symbols` não transforma Node-API 10 em Node-API 4.
+
+Desabilite-o somente quando o modelo de linkedição estática/direta do alvo for deliberado e testado:
+
+**Cargo.toml**
+
+```toml
+napi = { version = "3", default-features = false, features = ["napi6"] }
+```
+
+### `node_version_detect`
+
+`node_version_detect` lê e armazena em cache a versão do Node host durante o registro do módulo. O napi-rs a usa para selecionar alguns caminhos otimizados e protegidos, incluindo caminhos mais novos de criação de propriedades quando os símbolos e recursos complementares necessários estão habilitados.
+
+Ele não é uma proteção geral de compatibilidade para toda chamada Node-API. Seu código ainda deve respeitar o recurso Node-API selecionado e a matriz de runtimes compatíveis.
+
+## Diagnósticos e observabilidade
+
+| Recurso          | Comportamento                                                                                                                                 | Custo / limitação                                                                           |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `deferred_trace` | Captura um erro JavaScript ao criar um deferred, para que uma rejeição posterior entre threads mantenha a stack do chamador. Implica `napi4`. | Aloca e retém um erro/referência para as operações deferred afetadas.                       |
+| `tracing`        | Reexporta `tracing` a partir de `napi`.                                                                                                       | Para emitir eventos gerados de entrada em callbacks, habilite também `napi-derive/tracing`. |
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = { version = "3", features = ["napi4", "tracing"] }
+napi-derive = { version = "3", features = ["tracing"] }
+```
+
+Os eventos gerados de callback usam o target de tracing `napi`. Instale e configure um subscriber de tracing na aplicação que incorpora o addon ou no caminho de inicialização do addon, caso queira observá-los.
+
+## Recursos de compatibilidade e somente de desenvolvimento
+
+| Recurso        | Finalidade                                                                                                               | Usar em produção?                                                                                                         |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `compat-mode`  | Restaura tipos, traits e macros de baixo nível, obsoletos desde a v2, para migração.                                     | Somente durante a migração; prefira APIs bindgen da v3 em código novo.                                                    |
+| `experimental` | Habilita símbolos brutos experimentais do Node-API e caminhos otimizados protegidos pelo napi-rs.                        | Somente quando você controla e testa o runtime; APIs experimentais do Node não têm a garantia estável de ABI do Node-API. |
+| `noop`         | Substitui caminhos de registro/conversão para permitir que crates Rust sejam compiladas ou testadas sem carregar o Node. | Não. Combine com `napi-derive/noop`; o comportamento de conversão JavaScript não é exercitado.                            |
+
+Os atributos de iterador são marcados como experimentais na API Rust, mas **não** são controlados pelo recurso Cargo `experimental`. Iteradores síncronos estão no runtime bindgen base; iteradores assíncronos requerem `tokio_rt`.
+
+### Testes somente com Cargo usando `noop`
+
+**Cargo.toml**
+
+```toml
+[features]
+noop = ["napi/noop", "napi-derive/noop"]
+
+[dependencies]
+napi = "3"
+napi-derive = "3"
+```
+
+Use isso para testar lógica Rust pura que esteja em uma crate de addon. Execute testes de integração JavaScript contra um addon realmente compilado para conversões, exceções, referências, finalizers, workers e limpeza do ambiente.
+
+## O pacote `full`
+
+`full` é um pacote de conveniência que contém exatamente:
+
+```toml
+full = [
+  "latin1",
+  "napi10",
+  "async",
+  "serde-json",
+  "experimental",
+  "chrono_date",
+]
+```
+
+Ele **não** significa todos os recursos: por exemplo, não inclui `web_stream`, `object_indexmap`, `deferred_trace`, `node_version_detect`, `tracing`, `error_anyhow` nem todos os componentes do Tokio.
+
+Como aumenta o nível do Node-API para 10 e habilita APIs experimentais, `full` é conveniente para builds de documentação e testes internos amplos, mas raramente é o padrão correto para um addon publicado.
+
+## Recursos do `napi-derive`
+
+A crate de macro procedural tem seu próprio conjunto de recursos:
+
+| Recurso       | Padrão | Efeito                                                                                                                                                        |
+| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `type-def`    | Sim    | Emite metadados consumidos por `@napi-rs/cli` para gerar declarações `.d.ts`.                                                                                 |
+| `strict`      | Sim    | Informa opções `#[napi]` analisadas que não foram usadas no item selecionado. Isso é validação do macro na compilação, não validação de argumento JavaScript. |
+| `tracing`     | Não    | Adiciona eventos de tracing aos wrappers de callback gerados. Combine com `napi/tracing`.                                                                     |
+| `compat-mode` | Não    | Habilita macros derive antigos usados pela API de compatibilidade.                                                                                            |
+| `noop`        | Não    | Desabilita a expansão normal do macro para builds/testes somente com Cargo.                                                                                   |
+| `full`        | Não    | Habilita `type-def`, `strict` e `compat-mode`.                                                                                                                |
+
+Não confunda `napi-derive/strict` com o atributo por função `#[napi(strict)]`: o recurso verifica o uso do macro durante a compilação; o atributo valida valores JavaScript em tempo de execução.
+
+## Base recomendada para addons publicados
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = {
+  version = "3",
+  default-features = false,
+  features = ["napi4", "dyn-symbols"]
+}
+napi-derive = "3"
+
+[build-dependencies]
+napi-build = "2"
+```
+
+Adicione recursos de integração somente quando a API pública exigir, documente o nível Node-API mínimo resultante e teste esse runtime mínimo e os runtimes atualmente compatíveis na CI.

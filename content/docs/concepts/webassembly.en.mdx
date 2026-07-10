@@ -1,5 +1,5 @@
 ---
-description: Build WebAssembly with **NAPI-RS**.
+description: Build, package, test, and run a NAPI-RS WASI fallback in Node.js and browsers.
 ---
 
 import { Callout } from 'nextra-theme-docs'
@@ -15,11 +15,14 @@ import NpmLogo from '../../../public/assets/npm.png'
 export const getStaticProps = async () => {
   const { createHash } = await import('node:crypto')
 
-  const wasmIssueJson = await fetch('https://api.github.com/repos/napi-rs/napi-rs/issues/1794', {
-    headers: {
-      'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
+  const wasmIssueJson = await fetch(
+    'https://api.github.com/repos/napi-rs/napi-rs/issues/1794',
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+      },
     },
-  }).then(res => res.json())
+  ).then((res) => res.json())
   return {
     props: {
       ssg: {
@@ -27,17 +30,21 @@ export const getStaticProps = async () => {
           [`https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/`]: {
             json: {
               title: 'Mitigations: Landing new class of timing attacks',
-              body: 'Several recently-published research articles have demonstrated a new class of timing attacks (Meltdown and Spectre) that work on modern CPUs.  Our internal experiments confirm that it is possible to use similar techniques from Web content to read private information between different origins.',
+              body: 'Several recently-published research articles have demonstrated a new class of timing attacks (Meltdown and Spectre) that work on modern CPUs. Our internal experiments confirm that it is possible to use similar techniques from Web content to read private information between different origins.',
               user: {
                 login: 'Luke Wagner',
               },
               repoUrl: 'blog.mozilla.org',
             },
-            og: await fetch('https://blog.mozilla.org/wp-content/blogs.dir/278/files/2021/02/moz_blog_header_som_002_1200x600.jpg')
-              .then(res => res.bytes())
+            og: await fetch(
+              'https://blog.mozilla.org/wp-content/blogs.dir/278/files/2021/02/moz_blog_header_som_002_1200x600.jpg',
+            )
+              .then((res) => res.bytes())
               .then((bytes) => Buffer.from(bytes).toString('base64')),
-            userAvatar: await fetch('https://avatars.githubusercontent.com/u/9660325?v=4')
-              .then(res => res.bytes())
+            userAvatar: await fetch(
+              'https://avatars.githubusercontent.com/u/9660325?v=4',
+            )
+              .then((res) => res.bytes())
               .then((bytes) => Buffer.from(bytes).toString('base64')),
           },
           [`https://github.com/napi-rs/napi-rs/issues/1794`]: {
@@ -49,8 +56,14 @@ export const getStaticProps = async () => {
               },
               repoUrl: `napi-rs/napi-rs`,
             },
-            og: await fetch(`https://opengraph.githubassets.com/${createHash('sha256').update(wasmIssueJson.updated_at).digest('hex')}/napi-rs/napi-rs/issues/1794`).then(res => res.bytes()).then((bytes) => Buffer.from(bytes).toString('base64')),
-            userAvatar: await fetch(wasmIssueJson.user.avatar_url).then(res => res.bytes()).then((bytes) => Buffer.from(bytes).toString('base64')),
+            og: await fetch(
+              `https://opengraph.githubassets.com/${createHash('sha256').update(wasmIssueJson.updated_at).digest('hex')}/napi-rs/napi-rs/issues/1794`,
+            )
+              .then((res) => res.bytes())
+              .then((bytes) => Buffer.from(bytes).toString('base64')),
+            userAvatar: await fetch(wasmIssueJson.user.avatar_url)
+              .then((res) => res.bytes())
+              .then((bytes) => Buffer.from(bytes).toString('base64')),
           },
         },
       },
@@ -58,60 +71,201 @@ export const getStaticProps = async () => {
   }
 }
 
-# WebAssembly
+# WebAssembly and WASI
 
 <Callout type="info">
   There is a amazing WebAssembly course developed by [@Dominic Elm](https://x.com/elmd_): <a style={{ color: 'var(--color-indigo-400)', textDecorationLine: 'underline' }} href="https://learn-wasm.dev/?via=brooklyn" target="_blank">Learn **WebAssembly**</a>
 </Callout>
 
-**NAPI-RS** supports building `WebAssembly` target and running it in the browser and Node.js. For now we only support the [`wasm32-wasip1-threads`](https://doc.rust-lang.org/rustc/platform-support/wasm32-wasip1-threads.html) target.
+NAPI-RS can compile an addon to
+[`wasm32-wasip1-threads`](https://doc.rust-lang.org/rustc/platform-support/wasm32-wasip1-threads.html)
+and generate loaders for Node.js and browsers. The primary use cases are:
 
-<Callout>
-  In theory, `wasm32-unknown-unknown` and `wasm32-wasip1` targets can also be supported, but these two targets are only suitable for people who have deep understanding of `WebAssembly`. For example, you need to handle cases where `std::threads` is used in your code and dependencies yourself, which makes compilation very complex.
-  At the current stage, **NAPI-RS**'s `WebAssembly` support is targeted at users who use `WebAssembly` as a fallback in Node.js, as well as users who develop playgrounds and repro in browsers/StackBlitz. These users are not very sensitive to bundle size, so we choose to only support the `wasm32-wasip1-threads` target by default to reduce noise when this feature is in the early stage.
+- a portable fallback when no prebuilt native addon matches the host;
+- a browser, StackBlitz, or WebContainer demo of the same Rust API;
+- an explicitly WASI-targeted package.
+
+`wasm32-wasip1-threads` is currently the supported default. Lower-level
+`wasm32-unknown-unknown` and non-threaded WASI targets require you to adapt
+threading and dependencies yourself and are not generated by this workflow.
+
+<Callout type="warning">
+  A WASI build is not automatically equivalent to a native addon. Operating
+  system APIs, native C/C++ dependencies, filesystem behavior, threads, memory
+  limits, and host runtime support can differ. Test the WASI artifact as a
+  separate release target.
 </Callout>
 
-The example app below is a simple image transformer, it's using [`@napi-rs/image`](https://github.com/Brooooooklyn/Image) directly:
+## Quick start
+
+The easiest starting point is `napi new` with the WASI target enabled. For an
+existing project, install the Rust target and add it to `napi.targets`:
+
+```sh
+rustup target add wasm32-wasip1-threads
+```
+
+```json filename="package.json"
+{
+  "name": "@scope/my-addon",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "browser": "browser.js",
+  "napi": {
+    "binaryName": "my-addon",
+    "targets": [
+      "x86_64-unknown-linux-gnu",
+      "aarch64-apple-darwin",
+      "x86_64-pc-windows-msvc",
+      "wasm32-wasip1-threads"
+    ],
+    "wasm": {
+      "initialMemory": 4000,
+      "maximumMemory": 65536,
+      "browser": {
+        "fs": false,
+        "asyncInit": false,
+        "buffer": false,
+        "errorEvent": true
+      }
+    }
+  }
+}
+```
+
+The project must have compatible `@emnapi/core` and `@emnapi/runtime`
+dependencies. The scaffolds created by current `napi new` include them. If the
+versions resolved by the project differ from the `emnapi` version used by the
+CLI, the build stops with an explicit version-mismatch error; update them
+together rather than bypassing the check.
+
+Build the WASI target:
+
+```sh
+napi build --platform --release --target wasm32-wasip1-threads
+```
+
+No cross-compilation flag is needed. Pure-Rust crates use Rust's WASI linker.
+`WASI_SDK_PATH` is only needed when C/C++ code in the dependency tree requires a
+WASI C toolchain.
+
+## Generated artifacts
+
+For `binaryName: "my-addon"`, the build creates:
+
+| File | Purpose |
+| --- | --- |
+| `my-addon.wasm32-wasi.wasm` | Stripped release WASM module |
+| `my-addon.wasm32-wasi.debug.wasm` | Module retaining debug/name information when generation succeeds |
+| `my-addon.wasi.cjs` | Node.js WASI loader |
+| `my-addon.wasi-browser.js` | Browser ESM loader |
+| `wasi-worker.mjs` | Node worker used by emnapi threads |
+| `wasi-worker-browser.mjs` | Browser worker used by emnapi threads |
+| `browser.js` | Package browser entry that re-exports the WASI platform package |
+| `index.js` and `index.d.ts` | Normal platform-selecting loader and shared types |
+
+Keep each loader with its worker and WASM files. Renaming or moving one file
+without regenerating the loader breaks its relative URLs.
+
+## How native-to-WASI fallback works
+
+The normal `index.js` loader first tries the native binary for the current
+platform. If native loading fails, it tries:
+
+1. a local `my-addon.wasi.cjs`;
+2. the separately published `@scope/my-addon-wasm32-wasi` package.
+
+Use `NAPI_RS_FORCE_WASI` to test the fallback even on a supported native host.
+For loaders generated by `@napi-rs/cli` 3.7 or newer:
+
+| Value | Behavior |
+| --- | --- |
+| unset or any other string | Prefer native; try WASI only after native fails |
+| `true` | Attempt and select WASI even if native loaded; no strict missing-WASI assertion |
+| `error` | Attempt WASI and throw if no local or packaged WASI binding exists |
+
+Values such as `1`, `0`, and `false` do not force WASI. Use `error` in tests so
+a missing artifact cannot silently use the native implementation:
+
+```sh
+NAPI_RS_FORCE_WASI=error node ./test.cjs
+```
+
+In Node, the generated WASI loader:
+
+- uses `NAPI_RS_ASYNC_WORK_POOL_SIZE`, then `UV_THREADPOOL_SIZE`, then `4` for
+  the emnapi async-work pool;
+- preopens the host filesystem root through Node's WASI implementation;
+- reuses and unreferences worker threads so idle workers do not keep Node alive;
+- prefers the `.debug.wasm` file when it is present beside the loader.
+
+<Callout type="warning">
+  The Node WASI loader preopens the filesystem root. Treat the WASI addon as
+  trusted native application code, not as a security sandbox for untrusted
+  modules or input.
+</Callout>
+
+## Browser demo
+
+This image transformer uses
+[`@napi-rs/image`](https://github.com/Brooooooklyn/Image) through its WASI
+browser entry:
 
 <TransformImage />
-
-You can use the package like this:
 
 ```ts
 import { Transformer } from '@napi-rs/image'
 
 export async function transform() {
-  const imageBytes = await fetch('https://images-assets.nasa.gov/image/carina_nebula/carina_nebula~orig.png')
-    .then(res => res.arrayBuffer())
-  const transformer = new Transformer(imageBytes)
-  const webp = await transformer.toWebp()
+  const imageBytes = await fetch(
+    'https://images-assets.nasa.gov/image/carina_nebula/carina_nebula~orig.png',
+  ).then((res) => res.arrayBuffer())
+  const transformer = new Transformer(new Uint8Array(imageBytes))
+  return transformer.webp()
 }
 ```
 
-You can build it with the <img src={ViteLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> <span className="text-violet-500">Vite</span> or <img src={WebpackLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> <span className="text-sky-500">Webpack</span> without any additional configuration.
+After installing the WASI package and configuring cross-origin isolation, it
+can be bundled with <img src={ViteLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> <span className="text-violet-500">Vite</span> or <img src={WebpackLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> <span className="text-sky-500">Webpack</span>.
 
-## Server configuration
+For a local, unpublished build, import `./my-addon.wasi-browser.js` directly.
+For a published package, the root `browser` entry re-exports the separately
+published `-wasm32-wasi` package.
 
-To enable `WebAssembly` to use features like `threads` and `Atomics`, and to allow `Rust/C/C++` source code to be compiled directly to `WebAssembly` without modifications, **NAPI-RS** uses the `SharedArrayBuffer` feature in the browser.
+## Browser server configuration
 
-[`SharedArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer) is disabled by default due to historical security issues related to `SharedArrayBuffer`:
+The threads target uses shared WebAssembly memory, `SharedArrayBuffer`, workers,
+and atomics. Browsers expose `SharedArrayBuffer` only in a cross-origin-isolated
+page because of side-channel security mitigations:
 
 <LinkPreview href="https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/" />
 
-You need to configure the server response headers to enable `SharedArrayBuffer`, for example, in `Vite`:
+Serve the document with both headers:
+
+```text
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+```
+
+For example, in Vite:
 
 ```ts filename="vite.config.ts"
 import { defineConfig } from 'vite'
 
 export default defineConfig({
+  server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
+  },
   plugins: [
     {
-      name: 'configure-response-headers',
-      enforce: 'pre',
-      configureServer: (server) => {
+      name: 'configure-preview-response-headers',
+      configurePreviewServer(server) {
         server.middlewares.use((_req, res, next) => {
-          res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
           res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+          res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
           next()
         })
       },
@@ -120,17 +274,62 @@ export default defineConfig({
 })
 ```
 
-## Install the `WebAssembly` package
+Configure the production CDN/server as well; development headers do not carry
+over to a deployment. Cross-origin scripts, workers, WASM, images, and fonts
+must also satisfy the selected COEP policy.
 
-To reduce the installation size of **NAPI-RS** packages, `WebAssembly` packages are not installed by default. We achieve this by adding the `cpu: ["wasm32"]` field in the `package.json` of `WebAssembly` packages, which makes package managers automatically skip the installation of `WebAssembly` packages.
+Verify the result in the browser:
+
+```js
+console.log(globalThis.crossOriginIsolated) // true
+console.log(typeof SharedArrayBuffer) // 'function'
+```
+
+## Browser runtime configuration
+
+The `napi.wasm` fields control generated browser glue:
+
+| Field | Default | Effect |
+| --- | --- | --- |
+| `initialMemory` | `4000` pages | Initial shared memory (a WebAssembly page is 64 KiB) |
+| `maximumMemory` | `65536` pages | Maximum shared memory, 4 GiB |
+| `browser.fs` | `false` | Create an in-memory filesystem, preopen `/`, and export `__fs` / `__volume` |
+| `browser.asyncInit` | `false` | Use emnapi's asynchronous instantiation API |
+| `browser.buffer` | `false` | Inject the `buffer` package's `Buffer` into the emnapi context |
+| `browser.errorEvent` | `false` | Forward worker failures as `napi-rs-worker-error` window events |
+
+The browser entry fetches the WASM file and therefore uses top-level `await`
+even when `asyncInit` is `false`. Make sure the bundler/output target supports
+ESM workers, `import.meta.url`, and top-level await.
+
+With `fs: true`, filesystem access is to memfs, not the user's host filesystem:
+
+```ts
+import { __fs } from './my-addon.wasi-browser.js'
+
+__fs.writeFileSync('/input.txt', 'hello')
+```
+
+With `errorEvent: true`, observe worker errors before starting work:
+
+```ts
+window.addEventListener('napi-rs-worker-error', (event) => {
+  const { detail } = event as CustomEvent<unknown>
+  console.error('NAPI-RS WASI worker failed', detail)
+})
+```
+
+## Install the WebAssembly package
+
+To avoid increasing every native install, NAPI-RS marks the WASI platform
+package with `cpu: ["wasm32"]`. Package managers skip it unless wasm32 is an
+enabled installation architecture.
 
 <LinkPreview href="https://github.com/napi-rs/napi-rs/issues/1794" />
 
-For different package managers, there are different ways to install `WebAssembly` packages.
+### <img src={YarnLogo.src} style={{ verticalAlign: 'text-top' }} width={30} height={30} /> Yarn
 
-### <img src={YarnLogo.src} style={{ verticalAlign: 'text-top' }} width={30} height={30} /> `yarn`
-
-For **yarn v4**, you can set the [`supportedArchitectures`](https://yarnpkg.com/configuration/yarnrc#supportedArchitectures) in the `.yarnrc.yml` file to install `wasm32` packages:
+For Yarn 4, add `wasm32` to `.yarnrc.yml`:
 
 ```yaml filename=".yarnrc.yml"
 supportedArchitectures:
@@ -139,15 +338,11 @@ supportedArchitectures:
     - wasm32
 ```
 
-For **yarn v1**, you can use `--ignore-engines` to install `wasm32` packages, unfortunately, there is no other effective way to install `wasm32` package with **yarn v1** since it's not maintained.
+Yarn 1 has no equivalent maintained architecture setting. Its
+`--ignore-engines` workaround is broad and bypasses other compatibility checks;
+prefer a current package manager for packages that rely on WASI fallback.
 
-```bash
-yarn install --ignore-engines
-```
-
-### <img src={PnpmLogo.src} style={{ verticalAlign: 'text-top' }} width={30} height={30} /> `pnpm`
-
-`pnpm` supports the [`supportedArchitectures`](https://pnpm.io/settings#supportedarchitectures) too. You can set it in the `pnpm-workspace.yaml` file:
+### <img src={PnpmLogo.src} style={{ verticalAlign: 'text-top' }} width={30} height={30} /> pnpm
 
 ```yaml filename="pnpm-workspace.yaml"
 supportedArchitectures:
@@ -156,35 +351,88 @@ supportedArchitectures:
     - wasm32
 ```
 
-### <img src={NpmLogo.src} style={{ verticalAlign: 'text-top' }} width={30} height={30} /> `npm`
+### <img src={NpmLogo.src} style={{ verticalAlign: 'text-top' }} width={30} height={30} /> npm
 
-`npm` supports the [`--cpu`](https://docs.npmjs.com/cli/v11/commands/npm-install#cpu) flag since `v10.2.0`, you can use it to install `wasm32` arch packages manually:
+npm supports a target CPU flag in current releases:
 
-```bash
+```sh
 npm install --cpu=wasm32
 ```
 
-## Build the `C/C++` dependencies
+After installation, verify the package rather than assuming the setting was
+honored:
 
-If there are `C/C++` codes in your dependencies tree, you need to config the [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) before building the `WebAssembly` package.
-
-The `@napi-rs/cli` respect the `WASI_SDK_PATH` environment variable while building the `wasm32-wasip1-threads` target, this is what `WASI_SDK_PATH` folder looks like:
-
-```
-❯ lsd --tree --depth 1 $WASI_SDK_PATH
-wasi-sdk
-├── bin
-├── lib
-├── share
-└── VERSION
+```sh
+npm ls @scope/my-addon-wasm32-wasi
 ```
 
-You can download the `wasi-sdk` from the GitHub releases and set the `WASI_SDK_PATH` environment variable to the `wasi-sdk` folder:
+## Package and publish WASI
 
-```bash
-# on macOS aarch64
+WASI uses the same separate-package release flow as native targets:
 
-wget https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-25/wasi-sdk-25.0-arm64-macos.tar.gz
-tar -xvf wasi-sdk-25.0-arm64-macos.tar.gz
-export WASI_SDK_PATH="$(pwd)/wasi-sdk-25.0-arm64-macos"
+1. Include `wasm32-wasip1-threads` in `napi.targets`.
+2. Build and test it in its own CI job.
+3. Run `napi create-npm-dirs`; the generated WASI package gets `cpu:
+   ["wasm32"]`, a minimum Node engine compatible with the loader, and its
+   emnapi/runtime dependencies.
+4. Download all target artifacts and run `napi artifacts`. This copies the WASM
+   module, Node/browser loaders, and both workers into the WASI package.
+5. Run Node tests with `NAPI_RS_FORCE_WASI=error` and browser tests with
+   cross-origin isolation.
+6. Follow the normal [release guide](/docs/deep-dive/release).
+
+Inspect the final `npm pack --dry-run` output for the root package and the WASI
+platform package. The latter must contain the `.wasm`, `.wasi.cjs`,
+`.wasi-browser.js`, and worker files.
+
+## Build C/C++ dependencies
+
+If the dependency tree compiles C or C++, install
+[`wasi-sdk`](https://github.com/WebAssembly/wasi-sdk/releases) and set
+`WASI_SDK_PATH` to the extracted SDK root:
+
+```sh
+export WASI_SDK_PATH=/absolute/path/to/wasi-sdk
+test -x "$WASI_SDK_PATH/bin/clang"
+test -x "$WASI_SDK_PATH/bin/wasm-ld"
+napi build --platform --release --target wasm32-wasip1-threads
 ```
+
+The CLI always points Cargo's WASI linker variables at
+`$WASI_SDK_PATH/bin/wasm-ld`. For the C/C++ toolchain variables (`TARGET_CC`,
+`TARGET_CXX`, `TARGET_AR`, `TARGET_RANLIB`, `TARGET_CFLAGS`, `TARGET_CXXFLAGS`,
+and `TARGET_LDFLAGS`), an existing environment value wins; the CLI fills only
+unset values. A dependency may still be incompatible when it assumes POSIX APIs
+that WASI does not provide; a successful native build is not evidence that the
+same dependency supports WASI.
+
+## Runtime support matrix
+
+| Host | Status and constraints |
+| --- | --- |
+| Node.js | Generated `.wasi.cjs` path; platform package requires Node 14 or newer and uses Node WASI/worker APIs |
+| Cross-origin-isolated browser | Generated ESM + module worker path; requires shared memory, top-level await, and correct asset serving |
+| Browser without isolation | Unsupported for the threads target because shared memory is unavailable |
+| Bun and Deno | Do not claim support without a runtime test; Node-compatible WASI loading currently has an open incompatibility report |
+| Edge/serverless isolates | Host-specific; many do not expose Node WASI, filesystem, or worker APIs expected by the generated loader |
+
+The Bun/Deno limitation is tracked in
+[napi-rs#2965](https://github.com/napi-rs/napi-rs/issues/2965). It is a runtime
+compatibility gap, not something package installation instructions can fix.
+
+## Test checklist
+
+Before publishing a WASI target, test:
+
+- one plain Node import with `NAPI_RS_FORCE_WASI=error`;
+- errors and rejected async operations, not only successful functions;
+- process exit after threads and async work complete;
+- the final separately packed/installed WASI npm package;
+- a production-style browser server with COOP/COEP headers;
+- worker startup, multiple concurrent calls, and worker error forwarding;
+- browser memory growth and out-of-memory behavior under representative input;
+- memfs behavior when filesystem APIs are part of the public contract;
+- every non-Node runtime you list as supported.
+
+For failure signatures and exact probes, see
+[Troubleshooting: WASI failures](/docs/more/troubleshooting#wasi-failures).

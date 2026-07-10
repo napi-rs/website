@@ -1,0 +1,400 @@
+---
+title: 'Testing and debugging'
+description: Test a NAPI-RS addon at the Rust and JavaScript boundaries and debug native code inside Node.js.
+---
+
+# Testing and debugging
+
+A native addon has two test boundaries:
+
+- Rust tests verify logic that does not need a live JavaScript engine.
+- JavaScript integration tests load the `.node` library into Node.js and verify
+  conversion, exceptions, promises, garbage collection, and environment
+  lifecycle behavior.
+
+Use both. A Rust test cannot prove that a generated binding accepts the intended
+JavaScript value, and a JavaScript-only suite makes ordinary Rust logic slower
+and harder to isolate.
+
+## Test pure Rust logic with Cargo
+
+Keep algorithms and operating-system integration independent from NAPI-RS
+values where possible:
+
+**src/core.rs**
+
+```rust
+pub fn normalize_count(value: i32) -> Result<u32, &'static str> {
+  value.try_into().map_err(|_| "count must not be negative")
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn rejects_negative_counts() {
+    assert_eq!(normalize_count(-1), Err("count must not be negative"));
+  }
+}
+```
+
+The exported function can be a thin conversion layer:
+
+**src/lib.rs**
+
+```rust
+mod core;
+
+use napi::{Error, Result, Status};
+use napi_derive::napi;
+
+#[napi]
+pub fn normalize_count(value: i32) -> Result<u32> {
+  core::normalize_count(value)
+    .map_err(|reason| Error::new(Status::InvalidArg, reason))
+}
+```
+
+Run these tests normally:
+
+```sh
+cargo test
+```
+
+### Test exported pure functions with `noop`
+
+Native registration normally refers to symbols supplied by the Node process.
+If your test binary cannot link those symbols, enable the `noop` feature for
+both `napi` and `napi-derive` in a test-only crate feature:
+
+**Cargo.toml**
+
+```toml
+[features]
+test-noop = ["napi/noop", "napi-derive/noop"]
+```
+
+```sh
+cargo test --features test-noop
+```
+
+In `noop` mode, `#[napi]` does not generate the JavaScript registration layer,
+so an exported function made only of ordinary Rust values can be called by a
+Rust test. It does **not** create a fake JavaScript engine. Code involving
+`Env`, `Function`, `Object`, JavaScript references, promises, or conversion
+through `napi_value` still belongs in a Node integration test.
+
+For compile-time macro diagnostics, use [`trybuild`](https://docs.rs/trybuild)
+tests and commit their `.stderr` snapshots separately from runtime tests.
+
+## Test the generated binding in Node.js
+
+Build a debug addon and import the generated loader:
+
+**package.json**
+
+```json
+{
+  "scripts": {
+    "build:debug": "napi build --platform",
+    "test": "node --test"
+  }
+}
+```
+
+**test/add.test.cjs**
+
+```js
+const assert = require('node:assert/strict')
+const test = require('node:test')
+
+const addon = require('../index.js')
+
+test('native add', () => {
+  assert.equal(addon.add(20, 22), 42)
+})
+
+test('invalid input throws synchronously', () => {
+  assert.throws(() => addon.normalizeCount(-1), /must not be negative/)
+})
+```
+
+```sh
+npm run build:debug
+npm test
+```
+
+Test through the same loader your users import. Requiring a file from
+`target/debug` bypasses platform selection and can hide packaging defects.
+
+At minimum, integration tests should cover:
+
+- argument and return-value conversion, including null and omitted values;
+- synchronous errors and rejected promises;
+- generated TypeScript with `tsc --noEmit`;
+- one clean process start and exit;
+- every Node version and target you advertise as tested.
+
+## Test workers and environment teardown
+
+Every `worker_threads` worker has its own Node-API environment. Load the addon
+inside the worker instead of passing native classes or JavaScript handles from
+another isolate:
+
+**test/worker.cjs**
+
+```js
+const { parentPort } = require('node:worker_threads')
+const { add } = require('../index.js')
+
+parentPort.postMessage(add(2, 3))
+```
+
+**test/worker.test.cjs**
+
+```js
+const assert = require('node:assert/strict')
+const { join } = require('node:path')
+const test = require('node:test')
+const { Worker } = require('node:worker_threads')
+
+test('loads in a worker isolate', async () => {
+  const worker = new Worker(join(__dirname, 'worker.cjs'))
+  const value = await new Promise((resolve, reject) => {
+    worker.once('message', resolve)
+    worker.once('error', reject)
+  })
+
+  assert.equal(value, 5)
+  await worker.terminate()
+})
+```
+
+Add a separate stress test when the addon owns background work or JavaScript
+references:
+
+1. Start many workers and require the addon concurrently.
+2. Exercise the async API and await normal completion.
+3. Ask the worker to stop, cancel owned work, and wait for acknowledgements.
+4. Terminate the worker only after the graceful path succeeds.
+5. Put abrupt `worker.terminate()` races in a dedicated test so a product
+   limitation is not mistaken for ordinary shutdown behavior.
+
+Abrupt termination with native async work still has open runtime-specific
+failure reports, especially in Bun ([napi-rs#2938](https://github.com/napi-rs/napi-rs/issues/2938)).
+Treat cancellation and worker shutdown as part of the API contract; a
+documentation change cannot make an in-flight operating-system call
+cancellable.
+
+## Test process exit
+
+A strong ThreadsafeFunction, open handle, or background worker can keep Node
+alive. Test exit behavior in a child process so the main test runner cannot hide
+the leak:
+
+**test/exit.test.cjs**
+
+```js
+const assert = require('node:assert/strict')
+const { spawn } = require('node:child_process')
+const { join } = require('node:path')
+const test = require('node:test')
+
+test('process exits after async work', async () => {
+  const child = spawn(process.execPath, [join(__dirname, 'exit-repro.cjs')])
+
+  let timer
+  const code = await Promise.race([
+    new Promise((resolve, reject) => {
+      child.once('exit', resolve)
+      child.once('error', reject)
+    }),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        child.kill()
+        reject(new Error('child did not exit'))
+      }, 5_000)
+    }),
+  ]).finally(() => clearTimeout(timer))
+
+  assert.equal(code, 0)
+})
+```
+
+If a ThreadsafeFunction should not keep the event loop alive, build it in weak
+mode. See [Async and concurrency](/docs/more/async-concurrency) for the
+lifecycle tradeoff.
+
+## Test garbage collection and leaks
+
+Garbage collection is nondeterministic. A useful regression test creates a
+`WeakRef`, drops all strong JavaScript references, requests GC repeatedly, and
+uses a deadline:
+
+**test/leak.cjs**
+
+```js
+const { NativeResource } = require('../index.js')
+
+let resource = new NativeResource()
+const weak = new WeakRef(resource)
+resource = undefined
+
+const deadline = Date.now() + 10_000
+const interval = setInterval(() => {
+  global.gc()
+  if (weak.deref() === undefined) {
+    clearInterval(interval)
+    process.exit(0)
+  }
+  if (Date.now() > deadline) {
+    console.error('NativeResource was not collected before the deadline')
+    process.exit(1)
+  }
+}, 50)
+```
+
+```sh
+node --expose-gc test/leak.cjs
+```
+
+Do not assert collection immediately after one `global.gc()` call. Also run
+longer stress jobs under platform memory tools when the addon owns allocations:
+
+- AddressSanitizer or LeakSanitizer for Rust/C/C++ memory errors;
+- Instruments on macOS;
+- Valgrind on supported Linux configurations;
+- Application Verifier or WinDbg on Windows.
+
+Keep sanitizer builds separate from ordinary release artifacts.
+
+## Start with a useful diagnostic run
+
+Before attaching a debugger, reproduce the problem with a debug addon and full
+CLI/Rust diagnostics:
+
+```sh
+DEBUG='napi:*' RUST_BACKTRACE=full napi build --platform --verbose
+DEBUG='napi:*' RUST_BACKTRACE=full node ./repro.cjs
+```
+
+Do not pass `--release` or `--strip`. Confirm which Node executable and binding
+are involved:
+
+```sh
+node -p "process.execPath"
+node -p "process.platform + ' ' + process.arch"
+file ./*.node
+```
+
+Use `NAPI_RS_NATIVE_LIBRARY_PATH=/absolute/path/to/addon.node` to make a
+generated loader try one exact local binary. This is a diagnostic override,
+not a packaging configuration.
+
+## Debug with VS Code and CodeLLDB
+
+Install the CodeLLDB extension and create a build task:
+
+**.vscode/tasks.json**
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "napi build debug",
+      "type": "shell",
+      "command": "napi build --platform",
+      "problemMatcher": ["$rustc"]
+    }
+  ]
+}
+```
+
+Then launch **Node**, not the `.node` library. Replace `program` with the
+absolute path printed by `node -p "process.execPath"` if CodeLLDB does not
+resolve `node` from `PATH`:
+
+**.vscode/launch.json**
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug NAPI-RS in Node",
+      "type": "lldb",
+      "request": "launch",
+      "program": "node",
+      "args": ["${workspaceFolder}/repro.cjs"],
+      "cwd": "${workspaceFolder}",
+      "sourceLanguages": ["rust"],
+      "env": {
+        "RUST_BACKTRACE": "full",
+        "DEBUG": "napi:*"
+      },
+      "preLaunchTask": "napi build debug"
+    }
+  ]
+}
+```
+
+Set breakpoints in Rust before the JavaScript first imports the addon. A
+breakpoint may appear unbound until Node loads the `.node` image.
+
+This setup is known to work on macOS, Linux, and WSL. Native Windows debugging
+with `cppvsdbg` remains an open documentation and tooling gap
+([napi-rs#2830](https://github.com/napi-rs/napi-rs/issues/2830)); do not assume a
+`cppvsdbg` configuration is supported merely because it launches Node.
+CodeLLDB on Windows or WSL is currently the more reproducible starting point.
+
+## Debug with CLion or another native debugger
+
+The same process model applies in every native debugger:
+
+1. Build with `napi build --platform`.
+2. Create a **Native Application** configuration.
+3. Set the executable to the exact Node executable.
+4. Set `repro.cjs` as the program argument and the package as the working
+   directory.
+5. Add the build command as a before-launch task.
+
+Alternatively, start `node --inspect-brk repro.cjs`, attach the native debugger
+to that Node PID, set Rust breakpoints, and then continue JavaScript execution.
+The JavaScript inspector and native debugger can be attached to the same
+process.
+
+Command-line equivalents are useful for crash backtraces:
+
+```sh
+# macOS or Linux with LLDB
+lldb -- node ./repro.cjs
+# at the LLDB prompt
+run
+thread backtrace all
+```
+
+```sh
+# Linux with GDB
+gdb --args node ./repro.cjs
+# at the GDB prompt
+run
+thread apply all bt
+```
+
+## When breakpoints do not bind
+
+Check these in order:
+
+1. The build omitted `--release` and `--strip`.
+2. The loader selected the binary you just built, not a platform package in
+   `node_modules`.
+3. `process.execPath` is the executable launched by the debugger.
+4. The Rust source belongs to the exact Cargo target used for the `.node` file.
+5. The breakpoint is reached only after `require()` or `import` loads the
+   addon.
+6. On macOS, the binary and Node process have matching architectures.
+
+For loader failures, symbol errors, libc mismatches, and stale TypeScript, use
+the [troubleshooting decision tree](/docs/more/troubleshooting).

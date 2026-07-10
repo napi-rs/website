@@ -1,6 +1,6 @@
 ---
 title: 'Módulo nativo'
-description: What is native module, how Node.js load and execute it.
+description: Entenda o que é um módulo nativo e como o Node.js o carrega e executa.
 ---
 
 # Módulo nativo
@@ -17,7 +17,7 @@ O leitor perspicaz verá que seu Número Mágico[^1] é `0x7F454C46` e o código
 
 Na verdade, não apenas no Linux. Quando um módulo C++ do Node.js é compilado no OSX, você obtém uma DLL com o sufixo `*.node`, que essencialmente é `*.dylib`, e no Windows, você obtém uma DLL com o sufixo `*.node`, que essencialmente é `*.dll`.
 
-SEsse tipo de módulo, quando requerido no Node.js, é exigido por meio de `process.dlopen()`. Vamos dar uma olhada na função DLOpen[^2] no Node.js [v10.23.0](https://github.com/nodejs/node/blob/v10.23.0/src/node.cc#L1232):
+Esse tipo de módulo, quando requerido no Node.js, é carregado por meio de `process.dlopen()`. Vamos dar uma olhada na função DLOpen[^2] no Node.js [v10.23.0](https://github.com/nodejs/node/blob/v10.23.0/src/node.cc#L1232):
 
 ```cpp
 // DLOpen is process.dlopen(module, filename, flags).

@@ -1,5 +1,5 @@
 ---
-description: napi artifacts command in @napi-rs/cli.
+description: Coleta artefatos de build de CI nos pacotes de plataforma do napi-rs.
 ---
 
 # Artifacts
@@ -7,178 +7,132 @@ description: napi artifacts command in @napi-rs/cli.
 import { Callout } from 'nextra-theme-docs'
 import { Green } from '../../../components/chalk'
 
-Gerenciamento de [artifacts](https://docs.github.com/en/actions/advanced-guides/storing-workflow-data-as-artifacts) do GitHub Actions.
+`napi artifacts` localiza recursivamente arquivos `.node` e `.wasm` gerados,
+valida seus nomes de binário e sufixos de target e os copia para os pacotes npm
+correspondentes de cada plataforma. Os arquivos nativos também são copiados
+para o diretório do pacote raiz para que o loader gerado consiga resolver um
+binding local.
 
-<Callout>
-  Este comando geralmente é usado na etapa de publicação, antes do comando `npm
-  publish` e após a etapa de `Download artifacts`.
-</Callout>
+## Uso
 
-## Flags List
+```sh
+napi artifacts [--options]
+```
 
-| Flag          | Tipo/Valor padrão    | Descrição                                                                                           |
-| ------------- | -------------------- | --------------------------------------------------------------------------------------------------- |
-| `-d` ,`--dir` | `String`/`artifacts` | O diretório de origem que contém todos os resultados dos `artifacts` gerados na fase de compilação. |
-| `--dist`      | `String`/`npm`       | O diretório de distribuição para onde o complemento nativo será copiado.                            |
+```ts
+import { NapiCli } from '@napi-rs/cli'
 
-## Como isso funciona
+await new NapiCli().artifacts({
+  outputDir: 'artifacts',
+  npmDir: 'npm',
+})
+```
 
-Suponha que você tenha um projeto que cria um complemento(addon) nativo para estas plataformas:
+## Opções
 
-- `x86_64-apple-darwin`
-- `x86_64-pc-windows-msvc`
-- `x86_64-unknown-linux-gnu`
-- `aarch64-apple-darwin`
-- `aarch64-linux-android`
-- `aarch64-unknown-linux-gnu`
-- `aarch64-unknown-linux-musl`
-- `aarch64-pc-windows-msvc`
-- `armv7-unknown-linux-gnueabihf`
-- `arm-linux-androideabi`
-- `x86_64-unknown-linux-musl`
-- `x86_64-unknown-freebsd`
-- `i686-pc-windows-msvc`
+| Opção | Sintaxe CLI | Tipo | Obrigatório | Padrão | Descrição |
+| --- | --- | --- | :---: | --- | --- |
+| `cwd` | `--cwd` | `string` | Não | `process.cwd()` | Diretório-base para configuração, pacote, artefatos baixados, pacotes npm e saídas de build. |
+| `configPath` | `--config-path,-c` | `string` | Não | | Arquivo JSON de configuração do napi independente. |
+| `packageJsonPath` | `--package-json-path` | `string` | Não | <Green>`package.json`</Green> | Pacote raiz que contém a configuração do napi. |
+| `outputDir` | `--output-dir,-o,-d` | `string` | Não | <Green>`./artifacts`</Green> | Diretório pesquisado recursivamente em busca dos arquivos `.node` e `.wasm` baixados. Isso corresponde ao caminho de download dos artefatos, não a `npm/`. |
+| `npmDir` | `--npm-dir` | `string` | Não | <Green>`npm`</Green> | Diretório que contém os pacotes gerados de cada plataforma. |
+| `buildOutputDir` | `--build-output-dir` | `string` | Não | `cwd` | Diretório que contém os arquivos JavaScript WASI e worker gerados. Caminhos relativos partem de `--cwd`. |
 
-E você pode baixar esses artefatos através de `actions/download-artifact`:
+Não existe a opção `--dist`. Use `--output-dir` para os artefatos de build
+baixados e `--npm-dir` para os destinos dos pacotes de plataforma.
+
+## Workflow de CI
+
+Cada job de build deve enviar arquivos com o nome configurado do binário e o
+ABI do target, por exemplo:
+
+```text
+cool.darwin-arm64.node
+cool.linux-x64-gnu.node
+cool.win32-x64-msvc.node
+cool.wasm32-wasi.wasm
+```
+
+No job de coleta, crie os diretórios dos pacotes, baixe todos os artefatos e
+depois faça a coleta:
 
 ```yaml
-- name: Download all artifacts
-  uses: actions/download-artifact@v2
+- name: Create platform packages
+  run: yarn napi create-npm-dirs
+
+- name: Download all build artifacts
+  uses: actions/download-artifact@v8
   with:
-  	path: artifacts
+    path: artifacts
+
+- name: Move artifacts into packages
+  run: yarn napi artifacts --output-dir artifacts --npm-dir npm
 ```
 
-Agora a estrutura de diretórios ficará assim:
+Normalmente, `actions/download-artifact` cria um diretório aninhado por
+artefato enviado. A CLI pesquisa recursivamente, então estes dois layouts
+funcionam:
 
-```text {4,6,8,10,12,14,16,18,20,22,24,26,28} filename="directory structure"
+```text
+artifacts/
+├── bindings-aarch64-apple-darwin/
+│   └── cool.darwin-arm64.node
+├── bindings-x86_64-unknown-linux-gnu/
+│   └── cool.linux-x64-gnu.node
+└── bindings-x86_64-pc-windows-msvc/
+    └── cool.win32-x64-msvc.node
+```
+
+Depois da coleta:
+
+```text
 .
-├── artifacts
-|   ├── bindings-x86_64-apple-darwin
-|   │   └── blake.darwin-x64.node
-|   ├── bindings-x86_64-pc-windows-msvc
-|   │   └── blake.win32-x64.node
-|   ├── bindings-x86_64-unknown-linux-gnu
-|   │   └── blake.linux-x64-gnu.node
-|   ├── bindings-aarch64-apple-darwin
-|   │   └── blake.darwin-arm64.node
-|   ├── bindings-aarch64-linux-android
-|   │   └── blake.android-arm64.node
-|   ├── bindings-aarch64-unknown-linux-gnu
-|   │   └── blake.linux-arm64-gnu.node
-|   ├── bindings-aarch64-unknown-linux-musl
-|   │   └── blake.linux-arm64-musl.node
-|   ├── bindings-aarch64-pc-windows-msvc
-|   │   └── blake.win32-arm64-msvc.node
-|   ├── bindings-armv7-unknown-linux-gnueabihf
-|   │   └── blake.linux-arm-gnueabihf.node
-|   ├── bindings-arm-linux-androideabi
-|   │   └── blake.android-arm-eabi.node
-|   ├── bindings-x86_64-unknown-linux-musl
-|   │   └── blake.linux-x64-musl.node
-|   ├── bindings-x86_64-unknown-freebsd
-|   │   └── blake.freebsd-x64.node
-|   └── bindings-i686-pc-windows-msvc
-|       └── blake.win32-ia32-msvc.node
-├── npm
-│   ├── android-arm-eabi
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── android-arm64
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── darwin-arm64
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── darwin-x64
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── freebsd-x64
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── linux-arm-gnueabihf
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── linux-arm64-gnu
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── linux-arm64-musl
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── linux-x64-gnu
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── linux-x64-musl
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── win32-arm64-msvc
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── win32-ia32-msvc
-│   │   ├── README.md
-│   │   └── package.json
-│   └── win32-x64-msvc
-│       ├── README.md
-│       └── package.json
+├── cool.darwin-arm64.node
+├── cool.linux-x64-gnu.node
+├── cool.win32-x64-msvc.node
+└── npm/
+    ├── darwin-arm64/cool.darwin-arm64.node
+    ├── linux-x64-gnu/cool.linux-x64-gnu.node
+    └── win32-x64-msvc/cool.win32-x64-msvc.node
 ```
 
-Como você pode ver, precisamos copiar todos os arquivos <Green>`.node`</Green> para o diretório `npm` para que possamos publicá-los por meio do comando [`napi prepublish`](./pre-publish).
+## Regras de correspondência
 
-O comando `napi artifacts` fará esse trabalho para você. Suponha que as flags <Green>`-d`</Green> e <Green>`--dist`</Green> tenham o valor padrão, e a estrutura de diretórios seja a mesma que abaixo. Após a execução do comando `napi artifacts`, a estrutura de diretórios se tornará:
+Para cada arquivo encontrado, a CLI:
 
-```text {6,10,14,18,22,26,30,34,38,42,46,50,54} filename="directory structure"
-.
-├── artifacts
-├── npm
-│   ├── android-arm-eabi
-│   │   ├── README.md
-|   |   ├── blake.android-arm-eabi.node
-│   │   └── package.json
-│   ├── android-arm64
-│   │   ├── README.md
-|   |   ├── blake.android-arm64.node
-│   │   └── package.json
-│   ├── darwin-arm64
-│   │   ├── README.md
-|   |   ├── blake.darwin-arm64.node
-│   │   └── package.json
-│   ├── darwin-x64
-│   │   ├── README.md
-|   |   ├── blake.darwin-x64.node
-│   │   └── package.json
-│   ├── freebsd-x64
-│   │   ├── README.md
-|   |   ├── blake.freebsd-x64.node
-│   │   └── package.json
-│   ├── linux-arm-gnueabihf
-│   │   ├── README.md
-|   |   ├── blake.linux-arm-gnueabihf.node
-│   │   └── package.json
-│   ├── linux-arm64-gnu
-│   │   ├── README.md
-|   |   ├── blake.linux-arm64-gnu.node
-│   │   └── package.json
-│   ├── linux-arm64-musl
-│   │   ├── README.md
-|   |   ├── blake.linux-arm64-musl.node
-│   │   └── package.json
-│   ├── linux-x64-gnu
-│   │   ├── README.md
-|   |   ├── blake.linux-x64-gnu.node
-│   │   └── package.json
-│   ├── linux-x64-musl
-│   │   ├── README.md
-|   |   ├── blake.linux-x64-musl.node
-│   │   └── package.json
-│   ├── win32-arm64-msvc
-│   │   ├── README.md
-|   |   ├── blake.win32-arm64-msvc.node
-│   │   └── package.json
-│   ├── win32-ia32-msvc
-│   │   ├── README.md
-|   |   ├── blake.win32-ia32-msvc.node
-│   │   └── package.json
-│   └── win32-x64-msvc
-│       ├── README.md
-|       ├── blake.win32-x64-msvc.node
-│       └── package.json
-```
+1. Separa do nome do arquivo o sufixo final delimitado por pontos, como
+   `linux-x64-gnu`.
+2. Exige que o nome-base restante seja igual a `napi.binaryName`. Um nome de
+   binário diferente gera um aviso e é ignorado.
+3. Encontra o pacote de target configurado cujo diretório corresponde a esse
+   sufixo de plataforma. Um arquivo sem pacote de target faz o comando falhar,
+   exceto binários de origem que são combinados intencionalmente em um binário
+   universal configurado.
+4. Grava o arquivo nesse pacote de target e no diretório do pacote raiz.
+
+<Callout type="warning">
+  O comando confia no sufixo do nome do arquivo. Ele não inspeciona o binário
+  nativo para comprovar sua arquitetura, libc, sistema operacional mínimo ou
+  nível de Node-API. Teste cada artefato no runtime que ele afirma suportar
+  antes de publicar.
+</Callout>
+
+## Artefatos WASI
+
+Quando `napi.targets` inclui um target WASI, `napi artifacts` também copia os
+arquivos de suporte gerados para `npm/wasm32-wasi`:
+
+- `<binaryName>.wasi.cjs`
+- `<binaryName>.wasi-browser.js`
+- `wasi-worker.mjs`
+- `wasi-worker-browser.mjs`
+
+Por padrão, esses arquivos são lidos a partir de `--cwd`. Passe
+`--build-output-dir` quando a build WASI os tiver gravado em outro lugar; um
+valor relativo parte de `--cwd`. O arquivo `.wasm` baixado continua sendo
+localizado em `--output-dir`.
+
+Depois de coletar e verificar todos os targets, [`napi pre-publish`](./pre-publish)
+versiona e publica os pacotes de plataforma. `napi pre-publish` não copia
+artefatos ausentes para você.

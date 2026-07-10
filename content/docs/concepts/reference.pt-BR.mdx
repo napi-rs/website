@@ -1,6 +1,10 @@
 ---
-description: Create and use Object References.
+description: Crie e use referências a objetos JavaScript.
 ---
+
+import { Callout } from 'nextra-theme-docs'
+
+import NodeLink from '../../../components/node-link'
 
 # `Reference` / `WeakReference`
 
@@ -40,6 +44,7 @@ Assim como o [`Env`](./inject-env) e o [`This`](./inject-this), o `Reference` é
 
 ```rust {37-42,45-48} filename="lib.rs"
 use napi::bindgen_prelude::*;
+use napi_derive::napi;
 
 pub struct Repository {
   dir: String,
@@ -149,7 +154,7 @@ impl CSSRuleList {
 #[napi]
 pub struct CSSStyleSheet {
   name: String,
-  inner: OwnedStyleSheet,
+  inner: Rc<RefCell<OwnedStyleSheet>>,
   rules: Option<Reference<CSSRuleList>>,
 }
 
@@ -157,7 +162,7 @@ pub struct CSSStyleSheet {
 impl CSSStyleSheet {
   #[napi(constructor)]
   pub fn new(name: String, rules: Vec<String>) -> Result<Self> {
-    let inner = OwnedStyleSheet { rules };
+    let inner = Rc::new(RefCell::new(OwnedStyleSheet { rules }));
     Ok(CSSStyleSheet {
       name,
       inner,
@@ -193,3 +198,178 @@ No exemplo acima, a struct `CSSRuleList` é criada com uma `WeakReference<CSSSty
 Como o `CSSRuleList` é criado pelo `CSSStyleSheet` neste caso, a instância `CSSStyleSheet` é uma referência circular para a instância `CSSRuleList` que criou.
 
 A `WeakReference` não aumentará a contagem de referência do objeto bruto, então o método `upgrade` de `WeakReference` pode retornar `None` se o objeto bruto for descartado.
+
+## Referência de valores JavaScript {#javascript-value-reference}
+
+### `ObjectRef`
+
+<Callout type="warning">
+  Um `ObjectRef` com posse deve ser retornado ao JavaScript ou consumido por
+  `unref`. Descartá-lo apenas reporta um vazamento; sem um `Env` ele não
+  consegue deletar a referência Node-API, então o objeto permanece fortemente
+  referenciado.
+</Callout>
+
+No exemplo abaixo, criamos o `ObjectRef` no construtor e o usamos depois no método `getOptions`.
+
+```rust {14} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub struct NativeClass {
+  options: Option<ObjectRef>,
+}
+
+#[napi]
+impl NativeClass {
+  #[napi(constructor)]
+  pub fn new(options: Object) -> Result<Self> {
+    Ok(Self {
+      options: Some(options.create_ref()?),
+    })
+  }
+
+  #[napi]
+  pub fn get_options<'env>(&self, env: &'env Env) -> Result<Object<'env>> {
+    self
+      .options
+      .as_ref()
+      .ok_or_else(|| Error::from_reason("options were released"))?
+      .get_value(env)
+  }
+
+  #[napi]
+  pub fn release_options(&mut self, env: &Env) -> Result<()> {
+    if let Some(options) = self.options.take() {
+      options.unref(env)?;
+    }
+    Ok(())
+  }
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+```ts filename="index.ts"
+import { NativeClass } from './index.js'
+
+const nativeClass = new NativeClass({
+  name: 'John',
+  age: 30,
+})
+
+const options = nativeClass.getOptions() // { name: 'John', age: 30 }
+nativeClass.releaseOptions()
+```
+
+### `SymbolRef`
+
+<Callout type="warning">
+  Um `SymbolRef` com posse deve ser retornado ao JavaScript ou consumido por
+  `unref`. Descartá-lo apenas reporta um vazamento; sem um `Env` ele não
+  consegue deletar a referência Node-API, então o símbolo permanece fortemente
+  referenciado.
+</Callout>
+
+A API do `SymbolRef` é basicamente a mesma do `ObjectRef`.
+
+```rust filename="lib.rs"
+use napi::{SymbolRef, bindgen_prelude::*};
+use napi_derive::napi;
+
+#[napi]
+pub fn create_symbol_ref(env: &Env) -> Result<SymbolRef> {
+  Symbol::new("NAPI_RS_SYMBOL")
+    .into_js_symbol(env)?
+    .create_ref()
+}
+```
+
+### `FunctionRef`
+
+<Callout type="info">
+  `FunctionRef` é `Send + Sync`, mas o `Function` emprestado a partir dele está
+  vinculado ao `Env` fornecido a `borrow_back`. Mover a referência não a torna
+  válida para chamar JavaScript a partir de uma thread arbitrária; empreste-o e
+  chame-o apenas em uma thread onde aquele ambiente possa ser usado.
+</Callout>
+
+O `FunctionRef` pode ser criado diretamente no `Function`.
+
+No exemplo abaixo, se você tentar chamar `Function` no callback do `Promise.finally`, você encontrará um erro de lifetime:
+
+```rust {15} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn promise_finally_callback(
+  mut promise: PromiseRaw<()>,
+  on_finally: Function<()>,
+) -> Result<()> {
+  // ❌ compile Error
+  // borrowed data escapes outside of function
+  // `on_finally` escapes the function body here
+  // lib.rs(7, 3): `on_finally` is a reference that is only valid in the function body
+  // lib.rs(7, 3): has type `napi::bindgen_prelude::Function<'1, ()>`
+  promise.finally(|env| {
+    on_finally.call(());
+    Ok(())
+  })?;
+  Ok(())
+}
+```
+
+Você pode criar o `FunctionRef` e pegar o `Function` emprestado de volta a partir dele mais tarde:
+
+```rust {11} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn promise_finally_callback(
+  mut promise: PromiseRaw<()>,
+  on_finally: Function<(), ()>,
+) -> Result<()> {
+  let on_finally_ref = on_finally.create_ref()?;
+  promise.finally(move |env| {
+    let on_finally = on_finally_ref.borrow_back(&env)?;
+    on_finally.call(())?;
+    Ok(())
+  })?;
+  Ok(())
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+```ts filename="index.ts"
+import { promiseFinallyCallback } from './index.js'
+
+promiseFinallyCallback(Promise.resolve(), () => {
+  console.log('finally')
+})
+```
+
+### `ExternalRef`
+
+<Callout type="info">
+  O `ExternalRef` não é `Send` porque ele precisa ser descartado na mesma thread
+  em que o `ExternalRef` é criado.
+</Callout>
+
+O `ExternalRef` mantém o <NodeLink href="https://nodejs.org/api/n-api.html#napi_ref">`napi_ref`</NodeLink> para o objeto criado pela função <NodeLink href="https://nodejs.org/api/n-api.html#napi_create_external">`napi_create_external`</NodeLink>.
+
+É basicamente a mesma coisa que a API do `ObjectRef`:
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn create_external_ref(env: &Env, size: u32) -> Result<ExternalRef<u32>> {
+  let external = External::new(size).into_js_external(env)?;
+  external.create_ref()
+}
+```

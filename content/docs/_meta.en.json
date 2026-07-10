@@ -1,8 +1,8 @@
 {
   "introduction": "Introduction",
-  "concepts": "Concepts",
+  "concepts": "Concepts & reference",
   "cli": "CLI",
   "deep-dive": "Deep dive",
   "cross-build": "Cross build",
-  "more": "More"
+  "more": "Guides & help"
 }

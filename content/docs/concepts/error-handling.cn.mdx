@@ -1,0 +1,297 @@
+---
+title: '错误处理'
+description: 在同步与异步 napi-rs API 之间抛出、拒绝、保留并分类错误。
+---
+
+import { Callout } from 'nextra-theme-docs'
+
+# 错误处理
+
+预期内的失败应以 `napi::Result<T>` 跨越原生边界；它是 `std::result::Result<T, napi::Error>` 的别名。napi-rs 会根据导出 API 的类型，将 `Err` 转换为同步异常或 Promise 拒绝。
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn divide(left: f64, right: f64) -> Result<f64> {
+  if right == 0.0 {
+    return Err(Error::new(Status::InvalidArg, "right must not be zero"));
+  }
+  Ok(left / right)
+}
+```
+
+```js filename="index.mjs"
+try {
+  divide(1, 0)
+} catch (error) {
+  console.error(error.code)    // "InvalidArg"
+  console.error(error.message) // "right must not be zero"
+}
+```
+
+TypeScript 不会编码抛出的异常或被拒绝的 Promise。请在 JSDoc 中记录领域错误，并测试其 JavaScript 形状。
+
+## 核心类型
+
+```rust
+pub type Result<T, S = Status> = std::result::Result<T, Error<S>>;
+
+pub struct Error<S = Status> {
+  pub status: S,
+  pub reason: String,
+  pub cause: Option<Box<Error>>,
+  // private reference to an original JavaScript exception when available
+}
+```
+
+| 字段 | JavaScript 含义 | 说明 |
+| --- | --- | --- |
+| `reason` | `error.message` | 便于人类阅读的描述。 |
+| `status.as_ref()` | `error.code` | `Status` 主要表示 Node-API 状态，而不是应用错误分类体系。 |
+| `cause` | `error.cause` | 通过 `set_cause` 设置；嵌套 cause 会递归转换。 |
+
+对于 `GenericFailure`，使用 `Error::from_reason(message)`；当 Node-API 状态能传达有用信息时，使用 `Error::new(status, message)`。
+
+```rust filename="lib.rs"
+#[napi]
+pub fn load_config() -> Result<()> {
+  std::fs::read_to_string("config.json")
+    .map(|_| ())
+    .map_err(|source| {
+      let mut error = Error::new(Status::GenericFailure, "could not load config");
+      error.set_cause(Error::from(source));
+      error
+    })
+}
+```
+
+`Error` 实现了多种常见失败的转换，包括 `std::io::Error` 和 `std::ffi::NulError`。启用 `serde-json` 后，它还会将 `serde_json::Error` 转换为 `Status::InvalidArg`。
+
+## 同步函数
+
+当同步导出函数返回 `Err` 时，生成的回调会在返回 JavaScript 之前抛出 JavaScript `Error`。
+
+| Rust 返回值 | JavaScript 行为 |
+| --- | --- |
+| `T` | 返回一个值。转换失败仍会抛出异常。 |
+| `Result<T>` 的 `Ok(value)` | 转换并返回 `value`。 |
+| `Result<T>` 的 `Err(error)` | 抛出 `Error`。 |
+
+参数转换发生在调用 Rust 函数之前。因此，即使函数的 Rust 返回类型不是 `Result`，错误的输入类型也会抛出转换错误。
+
+## 异步函数
+
+参数成功转换后，导出的 Rust `async fn` 会返回一个 JavaScript Promise：
+
+| Future 结果 | JavaScript 行为 |
+| --- | --- |
+| `T` | 转换 `T` 后兑现 Promise。 |
+| `Result<T>::Ok(value)` | 用 `value` 兑现 Promise。 |
+| `Result<T>::Err(error)` | 用转换后的错误拒绝 Promise。 |
+| 返回值转换失败 | 拒绝 Promise。 |
+
+参数校验和转换仍在创建 Promise 之前同步执行，因此无效输入可能会同步抛出异常。
+使用 `#[napi(return_if_invalid)]` 时，无效输入改为同步返回 `undefined`，
+即使生成的声明仍把成功路径描述为返回 `Promise<T>`。
+
+```rust filename="lib.rs"
+#[napi]
+pub async fn read_text(path: String) -> Result<String> {
+  napi::tokio::fs::read_to_string(&path)
+    .await
+    .map_err(|source| {
+      let mut error = Error::new(Status::GenericFailure, format!("could not read {path}"));
+      error.set_cause(source.into());
+      error
+    })
+}
+```
+
+该示例需要启用 `napi` 的 `async`（或 `tokio_rt`）以及 `tokio_fs`
+特性。有关运行时和生命周期规则，请参阅 [async fn](/docs/concepts/async-fn)。
+
+### 异步堆栈跟踪
+
+工作转移到其他线程后才构造的错误，其堆栈通常从拒绝发生处开始，而不是原始 JavaScript 调用处开始。可选的 `deferred_trace` 特性会在创建 deferred Promise 时捕获一个 JavaScript 错误，并在拒绝 napi-rs deferred 时复用该堆栈。
+
+```toml filename="Cargo.toml"
+[dependencies]
+napi = { version = "3", features = ["async", "deferred_trace"] }
+```
+
+这会为每个受影响的 deferred 操作增加一个错误对象/引用。只有当诊断价值值得承担这次分配和引用管理成本时，才应启用它。
+
+## `AsyncTask`
+
+`AsyncTask<T>` 在 libuv worker pool 中运行 `Task::compute`，并在 JavaScript 线程完成 Promise。
+
+1. `compute` 在 JavaScript 线程之外返回 `Result<Output>`。
+2. `Ok(output)` 在 JavaScript 线程中传给 `resolve`。
+3. `Err(error)` 在 JavaScript 线程中传给 `reject`。
+4. 生成的 `JsValue` 会兑现 Promise；`resolve` 或 `reject` 返回错误则会拒绝 Promise。
+5. 无论走哪条路径，之后都会运行 `finally` 做清理。
+
+默认的 `Task::reject` 会直接返回同一个 `Err`，因此 Promise 被拒绝。自定义 `reject` 可以改为返回 `Ok(fallback)`，这会**恢复**并兑现 Promise。
+
+```rust filename="lib.rs"
+impl Task for Lookup {
+  type Output = String;
+  type JsValue = String;
+
+  fn compute(&mut self) -> Result<Self::Output> {
+    self.lookup().map_err(Error::from)
+  }
+
+  fn resolve(&mut self, _: Env, output: Self::Output) -> Result<Self::JsValue> {
+    Ok(output)
+  }
+
+  fn reject(&mut self, _: Env, error: Error) -> Result<Self::JsValue> {
+    if error.status == Status::GenericFailure {
+      Ok("default".to_owned()) // Promise fulfillment, not rejection
+    } else {
+      Err(error)
+    }
+  }
+}
+```
+
+如果在 libuv 开始任务前取消，Promise 会被一个名称为 `AbortError` 的错误拒绝。任务一旦启动，取消并不保证能停止计算。参阅 [AsyncTask](/docs/concepts/async-task)。
+
+## ThreadsafeFunction 错误
+
+ThreadsafeFunction 有两种错误策略：
+
+- 当 `CalleeHandled = true`（默认值）时，JavaScript 回调遵循错误优先形式：`(error, value) => ...`。使用 `Ok(value)` 或 `Err(error)` 调用它。
+- 当 `CalleeHandled = false` 时，生成的回调没有错误参数，Rust 调用直接接收值。请在调用前处理原生失败。
+
+`call_with_return_value` 会把回调结果报告给 Rust 完成回调。当 `CalleeHandled = true` 时，`call_async` 也会把 JavaScript throw 作为 `Err` 返回。当 `CalleeHandled = false` 时，请使用 `call_async_catch`；普通 `call_async` 会改为通过 `napi_fatal_exception` 处理同步 throw。即发即弃调用无法把之后发生的 JavaScript throw 变成原始 Rust 调用的返回值。
+
+ThreadsafeFunction 队列与生命周期失败会使用 `QueueFull` 或 `Closing` 等 Node-API 状态；如果非阻塞或异步调用方法提供返回值，务必检查它。有关完整泛型参数和调用模式，请参阅 [ThreadsafeFunction](/docs/concepts/threadsafe-function)。
+
+## 自定义错误代码
+
+`Error<S>` 接受任何实现 `AsRef<str>` 的状态类型。它会设置 `error.code`，但不会改变 JavaScript 错误子类。
+
+```rust filename="lib.rs"
+#[derive(Debug)]
+pub enum ConfigError {
+  Missing,
+  Invalid,
+}
+
+impl AsRef<str> for ConfigError {
+  fn as_ref(&self) -> &str {
+    match self {
+      Self::Missing => "ERR_CONFIG_MISSING",
+      Self::Invalid => "ERR_CONFIG_INVALID",
+    }
+  }
+}
+
+#[napi]
+pub fn validate_config(present: bool) -> Result<(), ConfigError> {
+  if present {
+    Ok(())
+  } else {
+    Err(Error::new(ConfigError::Missing, "configuration is required"))
+  }
+}
+```
+
+生成的包装器接受该自定义状态，因为它只要求 `AsRef<str>`。如果底层 napi-rs API 还必须把自身的 `Status` 转换为自定义类型，请同时实现 `From<Status>`。
+
+## 错误子类与任意抛出值
+
+从导出函数返回普通 `Error` 会生成 JavaScript `Error`。要直接抛出更具体的内置子类，请使用 `Env`：
+
+```rust filename="lib.rs"
+#[napi]
+pub fn set_percentage(env: Env, value: f64) -> Result<()> {
+  if !(0.0..=100.0).contains(&value) {
+    return env.throw_range_error("percentage must be between 0 and 100", Some("ERR_RANGE"));
+  }
+  Ok(())
+}
+```
+
+可用辅助方法包括 `throw_error`、`throw_type_error` 和 `throw_range_error`。`throw_syntax_error` 需要 `napi9`。`Env::throw(value)` 可以抛出任意 `ToNapiValue`，包括自定义 JavaScript 错误对象。
+
+使用原始环境时，底层包装类型 `JsError`、`JsTypeError`、`JsRangeError` 以及（启用 `napi9` 时）`JsSyntaxError` 可以构造或抛出这些子类。
+
+<Callout type="warning">
+  调用 `Env::throw_*` 方法后应立即返回。该环境中已有待处理的 JavaScript 异常；
+  继续调用不相关的 Node-API 操作可能替换或掩盖原始失败。
+</Callout>
+
+## 保留 JavaScript 异常
+
+将 `Unknown` JavaScript 值转换为 `Error` 会记录其 message 和 cause。在原生构建中，它还会尝试保留对原始值的引用。当该保留值是 JavaScript `Error`，并且 Rust 错误在其所属 JavaScript 环境中重新转换时，napi-rs 可以复用该对象，并保留其子类、堆栈和自定义属性。`Result` 错误转换不会直接透传保留的非 `Error` 值；napi-rs 会改为根据自有错误数据重建普通 `Error`。
+
+```rust filename="lib.rs"
+#[napi]
+pub fn pass_error_through(value: Unknown) -> Result<()> {
+  Err(value.into())
+}
+```
+
+重要边界：
+
+- `Error::try_clone` 始终保留拥有所有权的 status、reason 和 cause 信息。
+- 启用 Node-API 4 生命周期支持时，克隆可以安全地跨线程共享保留的引用，但原始对象只会在其所属 JavaScript 线程中解引用。
+- 当错误出现在另一个环境/线程时，napi-rs 会根据 status、reason 和 cause 重建新的普通 `Error`，而不会访问外部环境。
+- WASI 构建不会保留原生 `napi_ref`；它们会根据可用数据重建错误。
+
+不要把 `try_clone` 当作跨 worker 或 isolate 保证 JavaScript 对象身份的方式。
+
+## `anyhow`
+
+启用 `error_anyhow`，可添加从 `anyhow::Error` 的转换，并通过 napi-rs 重新导出该依赖：
+
+```toml filename="Cargo.toml"
+[dependencies]
+napi = { version = "3", features = ["error_anyhow"] }
+```
+
+```rust filename="lib.rs"
+#[napi]
+pub fn parse_document(source: String) -> Result<Document> {
+  parse(&source).map_err(Error::from)
+}
+```
+
+该转换使用 `Status::GenericFailure`，并把 anyhow 错误链格式化进 reason。如果调用方需要稳定、机器可读的代码或结构化 `cause`，请显式把领域错误映射为 `Error`。
+
+## Panic 不是普通错误
+
+Rust panic 不能替代 FFI 边界上的 `Result`。同步生成回调中的未捕获 panic 可能终止进程。
+
+`#[napi(catch_unwind)]` 使用 `std::panic::catch_unwind` 包装函数或方法调用，并将正在展开的载荷转换为 `GenericFailure` 错误：
+
+```rust filename="lib.rs"
+#[napi(catch_unwind)]
+pub fn call_untrusted_rust() {
+  library_that_may_panic();
+}
+```
+
+它存在以下根本限制：
+
+- 只有当 crate 使用支持展开的 panic 策略构建时才有效。`panic = "abort"` 无法捕获。
+- 某些 Rust 操作会直接中止而不展开。
+- 它捕获的是该生成边界上的 Rust 调用，而不是任意脱离线程中的 panic。
+- 捕获 panic 并不能证明外部状态仍然一致。
+
+napi-rs Tokio 任务在轮询期间发生的 panic 会被运行时观察到，通常会拒绝 deferred Promise，但可用的 panic 载荷和堆栈信息有限。可恢复失败应始终保留在 `Result` 中，而 panic 只应表示内部不变量被破坏。
+
+## 设计检查清单
+
+- 对调用者预期要据此分支处理的失败，使用稳定的自定义代码。
+- 使用 `cause` 保留原始失败，不要把无关消息简单拼接起来。
+- 抛出或拒绝错误；除非恢复本身就是 API 契约的一部分，否则不要只记录日志并返回貌似合理的值。
+- 在 `AsyncTask::reject` 中，请记住 `Ok` 会兑现 Promise。
+- 不要从 worker 线程访问 `Env`、作用域内的 JavaScript 值或原始 `napi_value`。
+- 将错误对象身份视为仅在一个 JavaScript 环境内有效。
+- 测试 JavaScript 的 `name`、`code`、`message`、`cause` 以及同步/异步行为，而不只是 Rust 结果。

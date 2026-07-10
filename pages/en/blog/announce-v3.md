@@ -7,6 +7,7 @@ import Sponsor from "../../../components/sponsor.jsx" with { island: "visible" }
 ---
 title: 'Announcing NAPI-RS v3'
 date: '2025-07-07'
+description: 'NAPI-RS v3 adds WebAssembly support, a safer API design, and new cross-compilation.'
 ---
 
 # Announcing NAPI-RS v3

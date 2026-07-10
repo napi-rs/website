@@ -59,7 +59,7 @@ console.log(fibonacci(5))
 
 👷‍♂️ 由 `Rust` 编译器保障的内存安全
 
-⚡️ `Rust` 与 `Node.js` 之间通过 `Buffer` 和 `TypedArray` 实现零数据拷贝交互
+⚡️ 通过 `Buffer` 和 `TypedArray` 在 `Rust` 与 `Node.js` 之间高效传输二进制数据，并可按需使用零拷贝视图
 
 ⚙️ 轻松并行代码
 
@@ -71,26 +71,11 @@ console.log(fibonacci(5))
 
 <Ecosystem />
 
-## 支持列表
+## 支持与兼容性
 
-### Node.js
+Node-API 的 ABI 兼容范围、构建 CLI 的 Node.js 要求，以及源码仓库当前持续测试的版本并不是同一件事。当前 CLI 构建建议使用 Node.js 22.13+ 或 24+；源码仓库的主要矩阵测试 Node.js 22、24 和 26。每个原生产物仍然只适用于其操作系统、CPU 和 libc 目标。
 
-| Node10 | Node12 | Node14 | Node16 | Node18 | Node20 |
-| ------ | ------ | ------ | ------ | ------ | ------ |
-| ✓      | ✓      | ✓      | ✓      | ✓      | ✓      |
-
-### 操作系统与平台
-
-> ✅ Means official tested in napi-rs repo. <br/> `-` Means no official Node.js release.
-
-|            | i686 | x64 | aarch64 | arm |
-| ---------- | ---- | --- | ------- | --- |
-| Windows    | ✅   | ✅  | ✅      | -   |
-| macOS      | -    | ✅  | ✅      | ✅  |
-| Linux      | -    | ✅  | ✅      | ✅  |
-| Linux musl | -    | ✅  | ✅      | -   |
-| FreeBSD    | -    | ✅  | -       | -   |
-| Android    | -    | -   | ✅      | ✅  |
+请阅读[支持与兼容性](/cn/docs/more/support-compatibility)，了解 Node-API 等级、运行时、模板目标和 CI 覆盖范围之间的区别。
 
 ## 相关项目
 

@@ -1,9 +1,8 @@
 {
   "introduction": "Introdução",
-  "concepts": "Conceitos",
+  "concepts": "Conceitos e referência",
   "cli": "CLI",
   "deep-dive": "Aprofundamento",
   "cross-build": "Compilação cruzada",
-  "ecosystem": "Ecossistema",
-  "more": "Mais"
+  "more": "Guias e ajuda"
 }

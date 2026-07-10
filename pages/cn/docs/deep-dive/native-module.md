@@ -1,0 +1,193 @@
+---
+title: '原生模块'
+description: 什么是原生模块，以及 Node.js 如何加载并执行它。
+---
+
+# 原生模块
+
+> 部分内容借鉴自 https://xcoder.in/2017/07/01/nodejs-addon-history/
+
+## 原生模块的本质
+
+先从 Node.js C++ 模块开发最本质的部分说起。例如在 Linux 下，我们有一个合法的原生模块 `pinyin.linux-x64-gnu.node`。它实际上是二进制文件，无法在文本编辑器中正常查看，需要使用二进制查看器。
+
+![](/assets/hex.png)
+
+细心的读者会发现，其 Magic Number[^1] 为 `0x7F454C46`，对应的 ASCII 是 ELF。因此答案很明显：它是 Linux 上的 **_DLL_** 文件。
+
+事实上不只 Linux 如此。Node.js C++ 模块在 OSX 下编译时，会得到一个后缀为 `*.node`、本质是 `*.dylib` 的 DLL；在 Windows 下，则会得到后缀为 `*.node`、本质是 `*.dll` 的 DLL。
+
+Node.js 在 require 这类模块时会使用 `process.dlopen()`。下面看看 Node.js [v10.23.0](https://github.com/nodejs/node/blob/v10.23.0/src/node.cc#L1232) 中的 DLOpen[^2] 函数：
+
+```cpp
+// DLOpen is process.dlopen(module, filename, flags).
+void DLOpen(const FunctionCallbackInfo<Value>& args) {
+  Environment* env = Environment::GetCurrent(args);
+  auto context = env->context();
+
+  Local<Object> module;
+  Local<Object> exports;
+  Local<Value> exports_v;
+  // initialize `module`, `module.exports` values
+  if (!args[0]->ToObject(context).ToLocal(&module) ||
+      // this line is equal to `exports = module.exports`
+      !module->Get(context, env->exports_string()).ToLocal(&exports_v) ||
+      !exports_v->ToObject(context).ToLocal(&exports)) {
+    return;  // Exception pending.
+  }
+
+  node::Utf8Value filename(env->isolate(), args[1]);  // Cast
+  DLib dlib(*filename, flags);
+  bool is_opened = dlib.Open();
+
+  node_module* const mp = static_cast<node_module*>(
+      uv_key_get(&thread_local_modpending));
+  uv_key_set(&thread_local_modpending, nullptr);
+
+  ...
+
+  // transfer the handle in dynamic lib to the `mp`
+  mp->nm_dso_handle = dlib.handle_;
+  mp->nm_link = modlist_addon;
+  modlist_addon = mp;
+
+  if (mp->nm_context_register_func != nullptr) {
+    mp->nm_context_register_func(exports, module, context, mp->nm_priv);
+  } else if (mp->nm_register_func != nullptr) {
+    mp->nm_register_func(exports, module, mp->nm_priv);
+  } else {
+    dlib.Close();
+    env->ThrowError("Module has no declared entry point.");
+    return;
+  }
+
+}
+```
+
+从逻辑上看，加载过程如下：
+
+- 通过 `uv_dlopen` 加载链接库。
+- 将已加载的库挂到原生模块链表。
+- 使用 `mp->nm_register_func()` 初始化模块，并取得其中的 module 与 module.exports。
+
+整体流程类似下图：
+
+![nm flow](/assets/nm-flow.png)
+
+## 如何构建原生模块
+
+### `node-waf`
+
+Node.js 0.8 之前，开发者使用 `node-waf` 构建库。当然，它不是 npm registry 中现在的 node-waf；原始 `node-waf` 已经多年无人维护。
+
+它通过名为 `wscript` 的文件配置。从 Node.js 0.8 开始，Node.js 内置了 `node-gyp`，于是人们不再需要 wscript。
+
+不过在这段过渡时期，许多使用 C++ 构建 Node.js 插件的库同时包含 `binding.gyp` 和 `wscript`。
+
+可以在 [node-mysql-libmysqlclient](https://github.com/Sannis/node-mysql-libmysqlclient/tree/9545ea7485fcc8b07b7c56c5ec3575938bfd4e5f) 中看到那个时代留下的文件。它通过 `binding.gyp` 支持 node-gyp，同时仍保留 `wscript`。
+
+### `node-gyp`
+
+`node-gyp` 从 Node.js v0.8 开始一直伴随 Node.js；在此之前，默认编译辅助工具是 `node-waf`。老 Node.js 开发者应该对此很熟悉。
+
+#### `GYP`
+
+`node-gyp` 基于 `GYP`[^3]。它识别包或项目中的 `binding.gyp`[^4] 文件，根据该配置为各系统生成可编译项目，例如 Windows 的 **Visual Studio 项目文件（\*.sln 等）**和 Unix 的 Makefile。`node-gyp` 还可以调用系统编译工具（例如 GCC），把项目最终编译成 DLL `*.node` 文件。
+
+> 从上述说明可知，在 Windows 上编译 C++ 原生模块依赖 Visual Studio，这也是安装某些 Node.js 包前需要安装 Visual Studio 的原因。<br/>
+> 实际上，不需要 Visual Studio IDE 的用户只要安装编译器即可，因为 node-gyp 依赖的是编译器，而非 IDE。希望精简安装的用户可以直接访问 [https://download.microsoft.com/download/5/f/7/5f7acaeb-8363-451f-9425-68a90f98b238/visualcppbuildtools_full.exe](https://download.microsoft.com/download/5/f/7/5f7acaeb-8363-451f-9425-68a90f98b238/visualcppbuildtools_full.exe) 下载 Visual C++ Build Tools，或者通过 `npm install --global --production windows-build-tools` 安装所需编译工具。
+
+了解这些背景后，来看 `binding.gyp` 的基本结构：
+
+**binding.gyp**
+
+```text
+{
+  "targets": [{
+    "target_name": "addon1",
+    "sources": [ "1/addon.cc", "1/myobject.cc" ]
+  }, {
+    "target_name": "addon2",
+    "sources": [ "2/addon.cc", "2/myobject.cc" ]
+  }, {
+    "target_name": "addon3",
+    "sources": [ "3/addon.cc", "3/myobject.cc" ]
+  }, {
+    "target_name": "addon4",
+    "sources": [ "4/addon.cc", "4/myobject.cc" ]
+  }]
+}
+```
+
+该配置表达了以下信息：
+
+- 定义了四个 C++ 原生模块。
+- 每个模块的源代码分别是 **\*.addon.cc** 和 **\*.myobject.cc**。
+- 四个模块的名称为 **addon1** 到 **addon4**。
+- 隐含结果：编译后，这些模块位于 **build/Release/addon\*.node**。
+
+有关 GYP 配置文件的更多信息，请参阅官方文档；脚注中提供了 GYP 链接。
+
+#### `node-gyp` 的其他工作
+
+除基于 GYP 外，node-gyp 还会做一些额外工作。编译 C++ 原生扩展时，它会进入指定目录（通常是 `~/.node-gyp`），查找当前 Node.js 版本的头文件和静态链接库；如果不存在，就从 Node.js 网站下载。
+
+以下是在 macOS 上由 node-gyp 下载的特定 Node.js 版本头文件与库的目录结构：
+
+```text
+/Users/napi-rs/.node-gyp
+└── 14.15.1
+    └── include
+        └── node
+            ├── common.gypi
+            ├── config.gypi
+            ├── cppgc
+            ├── js_native_api.h
+            ├── js_native_api_types.h
+            ├── libplatform
+            ├── node.h
+            ├── node_api.h
+            ├── node_api_types.h
+            ├── node_buffer.h
+            ├── node_object_wrap.h
+            ├── node_version.h
+            ├── openssl
+            ├── uv
+            ├── uv.h
+            ├── v8-fast-api-calls.h
+            ├── v8-internal.h
+            ├── v8-platform.h
+            ├── v8-profiler.h
+            ├── v8-util.h
+            ├── v8-value-serializer-version.h
+            ├── v8-version-string.h
+            ├── v8-version.h
+            ├── v8-wasm-trap-handler-posix.h
+            ├── v8-wasm-trap-handler-win.h
+            ├── v8.h
+            └── v8config.h
+```
+
+node-gyp 编译时，这个头文件目录会以 `"include_dirs"` 字段形式合并到 `binding.gyp`；简而言之，所有头文件都可以直接 `#include`。
+
+node-gyp 是命令行程序，安装后可直接运行 `$ node-gyp`。它提供以下子命令：
+
+- `$ node-gyp configure`：根据当前目录中的 binding.gyp 生成项目文件，例如 Makefile。
+- `$ node-gyp build`：构建并编译当前项目，之前必须先执行 `configure`。
+- `$ node-gyp clean`：清除生成的构建文件和输出目录。
+- `$ node-gyp rebuild`：等同于依次执行 `clean`、`configure` 和 `build`。
+- `$ node-gyp install`：手动将当前 Node.js 版本的头文件和库文件下载到对应目录。
+
+## 总结
+
+本章介绍了什么是 Node.js 原生插件，以及如何编译它。下一章将回顾 Node.js 中与原生插件相关的 API 演变历史，并正式介绍主角 N-API。
+
+## 参考资料
+
+[^1]: https://en.wikipedia.org/wiki/Magic_number_(programming)
+
+[^2]: https://github.com/nodejs/node/blob/v6.9.4/src/node.cc#L2427-L2502
+
+[^3]: GYP 是 _Generate Your Projects_ 的缩写，是 Google 开发的构建系统。更多信息见 https://gyp.gsrc.io。
+
+[^4]: GYP 配置文件通常使用 _.gyp 或 _.gypi 扩展名，是一种类似 JSON 的文件。

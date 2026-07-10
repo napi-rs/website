@@ -11,6 +11,19 @@ JavaScript `Class`.
 
 :::
 
+## Choose the right JavaScript shape
+
+`#[napi]` on a struct creates a JavaScript class with native identity and methods. Other struct attributes create value shapes instead:
+
+| Rust declaration                         | JavaScript representation                        | Use it for                                                 |
+| ---------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------- |
+| `#[napi] struct`                         | Class instance backed by one Rust value          | Stateful native objects, methods, identity, and references |
+| `#[napi(object)] struct`                 | Plain object copied to/from an owned Rust struct | Records, options, and configuration shapes                 |
+| `#[napi(transparent)] struct Wrapper(T)` | The inner value `T`                              | Rust newtypes that should not add a JavaScript wrapper     |
+| `#[napi(array)]` tuple struct            | JavaScript Array / TypeScript tuple              | Fixed positional data                                      |
+
+See [Type conversions](/docs/concepts/type-conversions) for direction and ownership rules and [`#[napi]` attributes](/docs/concepts/napi-attributes) for the complete shape controls.
+
 ## `Constructor`
 
 ### Default `constructor`
@@ -37,6 +50,8 @@ export class AnimalWithDefaultConstructor {
 }
 ```
 
+Every public field is part of the JavaScript API: napi-rs generates a getter and, unless the field is `#[napi(readonly)]`, a setter. Its Rust type must therefore support the generated JavaScript conversion direction. Keep native-only state private, as `count` is in the custom-constructor example below.
+
 ### Custom `constructor`
 
 If you want to define a custom `constructor`, you can use `#[napi(constructor)]` on your constructor `fn` in the struct `impl` block.
@@ -44,19 +59,16 @@ If you want to define a custom `constructor`, you can use `#[napi(constructor)]`
 **lib.rs**
 
 ```rust
-// A complex struct that cannot be exposed to JavaScript directly.
-pub struct QueryEngine {}
-
 #[napi(js_name = "QueryEngine")]
 pub struct JsQueryEngine {
-  engine: QueryEngine,
+  count: u32,
 }
 
 #[napi]
 impl JsQueryEngine {
   #[napi(constructor)]
   pub fn new() -> Self {
-    JsQueryEngine { engine: QueryEngine::new() }
+    JsQueryEngine { count: 0 }
   }
 }
 ```
@@ -82,19 +94,16 @@ Besides `constructor`, you can also define factory methods on `Class` by using `
 **lib.rs**
 
 ```rust
-// A complex struct that cannot be exposed to JavaScript directly.
-pub struct QueryEngine {}
-
 #[napi(js_name = "QueryEngine")]
 pub struct JsQueryEngine {
-  engine: QueryEngine,
+  count: u32,
 }
 
 #[napi]
 impl JsQueryEngine {
   #[napi(factory)]
   pub fn with_initial_count(count: u32) -> Self {
-    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+    JsQueryEngine { count }
   }
 }
 ```
@@ -130,30 +139,27 @@ You can define a JavaScript class method with `#[napi]` on a struct method in **
 **lib.rs**
 
 ```rust
-// A complex struct that cannot be exposed to JavaScript directly.
-pub struct QueryEngine {}
-
 #[napi(js_name = "QueryEngine")]
 pub struct JsQueryEngine {
-  engine: QueryEngine,
+  count: u32,
 }
 
 #[napi]
 impl JsQueryEngine {
   #[napi(factory)]
   pub fn with_initial_count(count: u32) -> Self {
-    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+    JsQueryEngine { count }
   }
 
   /// Class method
   #[napi]
   pub async fn query(&self, query: String) -> napi::Result<String> {
-    self.engine.query(query).await
+    Ok(format!("{query}: {}", self.count))
   }
 
   #[napi]
   pub fn status(&self) -> napi::Result<u32> {
-    self.engine.status()
+    Ok(self.count)
   }
 }
 ```
@@ -164,8 +170,8 @@ impl JsQueryEngine {
 export class QueryEngine {
   static withInitialCount(count: number): QueryEngine
   constructor()
-  query(query: string) => Promise<string>
-  status() => number
+  query(query: string): Promise<string>
+  status(): number
 }
 ```
 
@@ -185,31 +191,28 @@ Define [JavaScript class `getter`](https://developer.mozilla.org/en-US/docs/Web/
 
 **lib.rs**
 
-```rust {22-25}
-// A complex struct that cannot be exposed to JavaScript directly.
-pub struct QueryEngine {}
-
+```rust
 #[napi(js_name = "QueryEngine")]
 pub struct JsQueryEngine {
-  engine: QueryEngine,
+  count: u32,
 }
 
 #[napi]
 impl JsQueryEngine {
   #[napi(factory)]
   pub fn with_initial_count(count: u32) -> Self {
-    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+    JsQueryEngine { count }
   }
 
   /// Class method
   #[napi]
   pub async fn query(&self, query: String) -> napi::Result<String> {
-    self.engine.query(query).await
+    Ok(format!("{query}: {}", self.count))
   }
 
   #[napi(getter)]
   pub fn status(&self) -> napi::Result<u32> {
-    self.engine.status()
+    Ok(self.count)
   }
 }
 ```
@@ -230,36 +233,33 @@ Define [JavaScript class `setter`](https://developer.mozilla.org/en-US/docs/Web/
 
 **lib.rs**
 
-```rust {27-30}
-// A complex struct that cannot be exposed to JavaScript directly.
-pub struct QueryEngine {}
-
+```rust
 #[napi(js_name = "QueryEngine")]
 pub struct JsQueryEngine {
-  engine: QueryEngine,
+  count: u32,
 }
 
 #[napi]
 impl JsQueryEngine {
   #[napi(factory)]
   pub fn with_initial_count(count: u32) -> Self {
-    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+    JsQueryEngine { count }
   }
 
   /// Class method
   #[napi]
   pub async fn query(&self, query: String) -> napi::Result<String> {
-    self.engine.query(query).await
+    Ok(format!("{query}: {}", self.count))
   }
 
   #[napi(getter)]
   pub fn status(&self) -> napi::Result<u32> {
-    self.engine.status()
+    Ok(self.count)
   }
 
   #[napi(setter)]
   pub fn count(&mut self, count: u32) {
-    self.engine.count = count;
+    self.count = count;
   }
 }
 ```
@@ -277,17 +277,19 @@ export class QueryEngine {
 
 ## Class as argument
 
-`Class` is different from [`Object`](./object). `Class` can have Rust methods and associated functions on it. Every field in `Class` can be mutated in JavaScript.
+`Class` is different from [`Object`](./object). The Rust value is wrapped by a JavaScript instance and managed by that environment's garbage collector. Pass the instance back to Rust as `&T` for shared access or `&mut T` for mutable access; the value is not cloned from a plain object.
 
-So the ownership of the `Class` is actually transferred to the JavaScript side when you create it. It is managed by the JavaScript GC, and you can only pass it back by passing its `reference`.
+Only public struct fields become JavaScript properties. They are writable by default because napi-rs generates both accessors; `#[napi(readonly)]` suppresses the setter, and `#[napi(skip)]` suppresses both accessors. Private fields remain native implementation details. A writable field needs both `ToNapiValue` and `FromNapiValue`; a readonly field needs only `ToNapiValue`. See the [field attribute reference](/docs/concepts/napi-attributes#fields), including the `#[napi(constructor)]` shorthand limitation.
 
 **lib.rs**
 
 ```rust {1,5}
+#[napi]
 pub fn accept_class(engine: &QueryEngine) {
   // ...
 }
 
+#[napi]
 pub fn accept_class_mut(engine: &mut QueryEngine) {
   // ...
 }
@@ -299,6 +301,8 @@ pub fn accept_class_mut(engine: &mut QueryEngine) {
 export function acceptClass(engine: QueryEngine): void
 export function acceptClassMut(engine: QueryEngine): void
 ```
+
+For nested class instances, arrays of class instances, and `ClassInstance<T>`, see the [class section of the conversion reference](/docs/concepts/type-conversions#objects-classes-and-custom-shapes).
 
 ## Property attributes
 
@@ -350,7 +354,7 @@ qe.getNum = function () {} // TypeError: Cannot assign to read only property 'ge
 
 **lib.rs**
 
-```rust {4, 26}
+```rust
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
@@ -365,9 +369,23 @@ pub struct CustomFinalize {
 impl CustomFinalize {
   #[napi(constructor)]
   pub fn new(mut env: Env, width: u32, height: u32) -> Result<Self> {
-    let inner = vec![0; (width * height * 4) as usize];
-    let inner_size = inner.len();
-    env.adjust_external_memory(inner_size as i64)?;
+    let inner_size = u64::from(width)
+      .checked_mul(u64::from(height))
+      .and_then(|pixels| pixels.checked_mul(4))
+      .and_then(|bytes| usize::try_from(bytes).ok())
+      .ok_or_else(|| Error::new(Status::InvalidArg, "image dimensions are too large"))?;
+    let external_size = i64::try_from(inner_size)
+      .map_err(|_| Error::new(Status::InvalidArg, "image dimensions are too large"))?;
+
+    let mut inner = Vec::new();
+    inner.try_reserve_exact(inner_size).map_err(|err| {
+      Error::new(
+        Status::GenericFailure,
+        format!("failed to allocate image buffer: {err}"),
+      )
+    })?;
+    inner.resize(inner_size, 0);
+    env.adjust_external_memory(external_size)?;
     Ok(Self {
       width,
       height,
@@ -378,7 +396,9 @@ impl CustomFinalize {
 
 impl ObjectFinalize for CustomFinalize {
   fn finalize(self, mut env: Env) -> Result<()> {
-    env.adjust_external_memory(-(self.inner.len() as i64))?;
+    let external_size = i64::try_from(self.inner.len())
+      .map_err(|_| Error::new(Status::InvalidArg, "image buffer is too large"))?;
+    env.adjust_external_memory(-external_size)?;
     Ok(())
   }
 }
@@ -400,7 +420,7 @@ There is `fn instance_of` on all `#[napi]` class:
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
-#[napi]
+#[napi(constructor)]
 pub struct NativeClass {}
 
 #[napi]

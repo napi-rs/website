@@ -1,9 +1,8 @@
 {
   "introduction": "介绍",
-  "concepts": "概念",
+  "concepts": "概念与参考",
   "cli": "CLI",
-  "deep-dive": "Deep dive",
+  "deep-dive": "深入理解",
   "cross-build": "交叉编译",
-  "ecosystem": "Ecosystem",
-  "more": "More"
+  "more": "指南与帮助"
 }

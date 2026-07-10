@@ -1,0 +1,169 @@
+---
+title: Support and compatibility
+description: Understand Node-API ABI compatibility, tested runtimes, and napi-rs build targets.
+---
+
+# Support and compatibility
+
+import { Callout } from 'nextra-theme-docs'
+
+“Supported” can mean several different things for a native addon. napi-rs keeps
+these boundaries separate:
+
+| Question | Source of truth |
+| --- | --- |
+| Can a compiled addon load on a Node.js release? | The Node-API level compiled into that addon and the Node-API versions provided by the runtime. |
+| Can `@napi-rs/cli` run? | The CLI package's own Node.js engine requirement. |
+| Is a Node/runtime combination continuously tested? | The current napi-rs source CI workflow. |
+| Does `napi new` generate a build and publish path for a target? | The selected Yarn or pnpm template's checked-in matrix and `napi.targets`. |
+| Can Rust compile the target triple? | Rust target support plus the required linker, SDK, native dependencies, and cross-build mechanism. |
+| Does upstream Node.js publish a binary for the target? | Node.js release artifacts, which are narrower than the triples the napi-rs CLI can parse. |
+
+An accepted target triple or ABI-compatible Node-API level is not, by itself, a
+promise that every combination above is tested.
+
+## Node-API ABI compatibility
+
+Node-API provides ABI stability across Node.js versions. A native binary built
+against Node-API level `N` can generally load on later Node.js releases that
+still provide level `N`, without rebuilding for every Node major.
+
+That guarantee does not cover:
+
+- APIs introduced after the selected Node-API level.
+- Operating-system, CPU, libc, C++ runtime, or minimum deployment-target
+  compatibility.
+- Bugs in an alternate runtime's Node-API implementation.
+- Native libraries linked by your own dependencies.
+
+`napi new` asks for the minimum Node-API level and writes both the corresponding
+`napiN` Cargo feature and `engines.node` range into the generated project. The
+scaffold currently offers Node-API levels 1 through 9 and defaults to level 4.
+Choose the lowest level that provides the APIs you use, then test on its oldest
+claimed Node.js runtime. Features such as async support can still raise the
+effective Node-API floor.
+
+## CLI and Rust requirements
+
+- `@napi-rs/cli` declares `>=23.5.0 || ^22.13.0 || ^20.17.0`, matching its
+  interactive-prompt dependency. Use an up-to-date **Node.js 22 LTS release
+  (22.13+) or Node.js 24+** for current CLI builds. An addon may still target an
+  older compatible Node.js runtime even though the CLI that builds it cannot
+  run there.
+- The current napi-rs v3 workspace declares **Rust 1.88** as its minimum Rust
+  version.
+- The generated template's `engines.node` describes the addon package, not the
+  build CLI.
+
+## What the napi-rs source repository tests
+
+The primary [napi-rs source CI
+matrix](https://github.com/napi-rs/napi-rs/blob/main/.github/workflows/test-release.yaml)
+currently exercises **Node.js 22, 24, and 26** across its main Linux, macOS,
+and Windows jobs. Additional Docker target tests currently use Node.js 22 and
+24.
+
+This is the project's current regression coverage, not the complete Node-API
+compatibility range. A Node version outside that matrix may be ABI-compatible,
+but it is not accurate to call it continuously tested by the current source
+workflow.
+
+The generated package templates maintain their own smaller test matrices. Read
+the workflow copied into your project and treat that checked-in file as the
+support contract for your package.
+
+## JavaScript runtimes
+
+| Runtime | Status |
+| --- | --- |
+| **Node.js native addons** | Primary runtime. Release claims should still be limited to the Node versions and platforms your package tests. |
+| **Bun native addons** | Best effort. The source repository runs a latest-Bun job, but the test step is `continue-on-error`, so Bun failures do not block napi-rs releases. Test your actual addon before claiming support. |
+| **Deno native addons** | Not part of the current napi-rs source CI matrix. Do not infer Deno support from Node-API compatibility alone. |
+| **Node.js WASI fallback** | Exercised by the source and generated template workflows for their selected Node versions. It is a different artifact and loader from a native `.node` addon. |
+| **Browser WASI** | Available through generated browser/worker bindings. It requires WebAssembly threads, workers, and the appropriate cross-origin isolation headers. Test the target browsers explicitly. |
+| **Bun/Deno WASI fallback** | Known compatibility gaps remain; see [napi-rs issue #2965](https://github.com/napi-rs/napi-rs/issues/2965). Do not present this path as generally supported. |
+
+<Callout type="info">
+  A package can support a runtime more strongly than napi-rs itself does by
+  adding its own blocking runtime tests. Record those tests in the package's
+  support policy rather than relying on the framework homepage.
+</Callout>
+
+## Targets accepted by the CLI
+
+The current CLI recognizes target families including:
+
+- macOS x64, arm64, and universal binaries.
+- Windows MSVC x64, x86, and arm64, plus Windows GNU x64.
+- Linux glibc x64, arm64, armv7, loongarch64, riscv64gc, ppc64le, and s390x.
+- Linux musl x64, arm64, and armv7.
+- Android arm64 and armv7.
+- FreeBSD x64.
+- OpenHarmony x64 and arm64.
+- threaded WASI preview-1 targets.
+
+This list describes parsing and packaging vocabulary. Some targets require a
+manually installed linker or SDK, some can only be built from particular
+hosts, and some do not have official Node.js runtime binaries.
+
+## Targets generated by `napi new`
+
+`napi new` copies one of two maintained repositories:
+
+- [Yarn package template](https://github.com/napi-rs/package-template)
+- [pnpm package template](https://github.com/napi-rs/package-template-pnpm)
+
+The scaffold filters existing template rows; it does not synthesize a new CI
+recipe for every accepted triple. The current templates provide build/package
+paths for the common matrix:
+
+| Platform | Template-backed targets |
+| --- | --- |
+| macOS | x64, arm64 |
+| Windows MSVC | x64, x86, arm64 |
+| Linux glibc | x64, arm64, armv7 |
+| Linux musl | x64, arm64 |
+| Android | arm64, armv7 |
+| FreeBSD | x64 |
+| WASI | threaded preview-1 target |
+
+Both maintained templates currently implement this matrix. Because `napi new`
+filters their checked-in configuration instead of synthesizing target recipes,
+treat the generated `package.json` and `.github/workflows/CI.yml` as the support
+baseline for the new package.
+
+Targets such as OpenHarmony, Windows GNU, armv7 musl, universal macOS,
+loongarch64, riscv64gc, ppc64le, and s390x may be accepted by the CLI without
+having a complete scaffolded build and publish path. Selecting all targets does
+not change that.
+
+## Adding or claiming a target
+
+Before listing a target as supported:
+
+1. Add the triple to `napi.targets`.
+2. Run `napi create-npm-dirs` and inspect the generated package constraints.
+3. Add a CI build using the correct host, linker/SDK, and cross-build mode.
+4. Upload and collect the artifact with `napi artifacts`.
+5. Run the binary on the real or faithfully emulated target environment.
+6. Test the oldest OS, libc, deployment target, and Node.js version you claim.
+7. Verify a clean install of the root package selects and loads the expected
+   optional package.
+
+Use [Cross build](/docs/cross-build) for the host/target decision tree and [Add
+a target to an existing
+project](/docs/cross-build#add-a-target-to-an-existing-project) for the full
+packaging flow.
+
+## How to state support accurately
+
+Prefer a claim such as:
+
+> One binary per listed platform, built against Node-API 8. CI tests Node.js 22
+> and 24 on macOS arm64/x64, Windows x64, and Linux x64 glibc/musl. Other
+> Node-API-compatible Node.js releases are expected to work but are not in the
+> blocking matrix.
+
+Avoid “all Node versions” or “all platforms.” Include the Node-API level,
+tested Node versions, OS/CPU/libc matrix, minimum OS or glibc floor, and whether
+alternate runtimes are blocking, best-effort, or untested.

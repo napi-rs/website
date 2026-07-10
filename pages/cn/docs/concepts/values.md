@@ -7,6 +7,8 @@ description: Rust 和 JavaScript 类型之间的转换。
 
 Rust 和 JavaScript 类型之间的转换。
 
+本页介绍常见值。有关完整的源码依据矩阵，包括转换方向、所有权、Cargo 特性、`Option`、`Either`、集合、路径、函数、Promise、stream 和 Node-API 级别，请参阅[类型转换](/docs/concepts/type-conversions)。
+
 ### Undefined
 
 代表 JavaScript 中的 `undefined`。
@@ -29,7 +31,7 @@ fn log(n: u32) {
 **index.d.ts**
 
 ```ts
-export function getUndefined(): undefined
+export function getUndefined(): void
 export function log(n: number): void
 ```
 
@@ -61,6 +63,8 @@ export function getNull(): null
 export function getEnv(env: string): string | null
 ```
 
+`Option<T>` 作为参数时接受 `T`、`null` 或 `undefined`，但返回值为 `None` 时会返回 `null`。在 `#[napi(object)]` 字段中，默认表示是可选属性，输出时会省略 `None`；`#[napi(use_nullable)]` 则会将其变为必需的 `T | null` 属性。有关随位置变化的完整映射，请参阅 [`Option`、`null` 与 `undefined`](/docs/concepts/type-conversions#option-null-and-undefined)。
+
 ### Numbers
 
 JavaScript `Number` 等同于这些 Rust 整数/浮点数 类型: `u32`, `i32`, `i64`, `f64`。
@@ -72,7 +76,7 @@ JavaScript `Number` 等同于这些 Rust 整数/浮点数 类型: `u32`, `i32`, 
 ```rust
 #[napi]
 fn sum(a: u32, b: i32) -> i64 {
-	(b + a as i32).into()
+	i64::from(a) + i64::from(b)
 }
 ```
 
@@ -132,8 +136,8 @@ fn with_buffer(buf: Buffer) {
 }
 
 #[napi]
-fn read_buffer(file: String) -> Buffer {
-	Buffer::from(std::fs::read(file).unwrap())
+fn read_buffer(file: String) -> Result<Buffer> {
+	Ok(std::fs::read(file)?.into())
 }
 ```
 
@@ -162,20 +166,21 @@ export function readBuffer(file: string): Buffer
 
 ```rust
 #[napi]
-fn keys(obj: Object) -> Vec<String> {
-	Object::keys(&obj).unwrap()
+pub fn keys(obj: Object) -> Result<Vec<String>> {
+	Object::keys(&obj)
 }
 
 #[napi]
-fn log_string_field(obj: Object, field: String) {
-	println!("{}: {:?}", &field, obj.get::<String>::(field.as_ref()));
+pub fn log_string_field(obj: Object, field: String) -> Result<()> {
+	println!("{}: {:?}", &field, obj.get::<String>(&field)?);
+	Ok(())
 }
 
 #[napi]
-fn create_obj(env: Env) -> Object {
-	let mut obj = env.create_object().unwrap();
-	obj.set("test", 1).unwrap();
-	obj
+pub fn create_obj(env: &Env) -> Result<Object> {
+	let mut obj = Object::new(env)?;
+	obj.set("test", 1)?;
+	Ok(obj)
 }
 ```
 
@@ -183,7 +188,7 @@ fn create_obj(env: Env) -> Object {
 
 ```ts
 export function keys(obj: object): Array<string>
-export function logStringField(obj: object): void
+export function logStringField(obj: object, field: string): void
 export function createObj(): object
 ```
 
@@ -192,9 +197,11 @@ export function createObj(): object
 **lib.rs**
 
 ```rust
+use std::collections::HashMap;
+
 /// #[napi(object)] 需要所有的结构体字段都是对外可见的
 #[napi(object)]
-struct PackageJson {
+pub struct PackageJson {
 	pub name: String,
 	pub version: String,
 	pub dependencies: Option<HashMap<String, String>>,
@@ -202,13 +209,18 @@ struct PackageJson {
 }
 
 #[napi]
-fn log_package_name(package_json: PackageJson) {
+pub fn log_package_name(package_json: PackageJson) {
 	println!("name: {}", package_json.name);
 }
 
 #[napi]
-fn read_package_json() -> PackageJson {
-	// ...
+pub fn example_package_json() -> PackageJson {
+	PackageJson {
+		name: "example".to_owned(),
+		version: "1.0.0".to_owned(),
+		dependencies: None,
+		dev_dependencies: None,
+	}
 }
 ```
 
@@ -218,11 +230,11 @@ fn read_package_json() -> PackageJson {
 export interface PackageJson {
   name: string
   version: string
-  dependencies: Record<string, string> | null
-  devDependencies: Record<string, string> | null
+  dependencies?: Record<string, string>
+  devDependencies?: Record<string, string>
 }
 export function logPackageName(packageJson: PackageJson): void
-export function readPackageJson(): PackageJson
+export function examplePackageJson(): PackageJson
 ```
 
 ::: warning
@@ -232,6 +244,8 @@ Rust `fn` 中传入的 `#[napi(object)]` 结构体是从 **_JavaScript Object_**
 对其的任何更改都不会影响到原始的 **_JavaScript_** 对象。
 
 :::
+
+`#[napi(object)]` 是拥有所有权的普通对象形状，不是类。需要原生类身份和方法时使用 `#[napi] struct`；需要使用内部 JavaScript 表示的 Rust newtype 时使用 `#[napi(transparent)]`；需要元组形状的数组时使用 `#[napi(array)]`。参阅[类型转换](/docs/concepts/type-conversions#objects-classes-and-custom-shapes)。
 
 **lib.rs**
 
@@ -263,7 +277,7 @@ console.log(animal.name) // "dog"
 
 因为 JavaScript 的 `Array` 类型实际上是一种特殊的 `Object` ，所以操作 `Array`s 的性能与操作 `Object`s 的性能相同。
 
-`Array` 和 `Vec<T>` 之间的转换更为繁重，复杂度为 `O(2n)`。
+`Array` 和 `Vec<T>` 之间的转换更为繁重，复杂度为 `O(n)`。
 
 :::
 
@@ -276,18 +290,19 @@ fn arr_len(arr: Array) -> u32 {
 }
 
 #[napi]
-fn get_tuple_array(env: Env) -> Array {
-  let mut arr = env.create_array(2).unwrap();
+fn get_tuple_array(env: &Env) -> Result<Array> {
+  let mut arr = env.create_array(2)?;
 
-  arr.insert(1).unwrap();
-  arr.insert("test").unwrap();
+  arr.insert(1)?;
+  arr.insert("test")?;
 
-  arr
+  Ok(arr)
 }
 
 #[napi]
-fn vec_len(nums: Vec<u32>) -> u32 {
-  u32::try_from(nums.len()).unwrap()
+fn vec_len(nums: Vec<u32>) -> Result<u32> {
+  u32::try_from(nums.len())
+    .map_err(|_| Error::new(Status::InvalidArg, "Array is too large"))
 }
 
 #[napi]
@@ -328,12 +343,22 @@ Rust fn 不能接收 `i128` `u128` `u64` `i64n` 作为参数的原因是，将 J
 ```rust
 /// `get_u128` 的返回值是 (signed: bool, value: u128, lossless: bool)
 #[napi]
-fn bigint_add(a: BigInt, b: BigInt) -> u128 {
-  a.get_u128().1 + b.get_u128().1
+pub fn bigint_add(a: BigInt, b: BigInt) -> Result<u128> {
+  let (a_signed, a_value, a_lossless) = a.get_u128();
+  let (b_signed, b_value, b_lossless) = b.get_u128();
+  if a_signed || b_signed || !a_lossless || !b_lossless {
+    return Err(Error::new(
+      Status::InvalidArg,
+      "both values must be lossless, non-negative u128 integers",
+    ));
+  }
+  a_value.checked_add(b_value).ok_or_else(|| {
+    Error::new(Status::InvalidArg, "u128 addition overflowed")
+  })
 }
 
 #[napi]
-fn create_big_int_i128() -> i128 {
+pub fn create_big_int_i128() -> i128 {
   100
 }
 ```
@@ -341,8 +366,8 @@ fn create_big_int_i128() -> i128 {
 **index.d.ts**
 
 ```ts
-export function bigintAdd(a: BigInt, b: BigInt): BigInt
-export function createBigIntI128(): BigInt
+export function bigintAdd(a: bigint, b: bigint): bigint
+export function createBigIntI128(): bigint
 ```
 
 ### TypedArray
@@ -368,7 +393,7 @@ fn create_external_typed_array() -> Uint32Array {
 
 #[napi]
 fn mutate_typed_array(mut input: Float32Array) {
-  for item in input.as_mut() {
+  for item in unsafe { input.as_mut() } {
     *item *= 2.0;
   }
 }
@@ -388,5 +413,7 @@ export function mutateTypedArray(input: Float32Array): void
 import { convertU32Array, mutateTypedArray } from './index.js'
 
 convertU32Array(new Uint32Array([1, 2, 3, 4, 5])) // [1, 2, 3, 4, 5]
-mutateTypedArray(new Float32Array([1, 2, 3, 4, 5])) // Float32Array(5) [ 2, 4, 6, 8, 10 ]
+const values = new Float32Array([1, 2, 3, 4, 5])
+mutateTypedArray(values)
+console.log(values) // Float32Array(5) [ 2, 4, 6, 8, 10 ]
 ```

@@ -1,298 +1,213 @@
 ---
-title: '编写发布一个简单的包'
-description: 使用 NAPI-RS 编写并发布一个简单的包.
+title: '一个简单的包'
+description: 创建、构建、测试并准备一个 napi-rs v3 包。
 ---
 
-# 编写发布一个简单的包
+# 一个简单的包
 
-## 新建 `@napi-rs/cool`
+本教程将创建一个 napi-rs v3 插件，从 Node.js 调用它，并为项目配置 CI。请先完成[前置条件](./getting-started#前置条件)。
 
-让我们从 `@napi-rs/cli` 开始。
+## 创建项目
 
-使用 `napi new` 命令创建新项目:
+请选择一个你有权使用的包名。强烈建议使用 scope，因为发布工作流会为每个目标创建一个 npm 包。
 
-```bash {2}
-napi new
-? Package name: (The name field in your package.json)
+以下命令使用 Yarn 模板，并为其他选项提供非交互式默认值：
+
+```sh
+npx @napi-rs/cli new cool \
+  --name @your-scope/cool \
+  --no-interactive
 ```
 
-让我们给这个包起一个酷一点的名字: **@napi-rs/cool**
+改用 pnpm 模板：
 
-::: warning
-我们推荐将你的包发布到 npm scope 下。 因为 `@napi-rs/cli`
-会在每个支持的平台下创建并发布很多个包。 如果这些包不在一个 npm scope
-下，在发布的时候就会触发 npm [**_spam
-detection_**](https://stackoverflow.com/a/54135900/5684750)。
+```sh
+pnpm dlx @napi-rs/cli new cool \
+  --name @your-scope/cool \
+  --package-manager pnpm \
+  --no-interactive
+```
+
+运行命令前，请替换 `@your-scope`。如果希望交互式选择 Node-API 级别、目标、许可证和 CI 工作流，请省略 `--no-interactive`。
+
+::: info
+`napi new` 支持持续维护的 Yarn 和 pnpm 模板。它不会生成一个之后可随意切换包管理器的通用模板。
 
 :::
 
-```bash {3}
-napi new
-? Package name: (The name field in your package.json) @napi-rs/cool
-? Dir name: (cool)
-```
+## 了解生成的项目
 
-下一步你需要为你的酷包选择目录名，它的默认值是你的包名的后缀。我们就按 **enter**，使用默认值吧。
+进入项目并安装依赖：
 
-```bash {4}
-napi new
-? Package name: (The name field in your package.json) @napi-rs/cool
-? Dir name: cool
-? Choose targets you want to support (Press <space> to select, <a> to toggle all, <i> to invert selection,
-and <enter> to proceed)
-❯ ◯ aarch64-apple-darwin
-  ◯ aarch64-linux-android
-  ◯ aarch64-unknown-linux-gnu
-  ◯ aarch64-unknown-linux-musl
-  ◯ aarch64-pc-windows-msvc
-  ◯ armv7-unknown-linux-gnueabihf
-  ◉ x86_64-apple-darwin
-(Move up and down to reveal more choices)
-```
-
-下一步是选择你想支持哪个平台。我想要支持所有平台，所以按 **A** 全选，然后按 **enter**。
-
-```bash {8}
-napi new
-? Package name: (The name field in your package.json) @napi-rs/cool
-? Dir name: cool
-? Choose targets you want to support aarch64-apple-darwin, aarch64-linux-android, aarch64-unknown-linux-gnu
-, aarch64-unknown-linux-musl, aarch64-pc-windows-msvc, armv7-unknown-linux-gnueabihf, x86_64-apple-darwin,
-x86_64-pc-windows-msvc, x86_64-unknown-linux-gnu, x86_64-unknown-linux-musl, x86_64-unknown-freebsd, i686-p
-c-windows-msvc, armv7-linux-androideabi
-? Enable github actions? (Y/n)
-```
-
-下一步，你需要选择是否启用 `GitHub CI` 配置。如果你的项目将在 `GitHub` 上发布，那么你需要启用它。让我们在这里输入 **Y** 并按**enter**。
-
-```bash {9-16}
-napi new
-? Package name: (The name field in your package.json) @napi-rs/cool
-? Dir name: cool
-? Choose targets you want to support aarch64-apple-darwin, aarch64-linux-android, aarch64-unknown-linux-gnu
-, aarch64-unknown-linux-musl, aarch64-pc-windows-msvc, armv7-unknown-linux-gnueabihf, x86_64-apple-darwin,
-x86_64-pc-windows-msvc, x86_64-unknown-linux-gnu, x86_64-unknown-linux-musl, x86_64-unknown-freebsd, i686-p
-c-windows-msvc, armv7-linux-androideabi
-? Enable github actions? Yes
-Writing Cargo.toml
-Writing .npmignore
-Writing build.rs
-Writing package.json
-Writing src/lib.rs
-Writing .github/workflows/CI.yml
-Writing .cargo/config.toml
-Writing rustfmt.toml
-```
-
-现在`@napi-rs/cli`已经创建了一个名为`@napi-rs/cool`的新包，并且在`cool`目录下。
-
-让我们进入这个目录并且做一些准备工作:
-
-```bash
+```sh
 cd cool
 yarn install
 ```
 
-我在这里使用`yarn`来安装依赖，你可以用你偏好的包管理器来代替它。
+pnpm 模板请使用 `pnpm install`。最先会用到的文件有：
 
-而现在的目录结构是这样的:
-
-```
-tree -a
+```text
 .
-├── .cargo
-│   └── config.toml
-├── .github
-│   └── workflows
-│       └── CI.yml
-├── .npmignore
+├── .github/workflows/CI.yml
 ├── Cargo.toml
 ├── build.rs
-├── npm
 ├── package.json
-├── rustfmt.toml
-└── src
-    └── lib.rs
+├── src/lib.rs
+└── __test__/index.spec.ts
 ```
 
-你的本地代码在 `src/lib.rs`中。`.cargo/config.toml` 文件只设置了为 `x86_64-pc-windows-msvc` 静态链接 C 运行时的 `rustflags`（pnpm 模板还覆盖了 `i686`）。它看起来无关紧要，但不要删除它：没有它，这些 Windows 构建就会依赖 MSVC 运行时 DLL。交叉编译的链接器和工具链配置并不在这个文件里 —— 它们来自 `napi` CLI 本身（参见 [napi build](../cli/build)）。一般来说，这个文件不会影响你在本地机器上的开发。交叉编译的工作方式参见[交叉编译](../cross-build)指南。
-`.github/workflows/CI.yml`文件是[`GitHub Actions`](https://docs.github.com/en/actions) 的配置文件。
-`build.rs` 文件对于构建 `Node.js` 的 native addon 是必要的，不要删除它或把它移到其他地方。
+- `src/lib.rs` 是 Rust 插件源代码。
+- `Cargo.toml` 声明 `cdylib` 和 napi-rs v3 crate。
+- `build.rs` 调用 napi-rs 构建设置，必须保留在 crate 根目录。
+- `package.json` 包含 CLI 脚本与 `napi` 打包配置。
+- `.github/workflows/CI.yml` 构建并测试从模板保留的目标任务。
 
-在`yarn`安装完成后，你可以运行`build`命令来构建你的 native addon:
+此时还没有 `npm/`。各平台构建完成后，发布任务会通过 `napi create-npm-dirs` 创建各平台包目录。
 
-```bash
-yarn build
-yarn run v1.22.17
-$ napi build --platform --release
-    Updating crates.io index
-  Downloaded proc-macro2 v1.0.34
-  Downloaded once_cell v1.9.0
-  Downloaded napi v2.0.0-beta.7
-  Downloaded 3 crates (129.4 KB) in 2.35s
-   Compiling proc-macro2 v1.0.34
-   Compiling unicode-xid v0.2.2
-   Compiling memchr v2.4.1
-   Compiling syn v1.0.82
-   Compiling regex-syntax v0.6.25
-   Compiling convert_case v0.4.0
-   Compiling once_cell v1.9.0
-   Compiling napi-build v1.2.0
-   Compiling napi-sys v2.1.0
-   Compiling napi-rs_cool v0.0.0 (/cool)
-   Compiling quote v1.0.10
-   Compiling aho-corasick v0.7.18
-   Compiling regex v1.5.4
-   Compiling napi-derive-backend v1.0.17
-   Compiling ctor v0.1.21
-   Compiling napi-derive v2.0.0-beta.5
-   Compiling napi v2.0.0-beta.7
-    Finished release [optimized] target(s) in 37.11s
-✨  Done in 37.80s.
-```
+生成的 Rust 源代码导出了一个简单函数：
 
-然后现在的文件夹结构变成了这样:
+**src/lib.rs**
 
-```bash {11-13}
-tree -a -I target
-.
-├── .cargo
-│   └── config.toml
-├── .github
-│   └── workflows
-│       └── CI.yml
-├── .npmignore
-├── Cargo.toml
-├── build.rs
-├── cool.darwin-x64.node
-├── index.d.ts
-├── index.js
-├── node_modules
-├── npm
-├── package.json
-├── rustfmt.toml
-└── src
-    └── lib.rs
-```
-
-`yarn build` 命令为你生成了三个文件。
-
-`cool.darwin-x64.node` 是 Node.js addon 二进制文件, `index.js` 自动生成的 JavaScript 绑定文件，它帮你从 addon 二进制中 export 出所有的东西，并且保证对 esm 与 CommonJS 的兼容。`index.d.ts` 是生成的 TypeScript 定义文件。
-
-`new`命令从 `src/lib.rs` 中为你生成了一个简单的 `sum` 函数。
-
-**lib.rs**
-
-```rust {7}
+```rust
 #![deny(clippy::all)]
 
 use napi_derive::napi;
 
 #[napi]
-pub fn sum(a: i32, b: i32) -> i32 {
-  a + b
+pub fn plus_100(input: u32) -> u32 {
+  input + 100
 }
 ```
 
-查看 `index.d.ts` 文件内容你可以看到 `sum` 函数的 TypeScript 定义已经帮你自动生成:
+该宏会把 Rust 函数公开为 JavaScript 函数 `plus100`，并在构建时写入相应的 TypeScript 声明。
+
+## 构建插件
+
+为当前平台运行模板的 release 构建：
+
+```sh
+yarn build
+```
+
+pnpm 请运行 `pnpm build`。该脚本调用 `napi build --platform --release`，生成类似以下文件：
+
+```text
+cool.darwin-arm64.node
+index.js
+index.d.ts
+```
+
+`.node` 的确切后缀取决于当前操作系统、架构和 ABI。例如 Linux glibc 构建使用 `linux-x64-gnu`。需要调试构建时使用 `yarn build:debug`。
+
+生成的声明包含：
 
 **index.d.ts**
 
-```ts {3}
-/* eslint-disable */
-
-export function sum(a: number, b: number): number
+```ts
+export declare function plus100(input: number): number
 ```
 
-让我们创建一个 `main.mjs` 文件来测试生成的 `sum` 函数:
+从 Node.js 调用原生函数：
 
-**main.mjs**
-
-```js
-import { sum } from './index.js'
-
-console.log('From native', sum(40, 2))
+```sh
+node -e "const { plus100 } = require('./index.js'); console.log(plus100(42))"
 ```
 
-执行!
+输出为：
 
-```bash
-node main.mjs
-From native 42
+```text
+142
 ```
 
-恭喜你! 你已经成功的创建了一个 `Node.js` addon!
+## 修改并测试 Rust API
 
-## 发布
+在 `src/lib.rs` 中添加另一个导出函数：
 
-很可惜你不能直接发布 `@napi-rs/cool`，因为你没有 `@napi-rs` npm scope 的发布权限。
+**src/lib.rs**
 
-但你可以新建一个你自己的 [npm scope](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/)。
-
-一旦你创建了你自己的 npm scope, 你可以使用 `napi rename` 命令来重命名刚刚新建的 `@napi-rs/cool` 项目。
-
-```bash {1}
-napi rename
-? name: name field in package.json
+```rust
+#[napi]
+pub fn multiply(left: i32, right: i32) -> i32 {
+  left * right
+}
 ```
 
-假设你创建的 npm scope 名字叫 `jarvis`, 你可以在这里输入 `@jarvis/cool`:
+重新构建，然后验证运行时导出和生成的类型：
 
-```bash {3}
-napi rename
-? name: name field in package.json @jarvis/cool
-? napi name: (cool)
+```sh
+yarn build
+node -e "const { multiply } = require('./index.js'); console.log(multiply(6, 7))"
 ```
 
-你不需要重命名 `package.json` 中的 `napi name` 字段，因为包的后缀并没有变化。 在这里按下 **Enter** 保留 `cool` 这个名字。
+在 `__test__/index.spec.ts` 中添加对应的 AVA 断言：
 
-```bash
-napi rename
-? name: name field in package.json @jarvis/cool
-? napi name: cool
-? repository: Leave empty to skip
+\***\*test**/index.spec.ts\*\*
+
+```ts
+import test from 'ava'
+
+import { multiply } from '../index'
+
+test('multiply in native code', (t) => {
+  t.is(multiply(6, 7), 42)
+})
 ```
 
-如果你想发布 **NAPI-RS** 构建的包，你需要一个 `GitHub` 仓库，因为你需要 `GitHub Actions` 来为你做自动化编译和发布工作。在这里输入你的 GitHub 仓库的 URL 即可:
+运行测试：
 
-```bash {5}
-napi rename
-? name: name field in package.json @jarvis/cool
-? napi name: cool
-? repository: Leave empty to skip
-? description: Leave empty to skip
+```sh
+yarn test
 ```
 
-输入 `package.json` 中的 `description` 字段，直接按下 **enter** 来跳过这个步骤。
+## 准备仓库
 
-现在你的软件包名称已经重命名为`@jarvis/cool`，你终于可以发布它了。
+推送生成的工作流之前，请更新 `package.json`：
 
-现在初始化 `git` 配置并将它推到 GitHub:
+- 将 `name` 设为你有权发布的包名和 scope。
+- 将 `repository` 设为最终 GitHub 仓库。npm provenance 会检查该元数据，因此不要保留模板仓库 URL。
+- 检查 `license`、`description`、`keywords`、`homepage` 和 `bugs`。
+- 检查 `napi.targets`。它控制包创建与发布，但每个目标仍需实际的 CI 构建任务。
 
-```bash
+如果之后更改包名或二进制名称，请使用 CLI，使 Cargo、包配置、CI 和生成的绑定名称保持一致：
+
+```sh
+yarn napi rename \
+  --name @your-scope/cool \
+  --binary-name cool \
+  --repository https://github.com/your-name/cool.git
+```
+
+然后创建并推送仓库：
+
+```sh
 git init
-git remote add origin git@github.com/yourname/cool.git
 git add .
-git commit -m "Init"
-git push
+git commit -m "Create napi-rs package"
+git branch -M main
+git remote add origin git@github.com:your-name/cool.git
+git push -u origin main
 ```
+
+## 准备 npm 和 GitHub Actions
+
+生成的工作流通过 npm 发布，并创建 GitHub release。对于其基于 token 的设置：
+
+1. 创建要使用的 npm scope 和包访问权限。
+2. 创建一个能发布根包和所有平台包的 npm automation token。
+3. 将其添加为 `NPM_TOKEN` Actions secret。
+4. 为 GitHub release 保留工作流的 `contents: write` 权限，为 npm provenance 保留 `id-token: write` 权限。
+5. 尝试发布前，先确保普通 CI 路径成功运行。
 
 ::: warning
-为了在 `GitHub Actions` 中发布你的包, 你需要在你的 GitHub 仓库中配置 `NPM_TOKEN` 环境变量.
-
-在项目的 **Settings -> Secrets** 中新建 **_NPM_TOKEN_** 环境变量。
+发布不是原子操作。`napi pre-publish` 会更新包元数据、发布平台包，并且可能在 npm 发布根包之前创建或更新 GitHub release。不要把真实凭据用于试运行。
 
 :::
 
-如果所有步骤都完成了，你可以在 GitHub 上看到如下的 CI 流程:
+请阅读[发布原生包](/docs/deep-dive/release)，了解完整的发布前检查、发布与恢复流程。确切的副作用和标志见 [`napi pre-publish`](/docs/cli/pre-publish)。
 
-![](/assets/CI.png)
+## 后续阅读
 
-这是一个测试 CI，让我们来发布它吧:
-
-```bash
-npm version patch
-git push --follow-tags
-```
-
-然后 `CI` 会自动编译并发布 `@jarvis/cool`。
+- [值](/docs/concepts/values)：Rust 到 JavaScript 的转换。
+- [异步函数](/docs/concepts/async-fn)：异步导出。
+- [支持与兼容性](/docs/more/support-compatibility)：扩展目标矩阵前阅读。
+- [交叉编译](/docs/cross-build)：非宿主目标构建。

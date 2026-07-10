@@ -1,97 +1,212 @@
 ---
-title: 'Release de Pacotes Nativos'
-description: The history of how to release native packages.
+title: 'Publicar pacotes nativos'
+description: Compile, verifique, publique e recupere um release multi-plataforma do napi-rs.
 ---
 
-# Release de Pacotes Nativos
+# Publicar pacotes nativos
 
-Como você pode ver na seção anterior, o método de distribuição dominante na comunidade é **_distribuir o código-fonte `C/C++` diretamente_**.
-No entanto, essa abordagem não é uma solução de distribuição aceitável para desenvolvedores que usam `Rust` para escrever complementos nativos do Node.js,
-devido à complexidade e tempo de compilação da cadeia de ferramentas do Rust, tornando a distribuição do código-fonte diretamente um grande problema para os desenvolvedores que usam esses complementos nativos.
+O napi-rs distribui addons pré-compilados como pacotes npm. Os consumidores
+instalam um pacote raiz pequeno, e o gerenciador de pacotes seleciona um pacote
+opcional correspondente ao sistema operacional, CPU e libc atuais. Nenhum
+compilador nem script de download em tempo de instalação é necessário na
+máquina do consumidor.
 
-A seguir, descreverei várias maneiras de distribuir complementos nativos, incluindo **_distribuição direta do código-fonte_**. Após esta introdução, acredito que você poderá encontrar a forma mais adequada de distribuição de complementos nativos para `Rust`.
+::: warning
+Uma publicação multi-plataforma não é atômica. Versões no npm são imutáveis,
+e uma falha pode ocorrer depois que alguns pacotes de plataforma já existem,
+mas antes de o pacote raiz ser publicado. Trate jobs de release como mudanças
+de produção, não como prévias de build.
 
-## 1. Distribuição do Código-fonte
+:::
 
-Usar esse método requer que o usuário instale ferramentas de compilação como `node-gyp`, `cmake`, `g++`, etc.
-Isso não é um problema durante a fase de desenvolvimento, mas com a popularidade do `Docker`,
-instalar um monte de ferramentas de compilação em um determinado ambiente `Docker` é um pesadelo para muitas equipes.
-E se esse problema não for tratado adequadamente, aumentará o tamanho da `imagem do Docker` sem motivo (na verdade, esse problema pode ser resolvido compilando a imagem do Docker em uma imagem de Construtor especial antes de compilá-la, mas conversei com várias empresas e poucas equipes farão isso).
+## Modelo de distribuição
 
-## 2. Distribuir apenas o código JavaScript, baixar o produto correspondente na fase `postinstall`
+Para um pacote raiz como `@scope/addon`, o napi-rs cria pacotes como:
 
-Algumas dependências de compilação de complementos nativos são tão complexas que não é prático para o desenvolvedor médio do Node instalar um conjunto completo de ferramentas de compilação durante a fase de desenvolvimento.
-Outro cenário é que o próprio complemento nativo é tão complexo que pode levar muito tempo para compilar, e o autor da biblioteca não gostaria que as pessoas passassem horas apenas instalando-a ao usar sua biblioteca.
-
-Então, outra maneira popular é usar as ferramentas de `CI` para **_pré-compilar_** o complemento nativo na tarefa de `CI` para cada plataforma (win32/darwin/linux/...) e distribuir apenas o código JavaScript correspondente,
-enquanto o arquivo do complemento **_pré-compilado_** é baixado do **CDN/lançamento do GitHub** por meio do script `postinstall`.
-Por exemplo, existe uma ferramenta popular na comunidade que faz isso: [node-pre-gyp](https://github.com/mapbox/node-pre-gyp). Esta ferramenta faz o upload automaticamente do complemento nativo compilado em `CI` para um local específico com base na configuração do usuário e, em seguida, o baixa do local de upload durante a instalação.
-
-Este método de distribuição parece impecável, mas existem vários problemas que não podem ser contornados:
-
-- Ferramentas como `node-pre-gyp` adicionam muitas dependências **irrelevantes em tempo de execução** a um projeto.
-- Não importa para qual `CDN` você faça o upload, é difícil acomodar usuários de todo o mundo. Você se lembra das memórias dolorosas de ficar preso em `postinstall` por horas para baixar arquivos de algum lançamento do GitHub e depois falhar? É verdade que construir um espelho binário na região mais próxima pode amenizar parcialmente esse problema, mas o espelho não está sempre sincronizado/faltando de tempos em tempos.
-- Não é amigável para redes privadas. Muitas empresas podem não conseguir acessar a extranet em suas máquinas de CI/CD (elas terão um NPM privado para acompanhar, mas se não tiverem, não adianta discutir), muito menos baixar um complemento nativo de algum CDN.
-
-## 3. O complemento nativo para diferentes plataformas é distribuído por meio de pacotes npm diferentes
-
-A nova ferramenta de compilação da geração [esbuild](https://github.com/evanw/esbuild), que é muito popular no front-end, usa essa abordagem. Cada complemento nativo corresponde a um pacote npm e, em seguida, o script `postinstall` instala o pacote do complemento nativo para o sistema atual.
-
-Outra maneira é expor os pacotes a serem instalados pelo usuário: usar todos os pacotes nativos como `optionalDependencies` e, em seguida, usar os campos `os` e `cpu` no `package.json` para que o `npm/yarn/pnpm` _escolha automaticamente qual pacote nativo instalar (a instalação na verdade falha se o pacote não corresponder aos requisitos do sistema)_ na hora da instalação, por exemplo:
-
-```json
-{
-  "name": "@node-rs/bcrypt",
-  "version": "0.5.0",
-  "os": ["linux", "win32", "darwin"],
-  "cpu": ["x64"],
-  "optionalDependencies": {
-    "@node-rs/bcrypt-darwin": "^0.5.0",
-    "@node-rs/bcrypt-linux": "^0.5.0",
-    "@node-rs/bcrypt-win32": "^0.5.0"
-  }
-}
+```text
+@scope/addon
+@scope/addon-darwin-arm64
+@scope/addon-win32-x64-msvc
+@scope/addon-linux-x64-gnu
+@scope/addon-linux-x64-musl
 ```
 
-```json
-{
-  "name": "@node-rs/bcrypt-darwin",
-  "version": "0.5.0",
-  "os": ["darwin"],
-  "cpu": ["x64"]
-}
+Cada pacote de plataforma contém um artefato nativo e declara restrições npm
+de `os`, `cpu` e, quando aplicável, `libc`. O pacote raiz lista versões exatas
+desses pacotes em `optionalDependencies`; seu loader gerado então carrega o
+pacote correspondente ao sistema em execução.
+
+Esse modelo evita as duas alternativas comuns:
+
+- Enviar código-fonte Rust/C/C++ e exigir que todo consumidor instale uma
+  toolchain nativa.
+- Baixar um binário do GitHub ou de uma CDN em `postinstall`, o que introduz
+  falhas de rede em tempo de instalação e em redes privadas.
+
+## Comandos no pipeline de release
+
+| Comando                                          | Responsabilidade                                                                                                                  |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| [`napi create-npm-dirs`](../cli/create-npm-dirs) | Criar um diretório de pacote para cada alvo configurado.                                                                          |
+| [`napi build`](../cli/build)                     | Compilar um alvo por invocação. A CI o executa uma vez para cada linha da matriz.                                                 |
+| [`napi artifacts`](../cli/artifacts)             | Coletar arquivos `.node`/`.wasm` baixados para dentro dos pacotes raiz e de plataforma.                                           |
+| [`napi pre-publish`](../cli/pre-publish)         | Sincronizar versões e dependências opcionais, publicar pacotes de plataforma e, opcionalmente, criar/enviar um release no GitHub. |
+| `npm publish`                                    | Publicar o pacote raiz. No template, isso invoca `napi prepublish -t npm` via `prepublishOnly` primeiro.                          |
+
+`napi pre-publish` não compila nem coleta artefatos, e não publica o pacote
+raiz por conta própria.
+
+## Configuração única de release
+
+Antes do primeiro release:
+
+1. Use um escopo npm ou confirme que o nome raiz e o nome de cada pacote de
+   alvo com sufixo estão disponíveis.
+2. Defina `name`, `repository`, `license` e `publishConfig` finais em
+   `package.json`. O repositório deve corresponder ao workflow do GitHub para
+   provenance no npm.
+3. Revise `napi.binaryName` e `napi.targets`. Todo alvo precisa de um pacote,
+   job de build e teste de runtime; um target triple aceito, por si só, não é
+   garantia de suporte.
+4. Configure um token de automação npm como secret `NPM_TOKEN` do Actions, a
+   menos que você tenha substituído deliberadamente o template por trusted
+   publishing do npm. A identidade deve ter permissão para publicar o pacote
+   raiz e todos os nomes de plataforma.
+5. Mantenha `contents: write` para criação de release no GitHub e
+   `id-token: write` para provenance no npm no job de publicação.
+6. Execute com sucesso o workflow normal de branch/PR antes de habilitar um
+   release.
+
+Veja [Support and compatibility](/docs/more/support-compatibility) e [Cross
+build](../cross-build) antes de expandir a matriz gerada.
+
+## Checklist prévio para cada versão
+
+Antes de criar um commit de versão, verifique:
+
+- O commit de release foi construído a partir da branch limpa pretendida e do
+  código revisado.
+- Formatação local, checks Rust, testes JavaScript, declarações geradas e um
+  carregamento nativo local passam com sucesso.
+- A matriz de CI compila todas as entradas de `napi.targets`, e todo arquivo
+  produzido tem o sufixo `binaryName.platform-arch-abi` esperado.
+- As novas versões raiz e de plataforma ainda não existem no npm.
+- `npm whoami` funciona com a identidade de release e o token é válido para
+  todos os nomes de pacote.
+- O changelog e as declarações de suporte a Node-API/runtime correspondem ao
+  release.
+
+Inspecione o tarball raiz sem executar lifecycle scripts:
+
+```sh
+npm pack --dry-run --ignore-scripts
 ```
 
-```json
-{
-  "name": "@node-rs/bcrypt-linux",
-  "version": "0.5.0",
-  "os": ["linux"],
-  "cpu": ["x64"]
-}
+Não confie em `npm publish --dry-run`: lifecycle scripts do npm ainda podem
+invocar `napi prepublish`, o que pode publicar os pacotes de plataforma reais.
+Use [`napi pre-publish --dry-run`](../cli/pre-publish#preview-safely)
+separadamente, sabendo que ele não valida a completude dos artefatos nem a
+autorização no registry.
+
+## Fazer release com o workflow gerado
+
+Os templates mantidos publicam a partir do workflow do GitHub Actions. O job:
+
+1. Aguarda jobs de lint, build e runtime-test.
+2. Baixa todos os artefatos do workflow com `actions/download-artifact@v8`.
+3. Cria os diretórios npm dos alvos.
+4. Executa `napi artifacts` para preencher os pacotes raiz e de plataforma.
+5. Habilita provenance no npm.
+6. Executa `npm publish` para o pacote raiz. Seu script `prepublishOnly`
+   executa `napi prepublish -t npm`, que publica primeiro os pacotes de
+   plataforma e envia os assets do release no GitHub.
+7. Publica uma versão estável com a tag padrão do npm, ou um prerelease com a
+   tag `next`.
+
+O template atual decide se publica com base na mensagem do commit mais recente.
+O `npm version` já grava a versão sem prefixo como mensagem do commit (o padrão
+de `message` é `%s`); apenas a tag Git leva o prefixo `v` (`tag-version-prefix`
+tem `v` como padrão), e o gate de publicação do template aceita tanto `1.2.3`
+quanto `v1.2.3`. Portanto, `npm version patch` sozinho já produz uma mensagem de
+commit que o gate reconhece — passar `-m "%s"` abaixo é opcional e apenas fixa
+o formato da mensagem:
+
+```sh
+# Cria o commit de versão e a tag Git com prefixo v, mas faz com que a
+# mensagem do próprio commit seja exatamente a nova versão (por exemplo, 1.2.3).
+npm version patch -m "%s"
+git push --follow-tags
 ```
 
-```json
-{
-  "name": "@node-rs/bcrypt-win32",
-  "version": "0.5.0",
-  "os": ["win32"],
-  "cpu": ["x64"]
-}
+Para um prerelease:
+
+```sh
+npm version prerelease --preid next -m "%s"
+git push --follow-tags
 ```
 
-Esta abordagem é a distribuição menos intrusiva para usuários que utilizam complementos nativos e é usada por [@ffmpeg-installer/ffmpeg](https://github.com/kribblo/node-ffmpeg-installer#readme).
+Revise o `.github/workflows/CI.yml` gerado antes de usar esses comandos. Se o
+seu projeto tiver alterado o gatilho ou o tooling de release, siga o workflow
+versionado no repositório em vez desta convenção do template.
 
-No entanto, essa abordagem impõe uma carga de trabalho adicional aos autores de complementos nativos, incluindo a necessidade de escrever ferramentas para gerenciar o binário de lançamento e um monte de pacotes, que geralmente são muito difíceis de depurar (e normalmente abrangem vários sistemas e arquiteturas de CPU).
+## Gates de release dentro da CI
 
-Essas ferramentas precisam gerenciar todo o fluxo do complemento através das fases de desenvolvimento -> versão de lançamento local -> CI -> artefatos -> fase de implantação. Além disso, há muitas configurações de CI/CD para escrever/depurar, o que é demorado e tedioso.
+Como a CLI apenas avisa e continua quando um arquivo de alvo esperado está
+ausente, adicione um gate explícito antes da etapa de publicação. Ele deve
+provar que:
 
-## Conclusão
+- Todo diretório de alvo configurado existe.
+- Todo diretório contém exatamente o arquivo `.node` ou `.wasm` esperado.
+- Pacotes WASI contêm seu loader gerado e os arquivos de suporte ao worker.
+- Nenhum artefato tem um nome binário ou sufixo de alvo inesperado.
+- Os testes de runtime da plataforma consumiram os mesmos artefatos que serão
+  publicados.
 
-O complemento nativo com o terceiro método de distribuição (**distribuição de complementos nativos para diferentes plataformas por meio de pacotes npm diferentes**) é o mais fácil de usar e o menos mentalmente cansativo para os desenvolvedores que o utilizam, mas esse método de distribuição impõe custos adicionais de manutenção aos autores de complementos nativos.
+Não publique o pacote raiz a menos que todos os gates de plataforma passem. Uma
+vez que a versão raiz exista, clientes podem imediatamente tentar resolver toda
+dependência opcional listada.
 
-O **NAPI-RS** assume essa carga de trabalho:
+## Verifique o release publicado
 
-- [Compilação cruzada](../cross-build) — compile todas as plataformas-alvo a partir de poucos hosts de CI.
-- [`napi artifacts`](../cli/artifacts) — copia os binários compilados na CI para os pacotes npm de cada plataforma.
-- [`napi pre-publish`](../cli/pre-publish) — atualiza o `package.json` e publica os pacotes de cada plataforma.
+Um workflow verde não basta. Depois da publicação:
+
+1. Leia os metadados da raiz com `npm view @scope/addon@<version> --json` e
+   confirme sua dist-tag e `optionalDependencies` exatas.
+2. Consulte cada pacote de plataforma na mesma versão e inspecione `os`, `cpu`,
+   `libc` e a lista de arquivos do tarball.
+3. Confirme que o npm exibe provenance quando o workflow prometeu isso.
+4. Confirme que o release do GitHub aponta para a tag pretendida e contém todo
+   asset binário esperado.
+5. Instale o pacote raiz em projetos limpos em sistemas representativos glibc,
+   musl, macOS e Windows e chame um export nativo.
+6. Teste separadamente o fallback de nativo para WASI quando WASI fizer parte
+   do release.
+
+Mantenha a URL do workflow de release e os resultados de verificação junto das
+notas do release.
+
+## Recupere-se de um release parcial
+
+Não faça imediatamente um bump de versão nem reconstrua. Primeiro, inventarie
+os pacotes npm, o pacote raiz e os assets do GitHub para a versão com falha.
+Binários publicados nunca devem ser substituídos por bits diferentes sob a
+mesma versão.
+
+As ferramentas de recuperação são:
+
+- Executar novamente `napi prepublish -t npm` com os artefatos inalterados para
+  publicar pacotes de plataforma ausentes. Versões já publicadas são ignoradas
+  quando o npm retorna seu erro padrão de versão duplicada.
+- Passar `--gh-release-id <id>` para enviar a um release existente em vez de
+  criar outro.
+- Passar `--skip-optional-publish` somente depois de confirmar
+  independentemente que todo pacote de plataforma já existe.
+- Se apenas o pacote raiz restar, publique o tarball raiz inalterado a partir
+  do job de release confiável com lifecycle scripts desabilitados, para que a
+  fase de plataforma não seja repetida.
+
+Siga o [procedimento detalhado de falha parcial e
+recuperação](../cli/pre-publish#partial-failure-and-recovery). Se a raiz foi
+publicada com uma dependência de plataforma ausente, publique o pacote ausente
+imediatamente ou depreque a versão raiz quebrada; o npm não tem rollback
+atômico.

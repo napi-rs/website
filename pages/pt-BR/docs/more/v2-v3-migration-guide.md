@@ -1,0 +1,156 @@
+---
+title: 'Guia de migração da V2 para a V3'
+description: Guia de migração do NAPI-RS V2 para o V3.
+---
+
+## Configuração
+
+A configuração `napi` mudou: o campo `name` agora é `binaryName`.
+
+### `napi.name` -> `napi.binaryName`
+
+**package.json**
+
+```diff
+{
+  "name": "@napi-rs/package-template",
+  "version": "1.0.0",
+  "napi": {
+-   "name": "my-package",
++   "binaryName": "my-package",
+  }
+}
+```
+
+### `napi.triples -> napi.targets`
+
+A configuração `triples` foi removida, e agora você precisa definir `targets`.
+
+Os `triples.default` de antes eram:
+
+```
+"x86_64-unknown-linux-gnu",
+"x86_64-pc-windows-msvc",
+"x86_64-apple-darwin"
+```
+
+Agora você precisa adicioná-los à configuração `targets`.
+
+**package.json**
+
+```diff
+{
+  "name": "@napi-rs/package-template",
+  "version": "1.0.0",
+  "napi": {
+-   "triples": {
+-     "default": true,
+-     "additional": [
+-      "aarch64-apple-darwin",
+-      "x86_64-unknown-linux-musl",
+-      "aarch64-unknown-linux-musl"
+-    ]
+-   }
++   "targets": [
++     "x86_64-unknown-linux-gnu",
++     "x86_64-pc-windows-msvc",
++     "x86_64-apple-darwin",
++     "aarch64-apple-darwin",
++     "x86_64-unknown-linux-musl",
++     "aarch64-unknown-linux-musl"
++   ]
+  }
+}
+```
+
+## Mudanças incompatíveis na CLI
+
+A CLI foi reescrita.
+
+`--cargo-cwd` foi removido. Você precisa usar `--manifest-path` para apontar o
+caminho do `Cargo.toml`:
+
+```diff
+- napi build --cargo-cwd ./crates/napi
++ napi build --manifest-path ./crates/napi/Cargo.toml
+```
+
+Antes, as flags em `napi build` eram relativas a `--cargo-cwd || process.cwd()`;
+agora elas são relativas a `--cwd || process.cwd()`.
+
+### `--cargo-flags` removido
+
+A opção `--cargo-flags` foi removida. Agora as flags depois de `--` serão
+encaminhadas para o comando `cargo build`:
+
+```diff
+- napi build --cargo-flags="--locked"
++ napi build -- --locked
+```
+
+A flag `--locked` será passada para `cargo build`, resultando em
+`cargo build --locked`.
+
+### `create-npm-dir` foi renomeado para `create-npm-dirs`
+
+Veja [**create-npm-dirs**](/docs/cli/create-npm-dirs) para mais detalhes.
+
+Além das mudanças no nome do comando e nas flags, não é mais recomendado fazer
+commit de todos os arquivos `npm/*`. Você pode usar `napi create-npm-dirs` para
+criar os arquivos em `npm/` na CI, assim:
+https://github.com/napi-rs/package-template/blob/main/.github/workflows/CI.yml#L358
+
+### `napi universal` foi renomeado para `napi universalize`
+
+Veja [**universalize**](/docs/cli/universalize) para mais detalhes.
+
+## Crate `napi`
+
+### Alguns JsValues agora ficam atrás da feature flag `compat-mode`
+
+Esta é a lista completa desses valores:
+
+- `JsObject`
+- `JsFunction`
+- `JsNull`
+- `JsBoolean`
+- `JsUndefined`
+- `JsBuffer`
+- `JsBufferView`
+- `JsArrayBuffer`
+- `JsArrayBufferView`
+- `JsTypedArray`
+- `JsBigint`
+- `Ref`
+
+Essas APIs não são seguras; veja [**Lifetime in V3**](/blog/announce-v3#lifetime)
+para mais detalhes.
+
+Se você estiver usando essas APIs, precisará habilitar a feature flag
+`compat-mode`, mas isso não é recomendado.
+
+Você pode migrar dessas APIs para as novas APIs. Veja [Values](/docs/concepts/values),
+[Function](/docs/concepts/function), [Reference](/docs/concepts/reference) e
+[TypedArray](/docs/concepts/typed-array) para mais detalhes.
+
+### `ThreadsafeFunction`
+
+[`ThreadsafeFunction`](/docs/concepts/threadsafe-function) foi totalmente
+reescrita. Veja [**ThreadsafeFunction in V3**](/blog/announce-v3#threadsafefunction)
+para o contexto.
+
+A nova documentação da API está aqui:
+[`ThreadsafeFunction`](/docs/concepts/threadsafe-function)
+
+### `napi::module_init` foi movido para `napi_derive::module_init`
+
+Isso ocorreu por causa de mudanças incompatíveis no crate upstream
+[`ctor`](https://github.com/mmastrac/rust-ctor).
+
+## Crate `napi_derive`
+
+### novo `#[napi(module_exports)]`
+
+Isto serve para substituir o macro `#[module_exports]` no `compat-mode`; agora
+você pode remover a feature `compat-mode` de `napi-derive` e usar apenas macros
+modernos `#[napi]`.

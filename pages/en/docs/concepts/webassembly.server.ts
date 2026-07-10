@@ -13,8 +13,12 @@ import { defineHead } from 'void'
 export const prerender = false
 
 export const head = defineHead(() => ({
-  title: 'WebAssembly',
+  title: 'WebAssembly and WASI',
   meta: [
-    { name: 'description', content: 'Build WebAssembly with **NAPI-RS**.' },
+    {
+      name: 'description',
+      content:
+        'Build, package, test, and run a NAPI-RS WASI fallback in Node.js and browsers.',
+    },
   ],
 }))

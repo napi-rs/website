@@ -1,89 +1,144 @@
 ---
 title: '发布原生包'
-description: 原生包发布方式的历史。
+description: 构建、验证、发布多平台 napi-rs 版本，并从部分失败中恢复。
 ---
 
 # 发布原生包
 
-从前面部分的介绍可以窥见，目前社区上主流的分发方式是 **_直接分发 `C/C++` 源码_**。但这种方式对于使用 `Rust` 编写 Node.js native addon 的开发者来说，并不是一种可以接受的分发方案，因为 Rust 工具链的复杂性和编译耗时等问题，直接分发源码对使用这些 native addon 的开发者来说会是一种巨大的折磨。
+napi-rs 以 npm 包形式分发预构建插件。使用者安装一个很小的根包，包管理器会根据当前操作系统、CPU 和 libc 选择匹配的可选包。使用者的机器无需编译器或安装时下载脚本。
 
-下面我将介绍包括 **_直接分发源码_** 在内的 native addon 的几种分发方式，在介绍完之后相信你能找到最适合 `Rust` 的 native addon 分发方式。
+::: warning
+多平台发布不是原子操作。npm 版本不可变，而故障可能发生在部分平台包已经存在、根包尚未发布之间。请把发布任务视为生产变更，而不是构建预览。
 
-## 1. 分发源码
+:::
 
-使用这种方式要求用户安装 `node-gyp`、`cmake`、`g++` 等构建工具。这在开发阶段不是问题，但随着 `Docker` 的流行，在给定的 `Docker` 环境中安装一堆构建工具链对很多团队来说是一场噩梦。而且如果这个问题处理不好，还会平白增大 `Docker image` 的体积（其实这个问题可以通过在编译前使用专门的 Builder 镜像来构建 Docker image 解决，但我与各种公司交流过，很少有团队会这么做）。
+## 分发模型
 
-## 2. 只分发 JavaScript 代码，在 `postinstall` 阶段下载对应的产物
+对于 `@scope/addon` 这样的根包，napi-rs 会创建：
 
-有些 native addon 的构建依赖非常复杂，让普通 Node 开发者在开发阶段安装全套构建工具并不现实。另一种场景是 native addon 本身非常复杂，编译可能耗费大量时间，库作者不希望别人在使用他的库时，光是安装就要花上几个小时。
-
-因此另一种流行的方式是借助 `CI` 工具，在 `CI` 任务中为每个平台（win32/darwin/linux/...）**_预编译_** native addon，只分发对应的 JavaScript 代码，而 **_预编译_** 好的 addon 文件则通过 `postinstall` 脚本从 **CDN/GitHub release** 下载。例如社区里有一个流行的工具就是这么做的：[node-pre-gyp](https://github.com/mapbox/node-pre-gyp)。这个工具根据用户的配置，把 `CI` 中编译好的 native addon 自动上传到特定位置，然后在安装阶段从上传位置下载。
-
-这种分发方式看起来天衣无缝，但有几个绕不开的问题：
-
-- `node-pre-gyp` 这类工具会给项目引入大量**与运行时无关**的依赖。
-- 无论上传到哪个 `CDN`，都很难照顾到全世界的用户。你是否还记得被卡在 `postinstall` 阶段几个小时、从某个 GitHub release 下载文件最后还失败了的痛苦回忆？确实，在最近的地区建立二进制镜像可以部分缓解这个问题，但镜像时常不同步/缺失。
-- 对私有网络不友好。很多公司的 CI/CD 机器可能无法访问外网（它们会配套一个私有 NPM，如果连这个都没有就没有讨论的意义了），更不用说从某个 CDN 下载 native addon 了。
-
-## 3. 不同平台的 native addon 通过不同的 npm 包分发
-
-在前端非常流行的新一代构建工具 [esbuild](https://github.com/evanw/esbuild) 就采用了这种方式。每个 native addon 对应一个 npm 包，然后由 `postinstall` 脚本安装当前系统对应的 native addon 包。
-
-另一种方式是把要安装的包直接暴露给用户，将所有原生包作为 `optionalDependencies`，再利用 `package.json` 中的 `os` 和 `cpu` 字段，让 `npm/yarn/pnpm` 在安装时*自动选择要安装的原生包（与系统要求不匹配的包实际上会安装失败）*，例如：
-
-```json
-{
-  "name": "@node-rs/bcrypt",
-  "version": "0.5.0",
-  "os": ["linux", "win32", "darwin"],
-  "cpu": ["x64"],
-  "optionalDependencies": {
-    "@node-rs/bcrypt-darwin": "^0.5.0",
-    "@node-rs/bcrypt-linux": "^0.5.0",
-    "@node-rs/bcrypt-win32": "^0.5.0"
-  }
-}
+```text
+@scope/addon
+@scope/addon-darwin-arm64
+@scope/addon-win32-x64-msvc
+@scope/addon-linux-x64-gnu
+@scope/addon-linux-x64-musl
 ```
 
-```json
-{
-  "name": "@node-rs/bcrypt-darwin",
-  "version": "0.5.0",
-  "os": ["darwin"],
-  "cpu": ["x64"]
-}
+每个平台包包含一个原生产物，并声明 npm `os`、`cpu` 以及适用时的 `libc` 限制。根包在 `optionalDependencies` 中列出这些包的精确版本；其生成的加载器随后加载与运行系统匹配的包。
+
+该模型避免了两种常见替代方案：
+
+- 分发 Rust/C/C++ 源码，并要求每个使用者安装原生工具链。
+- 在 `postinstall` 中从 GitHub 或 CDN 下载二进制文件，这会带来安装时网络和私有网络故障。
+
+## 发布流水线中的命令
+
+| 命令                                             | 职责                                                                            |
+| ------------------------------------------------ | ------------------------------------------------------------------------------- |
+| [`napi create-npm-dirs`](../cli/create-npm-dirs) | 为每个已配置目标创建包目录。                                                    |
+| [`napi build`](../cli/build)                     | 每次调用构建一个目标。CI 为每个矩阵任务运行一次。                               |
+| [`napi artifacts`](../cli/artifacts)             | 将下载的 `.node`/`.wasm` 文件收集到根包与平台包。                               |
+| [`napi pre-publish`](../cli/pre-publish)         | 同步版本和可选依赖，发布平台包，并可选地创建/上传 GitHub release。              |
+| `npm publish`                                    | 发布根包。在模板中，它会先通过 `prepublishOnly` 调用 `napi prepublish -t npm`。 |
+
+`napi pre-publish` 不会构建或收集产物，也不会自行发布根包。
+
+## 一次性发布设置
+
+首次发布前：
+
+1. 使用 npm scope，或确认根包名及所有带目标后缀的包名都可用。
+2. 在 `package.json` 中设置最终的 `name`、`repository`、`license` 和 `publishConfig`。为了 npm provenance，repository 必须与 GitHub 工作流匹配。
+3. 检查 `napi.binaryName` 和 `napi.targets`。每个目标都需要包、构建任务和运行时测试；仅仅是可接受的目标三元组并不构成支持保证。
+4. 将 npm automation token 配置为 `NPM_TOKEN` Actions secret；除非你有意用 npm trusted publishing 替换模板。该身份必须有权发布根包和所有平台包名。
+5. 在发布任务中保留用于创建 GitHub release 的 `contents: write`，以及用于 npm provenance 的 `id-token: write`。
+6. 启用发布前，先让普通分支/PR 工作流成功运行。
+
+扩展生成的矩阵前，请阅读[支持与兼容性](/docs/more/support-compatibility)和[交叉编译](../cross-build)。
+
+## 每个版本的发布前检查
+
+创建版本提交前，请确认：
+
+- 发布提交来自预期的干净分支，且源代码已完成审核。
+- 本地格式化、Rust 检查、JavaScript 测试、生成声明和本地原生加载全部通过。
+- CI 矩阵构建 `napi.targets` 中的每一项，而且每个生成文件都具有预期的 `binaryName.platform-arch-abi` 后缀。
+- 新的根包和平台包版本在 npm 上都不存在。
+- `npm whoami` 对发布身份执行成功，且 token 对所有包名都有效。
+- changelog 与 Node-API/运行时支持声明符合本次发布。
+
+在不运行生命周期脚本的情况下检查根 tarball：
+
+```sh
+npm pack --dry-run --ignore-scripts
 ```
 
-```json
-{
-  "name": "@node-rs/bcrypt-linux",
-  "version": "0.5.0",
-  "os": ["linux"],
-  "cpu": ["x64"]
-}
+不要依赖 `npm publish --dry-run`：npm 生命周期脚本仍可能调用 `napi prepublish`，从而真正发布平台包。请单独使用 [`napi pre-publish --dry-run`](../cli/pre-publish#安全预览)，同时注意它不会验证产物完整性或 registry 授权。
+
+## 使用生成的工作流发布
+
+持续维护的模板从 GitHub Actions 工作流发布。该任务会：
+
+1. 等待 lint、构建和运行时测试任务。
+2. 使用 `actions/download-artifact@v8` 下载所有工作流产物。
+3. 创建目标 npm 目录。
+4. 运行 `napi artifacts` 填充根包与平台包。
+5. 启用 npm provenance。
+6. 对根包运行 `npm publish`。它的 `prepublishOnly` 脚本运行 `napi prepublish -t npm`，先发布平台包并上传 GitHub release 产物。
+7. 使用默认 npm tag 发布稳定版本，或使用 `next` tag 发布预发布版本。
+
+当前模板根据最新提交消息决定是否发布。`npm version` 默认就会把裸版本号写入提交消息（其 `message` 配置默认值为 `%s`）；只有 Git tag 会带上 `v` 前缀（`tag-version-prefix` 默认为 `v`），而模板的发布关卡对 `1.2.3` 和 `v1.2.3` 都接受。因此仅 `npm version patch` 本身产生的提交消息就能匹配该关卡——下面传入 `-m "%s"` 是可选的，只是固定提交消息格式：
+
+```sh
+# Creates the version commit and v-prefixed Git tag, but makes the commit
+# message itself exactly the new version (for example, 1.2.3).
+npm version patch -m "%s"
+git push --follow-tags
 ```
 
-```json
-{
-  "name": "@node-rs/bcrypt-win32",
-  "version": "0.5.0",
-  "os": ["win32"],
-  "cpu": ["x64"]
-}
+预发布版本：
+
+```sh
+npm version prerelease --preid next -m "%s"
+git push --follow-tags
 ```
 
-对使用 native addon 的用户来说，这种分发方式的侵入性最小，[@ffmpeg-installer/ffmpeg](https://github.com/kribblo/node-ffmpeg-installer#readme) 就在使用它。
+使用这些命令前，请检查生成的 `.github/workflows/CI.yml`。如果项目已经更改触发器或发布工具，应遵循签入仓库的工作流，而不是模板约定。
 
-然而，这种方式给 native addon 的作者带来了额外的工作量，包括需要编写管理发布二进制和一堆包的工具，而这些工具通常非常难调试（并且往往横跨多个系统和 CPU 架构）。
+## CI 中的发布关卡
 
-这些工具需要管理从开发 -> 本地发布版本 -> CI -> 产物 -> 部署阶段的整个 addon 流程。除此之外，还有大量 CI/CD 配置要编写/调试，既耗时又乏味。
+由于预期目标文件缺失时 CLI 只会警告并继续，请在发布步骤之前添加明确关卡，证明：
 
-## 结论
+- 每个已配置目标目录都存在。
+- 每个目录包含且只包含预期的 `.node` 或 `.wasm` 文件。
+- WASI 包包含生成的加载器和 worker 支持文件。
+- 没有产物使用意外的二进制名称或目标后缀。
+- 平台运行时测试使用的正是即将发布的产物。
 
-采用第 3 种分发方式（**不同平台的 native addon 通过不同的 npm 包分发**）的 native addon 最易用，对使用它的开发者来说心智负担最小，但这种分发方式会给 native addon 的作者带来额外的维护成本。
+除非所有平台关卡都通过，否则不要发布根包。根版本一旦存在，客户端可能立即尝试解析每个列出的可选依赖。
 
-**NAPI-RS** 接管了这部分工作：
+## 验证已发布版本
 
-- [交叉编译](../cross-build) —— 用少数几台 CI 宿主机构建所有目标平台。
-- [`napi artifacts`](/docs/cli/artifacts) —— 把 CI 中构建的二进制复制到各平台的 npm 包中。
-- [`napi pre-publish`](/docs/cli/pre-publish) —— 更新 `package.json` 并发布各平台的包。
+工作流显示绿色并不足够。发布后：
+
+1. 用 `npm view @scope/addon@<version> --json` 读取根包元数据，确认 dist-tag 和精确 `optionalDependencies`。
+2. 查询同一版本的每个平台包，检查其 `os`、`cpu`、`libc` 和 tarball 文件列表。
+3. 工作流承诺 provenance 时，确认 npm 显示该信息。
+4. 确认 GitHub release 指向预期 tag，并包含所有预期二进制产物。
+5. 在有代表性的 glibc、musl、macOS 和 Windows 系统上将根包安装到干净项目，并调用一个原生导出。
+6. 发布包含 WASI 时，单独测试原生到 WASI 的回退。
+
+将发布工作流 URL 和验证结果保存在 release notes 中。
+
+## 从部分发布中恢复
+
+不要立即提升版本或重新构建。先盘点失败版本的 npm 平台包、根包和 GitHub 产物。已发布二进制文件绝不能在同一版本下被不同内容替换。
+
+恢复工具包括：
+
+- 使用未更改的产物重新运行 `napi prepublish -t npm`，发布缺失的平台包。npm 返回标准重复版本错误时，已发布版本会被跳过。
+- 传入 `--gh-release-id <id>`，上传到现有 release，而不是另建一个。
+- 只有在独立确认每个平台包都已存在后才传入 `--skip-optional-publish`。
+- 如果只剩根包未发布，请在可信发布任务中禁用生命周期脚本并发布未更改的根 tarball，避免重复平台阶段。
+
+请遵循详细的[部分失败与恢复流程](../cli/pre-publish#部分失败与恢复)。如果根包在缺失某个平台依赖时已经发布，请立即发布缺失包，或弃用损坏的根版本；npm 没有原子回滚。

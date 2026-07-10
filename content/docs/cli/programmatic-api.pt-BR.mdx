@@ -1,0 +1,379 @@
+---
+description: Use as APIs programáticas do @napi-rs/cli para personalizar seu workflow de build.
+---
+
+# API programática
+
+import { Green, Rust, Warning } from '../../../components/chalk'
+import { Callout } from 'nextra-theme-docs'
+
+O pacote `@napi-rs/cli` exporta APIs programáticas que permitem personalizar
+seu workflow de build além do que os comandos da CLI oferecem. Isso é útil
+quando você precisa:
+
+- Fazer pós-processamento dos artefatos gerados (formatar, transformar ou validar arquivos gerados)
+- Integrar com sistemas de build personalizados, como Bazel
+- Gerar definições TypeScript separadamente da compilação Rust
+- Criar scripts de automação com controle total sobre o processo de build
+
+## Pós-processamento dos artefatos de build
+
+O caso de uso mais comum é executar um pós-processamento personalizado nos
+arquivos JavaScript e TypeScript gerados. Aqui está um exemplo usando
+<Green>oxfmt</Green> para formatar os arquivos de saída:
+
+```ts filename="build.ts"
+import { readFile, writeFile } from 'node:fs/promises'
+
+import { NapiCli, createBuildCommand } from '@napi-rs/cli'
+import { format, type FormatOptions } from 'oxfmt'
+
+import oxfmtConfig from './.oxfmtrc.json' with { type: 'json' }
+
+const buildCommand = createBuildCommand(process.argv.slice(2))
+const cli = new NapiCli()
+const buildOptions = {
+  ...buildCommand.getOptions(),
+  cargoOptions: buildCommand.cargoOptions,
+}
+const { task } = await cli.build(buildOptions)
+const outputs = await task
+
+for (const output of outputs) {
+  if (output.kind === 'js' || output.kind === 'dts') {
+    const { code } = await format(output.path, await readFile(output.path, 'utf-8'), oxfmtConfig as FormatOptions)
+    await writeFile(output.path, code)
+  }
+}
+```
+
+Execute este script com os mesmos argumentos que você passaria para
+<Green>napi build</Green>, inclusive os argumentos do Cargo após `--`:
+
+```sh
+oxnode ./build.ts --release --platform
+```
+
+### Como funciona
+
+1. `createBuildCommand(args)` analisa os argumentos da CLI e retorna uma instância de `BuildCommand`
+2. `buildCommand.getOptions()` extrai as opções nomeadas; `cargoOptions` leva os
+   argumentos restantes após `--`
+3. `cli.build(options)` inicia a build e retorna `{ task, abort }`
+4. `await task` aguarda a conclusão e retorna um array de objetos `Output`
+
+### Tipos de saída
+
+Cada item do array de saídas tem esta estrutura:
+
+```ts
+type OutputKind = 'js' | 'dts' | 'node' | 'exe' | 'wasm'
+
+type Output = {
+  kind: OutputKind
+  path: string  // Caminho absoluto para o arquivo de saída
+}
+```
+
+| Kind | Descrição |
+|------|-------------|
+| <Green>node</Green> | Addon nativo do Node.js (arquivo <Green>.node</Green>) |
+| <Green>js</Green> | Arquivo de binding JavaScript |
+| <Green>dts</Green> | Arquivo de definição TypeScript |
+| <Green>exe</Green> | Binário executável |
+| <Green>wasm</Green> | Módulo WebAssembly |
+
+## Geração independente de tipos/JS
+
+<Callout type="info">
+Isso é útil para sistemas de build como o Bazel, que fazem a compilação Rust
+separadamente e precisam apenas da etapa de geração de tipos TypeScript.
+</Callout>
+
+Se você compila código Rust fora de `@napi-rs/cli` (por exemplo, usando
+`rust_shared_library` do Bazel), ainda pode gerar definições TypeScript usando
+as APIs `generateTypeDef` e `writeJsBinding`:
+
+```ts filename="generate-types.ts"
+import { spawn } from 'node:child_process'
+import { mkdir, writeFile, copyFile, rm } from 'node:fs/promises'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+import { generateTypeDef, writeJsBinding, parseTriple } from '@napi-rs/cli'
+
+import pkg from './package.json' with { type: 'json' }
+
+const currentTarget = 'x86_64-unknown-linux-gnu'
+
+const currentDir = dirname(fileURLToPath(import.meta.url))
+const typeDefDir = join(currentDir, 'target', 'napi-rs', 'YOUR_PKG_NAME')
+const triple = parseTriple(currentTarget)
+const binaryName = pkg.napi.binaryName
+const bindingName = `${binaryName}.${triple.platformArchABI}.node`
+
+await mkdir(typeDefDir, { recursive: true })
+
+const childProcess = spawn('cargo', [
+  'build',
+  '--release',
+  '--target',
+  currentTarget,
+], {
+  stdio: 'pipe',
+  env: {
+    ...process.env,
+    NAPI_TYPE_DEF_TMP_FOLDER: typeDefDir,
+  },
+})
+
+childProcess.stdout.on('data', (data) => {
+  console.log(data.toString())
+})
+
+childProcess.stderr.on('data', (data) => {
+  console.error(data.toString())
+})
+
+await new Promise((resolve, reject) => {
+  childProcess.on('error', (error) => {
+    reject(error)
+  })
+  childProcess.on('close', (code) => {
+    if (code === 0) {
+      resolve(true)
+    } else {
+      reject(new Error(`cargo build --release failed with code ${code}`))
+    }
+  })
+})
+
+// Remova um binding antigo já carregado antes de substituí-lo. Sobrescrevê-lo no mesmo lugar
+// pode causar falhas em plataformas como o macOS.
+await rm(join(currentDir, bindingName)).catch(() => {
+  // ignore se não houver um binding antigo
+})
+
+await copyFile(
+  join(currentDir, 'target', currentTarget, 'release', 'libfoo.so'),
+  join(currentDir, bindingName),
+)
+
+const { dts, exports } = await generateTypeDef({
+  typeDefDir,
+  cwd: process.cwd(),
+})
+
+await writeFile(join(currentDir, 'customized.d.ts'), dts)
+
+await writeJsBinding({
+  jsBinding: 'customized.js',
+  platform: true,
+  binaryName,
+  packageName: pkg.name,
+  version: pkg.version,
+  outputDir: currentDir,
+  idents: exports
+})
+```
+
+<Callout type="warning">
+`typeDefDir` precisa conter os arquivos intermediários de definição de tipos
+gerados pelo proc macro `napi-derive` quando a feature `type-def` está
+habilitada. Esses arquivos normalmente são criados em um diretório temporário
+durante `napi build`.
+</Callout>
+
+### Fluxo de controle
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         FASE DE PREPARAÇÃO                             │
+├─────────────────────────────────────────────────────────────────────────┤
+│  1. Ler package.json para obter a configuração do napi                │
+│  2. Obter o target triple (da flag da cli) (ex.: 'x86_64-unknown-linux-gnu') │
+│  3. parseTriple() → obter platformArchABI para o nome do binding      │
+│  4. mkdir(typeDefDir) → criar diretório para as definições de tipos   │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           FASE DE BUILD                                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│  5. spawn('cargo', ['build', '--release', '--target', currentTarget])   │
+│     └─ env: { NAPI_TYPE_DEF_TMP_FOLDER: typeDefDir }                    │
+│        ▲                                                                │
+│        └─ Esta variável informa ao napi-derive onde gravar type defs    │
+│                                                                         │
+│  6. Fazer streaming de stdout/stderr do cargo                           │
+│  7. await da conclusão do cargo                                         │
+│  8. rm(binding antigo) → remover o arquivo .node antigo antes da troca  │
+│  9. copyFile(libfoo.so → <binaryName>.{platform}.node)                  │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    FASE DE GERAÇÃO DE TIPOS                             │
+├─────────────────────────────────────────────────────────────────────────┤
+│ 10. generateTypeDef({ typeDefDir, cwd })                                │
+│     └─ Lê arquivos JSON delimitados por linha de typeDefDir              │
+│     └─ Retorna { dts: string, exports: string[] }                       │
+│                                                                         │
+│ 11. writeFile('customized.d.ts', dts)                                   │
+│                                                                         │
+│ 12. writeJsBinding({ platform, binaryName, idents: exports, ... })      │
+│     └─ Gera um loader JS que importa o arquivo .node                    │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+                              ┌───────────┐
+                              │  CONCLUÍDO │
+                              │           │
+                              │ Saída:    │
+                              │ • .node   │
+                              │ • .d.ts   │
+                              │ • .js     │
+                              └───────────┘
+```
+
+### Conceitos principais
+
+#### A variável de ambiente `NAPI_TYPE_DEF_TMP_FOLDER`
+
+Quando você executa `cargo build` com `NAPI_TYPE_DEF_TMP_FOLDER` definida, o
+proc macro `napi-derive` grava nesse diretório um arquivo sem extensão para cada
+pacote Cargo. Cada linha do arquivo contém um objeto JSON. É assim que a
+informação de tipos flui do Rust para o TypeScript:
+
+```
+Código Rust → macro napi-derive → JSON delimitado por linha → generateTypeDef() → .d.ts
+```
+
+#### Nomes de binding específicos de plataforma
+
+A função `parseTriple()` extrai informações de plataforma de um target triple:
+
+```ts
+const triple = parseTriple('x86_64-unknown-linux-gnu')
+// Retorna: { platform: 'linux', arch: 'x64', abi: 'gnu', platformArchABI: 'linux-x64-gnu', ... }
+
+const bindingName = `mylib.${triple.platformArchABI}.node`
+// Resultado: 'mylib.linux-x64-gnu.node'
+```
+
+#### Removendo arquivos de binding antigos
+
+No macOS/Linux, copiar um novo arquivo `.node` sobre um arquivo existente sem
+removê-lo antes pode causar falhas de segmentação. Sempre remova o arquivo
+antigo primeiro:
+
+```ts
+await rm(join(currentDir, bindingName)).catch(() => {
+  // ignore o erro se o arquivo não existir
+})
+await copyFile(sourceLib, join(currentDir, bindingName))
+```
+
+### GenerateTypeDefOptions
+
+| Opção | Tipo | Obrigatório | Padrão | Descrição |
+|--------|------|----------|---------|-------------|
+| typeDefDir | string | Sim | | Diretório que contém os arquivos intermediários de definição de tipos |
+| cwd | string | Sim | | Diretório de trabalho para resolver caminhos relativos |
+| noDtsHeader | boolean | Não | false | Ignora o cabeçalho de arquivo padrão |
+| dtsHeader | string | Não | | String de cabeçalho personalizada para o arquivo <Green>.d.ts</Green>; usada quando nenhuma opção de arquivo de cabeçalho está definida |
+| dtsHeaderFile | string | Não | | Arquivo de cabeçalho resolvido a partir de `cwd`; tem precedência sobre todas as outras opções de cabeçalho personalizado |
+| configDtsHeader | string | Não | | Cabeçalho vindo da configuração (prioridade menor que `dtsHeader`) |
+| configDtsHeaderFile | string | Não | | Arquivo de cabeçalho vindo da configuração; tem prioridade menor que `dtsHeaderFile`, mas maior que strings de cabeçalho inline |
+| constEnum | boolean | Não | true | Gera <Green>const enum</Green> em vez de enum comum |
+| runtimeStringEnum | boolean | Não | false | Com `constEnum: false`, gera enums de runtime para `#[napi(string_enum)]`; caso contrário, gera uniões de strings apenas de tipo |
+
+### WriteJsBindingOptions
+
+| Opção | Tipo | Obrigatório | Padrão | Descrição |
+|--------|------|----------|---------|-------------|
+| platform | boolean | Não | false | Necessário para gerar o binding JS; adiciona o triple da plataforma |
+| noJsBinding | boolean | Não | false | Ignora a geração do binding JS |
+| idents | string[] | Sim | | Identificadores exportados de <Green>generateTypeDef</Green> |
+| jsBinding | string | Não | 'index.js' | Nome de arquivo personalizado para o binding JS |
+| esm | boolean | Não | false | Gera formato ESM em vez de CommonJS |
+| binaryName | string | Sim | | Nome do binário nativo |
+| packageName | string | Sim | | Nome do pacote para as instruções `require`/`import` |
+| version | string | Sim | | Versão do pacote |
+| outputDir | string | Sim | | Diretório onde gravar o arquivo de binding JS |
+
+## Outras APIs exportadas
+
+### Classe `NapiCli`
+
+A classe principal para acesso programático a todos os comandos da CLI:
+
+```ts
+import { NapiCli } from '@napi-rs/cli'
+
+const cli = new NapiCli()
+
+// Métodos disponíveis:
+cli.build(options)        // Build do projeto
+cli.artifacts(options)    // Coleta artefatos do CI
+cli.new(options)          // Cria um novo projeto
+cli.createNpmDirs(options)// Cria diretórios de pacotes npm
+cli.prePublish(options)   // Prepara para publicação
+cli.rename(options)       // Renomeia o projeto
+cli.universalize(options) // Cria binários universais
+cli.version(options)      // Atualiza versões
+```
+
+### Criadores de comando
+
+Transformam argumentos da CLI em objetos de opções do comando:
+
+```ts
+import {
+  createBuildCommand,
+  createArtifactsCommand,
+  createCreateNpmDirsCommand,
+  createPrePublishCommand,
+  createRenameCommand,
+  createUniversalizeCommand,
+  createVersionCommand,
+  createNewCommand,
+} from '@napi-rs/cli'
+
+// Analisa os argumentos como se estivesse executando `napi build --release --platform`
+const buildCmd = createBuildCommand(['--release', '--platform'])
+const options = buildCmd.getOptions()
+```
+
+### Funções utilitárias
+
+```ts
+import { parseTriple, readNapiConfig } from '@napi-rs/cli'
+
+// Analisa a string do target triple
+const triple = parseTriple('x86_64-unknown-linux-gnu')
+// { platform: 'linux', arch: 'x64', abi: 'gnu', ... }
+
+// O primeiro argumento é o caminho exato de package.json. O segundo argumento
+// opcional é uma configuração napi separada, com precedência.
+const config = await readNapiConfig(
+  '/path/to/project/package.json',
+  '/path/to/project/napi.config.json',
+)
+```
+
+## Interrompendo uma build
+
+O método `build()` retorna uma função `abort` para cancelar a build:
+
+```ts
+const { task, abort } = await cli.build(options)
+
+// Trata SIGINT para abortar de forma limpa
+process.on('SIGINT', () => {
+  abort()
+  process.exit(1)
+})
+
+const outputs = await task
+```

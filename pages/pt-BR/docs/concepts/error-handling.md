@@ -1,0 +1,335 @@
+---
+title: 'Tratamento de erros'
+description: Lance, rejeite, preserve e classifique erros em APIs napi-rs síncronas e assíncronas.
+---
+
+# Tratamento de erros
+
+Falhas esperadas devem atravessar o limite nativo como `napi::Result<T>`, um alias para `std::result::Result<T, napi::Error>`. O napi-rs transforma o `Err` em uma exceção síncrona ou em uma rejeição de Promise, de acordo com a API exportada.
+
+**lib.rs**
+
+```rust
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn divide(left: f64, right: f64) -> Result<f64> {
+  if right == 0.0 {
+    return Err(Error::new(Status::InvalidArg, "right must not be zero"));
+  }
+  Ok(left / right)
+}
+```
+
+**index.mjs**
+
+```js
+try {
+  divide(1, 0)
+} catch (error) {
+  console.error(error.code) // "InvalidArg"
+  console.error(error.message) // "right must not be zero"
+}
+```
+
+O TypeScript não codifica exceções lançadas nem Promises rejeitadas. Documente erros de domínio no JSDoc e teste a forma JavaScript deles.
+
+## Os tipos principais
+
+```rust
+pub type Result<T, S = Status> = std::result::Result<T, Error<S>>;
+
+pub struct Error<S = Status> {
+  pub status: S,
+  pub reason: String,
+  pub cause: Option<Box<Error>>,
+  // private reference to an original JavaScript exception when available
+}
+```
+
+| Campo             | Significado no JavaScript | Observações                                                                               |
+| ----------------- | ------------------------- | ----------------------------------------------------------------------------------------- |
+| `reason`          | `error.message`           | Descrição legível por pessoas.                                                            |
+| `status.as_ref()` | `error.code`              | `Status` é principalmente um status do Node-API, não uma taxonomia de erros da aplicação. |
+| `cause`           | `error.cause`             | Definido com `set_cause`; causas aninhadas são convertidas recursivamente.                |
+
+Use `Error::from_reason(message)` para um `GenericFailure`, ou `Error::new(status, message)` quando um status do Node-API transmitir informações úteis.
+
+**lib.rs**
+
+```rust
+#[napi]
+pub fn load_config() -> Result<()> {
+  std::fs::read_to_string("config.json")
+    .map(|_| ())
+    .map_err(|source| {
+      let mut error = Error::new(Status::GenericFailure, "could not load config");
+      error.set_cause(Error::from(source));
+      error
+    })
+}
+```
+
+`Error` implementa conversões para falhas comuns, incluindo `std::io::Error` e `std::ffi::NulError`. Com `serde-json`, também converte `serde_json::Error` em `Status::InvalidArg`.
+
+## Funções síncronas
+
+Quando uma função síncrona exportada retorna `Err`, o callback gerado lança um `Error` JavaScript antes de retornar ao JavaScript.
+
+| Retorno Rust                 | Comportamento no JavaScript                                     |
+| ---------------------------- | --------------------------------------------------------------- |
+| `T`                          | Retorna um valor. Falhas de conversão ainda lançam uma exceção. |
+| `Result<T>` com `Ok(value)`  | Converte e retorna `value`.                                     |
+| `Result<T>` com `Err(error)` | Lança um `Error`.                                               |
+
+A conversão de argumentos acontece antes de a função Rust ser chamada. Portanto, um tipo de entrada incorreto lança um erro de conversão mesmo que o tipo de retorno Rust da função não seja `Result`.
+
+## Funções assíncronas
+
+Depois que seus argumentos são convertidos com sucesso, uma `async fn` Rust
+exportada retorna uma Promise JavaScript:
+
+| Resultado da Future                   | Comportamento no JavaScript                |
+| ------------------------------------- | ------------------------------------------ |
+| `T`                                   | Resolve a Promise depois de converter `T`. |
+| `Result<T>::Ok(value)`                | Resolve a Promise com `value`.             |
+| `Result<T>::Err(error)`               | Rejeita a Promise com o erro convertido.   |
+| Falha na conversão do valor retornado | Rejeita a Promise.                         |
+
+A validação e a conversão dos argumentos ainda executam de forma síncrona antes
+que essa Promise seja criada. Uma entrada inválida pode, portanto, lançar uma
+exceção sincronamente. Com `#[napi(return_if_invalid)]`, uma entrada inválida
+retorna `undefined` sincronamente, embora a declaração gerada ainda descreva o
+caminho bem-sucedido como `Promise<T>`.
+
+**lib.rs**
+
+```rust
+#[napi]
+pub async fn read_text(path: String) -> Result<String> {
+  napi::tokio::fs::read_to_string(&path)
+    .await
+    .map_err(|source| {
+      let mut error = Error::new(Status::GenericFailure, format!("could not read {path}"));
+      error.set_cause(source.into());
+      error
+    })
+}
+```
+
+Este exemplo exige os recursos `async` (ou `tokio_rt`) e `tokio_fs` de `napi`.
+Consulte [async fn](/docs/concepts/async-fn) para as regras de runtime e ciclo de vida.
+
+### Stack traces assíncronos
+
+Erros construídos depois que o trabalho é movido para outra thread normalmente têm uma stack que começa no ponto de rejeição, não na chamada JavaScript original. O recurso opcional `deferred_trace` captura um erro JavaScript quando a Promise deferred é criada e reutiliza essa stack ao rejeitar um deferred do napi-rs.
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = { version = "3", features = ["async", "deferred_trace"] }
+```
+
+Isso adiciona um objeto/referência de erro a cada operação deferred afetada. Habilite-o quando o valor de diagnóstico justificar esse custo de alocação e gerenciamento de referência.
+
+## `AsyncTask`
+
+`AsyncTask<T>` executa `Task::compute` no pool de workers do libuv e conclui a Promise na thread JavaScript.
+
+1. `compute` retorna `Result<Output>` fora da thread JavaScript.
+2. `Ok(output)` é passado a `resolve` na thread JavaScript.
+3. `Err(error)` é passado a `reject` na thread JavaScript.
+4. O `JsValue` resultante resolve a Promise; um erro de `resolve` ou `reject` a rejeita.
+5. `finally` é executado após qualquer um dos caminhos para fazer a limpeza.
+
+O `Task::reject` padrão simplesmente retorna o mesmo `Err`, então a Promise é rejeitada. Um `reject` personalizado pode retornar `Ok(fallback)`, o que **recupera** e resolve a Promise.
+
+**lib.rs**
+
+```rust
+impl Task for Lookup {
+  type Output = String;
+  type JsValue = String;
+
+  fn compute(&mut self) -> Result<Self::Output> {
+    self.lookup().map_err(Error::from)
+  }
+
+  fn resolve(&mut self, _: Env, output: Self::Output) -> Result<Self::JsValue> {
+    Ok(output)
+  }
+
+  fn reject(&mut self, _: Env, error: Error) -> Result<Self::JsValue> {
+    if error.status == Status::GenericFailure {
+      Ok("default".to_owned()) // Promise fulfillment, not rejection
+    } else {
+      Err(error)
+    }
+  }
+}
+```
+
+O cancelamento antes de o libuv iniciar a tarefa rejeita com um erro cujo nome é `AbortError`. Depois que a tarefa começa, não há garantia de que o cancelamento interrompa a computação. Consulte [AsyncTask](/docs/concepts/async-task).
+
+## Erros de ThreadsafeFunction
+
+ThreadsafeFunction tem duas estratégias de erro:
+
+- Com `CalleeHandled = true` (o padrão), o callback JavaScript segue o padrão error-first: `(error, value) => ...`. Chame-o com `Ok(value)` ou `Err(error)`.
+- Com `CalleeHandled = false`, o callback gerado não tem parâmetro de erro, e a chamada Rust aceita o valor diretamente. Trate as falhas nativas antes de chamá-lo.
+
+`call_with_return_value` informa o resultado do callback ao callback de conclusão
+Rust. Com `CalleeHandled = true`, `call_async` também retorna um throw JavaScript
+como `Err`. Com `CalleeHandled = false`, use `call_async_catch`; o `call_async`
+comum encaminha um throw síncrono para `napi_fatal_exception`. Chamadas
+fire-and-forget não podem transformar um throw JavaScript posterior no valor de
+retorno da chamada Rust original.
+
+Falhas de fila e ciclo de vida da ThreadsafeFunction usam status do Node-API, como `QueueFull` ou `Closing`; sempre inspecione o valor de retorno de métodos de chamada não bloqueantes ou assíncronos quando a API fornecer um. Consulte [ThreadsafeFunction](/docs/concepts/threadsafe-function) para os parâmetros genéricos completos e modos de chamada.
+
+## Códigos de erro personalizados
+
+`Error<S>` aceita qualquer tipo de status que implemente `AsRef<str>`. Isso define `error.code` sem alterar a subclasse de erro JavaScript.
+
+**lib.rs**
+
+```rust
+#[derive(Debug)]
+pub enum ConfigError {
+  Missing,
+  Invalid,
+}
+
+impl AsRef<str> for ConfigError {
+  fn as_ref(&self) -> &str {
+    match self {
+      Self::Missing => "ERR_CONFIG_MISSING",
+      Self::Invalid => "ERR_CONFIG_INVALID",
+    }
+  }
+}
+
+#[napi]
+pub fn validate_config(present: bool) -> Result<(), ConfigError> {
+  if present {
+    Ok(())
+  } else {
+    Err(Error::new(ConfigError::Missing, "configuration is required"))
+  }
+}
+```
+
+O wrapper gerado aceita o status personalizado porque só precisa de `AsRef<str>`. Se APIs napi-rs de baixo nível precisarem converter seu `Status` para o tipo personalizado, implemente também `From<Status>`.
+
+## Subclasses de erro e valores lançados arbitrários
+
+Retornar um `Error` comum de uma função exportada produz um `Error` JavaScript. Para lançar diretamente uma subclasse interna mais específica, use `Env`:
+
+**lib.rs**
+
+```rust
+#[napi]
+pub fn set_percentage(env: Env, value: f64) -> Result<()> {
+  if !(0.0..=100.0).contains(&value) {
+    return env.throw_range_error("percentage must be between 0 and 100", Some("ERR_RANGE"));
+  }
+  Ok(())
+}
+```
+
+Os helpers disponíveis incluem `throw_error`, `throw_type_error` e `throw_range_error`. `throw_syntax_error` requer `napi9`. `Env::throw(value)` pode lançar qualquer `ToNapiValue`, incluindo um objeto de erro JavaScript personalizado.
+
+Os wrappers de baixo nível `JsError`, `JsTypeError`, `JsRangeError` e, com `napi9`, `JsSyntaxError` podem construir ou lançar essas subclasses ao trabalhar com ambientes brutos.
+
+::: warning
+Retorne imediatamente depois de chamar um método `Env::throw_*`. Há uma
+exceção JavaScript pendente nesse ambiente; continuar chamando operações
+Node-API não relacionadas pode substituir ou ocultar a falha original.
+
+:::
+
+## Preservando uma exceção JavaScript
+
+Converter um valor JavaScript `Unknown` em `Error` registra sua mensagem e causa.
+Em builds nativos, também tenta reter uma referência ao valor original. Quando o
+valor retido é um `Error` JavaScript e o erro Rust é convertido de volta no
+ambiente JavaScript ao qual pertence, o napi-rs pode reutilizar o objeto,
+preservando sua subclasse, stack e propriedades personalizadas. Um valor retido
+que não seja `Error` não é repassado pela conversão de erro de `Result`; nesse
+caso, o napi-rs reconstrói um `Error` genérico a partir dos dados próprios do erro.
+
+**lib.rs**
+
+```rust
+#[napi]
+pub fn pass_error_through(value: Unknown) -> Result<()> {
+  Err(value.into())
+}
+```
+
+Limites importantes:
+
+- `Error::try_clone` sempre preserva as informações próprias de status, reason e cause.
+- Com suporte de ciclo de vida do Node-API 4, um clone pode compartilhar a referência retida entre threads com segurança, mas o objeto original só é desreferenciado na thread JavaScript à qual pertence.
+- Quando um erro aparece em outro ambiente/thread, o napi-rs reconstrói um novo `Error` genérico a partir de status, reason e cause, em vez de acessar um ambiente externo.
+- Builds WASI não retêm um `napi_ref` nativo; eles reconstroem o erro com os dados disponíveis.
+
+Não use `try_clone` como garantia de identidade de objeto JavaScript entre workers ou isolates.
+
+## `anyhow`
+
+Habilite `error_anyhow` para adicionar conversão de `anyhow::Error` e reexportar a dependência pelo napi-rs:
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = { version = "3", features = ["error_anyhow"] }
+```
+
+**lib.rs**
+
+```rust
+#[napi]
+pub fn parse_document(source: String) -> Result<Document> {
+  parse(&source).map_err(Error::from)
+}
+```
+
+A conversão usa `Status::GenericFailure` e formata a cadeia de erros anyhow no reason. Se os chamadores precisarem de códigos estáveis legíveis por máquina ou de uma `cause` estruturada, mapeie explicitamente o erro de domínio para `Error`.
+
+## Panics não são erros comuns
+
+Um panic Rust não é um substituto compatível para `Result` no limite FFI. Um panic não capturado em um callback síncrono gerado pode encerrar o processo.
+
+`#[napi(catch_unwind)]` envolve a chamada de uma função ou método em `std::panic::catch_unwind` e converte uma carga em desenrolamento em um erro `GenericFailure`:
+
+**lib.rs**
+
+```rust
+#[napi(catch_unwind)]
+pub fn call_untrusted_rust() {
+  library_that_may_panic();
+}
+```
+
+Seus limites são fundamentais:
+
+- Só funciona quando a crate é compilada com uma estratégia de panic que permite desenrolamento. `panic = "abort"` não pode ser capturado.
+- Algumas operações Rust abortam sem desenrolar.
+- Ele captura a chamada Rust naquele limite gerado, não panics em threads destacadas arbitrárias.
+- Capturar um panic não prova que o estado externo permaneça consistente.
+
+Panics durante o polling de tarefas Tokio do napi-rs são observados pelo runtime e normalmente rejeitam a Promise deferred, mas a carga e a stack disponíveis do panic são limitadas. Mantenha as falhas recuperáveis em `Result` e reserve panics para violações de invariantes internos.
+
+## Checklist de design
+
+- Use códigos personalizados estáveis para falhas nas quais se espera que os chamadores façam branching.
+- Preserve a falha original com `cause` em vez de concatenar mensagens não relacionadas.
+- Lance ou rejeite; não apenas registre e retorne um valor plausível, a menos que a recuperação faça parte do contrato da API.
+- Em `AsyncTask::reject`, lembre-se de que `Ok` resolve a Promise.
+- Não acesse `Env`, valores JavaScript com escopo nem `napi_value`s brutos a partir de threads de worker.
+- Trate a identidade do objeto de erro como local a um ambiente JavaScript.
+- Teste `name`, `code`, `message`, `cause` e o comportamento síncrono versus assíncrono no JavaScript, não somente o resultado Rust.

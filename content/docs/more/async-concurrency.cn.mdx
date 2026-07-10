@@ -1,0 +1,204 @@
+---
+description: 选择异步 NAPI-RS API，并安全管理取消、JavaScript 访问、worker 与运行时关闭。
+---
+
+import { Callout } from 'nextra-theme-docs'
+
+# 异步与并发
+
+正确的抽象取决于工作必须在哪里运行，以及 Rust 运行期间是否需要调用 JavaScript。从能满足任务的最小抽象开始；把同步函数移到另一个线程，并不会让其依赖自动变得线程安全。
+
+## 决策表
+
+| 需求 | 使用 | 工作运行位置 | JavaScript 结果 |
+| --- | --- | --- | --- |
+| 快速转换或计算 | 普通 `#[napi] fn` | JavaScript 线程 | 立即返回值或抛出异常 |
+| Rust 异步 I/O 或异步生态 | `#[napi] async fn` | NAPI-RS Tokio runtime | `Promise<T>` |
+| 使用 Node worker pool 的阻塞/CPU 工作 | `AsyncTask<T>` | libuv 线程池；`resolve` 返回 JS 线程 | `Promise<T>` |
+| 从 OS/Tokio 线程调用 JS 函数 | `ThreadsafeFunction` | producer 线程，回调在 JS 线程 | 回调或等待返回值 |
+| 惰性传递序列 | iterator 或 async iterator | 拉取模式 | `for...of` / `for await...of` |
+| 使用 Web Streams 传输字节 | `ReadableStream` / `WritableStream` | Tokio 加 JS stream 回调 | Web Streams API |
+
+每一行都适用两条规则：
+
+1. 只有 JavaScript 线程可以使用 `Env` 或原始 `napi_value` handle。
+2. 跨线程或 `await` 边界的数据必须被拥有足够长时间；借用的 JavaScript 值仅在函数作用域内有效。
+
+把 buffer、对象或类实例移入后台工作前，请阅读[理解生命周期](/docs/concepts/understanding-lifetime)。
+
+## Tokio `async fn`
+
+启用 `async`（它会启用 NAPI-RS Tokio runtime），并只启用 crate 实际使用的 Tokio feature：
+
+```toml filename="Cargo.toml"
+[dependencies]
+napi = { version = "3", features = ["async"] }
+napi-derive = "3"
+tokio = { version = "1", features = ["fs", "time"] }
+```
+
+```rust filename="src/lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub async fn read_config(path: String) -> Result<Buffer> {
+  Ok(tokio::fs::read(path).await?.into())
+}
+```
+
+future 及其输出会跨线程，因此必须满足 `Send + 'static`。应优先使用 `String`、`Buffer` 和拥有所有权的 typed array 等输入。不要让 `JsString<'_>`、`Object<'_>` 或 `Env` 跨越 `await` 点。
+
+`async fn` 适用于异步 I/O。其中的长时间同步计算仍会占用 Tokio worker thread；阻塞工作请使用 `tokio::task::spawn_blocking` 或 `AsyncTask`。
+
+### 取消不会自动发生
+
+丢弃 JavaScript `Promise` 不会取消对应的 Rust future。长时间运行的工作需要设计取消协议：
+
+- 接受显式取消 handle 或操作 ID；
+- 将取消桥接到 Rust 所拥有的原子标志、channel 或库 cancellation token；
+- 取消后停止创建 JavaScript 工作；
+- 所有者关闭时 await 或 abort 每个已生成的 Tokio `JoinHandle`。
+
+用 `napi::tokio::spawn` 生成的分离工作不得比环境或它使用的 Rust/JavaScript 资源活得更久。请把 `JoinHandle` 保存在拥有它的类中，并在关闭路径中 abort 或 await。
+
+## `AsyncTask` 与 libuv worker pool
+
+适合放入 Node 共享 libuv 线程池的有界阻塞工作请使用 [`AsyncTask`](/docs/concepts/async-task)。`Task::compute` 在 JavaScript 线程之外运行；完成后的 `resolve`、`reject` 和 `finally` 在有 `Env` 可用的位置运行。
+
+```rust filename="src/lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+pub struct HashFile {
+  path: String,
+}
+
+#[napi]
+impl Task for HashFile {
+  type Output = Vec<u8>;
+  type JsValue = Buffer;
+
+  fn compute(&mut self) -> Result<Self::Output> {
+    // Blocking file and CPU work is allowed here. Do not call JavaScript.
+    Ok(std::fs::read(&self.path)?)
+  }
+
+  fn resolve(&mut self, _env: Env, bytes: Self::Output) -> Result<Self::JsValue> {
+    Ok(bytes.into())
+  }
+}
+
+#[napi]
+pub fn hash_file(path: String) -> AsyncTask<HashFile> {
+  AsyncTask::new(HashFile { path })
+}
+```
+
+`AsyncTask::with_signal` 接受 `AbortSignal`，但 Node-API 只能取消尚未开始的工作。`compute` 开始运行后，调用 `AbortController.abort()` 不会中断它。如果必须停止正在运行的工作，请将 `AbortSignal::on_abort` 与自己的协作式标志/channel 结合，并让 `compute` 定期检查。
+
+libuv pool 与 Node 文件系统、DNS、crypto 和其他原生工作共享。用长时间 CPU 任务塞满它，会延迟无关的应用工作。请在 JavaScript API 层限制并发；如果性能设计需要，则使用专用 Rust pool。
+
+## ThreadsafeFunction
+
+Rust 线程需要调度 JavaScript 回调时，请使用 [`ThreadsafeFunction`](/docs/concepts/threadsafe-function)。producer 发送拥有所有权的 Rust 数据；转换与回调在所属 JavaScript 环境中执行。
+
+请明确选择 queue 行为：
+
+- `NonBlocking` 立即返回。使用有界队列时，请把 `Status::QueueFull` 作为背压处理，不要静默丢弃数据。
+- `Blocking` 等待队列空间。绝不能从 JavaScript 线程使用；关闭路径中 event loop 可能不再排空，也应避免使用。
+- 队列大小 `0` 表示无界。它避免 `QueueFull`，但慢回调可能导致无限内存增长。
+- 强引用 ThreadsafeFunction 会让 event loop 保持活动。如果待处理回调不应阻止进程退出，请用 `.weak::<true>()` 构建。
+
+丢弃所有 clone 即可释放 ThreadsafeFunction。调用 `abort` 会立即关闭；之后的调用会报告 `Status::Closing`。
+
+### JavaScript 错误与返回值
+
+`callee_handled::<true>()` 使用 Node 回调约定：Rust 以 `Result` 调用 ThreadsafeFunction，JavaScript 接收 error-first 回调。设置为 `false` 时，Rust 调用只接受值，JavaScript 不接收错误参数；调用前请处理可恢复的原生错误。如果 Rust 必须等待回调结果，请使用 `call_async`；如果 JavaScript 抛出的值属于可恢复故障，请使用能捕获这些值的变体。
+
+绝不要让 JavaScript 异常以未检查 Rust panic 的形式跨越 FFI 回调。请返回或显式处理 `napi::Error`。
+
+### AsyncLocalStorage 与请求上下文
+
+ThreadsafeFunction 会注册为独立 Node async resource。不要假设稍后从 Rust 线程调度的回调会继承调用原生 API 时恰好处于活动状态的 `AsyncLocalStorage` store。如果上下文关系到正确性，请把请求 ID 或上下文对象作为拥有所有权的数据传递，并在 JavaScript 中恢复（例如使用 `AsyncResource`），不要依赖环境状态。
+
+Promise continuation 与 ThreadsafeFunction 回调保留 JavaScript 异步上下文的方式可能不同。请测试实际发布的 API/运行时组合。
+
+## Iterator 与 stream
+
+JavaScript 应一次拉取一个值时使用 iterator；生成下一个值需要异步操作时使用 async iterator。与通过无界 ThreadsafeFunction 队列推送每一项相比，拉取模型通常更容易取消和限流。
+
+使用者需要 Web Streams API 时启用 `web_stream` feature：
+
+```toml filename="Cargo.toml"
+[dependencies]
+napi = { version = "3", features = ["web_stream"] }
+```
+
+Web Streams 对字节数据的支持最成熟。`ReadableStream` 中的结构化 Rust 对象仍有未解决的行为报告（[napi-rs#2826](https://github.com/napi-rs/napi-rs/issues/2826)）；将结构化 chunk 作为受支持 API 前，请添加运行时测试。
+
+无论选择哪种抽象，都要定义使用者停止时的行为：
+
+- 调用 `return()`、`cancel()` 或 `abort()` 时取消 producer；
+- 释放 JavaScript 引用和 queue sender；
+- 确保被阻塞的 producer 在关闭时唤醒；
+- 决定交付还是丢弃已缓冲的值。
+
+## 运行时生命周期
+
+使用 `tokio_rt` 时，NAPI-RS 会创建一个 Tokio runtime，并在原生模块注册时启动。对于原生 Node 目标，它会在最后一个使用该模块的 Node-API 环境退出后关闭，并且可以为 Electron renderer reload 再次启动。
+
+请为每个环境注册环境特定资源。不要全局缓存一个 `Env`、JavaScript 引用、类构造函数或 ThreadsafeFunction，再从主线程将其复用于 worker isolate。
+
+### 自定义 Tokio runtime
+
+请在模块初始化期间、异步导出使用默认 runtime 之前安装自定义 runtime：
+
+```rust filename="src/lib.rs"
+use napi::create_custom_tokio_runtime;
+
+#[napi_derive::module_init]
+fn init() {
+  let runtime = tokio::runtime::Builder::new_multi_thread()
+    .worker_threads(4)
+    .enable_all()
+    .build();
+  match runtime {
+    Ok(runtime) => create_custom_tokio_runtime(runtime),
+    Err(err) => eprintln!("failed to create custom Tokio runtime: {err}"),
+  }
+}
+```
+
+<Callout type="warning">
+  自定义 runtime 实例目前只能被消费一次。执行 `shutdown_async_runtime()` 后再调用 `start_async_runtime()`，NAPI-RS 会回退到默认 runtime，而不是重建自定义配置。这是未解决的产品限制，不属于受支持的重启契约（[napi-rs#3251](https://github.com/napi-rs/napi-rs/issues/3251)）。
+</Callout>
+
+WASI 的 runtime 拆除限制不同。如果 WASI API 显式启动 runtime 或公开 shutdown 函数，请在实际 WASI 宿主中测试反复启动和关闭。参见 [WebAssembly](/docs/concepts/webassembly)。
+
+## Worker 关闭协议
+
+不要把突然终止作为原生工作的常规取消机制。稳健的 worker 协议如下：
+
+1. parent 发送 `stop`。
+2. worker 停止接受原生调用。
+3. 触发 Rust cancellation token。
+4. worker 等待活动 promise，并丢弃 ThreadsafeFunction producer。
+5. worker 回复 `stopped` 并关闭 message port。
+6. parent 只在超过期限后使用 `worker.terminate()`。
+
+Node worker 生命周期与 Bun worker 生命周期不可互换。异步原生操作期间突然终止仍有一个未解决的 Bun 崩溃报告（[napi-rs#2938](https://github.com/napi-rs/napi-rs/issues/2938)）。在自己的压力测试证明无误之前，请将该运行时标记为不支持此 API，或强制使用优雅关闭协议。
+
+## 审查清单
+
+发布异步导出前，请在其文档与测试中回答：
+
+- 哪个 pool/runtime/线程执行工作？
+- 它能否访问 JavaScript，而且只在正确的环境中访问？
+- 跨越 `await` 和线程边界的每个值由谁拥有？
+- 队列是否有界，出现背压时会怎样？
+- 调用者如何取消排队中和已运行的工作？
+- 什么让 Node event loop 保持活动？
+- worker 终止、Electron reload 和进程退出时会发生什么？
+- JavaScript 异常与 Rust panic 是否会转换为定义明确的失败？
+- 是否依赖环境异步上下文，还是显式传递上下文？

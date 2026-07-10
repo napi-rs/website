@@ -1,161 +1,151 @@
 ---
-title: 'Começando'
-description: Aprenda como começar com o napi-rs.
+title: 'Primeiros passos'
+description: Crie, compile e teste um pacote napi-rs v3.
 ---
 
-# Começando
+# Primeiros passos
 
 import Video from '../../../public/assets/napi-rs-guide.mp4'
 
-## Comece com `@napi-rs/cli`
-
-> A Maneira recomendada.
-
-<br />
+A forma mais rápida de iniciar um pacote napi-rs v3 é com `napi new`. Ele copia
+o template de pacote mantido, aplica o nome do seu pacote e a seleção de
+targets, e opcionalmente cria um workflow do GitHub Actions.
 
 <video controls style={{ width: '100%' }}>
   <source src={Video} type="video/mp4" />
   <track kind="captions" srcLang="en" />
 </video>
 
-### Instale a cli
+## Pré-requisitos {#prerequisites}
 
-```bash
-yarn global add @napi-rs/cli
-# or
-npm install -g @napi-rs/cli
-# or
-pnpm add -g @napi-rs/cli
+- **Recomenda-se Node.js 22.13 ou mais recente na linha Node 22, ou Node.js
+  24+**, para o conjunto atual de ferramentas do `@napi-rs/cli`. A CLI declara
+  `>=23.5.0 || ^22.13.0 || ^20.17.0`, em conformidade com sua dependência de
+  prompts interativos. Esse requisito de build é separado do requisito de
+  runtime do addon que você produzir. Consulte [Suporte e
+  compatibilidade](/docs/more/support-compatibility#cli-and-rust-requirements).
+- **Rust 1.88 ou mais recente**, incluindo Cargo. Recomenda-se instalar o Rust
+  com [rustup](https://rustup.rs/).
+- **Git**, porque `napi new` baixa e atualiza o template usando Git.
+- Um linker funcional para sua plataforma de desenvolvimento: Xcode Command
+  Line Tools no macOS, MSVC Build Tools no Windows, ou as ferramentas C
+  usuais no Linux.
+
+O Node-API torna um binário nativo ABI-compatível com versões posteriores do
+Node.js que forneçam o nível de Node-API contra o qual ele foi compilado. Isso
+é diferente das versões de Node e dos target triples exercitados pela CI do
+napi-rs. Leia [Suporte e compatibilidade](/docs/more/support-compatibility)
+antes de escolher um runtime ou definir a matriz de distribuição.
+
+## Crie um projeto
+
+Você não precisa de uma instalação global da CLI. Execute o pacote diretamente
+com o executor de pacotes de sua preferência:
+
+```sh
+# Template Yarn (o padrão)
+npx @napi-rs/cli new cool
+
+# O mesmo template via Yarn
+yarn dlx @napi-rs/cli new cool
+
+# Template pnpm
+pnpm dlx @napi-rs/cli new cool --package-manager pnpm
 ```
 
-### Crie um projeto
+O comando é interativo por padrão. Ele pergunta:
 
-```bash
-napi new
+1. O nome do pacote gravado em `package.json`.
+2. O nível mínimo de Node-API usado na feature Cargo gerada e no requisito de
+   engine Node.js do pacote.
+3. Os target triples a manter do template selecionado.
+4. A licença.
+5. Se devem ser geradas declarações TypeScript.
+6. Se o workflow do GitHub Actions do template deve ser mantido.
+
+Só os templates mantidos de **Yarn** e **pnpm** são compatíveis. O template
+fixa sua própria versão do gerenciador de pacotes, então use os comandos
+correspondentes depois que o projeto for criado. Para criar um projeto sem
+prompts, passe todos os valores que quiser alterar e adicione
+`--no-interactive`; veja [`napi new`](/docs/cli/new).
+
+## Instale, compile e teste
+
+Para o template padrão de Yarn:
+
+```sh
+cd cool
+yarn install
+yarn build
+yarn test
 ```
 
-#### Nome do pacote
+Para o template pnpm:
 
-O campo name no `package.json`.
+```sh
+cd cool
+pnpm install
+pnpm build
+pnpm test
+```
 
-#### Escolha os alvos que deseja suportar
+A build local compila um único target nativo: o do seu host, a menos que você
+passe `--target`. Ela produz:
 
-Plataformas que você desejar dar suporte.
+- `<binaryName>.<platform-arch-abi>.node`, o addon nativo.
+- `index.js`, o loader gerado.
+- `index.d.ts`, as declarações TypeScript geradas quando a geração de tipos
+  está habilitada.
 
-O workflow de CI gerado é o workflow do template filtrado para as plataformas que você escolher; portanto, um job de build só aparece para os targets para os quais o template traz uma linha de matriz: macOS (x64, arm64), Windows MSVC (x64, x86, arm64), Linux gnu e musl (x64, arm64), armv7 gnueabihf, Android (arm64, armv7), WASI e FreeBSD — a maioria deles compilada por compilação cruzada em vez de em hardware nativo.
+Os arquivos-fonte importantes no projeto gerado são:
 
-Os outros targets aceitos (OpenHarmony, `x86_64-pc-windows-gnu`, `armv7-unknown-linux-musleabihf`, loongarch64, riscv64gc, ppc64le, s390x) podem ser selecionados no prompt, mas o `napi new` nunca adiciona jobs que o template não tem. Esses targets não entram nem no workflow gerado nem na lista `napi.targets` do scaffold que o `napi create-npm-dirs` e o fluxo de publicação leem; portanto, eles ficam sem job de build na CI e sem pacote npm. Para distribuir um deles, adicione-o a `targets` na configuração do napi, execute `napi create-npm-dirs` e adicione você mesmo a linha na matriz de CI — veja [Adicionar um target a um projeto existente](../cross-build#adicionar-um-target-a-um-projeto-existente) para a receita completa. O guia [Compilação cruzada](../cross-build) também explica as flags de compilação cruzada que a CI gerada usa.
+| Caminho | Finalidade |
+| --- | --- |
+| `src/lib.rs` | Funções, structs e classes Rust exportadas com `#[napi]` |
+| `Cargo.toml` | Metadados do crate Rust e dependências do napi-rs |
+| `build.rs` | Configuração de build exigida pelo napi-rs |
+| `package.json` | Scripts JavaScript, metadados do pacote e configuração `napi` |
+| `.github/workflows/CI.yml` | Workflow de build, teste, artefatos e publicação multi-target |
 
-#### Habilite GitHub actions
+Os templates não versionam `npm/`. Depois das builds de plataforma, o job de
+publicação cria os diretórios de cada target com `napi create-npm-dirs`.
 
-Gere a configuração do GitHub actions para você.
+Continue em [Um pacote simples](./simple-package) para editar a API Rust e
+chamá-la a partir do Node.js.
 
-### Aprofundamento
+## Aprofundamento {#deep-dive}
 
-Aqui é recomendado distribuir seu pacote sob [escopo npm](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) porque `@napi-rs/cli` por padrão, anexa os diferentes sufixos de plataforma ao nome do pacote npm como o nome do pacote para a distribuição binária de plataforma diferente. O uso do escopo npm reduzirá a chance de o nome do pacote já estar em uso.
+### Como o pacote gerado é distribuído
 
-Por exemplo, se você quiser publicar o pacote `@cool/core`, com suporte para `macOS x64`, `Windows x64` e `Linux aarch64`, o `@napi-rs/cli` criará e publicará quatro pacotes para você:
-
-- `@cool/core` inclue apenas códigos `JavaScript`, que na verdade carregam o binário nativo de cada plataforma.
-- `@cool/core-darwin-x64` para a plataforma `macOS x64`.
-- `@cool/core-win32-x64` para a plataforma `Windows x64`.
-- `@cool/core-linux-arm64-gnu` para a plataforma `Linux aarch64`.
-
-Em cada pacote binário de plataforma, há os campos `cpu` e `os` em seu `package.json`:
+O napi-rs normalmente publica um pequeno pacote raiz e um pacote opcional por
+plataforma. Por exemplo, `@cool/core` pode depender de:
 
 ```json filename="package.json"
 {
-  "name": "@cool/core-darwin-x64",
-  "version": "1.0.0",
-  "os": ["darwin"],
-  "cpu": ["x64"]
-}
-```
-
-E `@cool/core` utiliza esses pacotes nativos como `optionalDependencies`:
-
-```json filename="package.json"
-{
-  "name": "@cool/core",
-  "version": "1.0.0",
   "optionalDependencies": {
-    "@cool/core-darwin-x64": "^1.0.0",
-    "@cool/core-win32-x64": "^1.0.0",
-    "@cool/core-linux-arm64": "^1.0.0"
+    "@cool/core-darwin-x64": "1.0.0",
+    "@cool/core-win32-x64-msvc": "1.0.0",
+    "@cool/core-linux-arm64-gnu": "1.0.0"
   }
 }
 ```
 
-E seu `index.js` em `@cool/core` será isso:
+O `index.js` gerado primeiro procura um addon local produzido durante o
+desenvolvimento. Em um pacote instalado, ele carrega o pacote opcional
+correspondente ao sistema operacional, CPU e libc Linux atuais. O gerenciador
+de pacotes usa os campos `os`, `cpu` e, quando aplicável, `libc` do pacote de
+plataforma para evitar a instalação de binários incompatíveis.
 
-```js filename="index.js"
-const { existsSync, readFileSync } = require('fs')
-const { join } = require('path')
+Recomenda-se usar um [escopo npm](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/)
+porque cada target compatível precisa de um nome de pacote distinto.
 
-const { platform, arch } = process
-
-let nativeBinding = null
-let localFileExisted = false
-let isMusl = false
-let loadError = null
-
-switch (platform) {
-  case 'darwin':
-    switch (arch) {
-      case 'x64':
-        localFileExisted = existsSync(join(__dirname, 'core.darwin-x64.node'))
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./core.darwin-x64.node')
-          } else {
-            nativeBinding = require('@cool/core-darwin-x64')
-          }
-        } catch (e) {
-          loadError = e
-        }
-        break
-      case 'arm64':
-        localFileExisted = existsSync(join(__dirname, 'core.darwin-arm64.node'))
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./core.darwin-arm64.node')
-          } else {
-            nativeBinding = require('@cool/core-darwin-arm64')
-          }
-        } catch (e) {
-          loadError = e
-        }
-        break
-      default:
-        throw new Error(`Unsupported architecture on macOS: ${arch}`)
-    }
-    break
-  // ...
-  default:
-    throw new Error(`Unsupported OS: ${platform}, architecture: ${arch}`)
-}
-
-if (!nativeBinding) {
-  if (loadError) {
-    throw loadError
-  }
-  throw new Error(`Failed to load native binding`)
-}
-
-const { plus100 } = nativeBinding
-
-module.exports.plus100 = plus100
-```
-
-O arquivo `index.js` gerado ajudará você a carregar o arquivo binário **_correto_** onde quer que esteja. E o `index.js` lida com dois casos:
-
-#### Pacote instalado nos `node_modules` dos usuários
-
-Para carregar o binário correto, a função `index.js` tenta carregar todos os pacotes possíveis para essa plataforma (pode haver vários pacotes binários possíveis para uma determinada arquitetura de sistema e CPU), por exemplo, na plataforma `Linux x64`, `index.js` tenta carregar `@cool/core-linux-x64-gnu` e `@cool/core-linux-x64-musl`. O pacote `@cool/core-linux-x64-gnu` será carregado se o usuário estiver usando um sistema operacional como `Ubuntu` `Debian` com `gnu libc` pré-instalado. E se o usuário estiver usando um sistema operacional como `Alpine` com `musl libc` pré-instalado, então `@cool/core-linux-x64-musl` será carregado.
-
-#### Desenvolvimento local
-
-O comando `build` no package.json no projeto gerado pelo comando `@napi-rs/cli` irá gerar a biblioteca de vínculo dinâmico binária compilada a partir do código `Rust` no diretório atual para fins de depuração. `index.js` também tentará carregar o binário correspondente do diretório atual nesse caso. Novamente, usando `Linux x64` como exemplo, a função `index.js` tentará carregar os arquivos `core.linux-x64-gnu.node` e `core.linux-x64-musl.node` sucessivamente.
+O array `napi.targets` define o que o projeto empacota; ele **não** faz com que
+uma única execução de `napi build` compile todos os targets. O scaffold só pode
+manter jobs de build que já existam em seu template. Para targets aceitos
+adicionais, adicione explicitamente a entrada de configuração, o diretório npm
+e a build da CI. Veja [Suporte e
+compatibilidade](/docs/more/support-compatibility) e [Compilação
+cruzada](/docs/cross-build).
 
 #### Problema de suporte ao IDE
 
@@ -187,12 +177,24 @@ Este problema pode emitir o seguinte erro no Rust Analyzer:
 [ERROR proc_macro_api::msg] proc-macro tried to print : `napi` macro expand failed.
 ```
 
-## Comece a partir do **GitHub template project**
+## Comece diretamente de um template
 
 ![package-template](./package-template.png)
 
-1. Acesse o [GitHub template project](https://github.com/napi-rs/package-template)
-2. **Clique em Usar este modelo**.
-3. Clone o seu projeto.
-4. Execute o comando `yarn install` para instalar as dependências.
-5. Execute o comando `npx napi rename` na pasta do projeto para renomear o seu pacote.
+Se você preferir o fluxo **Use this template** do GitHub, escolha o projeto
+correspondente:
+
+- [Template de pacote Yarn](https://github.com/napi-rs/package-template)
+- [Template de pacote pnpm](https://github.com/napi-rs/package-template-pnpm)
+
+Depois de clonar, instale as dependências e execute `napi rename` pelo
+gerenciador de pacotes selecionado antes de publicar com o nome do seu próprio
+pacote.
+
+## Próximos passos
+
+- [`napi new`](/docs/cli/new) para todas as opções de scaffold.
+- [Build](/docs/cli/build) e [Compilação cruzada](/docs/cross-build) para
+  targets adicionais.
+- [Publicar pacotes nativos](/docs/deep-dive/release) antes de publicar
+  qualquer coisa no npm.

@@ -1,0 +1,94 @@
+---
+description: 从持续维护的 Yarn 或 pnpm 模板创建 napi-rs 项目。
+---
+
+# New
+
+import { Callout } from 'nextra-theme-docs'
+import { Green } from '../../../components/chalk'
+
+`napi new` 从持续维护的外部模板创建项目，重命名包和 Rust crate，过滤目标与 CI 任务，写入从所选 Node-API 级别推导出的 Node.js engine 范围，并应用许可证和类型生成设置。
+
+<Callout type="warning">
+  必须安装 Git 且能够访问 GitHub。目标不能是现有文件或非空目录。
+</Callout>
+
+## 用法
+
+CLI 默认采用交互模式：
+
+```sh
+napi new <path>
+```
+
+路径可以省略；此时第一个提示会询问路径。自动化场景请使用 `--no-interactive`：
+
+```sh
+napi new cool \
+  --name @scope/cool \
+  --min-node-api 8 \
+  --targets x86_64-unknown-linux-gnu \
+  --targets aarch64-apple-darwin \
+  --no-interactive
+```
+
+程序化调用不会显示提示。请显式提供 `path` 和所有非默认值：
+
+```ts
+import { NapiCli } from '@napi-rs/cli'
+
+await new NapiCli().new({
+  path: 'cool',
+  name: '@scope/cool',
+  packageManager: 'pnpm',
+  targets: [
+    'x86_64-unknown-linux-gnu',
+    'aarch64-apple-darwin',
+  ],
+})
+```
+
+## 交互式提示
+
+启用 `--interactive` 时，命令会询问包名、最低 Node-API 级别、目标、许可证、TypeScript 声明生成和 GitHub Actions。如果需要 pnpm 模板，请在进入提示前传入 `--package-manager pnpm`；包管理器不是交互问题。
+
+## 选项
+
+布尔选项接受 `--no-` 前缀，例如 `--no-interactive`、`--no-enable-type-def` 和 `--no-enable-github-actions`。
+
+| 选项 | CLI 语法 | 类型 | 必填 | 默认值 | 描述 |
+| --- | --- | --- | :---: | --- | --- |
+| `path` | <Green>`<path>`</Green> | `string` | 非交互/程序化使用时必填 | | 从当前工作目录解析的空目标目录。 |
+| `interactive` | `--interactive,-i` | `boolean` | 否 | `true` | 询问项目信息。该选项仅用于 CLI；自动化中使用 `--no-interactive`。 |
+| `name` | `--name,-n` | `string` | 否 | 目标目录名 | `package.json` 包名。发布时推荐使用 scope 名称。 |
+| `minNodeApiVersion` | `--min-node-api,-v` | `number` | 否 | `4` | 同时用于生成包的 Node.js 引擎要求和 `napi` 依赖 feature 的最低 Node-API 级别。 |
+| `packageManager` | `--package-manager` | `yarn \| pnpm` | 否 | `yarn` | 选择持续维护的 Yarn 或 pnpm 模板。所选模板会固定自身包管理器版本。 |
+| `license` | `--license,-l` | `string` | 否 | `MIT` | 写入 `package.json` 的许可证。 |
+| `targets` | `--targets,-t` | `string[]` | 否 | `[]` | 要保留的目标三元组。多个目标请重复该标志。 |
+| `enableDefaultTargets` | `--enable-default-targets` | `boolean` | 否 | `true` | 非交互模式下 `targets` 为空时，使用默认目标集。 |
+| `enableAllTargets` | `--enable-all-targets` | `boolean` | 否 | `false` | 选择 CLI 接受的每个目标。这不会创建模板中缺失的 CI 任务。 |
+| `enableTypeDef` | `--enable-type-def` | `boolean` | 否 | `true` | 保留 `type-def` feature 和生成的 TypeScript 声明。 |
+| `enableGithubActions` | `--enable-github-actions` | `boolean` | 否 | `true` | 保留并过滤模板的 GitHub Actions 工作流。 |
+| `testFramework` | `--test-framework` | `string` | 否 | `ava` | 测试框架请求。目前模板只实现了 AVA。 |
+| `dryRun` | `--dry-run` | `boolean` | 否 | `false` | 验证选项、Git 可用性和目标，而不克隆或写入项目。 |
+
+`napi new` 会把所选 `napiN` feature 写入 `Cargo.toml`，并把对应的 Node.js 范围写入
+`package.json#engines.node`。其他 Cargo feature 可能隐含更高的 Node-API 级别，因此添加异步或其他
+可选集成后，请检查最终 feature 集合。
+
+## 模板与缓存
+
+仅支持以下模板选择：
+
+| 值 | 仓库 |
+| --- | --- |
+| `yarn` | [`napi-rs/package-template`](https://github.com/napi-rs/package-template) |
+| `pnpm` | [`napi-rs/package-template-pnpm`](https://github.com/napi-rs/package-template-pnpm) |
+
+CLI 将它们缓存在 `~/.napi-rs/template/<package-manager>/repo`。之后运行时会 fetch 仓库，并在复制前把缓存重置到 `origin/main`。模板的 `.git` 目录不会复制到新项目。
+
+## 目标选择不是支持保证
+
+提示会列出 CLI 能识别的所有目标三元组。生成的工作流只能保留所选模板中已存在的矩阵任务；生成的 `napi.targets` 列表也只能保留模板包配置中已有的目标。因此，额外的可接受目标可能需要手动配置、npm 目录、CI 和运行时测试。
+
+使用 `--enable-all-targets` 前请阅读[支持与兼容性](/docs/more/support-compatibility)，并按照[向现有项目添加目标](/docs/cross-build#向现有项目添加新目标)完成整个流程。

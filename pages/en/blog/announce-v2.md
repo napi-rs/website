@@ -6,6 +6,7 @@ import Contributors from "../../../components/contributors.jsx" with { island: "
 ---
 title: 'Announcing NAPI-RS v2'
 date: '2021-12-17'
+description: 'NAPI-RS v2 — a faster, safer framework for building Node.js addons in Rust.'
 ---
 
 # Announcing NAPI-RS v2

@@ -1,0 +1,331 @@
+---
+title: 'Iterators and async iterators'
+description: Implement JavaScript iteration protocols with Generator and AsyncGenerator.
+---
+
+import { Callout } from 'nextra-theme-docs'
+
+# Iterators and async iterators
+
+napi-rs can make a native class implement JavaScript's synchronous or asynchronous iteration protocol. These APIs are currently marked **experimental** in the Rust source: test the exact napi-rs and runtime versions you publish, and expect refinements to trait or lifecycle behavior.
+
+| Rust marker and trait | JavaScript protocol | Cargo feature |
+| --- | --- | --- |
+| `#[napi(iterator)]` + `Generator` or `ScopedGenerator` | `Symbol.iterator`, `next`, `return`, `throw` | Base `napi` API |
+| `#[napi(async_iterator)]` + `AsyncGenerator` | `Symbol.asyncIterator`, Promise-returning `next`, `return`, `throw` | `tokio_rt` (or `async`) |
+
+The two marker attributes are mutually exclusive on one class. A marked class also cannot have public fields named `next`, `return`, or `throw`, because napi-rs installs those protocol methods.
+
+## Synchronous iterator
+
+Implement `Generator` when yielded values are owned Rust values:
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi(iterator)]
+pub struct Counter {
+  current: u32,
+  end: u32,
+}
+
+#[napi]
+impl Generator for Counter {
+  type Yield = u32;
+  type Next = u32;
+  type Return = ();
+
+  fn next(&mut self, value: Option<Self::Next>) -> Option<Self::Yield> {
+    if let Some(next) = value {
+      self.current = next;
+    }
+    if self.current >= self.end {
+      return None;
+    }
+    let value = self.current;
+    self.current += 1;
+    Some(value)
+  }
+}
+
+#[napi]
+impl Counter {
+  #[napi(constructor)]
+  pub fn new(end: u32) -> Self {
+    Self { current: 0, end }
+  }
+}
+```
+
+```js filename="index.mjs"
+const counter = new Counter(3)
+
+console.log(counter.next())  // { value: 0, done: false }
+console.log(counter.next(2)) // { value: 2, done: false }
+console.log(counter.next())  // { done: true }
+
+console.log([...new Counter(3)]) // [0, 1, 2]
+```
+
+The generated declaration extends `Iterator<Yield, Return, Next>`.
+
+### Associated types
+
+| Associated type | Required trait | Used by |
+| --- | --- | --- |
+| `Yield` | `ToNapiValue` | Converts `Some(value)` from `next` or `catch` to JavaScript. |
+| `Next` | `FromNapiValue` | Converts the optional argument passed to `iterator.next(value)`. |
+| `Return` | `FromNapiValue` | Converts the optional argument passed to `iterator.return(value)`. |
+
+The method receives `Option<Next>` because JavaScript may call `next()` with no argument. `Some(yielded)` produces `{ value: yielded, done: false }`; `None` produces `{ done: true }` for that call. The synchronous adapter does not persist natural completion: a later `next()` invokes Rust again. If later calls must remain done, record that state in your struct and keep returning `None`.
+
+### `return()` and `complete`
+
+Override `complete` for cleanup when JavaScript closes iteration early—for example, when a `for...of` loop executes `break`.
+
+```rust filename="lib.rs"
+fn complete(&mut self, _value: Option<Self::Return>) -> Option<Self::Yield> {
+  self.release_native_cursor();
+  None
+}
+```
+
+The synchronous adapter currently invokes `complete`, marks the generator done, and uses the argument supplied by JavaScript as the returned iterator-result value. The `Option<Yield>` returned by `complete` is not currently exposed. Treat it as a cleanup hook and do not rely on its return value until this experimental API is stabilized.
+
+### `throw()` and `catch`
+
+The default `catch` returns the original JavaScript value as `Err`, so `iterator.throw(error)` throws that value and completes the iterator.
+
+Override it to recover:
+
+```rust filename="lib.rs"
+fn catch<'env>(
+  &'env mut self,
+  _env: Env,
+  value: Unknown<'env>,
+) -> std::result::Result<Option<Self::Yield>, Unknown<'env>> {
+  if self.can_recover() {
+    Ok(Some(self.fallback()))
+  } else {
+    Err(value)
+  }
+}
+```
+
+- `Err(value)` throws `value` and completes iteration.
+- `Ok(Some(value))` yields it with `done: false`.
+- `Ok(None)` completes without throwing.
+
+Use `std::result::Result` in the signature above because the error side is the original `Unknown`, not `napi::Error`.
+
+## Scoped synchronous yields
+
+`Generator::Yield` must be an owned or otherwise directly convertible value. Implement `ScopedGenerator<'env>` when a yielded value borrows the current JavaScript environment:
+
+```rust filename="lib.rs"
+use napi::iterator::ScopedGenerator;
+
+#[napi(iterator)]
+pub struct ObjectCounter {
+  current: u32,
+  end: u32,
+}
+
+#[napi]
+impl<'env> ScopedGenerator<'env> for ObjectCounter {
+  type Yield = Object<'env>;
+  type Next = ();
+  type Return = ();
+
+  fn next(
+    &mut self,
+    env: &'env Env,
+    _value: Option<Self::Next>,
+  ) -> Option<Self::Yield> {
+    if self.current >= self.end {
+      return None;
+    }
+    let mut object = Object::new(env).ok()?;
+    object.set("value", self.current).ok()?;
+    self.current += 1;
+    Some(object)
+  }
+}
+```
+
+The scoped trait receives `&Env` in `next` and `catch`. The yielded value is converted immediately on the JavaScript thread; it must not be stored in the class or moved to another thread.
+
+## Iterator helpers and prototypes
+
+`Symbol.iterator` returns the class instance itself. On runtimes that expose the global `Iterator` constructor, napi-rs adjusts the generated class prototype to inherit from `Iterator.prototype`, which makes iterator-helper methods such as `map`, `filter`, `take`, and `drop` available. On runtimes without that global, the basic iteration protocol still works but those helpers are absent.
+
+Because prototype integration is part of this experimental API, test subclassing and any code that freezes or replaces class prototypes.
+
+## Async iterator
+
+Enable the async runtime:
+
+```toml filename="Cargo.toml"
+[dependencies]
+napi = { version = "3", features = ["async", "tokio_time"] }
+napi-derive = "3"
+```
+
+Then mark the class and implement `AsyncGenerator`:
+
+```rust filename="lib.rs"
+use std::future::Future;
+
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi(async_iterator)]
+pub struct DelayedCounter {
+  current: u32,
+  end: u32,
+  delay_ms: u64,
+}
+
+#[napi]
+impl AsyncGenerator for DelayedCounter {
+  type Yield = u32;
+  type Next = ();
+  type Return = ();
+
+  fn next(
+    &mut self,
+    _value: Option<Self::Next>,
+  ) -> impl Future<Output = Result<Option<Self::Yield>>> + Send + 'static {
+    let value = self.current;
+    let end = self.end;
+    let delay_ms = self.delay_ms;
+    self.current += 1;
+
+    async move {
+      napi::tokio::time::sleep(std::time::Duration::from_millis(delay_ms)).await;
+      Ok((value < end).then_some(value))
+    }
+  }
+}
+
+#[napi]
+impl DelayedCounter {
+  #[napi(constructor)]
+  pub fn new(end: u32, delay_ms: u32) -> Self {
+    Self { current: 0, end, delay_ms: delay_ms as u64 }
+  }
+}
+```
+
+```js filename="index.mjs"
+for await (const value of new DelayedCounter(3, 10)) {
+  console.log(value) // 0, 1, 2
+}
+```
+
+The generated class implements:
+
+```ts
+[Symbol.asyncIterator](): AsyncGenerator<Yield, Return, Next | undefined>
+```
+
+### Async bounds
+
+`AsyncGenerator` deliberately prevents JavaScript-scoped values from crossing an await point:
+
+```rust
+type Yield: ToNapiValue + Send + 'static;
+
+fn next(
+  &mut self,
+  value: Option<Self::Next>,
+) -> impl Future<Output = Result<Option<Self::Yield>>> + Send + 'static;
+```
+
+The future cannot borrow `self`. Update synchronous state and copy or clone everything the future needs before creating the `async move` block, as the example does. A scoped `Object<'env>`, `Function<'env, ...>`, or `BufferSlice<'env>` cannot be the yielded type. Return owned values, or create a JavaScript value later in a different API that explicitly supplies `Env` on the JavaScript thread.
+
+### Async `next()`
+
+Each call returns a Promise:
+
+- `Ok(Some(value))` fulfills with `{ value, done: false }`.
+- `Ok(None)` fulfills with `{ value: undefined, done: true }`.
+- `Err(error)` rejects the Promise.
+
+The current experimental async adapter does not keep a separate terminal-state flag after `Ok(None)`. If a subsequent call must remain completed, keep that state in your Rust struct and continue returning `Ok(None)`.
+
+Do not assume overlapping `next()` calls are serialized for you. State mutation before the future is returned happens immediately on the JavaScript thread, while the resulting futures can remain in flight together. Design the state machine for concurrent in-flight operations or document that callers must await one result before requesting the next.
+
+### Async `return()`
+
+Override `complete` to perform asynchronous cleanup:
+
+```rust filename="lib.rs"
+fn complete(
+  &mut self,
+  _value: Option<Self::Return>,
+) -> impl Future<Output = Result<Option<Self::Yield>>> + Send + 'static {
+  let handle = self.take_handle();
+  async move {
+    handle.close().await.map_err(Error::from)?;
+    Ok(None)
+  }
+}
+```
+
+The returned Promise always resolves with `done: true`; `Some(value)` becomes its final value and `None` becomes `undefined`. An error rejects. As with `next`, the adapter does not itself persist a terminal flag for later operations, so record completion in your class if callers can retain and reuse the iterator object.
+
+There is an experimental typing mismatch here: `complete` returns `Option<Self::Yield>` at runtime, while the generated `AsyncGenerator<Yield, Return, Next>` declaration types the final value as `Return`. If `complete` can return `Some(value)`, keep `Yield` and `Return` the same type; otherwise return `None`. With different `Yield` and `Return` types, the generated declaration can disagree with the runtime value.
+
+JavaScript normally calls `return()` when a `for await...of` loop exits early, but cleanup should still tolerate the iterator being garbage-collected without an orderly return.
+
+### Async `throw()`
+
+The default `catch` turns the thrown JavaScript value into `napi::Error`, so the returned Promise rejects.
+
+```rust filename="lib.rs"
+fn catch(
+  &mut self,
+  _env: Env,
+  value: Unknown,
+) -> impl Future<Output = Result<Option<Self::Yield>>> + Send + 'static {
+  let error: Error = value.into();
+  async move { Err(error) }
+}
+```
+
+A custom `catch` can recover with `Ok(Some(value))`. In the current experimental adapter, a recovered `Ok(None)` is represented as a non-terminal result with a null value; use `Err` to rethrow or `Ok(Some(...))` to recover, and use `return()`/explicit class state to model completion.
+
+See [Error handling](/docs/concepts/error-handling) for JavaScript error preservation across async work.
+
+## Lifetime and garbage collection
+
+For async iteration, `[Symbol.asyncIterator]()` creates an iterator object that keeps a hidden, non-enumerable, non-writable reference to the native class instance. This prevents the class from being collected while the iterator is retained. The reference is released when the iterator object is finalized.
+
+That reference does not cancel an in-flight Rust future. Futures and any external resources they own need their own cancellation and shutdown design. Keep cleanup idempotent so it is safe from `complete`, explicit class methods, and `Drop`/finalization paths.
+
+The synchronous iterator is the class instance itself, so normal class-instance reachability keeps the Rust value alive.
+
+## Choosing another abstraction
+
+Use an iterator when each request naturally produces one item and the consumer controls pacing.
+
+- Use a normal array or `Vec<T>` for small, already-materialized results.
+- Use `ReadableStream` for streaming with Web Streams backpressure and cancellation semantics.
+- Use `AsyncTask` for one CPU-heavy result from libuv's worker pool.
+- Use an async function for one Tokio future and one Promise.
+- Use ThreadsafeFunction for repeated callbacks originating on a native thread.
+
+Because iterator support is experimental, prefer these established abstractions when interoperability or long-term API stability matters more than the iterator syntax.
+
+## Test checklist
+
+- `next()` with and without its argument.
+- Natural completion and calls after completion.
+- Early `break`, explicit `return(value)`, and cleanup failure.
+- Default and recovered `throw(error)` behavior.
+- Two overlapping async `next()` calls if the API permits them.
+- Dropping the original async class while retaining only its iterator.
+- Forced garbage collection and worker-environment shutdown.
+- Runtimes both with and without the global `Iterator` helper API.

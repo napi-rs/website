@@ -1,0 +1,289 @@
+---
+description: Escolha uma API assíncrona do NAPI-RS e gerencie com segurança cancelamento, acesso a JavaScript, workers e desligamento do runtime.
+---
+
+import { Callout } from 'nextra-theme-docs'
+
+# Assíncrono e concorrência
+
+A abstração correta depende de onde o trabalho precisa rodar e de se o Rust
+precisa chamar JavaScript enquanto ele está em execução. Comece pela menor
+abstração que corresponda ao trabalho; mover uma função síncrona para outra
+thread não torna suas dependências seguras para uso lá.
+
+## Tabela de decisão
+
+| Necessidade | Use | O trabalho roda em | Resultado em JavaScript |
+| --- | --- | --- | --- |
+| Conversão ou computação rápida | `#[napi] fn` comum | Thread JavaScript | Valor imediato ou throw |
+| I/O assíncrona Rust ou ecossistema assíncrono | `#[napi] async fn` | Runtime Tokio do NAPI-RS | `Promise<T>` |
+| Trabalho bloqueante/CPU usando o pool de workers do Node | `AsyncTask<T>` | Pool de threads do libuv; `resolve` volta para a thread JS | `Promise<T>` |
+| Chamar uma função JS a partir de uma thread do SO/Tokio | `ThreadsafeFunction` | Thread produtora, callback na thread JS | Callback ou retorno aguardado |
+| Entregar uma sequência sob demanda | iterator ou async iterator | Modelo pull | `for...of` / `for await...of` |
+| Fazer streaming de bytes com Web Streams | `ReadableStream` / `WritableStream` | Tokio mais callbacks de stream JS | API Web Streams |
+
+Duas regras valem para todas as linhas:
+
+1. Apenas a thread JavaScript pode usar `Env` ou handles `napi_value` brutos.
+2. Os dados que cruzam uma fronteira de thread ou `await` precisam ser
+   possuídos por tempo suficiente; valores JavaScript emprestados têm escopo de
+   função.
+
+Veja [Understanding lifetime](/docs/concepts/understanding-lifetime) antes de
+mover buffers, objetos ou instâncias de classe para trabalho em segundo plano.
+
+## `async fn` com Tokio
+
+Habilite `async` (que habilita o runtime Tokio do NAPI-RS) e apenas as
+features do Tokio que seu crate usa:
+
+```toml filename="Cargo.toml"
+[dependencies]
+napi = { version = "3", features = ["async"] }
+napi-derive = "3"
+tokio = { version = "1", features = ["fs", "time"] }
+```
+
+```rust filename="src/lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub async fn read_config(path: String) -> Result<Buffer> {
+  Ok(tokio::fs::read(path).await?.into())
+}
+```
+
+O future e sua saída cruzam threads, então precisam ser `Send + 'static`.
+Prefira entradas possuídas, como `String`, `Buffer` e typed arrays possuídos.
+Não mantenha `JsString<'_>`, `Object<'_>` nem `Env` ao longo de um ponto
+`await`.
+
+`async fn` é apropriado para I/O assíncrona. Um cálculo síncrono longo dentro
+dela ainda ocupa uma thread worker do Tokio; use `tokio::task::spawn_blocking`
+ou um `AsyncTask` para trabalho bloqueante.
+
+### O cancelamento não é automático
+
+Descartar o `Promise` JavaScript não cancela o future Rust. Projete um protocolo
+de cancelamento para trabalhos longos:
+
+- aceite um handle de cancelamento explícito ou um ID de operação;
+- faça a ponte do cancelamento para uma flag atômica, canal ou token de
+  cancelamento de biblioteca controlado pelo Rust;
+- pare de criar trabalho JavaScript depois do cancelamento;
+- aguarde ou aborte todo `JoinHandle` Tokio gerado durante o desligamento do
+  proprietário.
+
+Trabalho destacado gerado com `napi::tokio::spawn` não deve sobreviver ao
+ambiente nem aos recursos Rust/JavaScript que usa. Mantenha seu `JoinHandle` em
+uma classe proprietária e faça `abort` ou `await` dele no caminho de
+desligamento.
+
+## `AsyncTask` e o pool de workers do libuv
+
+Use [`AsyncTask`](/docs/concepts/async-task) para trabalho bloqueante limitado
+que caiba no pool de threads compartilhado do libuv do Node. `Task::compute`
+roda fora da thread JavaScript; `resolve`, `reject` e `finally` rodam depois da
+conclusão, quando `Env` está disponível.
+
+```rust filename="src/lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+pub struct HashFile {
+  path: String,
+}
+
+#[napi]
+impl Task for HashFile {
+  type Output = Vec<u8>;
+  type JsValue = Buffer;
+
+  fn compute(&mut self) -> Result<Self::Output> {
+    // Trabalho bloqueante de arquivo e CPU é permitido aqui. Não chame JavaScript.
+    Ok(std::fs::read(&self.path)?)
+  }
+
+  fn resolve(&mut self, _env: Env, bytes: Self::Output) -> Result<Self::JsValue> {
+    Ok(bytes.into())
+  }
+}
+
+#[napi]
+pub fn hash_file(path: String) -> AsyncTask<HashFile> {
+  AsyncTask::new(HashFile { path })
+}
+```
+
+`AsyncTask::with_signal` aceita um `AbortSignal`, mas o Node-API só consegue
+cancelar trabalho que ainda não começou. Quando `compute` já está em execução,
+chamar `AbortController.abort()` não o interrompe. Se o trabalho em execução
+precisar parar, combine `AbortSignal::on_abort` com sua própria flag/canal
+cooperativo e faça `compute` verificá-lo.
+
+O pool do libuv é compartilhado com filesystem, DNS, crypto e outros trabalhos
+nativos do Node. Saturá-lo com tarefas longas de CPU pode atrasar trabalhos não
+relacionados da aplicação. Limite a concorrência na API JavaScript ou use um
+pool Rust dedicado quando isso fizer parte do seu desenho de desempenho.
+
+## ThreadsafeFunction
+
+Use uma [`ThreadsafeFunction`](/docs/concepts/threadsafe-function) quando uma
+thread Rust precisar agendar um callback JavaScript. A thread produtora envia
+dados Rust possuídos; a conversão e o callback executam no ambiente JavaScript
+dono.
+
+Escolha deliberadamente o comportamento da fila:
+
+- `NonBlocking` retorna imediatamente. Com uma fila limitada, trate
+  `Status::QueueFull` como backpressure em vez de descartar dados
+  silenciosamente.
+- `Blocking` espera espaço na fila. Nunca o use a partir da thread JavaScript e
+  evite-o em caminhos de desligamento em que o event loop pode já não estar
+  drenando.
+- Um tamanho de fila `0` é ilimitado. Ele evita `QueueFull`, mas pode
+  transformar um callback lento em crescimento ilimitado de memória.
+- Uma ThreadsafeFunction forte mantém o event loop vivo. Construa com
+  `.weak::<true>()` quando callbacks pendentes não forem motivo para manter o
+  processo em execução.
+
+Solte todos os clones para liberar uma ThreadsafeFunction. Chamar `abort` a
+fecha imediatamente; chamadas posteriores relatam `Status::Closing`.
+
+### Erros JavaScript e valores de retorno
+
+`callee_handled::<true>()` usa a convenção de callback do Node: o Rust chama a
+ThreadsafeFunction com um `Result`, e o JavaScript recebe um callback
+error-first. Com `false`, a chamada Rust aceita apenas o valor, e o JavaScript
+não recebe parâmetro de erro; trate falhas nativas recuperáveis antes de
+chamá-la. Use `call_async` quando o Rust precisar aguardar o resultado do
+callback e use a variante que captura valores lançados pelo JavaScript quando
+essas falhas forem recuperáveis.
+
+Nunca deixe uma exceção JavaScript atravessar um callback FFI como um panic
+Rust não verificado. Retorne ou trate explicitamente o `napi::Error`.
+
+### AsyncLocalStorage e contexto de requisição
+
+Uma ThreadsafeFunction é registrada como seu próprio recurso assíncrono do
+Node. Não assuma que um callback agendado depois a partir de uma thread Rust
+herda o store de `AsyncLocalStorage` que estava ativo quando a API nativa foi
+chamada. Se contexto fizer parte da correção, passe um ID de requisição ou
+objeto de contexto como dado possuído e restaure-o em JavaScript (por exemplo,
+com um `AsyncResource`) em vez de depender de estado ambiente.
+
+Continuações de Promise podem preservar o contexto assíncrono JavaScript de
+forma diferente de um callback de ThreadsafeFunction. Teste a combinação exata
+de API/runtime que você distribui.
+
+## Iteradores e streams
+
+Use um iterator quando o JavaScript deve puxar um valor de cada vez. Use um
+async iterator quando produzir o próximo valor for assíncrono. O modelo pull
+geralmente é mais fácil de cancelar e limitar do que empurrar todos os itens
+por uma fila ilimitada de ThreadsafeFunction.
+
+Use a feature `web_stream` quando os consumidores precisarem da API Web
+Streams:
+
+```toml filename="Cargo.toml"
+[dependencies]
+napi = { version = "3", features = ["web_stream"] }
+```
+
+Web Streams estão mais estabelecidos para dados orientados a bytes. Objetos
+Rust estruturados em `ReadableStream` têm um relatório de comportamento ainda em
+aberto ([napi-rs#2826](https://github.com/napi-rs/napi-rs/issues/2826));
+adicione um teste de runtime antes de expor chunks estruturados como uma API
+suportada.
+
+Independentemente da abstração escolhida, defina o que acontece quando o
+consumidor para:
+
+- cancele o produtor quando `return()`, `cancel()` ou `abort()` for chamado;
+- libere referências JavaScript e remetentes de fila;
+- garanta que um produtor bloqueado desperte durante o desligamento;
+- decida se valores em buffer são entregues ou descartados.
+
+## Ciclo de vida do runtime
+
+Com `tokio_rt`, o NAPI-RS cria um runtime Tokio e o inicia quando o módulo
+nativo é registrado. Em targets Node nativos, ele é desligado depois que o
+último ambiente Node-API que usa o módulo sai, e pode ser iniciado novamente em
+um recarregamento de renderer do Electron.
+
+Registre recursos específicos de ambiente para cada ambiente. Não armazene em
+cache globalmente um único `Env`, referência JavaScript, construtor de classe
+ou ThreadsafeFunction para reutilizá-lo da thread principal em um worker
+isolate.
+
+### Runtime Tokio personalizado
+
+Instale um runtime personalizado durante a inicialização do módulo, antes de
+exportações assíncronas usarem o runtime padrão:
+
+```rust filename="src/lib.rs"
+use napi::create_custom_tokio_runtime;
+
+#[napi_derive::module_init]
+fn init() {
+  let runtime = tokio::runtime::Builder::new_multi_thread()
+    .worker_threads(4)
+    .enable_all()
+    .build();
+  match runtime {
+    Ok(runtime) => create_custom_tokio_runtime(runtime),
+    Err(err) => eprintln!("failed to create custom Tokio runtime: {err}"),
+  }
+}
+```
+
+<Callout type="warning">
+  Atualmente, uma instância de runtime personalizado é consumida uma única vez.
+  Depois de `shutdown_async_runtime()` seguido de `start_async_runtime()`, o
+  NAPI-RS volta para seu runtime padrão em vez de recriar a configuração
+  personalizada. Esta é uma limitação aberta do produto, não um contrato de
+  reinício suportado ([napi-rs#3251](https://github.com/napi-rs/napi-rs/issues/3251)).
+</Callout>
+
+O WASI tem restrições diferentes de teardown de runtime. Se sua API WASI inicia
+o runtime explicitamente ou expõe uma função de desligamento, teste
+inicialização e desligamento repetidos no host WASI real. Veja
+[WebAssembly](/docs/concepts/webassembly).
+
+## Protocolo de desligamento de worker
+
+Não faça da terminação abrupta o mecanismo normal de cancelamento para trabalho
+nativo. Um protocolo resiliente de worker é:
+
+1. O processo pai envia `stop`.
+2. O worker para de aceitar chamadas nativas.
+3. Tokens de cancelamento Rust são disparados.
+4. O worker aguarda promises ativas e solta produtores de ThreadsafeFunction.
+5. O worker responde `stopped` e fecha sua message port.
+6. O processo pai usa `worker.terminate()` somente depois de um prazo.
+
+O ciclo de vida de workers no Node e no Bun não é intercambiável. A terminação
+abrupta durante uma operação assíncrona nativa ainda tem um relatório de crash
+em aberto no Bun ([napi-rs#2938](https://github.com/napi-rs/napi-rs/issues/2938)).
+Marque esse runtime como não suportado para essa API, ou mantenha o protocolo
+gracioso como obrigatório, até que seu próprio teste de estresse prove o
+contrário.
+
+## Checklist de revisão
+
+Antes de distribuir uma exportação assíncrona, responda a estas perguntas na
+documentação e nos testes:
+
+- Qual pool/runtime/thread executa o trabalho?
+- Ela pode acessar JavaScript, e apenas no ambiente correto?
+- Quem controla cada valor ao cruzar fronteiras de `await` e thread?
+- A fila é limitada, e o que acontece sob backpressure?
+- Como o chamador cancela trabalho enfileirado e já em execução?
+- O que mantém o event loop do Node vivo?
+- O que acontece durante terminação de worker, recarregamento do Electron e
+  saída do processo?
+- Exceções JavaScript e panics Rust são convertidos em falhas definidas?
+- Contexto assíncrono ambiente é necessário, ou o contexto é passado
+  explicitamente?

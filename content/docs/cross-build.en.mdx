@@ -51,10 +51,12 @@ The **Generated CI** column shows what the CI workflow scaffolded by `napi new` 
 flowchart TD
     A[I want target T from host H] --> B{Is T the host triple?}
     B -- yes --> N0[no flag]
-    B -- no --> C{Is T Windows?}
+    B -- no --> C{Is T Windows MSVC?}
     C -- "H is Windows" --> N1["no flag - MSVC cross-links all Windows arches"]
     C -- "H is macOS or Linux" --> X1["-x (cargo-xwin downloads the MS SDK)"]
-    C -- no --> D{Is T macOS?}
+    C -- no --> WG{Is T Windows GNU or gnullvm?}
+    WG -- yes --> WGN["no flag + mingw/llvm-mingw + LIBNODE_PATH"]
+    WG -- no --> D{Is T macOS?}
     D -- "H is macOS" --> N2[no flag + rustup target]
     D -- "H is Linux" --> X2["-x (zig, pure Rust only - prefer a macOS runner)"]
     D -- no --> E{Is T Linux glibc?}
@@ -68,20 +70,26 @@ flowchart TD
     H2 -- yes --> VM["FreeBSD VM (reference) or -x + zig"]
 ```
 
-The Windows branch routes by the target's *platform*, so `x86_64-pc-windows-gnu` lands in the xwin branch too — but cargo-xwin is MSVC-only, and `-x` fails for that triple. Prefer the `*-pc-windows-msvc` triples; if you need windows-gnu, build it without a cross flag — see the windows-gnu note in [Recipes per target](#recipes-per-target).
+The `-x` Windows path is MSVC-only. On a non-Windows host, the CLI rejects an
+explicit Windows GNU or gnullvm target before Cargo metadata, tool downloads,
+or cargo-subcommand installation. Build those targets without a cross flag and
+provide mingw-w64 or llvm-mingw plus `LIBNODE_PATH`; see the Windows note in
+[Recipes per target](#recipes-per-target).
 
 ## The three flags at a glance
 
 |  | `--use-napi-cross` | `--cross-compile` / `-x` | `--use-cross` (legacy) |
 | --- | --- | --- | --- |
 | **Status** | Recommended for Linux glibc targets | Recommended for Windows MSVC targets from a non-Windows host and for musl; the zig fallback for glibc/macOS/FreeBSD when the preferred path is unavailable | **Legacy, not recommended** |
-| **Mechanism** | Env vars only: downloads a gcc cross toolchain from npm ([`@napi-rs/cross-toolchain`](https://github.com/napi-rs/cross-toolchain)) and points linker/CC/sysroot env at it; the command stays `cargo build` | Swaps the cargo subcommand: `cargo zigbuild` for most targets, `cargo xwin build` for Windows targets from a non-Windows host (routing covers every `*-windows-*` triple, but cargo-xwin supports MSVC only) | Swaps the binary: `cross build` runs the build inside a Docker/Podman container |
+| **Mechanism** | Env vars only: downloads a gcc cross toolchain from npm ([`@napi-rs/cross-toolchain`](https://github.com/napi-rs/cross-toolchain)) and points linker/CC/sysroot env at it; the command stays `cargo build` | Swaps the cargo subcommand: `cargo zigbuild` for non-Windows targets, or `cargo xwin build` for Windows MSVC targets from a non-Windows host; explicit Windows GNU/gnullvm targets are rejected before either command runs | Swaps the binary: `cross build` runs the build inside a Docker/Podman container |
 | **Targets** | Five Linux glibc triples: x64, arm64, armv7, ppc64le, s390x | Linux (gnu and musl) and macOS targets via zig; Windows MSVC via xwin | Whatever cross-rs has images for — Linux only, no macOS or Windows MSVC images |
 | **glibc floor** | 2.17 | zig's default (2.28 for zig 0.12–0.14) | The image's glibc (mostly 2.31; `:centos` variants 2.17) |
 | **Prerequisites** | Linux x64/arm64 host, `npm` on `PATH`; the toolchain is downloaded and cached automatically | `zig` on `PATH` for the zigbuild path, `clang` for the xwin path (the CLI never installs or checks either); the selected cargo subcommand (cargo-zigbuild or cargo-xwin) is auto-installed on first use | `cross` installed manually, plus a running Docker >= 20.10 or Podman >= 3.4 |
 | **C/C++ dependencies** | Compiled with the bundled gcc; the aarch64 gcc is old — see [known limitation](#native-dependencies) | Compiled with `zig cc`; Apple-framework dependencies need a macOS SDK | Full container toolchain — last resort for autotools/CMake build scripts |
 
-Pick exactly one flag per build. The flags do not combine, even in the combinations that only print a warning — see [the combination rules](./cli/build#pick-exactly-one).
+Pick exactly one flag per build. Any pair is rejected before Cargo metadata,
+toolchain downloads, or cargo-subcommand installation. See [the combination
+rules](./cli/build#pick-exactly-one).
 
 ## Recipes per target
 
@@ -117,7 +125,7 @@ napi build --release --target x86_64-pc-windows-msvc --cross-compile
 
 The generated CI builds all three MSVC targets on `windows-latest` with no flag; use `-x` when you have no Windows runner.
 
-What about `*-pc-windows-gnu`? `x86_64-pc-windows-gnu` is an accepted CLI target since [napi-rs#2935](https://github.com/napi-rs/napi-rs/pull/2935) (the generated JS loader picks the `win32-x64-gnu` binary when Node itself is a MINGW build); the other windows-gnu arches are not accepted. Do **not** use `-x` for it: cargo-xwin supports MSVC triples only, so for windows-gnu it configures nothing and the build later fails with ``error: linker `x86_64-w64-mingw32-gcc` not found``. Build it with no cross flag instead: `rustup target add x86_64-pc-windows-gnu`, install a mingw-w64 toolchain (`apt install mingw-w64` / `brew install mingw-w64`), and set `LIBNODE_PATH` to a directory containing `libnode.dll` from MSYS2's Node — napi-build links windows-gnu addons directly against it. This target is usually built inside MSYS2/MINGW, where both prerequisites are already available. There are still no official Node.js windows-gnu builds, so unless you specifically target MSYS2/MINGW Node, build for the `*-pc-windows-msvc` triple instead — historical context in [napi-rs#2001](https://github.com/napi-rs/napi-rs/issues/2001).
+What about `*-pc-windows-gnu`? `x86_64-pc-windows-gnu` is an accepted CLI target since [napi-rs#2935](https://github.com/napi-rs/napi-rs/pull/2935) (the generated JS loader picks the `win32-x64-gnu` binary when Node itself is a MINGW build); the other windows-gnu arches are not accepted. Do **not** use `-x` for it: from a non-Windows host, the CLI rejects that combination before Cargo metadata or cargo-xwin installation because cargo-xwin supports MSVC triples only. Build it with no cross flag instead: `rustup target add x86_64-pc-windows-gnu`, install a mingw-w64 toolchain (`apt install mingw-w64` / `brew install mingw-w64`), and set `LIBNODE_PATH` to a directory containing `libnode.dll` from MSYS2's Node — napi-build links windows-gnu addons directly against it. This target is usually built inside MSYS2/MINGW, where both prerequisites are already available. There are still no official Node.js windows-gnu builds, so unless you specifically target MSYS2/MINGW Node, build for the `*-pc-windows-msvc` triple instead — historical context in [napi-rs#2001](https://github.com/napi-rs/napi-rs/issues/2001).
 
 ### macOS
 
@@ -131,7 +139,10 @@ The generated CI builds both darwin targets natively on `macos-latest` with no f
 
 ### Android
 
-No cross flag. The CLI configures the toolchain from the `ANDROID_NDK_LATEST_HOME` environment variable (preinstalled on GitHub `ubuntu-latest` runners), whether or not a cross flag is passed.
+No cross flag. On a non-Android host, the CLI configures the toolchain from
+`ANDROID_NDK_LATEST_HOME` (preinstalled on GitHub `ubuntu-latest` runners) and
+stops before Cargo if the variable is missing. On an Android host, it leaves
+the native toolchain environment untouched.
 
 ```sh
 napi build --release --target aarch64-linux-android

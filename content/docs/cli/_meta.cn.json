@@ -1,6 +1,12 @@
 {
-  "build": "Build",
-  "artifacts": "Artifacts",
-  "pre-publish": "Prepublish",
-  "napi-config": "NAPI Config"
+  "new": "新建项目",
+  "rename": "重命名项目",
+  "build": "构建",
+  "napi-config": "NAPI 配置",
+  "programmatic-api": "编程式 API",
+  "create-npm-dirs": "创建 npm 目录",
+  "artifacts": "收集构建产物",
+  "universalize": "合并通用二进制",
+  "version": "更新包版本",
+  "pre-publish": "发布前处理"
 }

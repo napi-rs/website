@@ -1,24 +1,37 @@
 ---
-description: Overwrite the argument and return TypeScript types.
+description: 覆盖参数和返回值的 TypeScript 类型。
 ---
 
-# 重写类型
+# 类型覆盖
 
-在大多数情况下，**NAPI-RS** 会为你生成正确的 TypeScript 类型，但在某些情况下，你可能想要重写参数或返回值的类型。
+在大多数情况下，**NAPI-RS** 会根据 Rust 签名生成正确的 TypeScript 类型。只有当公开的 TypeScript 契约有意不同于运行时转换类型时才应覆盖，并在测试中保持两种行为一致。
 
-[ThreadsafeFunction](./threadsafe-function) 是一个例子，因为 `ThreadsafeFunction` 太复杂了，**NAPI-RS** 无法为其生成正确的 TypeScript 类型。你总是需要重写它的参数类型。
+[ThreadsafeFunction](./threadsafe-function) 就是一个例子：`build_callback` 闭包可以把拥有所有权的 Rust 数据转换为另一组 JavaScript 回调参数，因此类型推断不一定能描述最终的回调签名。
 
 ## `ts_args_type`
 
-重写函数的参数类型，**NAPI-RS** 会将重写的类型放在函数签名的括号中。
+替换导出函数完整的、逗号分隔的参数列表。这只会改变生成的声明，不会改变运行时转换。
 
-```rust {1} filename="lib.rs"
-#[napi(ts_args_type="callback: (err: null | Error, result: number) => void")]
-fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
-  let tsfn: ThreadsafeFunction<u32, ErrorStrategy::CalleeHandled> = callback
-    .create_threadsafe_function(0, |ctx| {
-      ctx.env.create_uint32(ctx.value + 1).map(|v| vec![v])
-    })?;
+```rust {10} filename="lib.rs"
+use std::sync::Arc;
+use std::thread;
+
+use napi::{
+  bindgen_prelude::*,
+  threadsafe_function::{ThreadsafeCallContext, ThreadsafeFunctionCallMode},
+};
+use napi_derive::napi;
+
+#[napi(ts_args_type = "callback: (err: null | Error, result: string) => void")]
+pub fn call_threadsafe_function(callback: Function<u32, ()>) -> Result<()> {
+  let tsfn_builder = callback.build_threadsafe_function();
+  let tsfn = Arc::new(
+    tsfn_builder
+      .callee_handled::<true>()
+      .build_callback(
+        move |ctx: ThreadsafeCallContext<u32>| Ok(format!("n: {}", ctx.value)),
+      )?,
+  );
   for n in 0..100 {
     let tsfn = tsfn.clone();
     thread::spawn(move || {
@@ -33,22 +46,23 @@ fn call_threadsafe_function(callback: JsFunction) -> Result<()> {
 
 ```ts filename="index.d.ts"
 export function callThreadsafeFunction(
-  callback: (err: null | Error, result: number) => void,
+  callback: (err: null | Error, result: string) => void,
 ): void
 ```
 
 ## `ts_arg_type`
 
-_单独_ 重写函数的一个或多个参数类型，**NAPI-RS** 会将重写的类型放在函数签名的括号中，并自动推导其他类型。
+_单独_替换一个或多个参数类型。NAPI-RS 会继续推断其他参数。
 
 ```rust {1} filename="lib.rs"
 #[napi]
 fn override_individual_arg_on_function(
   not_overridden: String,
-  #[napi(ts_arg_type = "() => string")] f: JsFunction,
+  #[napi(ts_arg_type = "() => string")] f: Function<(), String>,
   not_overridden2: u32,
-) {
-// code ...
+) -> Result<String> {
+  let value = f.call(())?;
+  Ok(format!("{not_overridden}-{value}-{not_overridden2}"))
 }
 ```
 
@@ -62,12 +76,12 @@ export function overrideIndividualArgOnFunction(
 
 ## `ts_return_type`
 
-重写函数的返回类型，**NAPI-RS** 会将重写的类型添加到函数签名的末尾。
+替换生成的返回类型。对于异步导出，请提供完整的公开类型，通常为 `Promise<T>`。
 
 ```rust {1} filename="lib.rs"
 #[napi(ts_return_type="number")]
-fn return_something_unknown(env: Env) -> Result<JsUnknown> {
-  env.create_uint32(42).map(|v| v.into_unknown())
+fn return_something_unknown<'env>(env: &'env Env) -> Result<Unknown<'env>> {
+  env.create_uint32(42).map(|v| v.to_unknown())
 }
 ```
 
@@ -77,7 +91,7 @@ export function returnSomethingUnknown(): number
 
 ## `ts_type`
 
-覆盖结构体中字段生成的 ts 类型。
+覆盖结构体字段所生成的 TypeScript 类型。
 
 ```rust {1} filename="lib.rs"
 #[napi(object)]
@@ -95,4 +109,113 @@ export interface TsTypeChanged {
   typeOverride: MySpecialString
   typeOverrideOptional?: object
 }
+```
+
+## 在文件头中添加自定义类型定义
+
+NAPI-RS 生成 `index.d.ts` 时会包含默认文件头。你可以自定义该文件头，添加原生模块所需的 TypeScript 类型、import 或注释。
+
+### 使用场景
+
+- **自定义类型别名**：定义 API 使用的 `MaybePromise<T>` 等类型
+- **导入外部类型**：导入 `ReadableStream`、`Buffer` 或其他 Node.js 类型
+- **ESLint/TypeScript 指令**：添加 `// @ts-nocheck` 或自定义规则
+- **文档**：版权声明、版本信息或弃用警告
+- **声明 symbol**：导出绑定使用的常量或 symbol
+
+### 配置选项
+
+| 方法 | 位置 | 最适合 |
+| ----------------- | ----------- | ---------------------------- |
+| `dtsHeaderFile` | napi 配置 | 包含 import 的复杂文件头 |
+| `dtsHeader` | napi 配置 | 简单的单行补充内容 |
+| `--dts-header` | CLI 标志 | CI/CD 覆盖 |
+| `--no-dts-header` | CLI 标志 | 完全禁用文件头 |
+
+### 优先级解析
+
+同时设置多个选项时，NAPI-RS 按以下顺序解析：
+
+| 优先级 | 来源 | 说明 |
+| :------: | ------------------------ | --------------------------------------------------- |
+| 1 | `dtsHeaderFile`（配置） | `napi` 配置中的文件路径——**只要设置就始终优先** |
+| 2 | `--dts-header`（CLI） | CLI 标志会覆盖内联配置 |
+| 3 | `dtsHeader`（配置） | `napi` 配置中的内联字符串 |
+| 4 | 默认文件头 | 未指定其他选项时使用 |
+
+> **要点**：配置中的 `dtsHeaderFile` 优先于所有其他选项，包括 `--dts-header` CLI 标志。如果需要通过 CLI 覆盖，请使用 `dtsHeader`，而不是 `dtsHeaderFile`。
+
+### 示例场景
+
+| 配置 `dtsHeaderFile` | 配置 `dtsHeader` | CLI `--dts-header` | 结果 |
+| :--------------------: | :----------------: | :----------------: | -------------------- |
+| `./header.d.ts` | `"type X = Y"` | `"// override"` | 使用 `./header.d.ts` |
+| - | `"type X = Y"` | `"// override"` | 使用 `"// override"` |
+| - | `"type X = Y"` | - | 使用 `"type X = Y"` |
+| - | - | - | 使用默认文件头 |
+
+### 使用 `dtsHeaderFile`（推荐）
+
+对于复杂的文件头，请创建单独的 `.d.ts` 文件：
+
+**第 1 步：创建文件头文件**
+
+```typescript filename="dts-header.d.ts"
+/* auto-generated by NAPI-RS */
+/* eslint-disable */
+
+import type { ReadableStream } from 'node:stream/web'
+
+type MaybePromise<T> = T | Promise<T>
+
+export declare const MY_SYMBOL: symbol
+```
+
+**第 2 步：在 package.json 中引用它**
+
+```json filename="package.json"
+{
+  "napi": {
+    "dtsHeaderFile": "./dts-header.d.ts"
+  }
+}
+```
+
+> ⚠️ 该文件的内容会**完全替换**默认文件头。如果希望保留自动生成的注释和 eslint 指令，请把它们包含在文件中。
+
+### 使用 `dtsHeader`（内联）
+
+对于简单的补充内容，请在配置中使用内联字符串：
+
+```json filename="package.json"
+{
+  "napi": {
+    "dtsHeader": "type MaybePromise<T> = T | Promise<T>"
+  }
+}
+```
+
+这会完全替换默认文件头。如果希望保留自动生成的注释和 eslint 指令，请把它们包含在字符串中。
+
+### CLI 选项
+
+**`--dts-header`**：通过 CLI 覆盖文件头（适用于 CI/CD）：
+
+```sh
+napi build --dts-header "// Custom header"
+```
+
+**`--no-dts-header`**：生成不含任何文件头的 `.d.ts`：
+
+```sh
+napi build --no-dts-header
+```
+
+### 默认文件头
+
+未自定义时，NAPI-RS 使用：
+
+```typescript
+/* auto-generated by NAPI-RS */
+/* eslint-disable */
 ```

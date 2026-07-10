@@ -5,13 +5,20 @@ description: Overwrite the argument and return TypeScript types.
 
 # Types Overwrite
 
-In most cases, **NAPI-RS** will generate the right TypeScript types for you. But in some scenarios, you may want to overwrite the arguments or return type.
+In most cases, **NAPI-RS** generates the correct TypeScript types from the Rust
+signature. Override them only when the public TypeScript contract intentionally
+differs from the runtime conversion type, and keep the two behaviors aligned in
+tests.
 
-[ThreadsafeFunction](./threadsafe-function) is an example, because the `ThreadsafeFunction` is too complex, **NAPI-RS** can't generate the right TypeScript types for it in some cases. You always need to overwrite its argument type.
+[ThreadsafeFunction](./threadsafe-function) is one example: a
+`build_callback` closure can transform owned Rust data into a different list of
+JavaScript callback arguments, so inference cannot always describe the final
+callback signature.
 
 ## `ts_args_type`
 
-Rewrite the arguments type of the function, **NAPI-RS** will put the rewritten type into the brace of the function signature.
+Replace the complete comma-separated parameter list of the exported function.
+This changes only the generated declaration, not runtime conversion.
 
 **lib.rs**
 
@@ -28,9 +35,13 @@ use napi_derive::napi;
 #[napi(ts_args_type = "callback: (err: null | Error, result: string) => void")]
 pub fn call_threadsafe_function(callback: Function<u32, ()>) -> Result<()> {
   let tsfn_builder = callback.build_threadsafe_function();
-  let tsfn = Arc::new(tsfn_builder.build_callback(
-    move |ctx: ThreadsafeCallContext<Result<u32>>| Ok(format!("n: {}", ctx.value?)),
-  )?);
+  let tsfn = Arc::new(
+    tsfn_builder
+      .callee_handled::<true>()
+      .build_callback(
+        move |ctx: ThreadsafeCallContext<u32>| Ok(format!("n: {}", ctx.value)),
+      )?,
+  );
   for n in 0..100 {
     let tsfn = tsfn.clone();
     thread::spawn(move || {
@@ -53,8 +64,8 @@ export function callThreadsafeFunction(
 
 ## `ts_arg_type`
 
-Rewrite one or more argument types of a function _individually_, **NAPI-RS** will put the rewritten types into the brace of the function
-signature and will auto-derive the other ones.
+Replace one or more parameter types _individually_. NAPI-RS continues to infer
+the other parameters.
 
 **lib.rs**
 
@@ -62,10 +73,11 @@ signature and will auto-derive the other ones.
 #[napi]
 fn override_individual_arg_on_function(
   not_overridden: String,
-  #[napi(ts_arg_type = "() => string")] f: Function,
+  #[napi(ts_arg_type = "() => string")] f: Function<(), String>,
   not_overridden2: u32,
-) {
-// code ...
+) -> Result<String> {
+  let value = f.call(())?;
+  Ok(format!("{not_overridden}-{value}-{not_overridden2}"))
 }
 ```
 
@@ -81,14 +93,15 @@ export function overrideIndividualArgOnFunction(
 
 ## `ts_return_type`
 
-Rewrite the return type of the function, **NAPI-RS** will add the rewritten type to the end of the function signature.
+Replace the generated return type. For an async export, provide the complete
+public type, normally `Promise<T>`.
 
 **lib.rs**
 
 ```rust {1}
 #[napi(ts_return_type="number")]
-fn return_something_unknown(env: Env) -> Result<JsUnknown> {
-  env.create_uint32(42).map(|v| v.into_unknown())
+fn return_something_unknown<'env>(env: &'env Env) -> Result<Unknown<'env>> {
+  env.create_uint32(42).map(|v| v.to_unknown())
 }
 ```
 

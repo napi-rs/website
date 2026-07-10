@@ -1,0 +1,239 @@
+---
+title: 'Cargo 特性'
+description: 配置 Node-API 级别、异步支持、转换、诊断和兼容性特性。
+---
+
+# Cargo 特性
+
+`napi` 的特性集合控制哪些 Node-API 符号和高级 Rust API 会编译进 addon。请选择能够提供所需 API 的最低 Node-API 级别，然后只启用 crate 实际需要的可选集成。
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = { version = "3", features = ["napi6", "async", "serde-json"] }
+napi-derive = "3"
+```
+
+## 默认值
+
+`napi` 默认启用以下特性：
+
+```toml
+default = ["napi4", "dyn-symbols"]
+```
+
+这意味着，如果不禁用默认特性，仅添加 `features = ["napi2"]` 仍会针对 Node-API 4 构建。要针对低于 4 的级别，请显式禁用默认特性，并决定是否保留动态符号加载：
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = {
+  version = "3",
+  default-features = false,
+  features = ["napi3", "dyn-symbols"]
+}
+```
+
+::: warning
+Cargo 特性是编译期能力，不是运行时 polyfill。即使 `dyn-symbols` 允许原生库本身完成加载，
+调用宿主未提供的 Node-API 函数仍然不受支持。
+
+:::
+
+## Node-API 级别
+
+`napi1` 到 `napi10` 的特性是累积的。例如，`napi8` 会启用 `napi7`，而后者会启用所有更低级别。所选级别是 addon 可能依赖的最低 Node-API 能力。
+
+| 特性     | 该级别限制的代表性 napi-rs API                                                               |
+| -------- | -------------------------------------------------------------------------------------------- |
+| `napi1`  | 基础值、函数、对象、数组、buffer、异步工作、Promise 和引用。                                 |
+| `napi2`  | 在原生目标上通过 `Env::get_uv_event_loop` 访问 libuv event loop。                            |
+| `napi3`  | 环境清理 hook。                                                                              |
+| `napi4`  | ThreadsafeFunction、deferred/异步运行时集成，以及 napi-rs 的跨线程引用清理机制。这是默认值。 |
+| `napi5`  | JavaScript `Date`、finalizer 以及相关对象/属性 API。                                         |
+| `napi6`  | BigInt 和 BigInt typed array、每个环境的实例数据，以及其他对象/ArrayBuffer API。             |
+| `napi7`  | 分离 ArrayBuffer，并检测已分离的 ArrayBuffer。                                               |
+| `napi8`  | 异步清理 hook、对象 freeze/seal 和类型标签 API。                                             |
+| `napi9`  | 全局 symbol、模块文件名，以及创建/抛出 JavaScript `SyntaxError`。                            |
+| `napi10` | 外部 Latin-1/UTF-16 字符串和专用属性键创建 API。                                             |
+
+此表只列出代表性的高级限制，并不包含 `napi-sys` 重新导出的每个原始函数。
+
+Node.js 已将一些 Node-API 级别向后移植到多个发布线，因此单独一个 Node 主版本并不是精确的兼容性判断依据。请查看官方 [Node-API 版本矩阵](https://nodejs.org/api/n-api.html#node-api-version-matrix)和实际运行时值：
+
+```js
+console.log(process.versions.napi)
+```
+
+在原生代码中，`Env::get_napi_version()` 会读取同一个值。软件包声明的运行时支持范围，不应宽于所选 Node-API 级别与实际测试过的运行时版本二者的交集。
+
+### 选择级别
+
+1. 除非依赖或所需 API 有其他要求，否则从模板/默认的 `napi4` 开始。
+2. 当编译器指出所需 API 受特性限制时，提高级别。
+3. 测试所得兼容范围中最旧的运行时。
+4. 保持 CLI 的 `minNodeApiVersion`、Cargo 特性、软件包 `engines` 与 CI 矩阵一致。
+
+提高该特性级别可能让生成的 addon 无法在较旧运行时中加载或使用。降低级别会在编译期移除 Rust API，这是发现意外依赖较新级别的最安全方式。
+
+## 异步与 Tokio
+
+| 特性              | 启用内容                                                            | 重要权衡                                                                   |
+| ----------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `tokio_rt`        | napi-rs 的 Tokio 运行时集成和 `napi4`；从 `napi` 重新导出 `tokio`。 | 增加 Tokio 运行时代码和生命周期管理。导出 Rust `async fn` 必须启用。       |
+| `async`           | `tokio_rt` 的别名。                                                 | 两个名称任选其一；同时启用没有意义。                                       |
+| `tokio_full`      | Tokio 的 `full` 特性集合。                                          | 会显著增加依赖和二进制大小；它**不能**取代 napi-rs 集成所需的 `tokio_rt`。 |
+| `tokio_fs`        | Tokio 文件系统 API。                                                | 导出异步函数时还要启用 `tokio_rt`/`async`。                                |
+| `tokio_io_std`    | Tokio 异步 stdin/stdout/stderr。                                    | 运行时要求相同。                                                           |
+| `tokio_io_util`   | Tokio I/O 工具 trait 和适配器。                                     | 运行时要求相同。                                                           |
+| `tokio_macros`    | Tokio 过程宏。                                                      | 仅使用 `#[napi]` 导出 `async fn` 不需要它。                                |
+| `tokio_net`       | Tokio 网络功能。                                                    | 运行时要求相同。                                                           |
+| `tokio_process`   | Tokio 子进程支持。                                                  | 仍然存在平台特定行为。                                                     |
+| `tokio_signal`    | Tokio 信号处理。                                                    | 仍然存在进程级信号交互。                                                   |
+| `tokio_sync`      | Tokio 同步类型。                                                    | 运行时要求相同。                                                           |
+| `tokio_test_util` | Tokio 时间/测试工具。                                               | 主要用于测试。                                                             |
+| `tokio_time`      | Tokio 定时器和超时。                                                | 运行时要求相同。                                                           |
+
+这些组件特性会启用 Tokio 依赖上的相应特性。它们并非都会隐式启用 napi-rs 的 `tokio_rt`；除非其他所选特性（例如 `web_stream`）已经启用它，否则请显式列出。
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = { version = "3", features = ["async", "tokio_fs", "tokio_time"] }
+```
+
+对于 CPU 密集型工作，应优先使用 [AsyncTask](/docs/concepts/async-task)，它使用 libuv worker pool，避免阻塞 Tokio 运行时。
+
+## 转换特性
+
+| 特性                 | 添加内容                                                                                            | 说明                                                                              |
+| -------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `serde-json`         | `serde_json::Value`、`Map` 和 `Number` 转换；启用 `serde` 与 `serde_json`。                         | JavaScript 中超出 JSON 数据模型的值会被拒绝，或需要显式表示。                     |
+| `serde-json-ordered` | `serde-json` 加上 `serde_json/preserve_order`。                                                     | 在 serde_json 表示中保留 map 插入顺序；JavaScript 属性顺序规则仍然适用。          |
+| `chrono_date`        | `chrono::DateTime` 与 `NaiveDateTime` 转换；启用 `chrono` 与 `napi5`。                              | JavaScript Date 精度为毫秒。                                                      |
+| `latin1`             | 通过 `encoding_rs` 将 Latin-1 解码/显示为 UTF-8。                                                   | `Latin1String` 转换本身无需此特性；格式化/解码支持受它限制。                      |
+| `object_indexmap`    | `IndexMap` 与 `IndexSet` 转换。                                                                     | 添加 `indexmap` 依赖。Map 仍使用普通 JavaScript 对象；set 使用 JavaScript `Set`。 |
+| `web_stream`         | `ReadableStream` 与 `WriteableStream`；启用 `futures-core`、`tokio-stream`、`tokio_rt` 与 `napi4`。 | 运行时还必须提供兼容的 Web Streams 全局对象。                                     |
+| `error_anyhow`       | 从 `anyhow::Error` 转换，以及可选的 `anyhow` 依赖。                                                 | 转换使用 `GenericFailure`；如需稳定的领域代码，请手动映射错误。                   |
+
+有关方向性与数据复制行为，请参阅[类型转换](/docs/concepts/type-conversions)。
+
+## 链接与运行时检测
+
+### `dyn-symbols`
+
+在支持的原生目标上，`dyn-symbols` 会在 addon 初始化时从宿主进程解析 Node-API 函数，而不是要求平台链接器解析每个符号。它默认启用。
+
+这对于跨操作系统以及原生链接行为不同的 Node 兼容宿主尤其有用。缺失函数会使用生成的 stub，因此符号加载可以继续，但调用缺失 API 仍然会失败。`dyn-symbols` 不会把 Node-API 10 变成 Node-API 4。
+
+只有当目标的静态/直接符号链接模型是有意选择并经过测试时，才应禁用它：
+
+**Cargo.toml**
+
+```toml
+napi = { version = "3", default-features = false, features = ["napi6"] }
+```
+
+### `node_version_detect`
+
+`node_version_detect` 会在模块注册期间读取并缓存宿主 Node 版本。napi-rs 用它选择少数受保护的优化路径，包括在所需符号和配套特性启用时采用较新的属性创建路径。
+
+它并不是包裹每次 Node-API 调用的通用兼容性保护。代码仍必须遵守所选 Node-API 特性和运行时支持矩阵。
+
+## 诊断与可观测性
+
+| 特性             | 行为                                                                                   | 成本 / 限制                                                  |
+| ---------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `deferred_trace` | 创建 deferred 时捕获 JavaScript 错误，让之后的跨线程拒绝保留调用方堆栈。隐含 `napi4`。 | 为受影响的 deferred 操作分配并保留一个错误/引用。            |
+| `tracing`        | 从 `napi` 重新导出 `tracing`。                                                         | 如需发出生成的回调入口事件，还要启用 `napi-derive/tracing`。 |
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = { version = "3", features = ["napi4", "tracing"] }
+napi-derive = { version = "3", features = ["tracing"] }
+```
+
+生成的回调事件使用 `napi` tracing target。如果要观察这些事件，请在嵌入应用或 addon 初始化路径中安装并配置 tracing subscriber。
+
+## 兼容性与仅开发用特性
+
+| 特性           | 用途                                                            | 是否用于生产环境？                                                             |
+| -------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `compat-mode`  | 恢复已弃用的 v2 时代底层类型、trait 和宏，便于迁移。            | 仅在迁移期间使用；新代码应优先使用 v3 bindgen API。                            |
+| `experimental` | 启用实验性原始 Node-API 符号和 napi-rs 保护的优化路径。         | 仅在你能控制并测试运行时时使用；实验性 Node API 不具备稳定 Node-API ABI 保证。 |
+| `noop`         | 替换注册/转换路径，让 Rust crate 无需加载 Node 即可编译或测试。 | 否。与 `napi-derive/noop` 配对；不会执行 JavaScript 转换行为。                 |
+
+迭代器属性在 Rust API 中标为实验性，但**不**受 `experimental` Cargo 特性控制。同步迭代器位于基础 bindgen 运行时中；异步迭代器需要 `tokio_rt`。
+
+### 使用 `noop` 进行纯 Cargo 测试
+
+**Cargo.toml**
+
+```toml
+[features]
+noop = ["napi/noop", "napi-derive/noop"]
+
+[dependencies]
+napi = "3"
+napi-derive = "3"
+```
+
+可使用它测试恰好位于 addon crate 中的纯 Rust 逻辑。对于转换、异常、引用、finalizer、worker 和环境清理，请针对真正构建的 addon 运行 JavaScript 集成测试。
+
+## `full` 组合
+
+`full` 是一个便捷组合，精确包含：
+
+```toml
+full = [
+  "latin1",
+  "napi10",
+  "async",
+  "serde-json",
+  "experimental",
+  "chrono_date",
+]
+```
+
+它并不代表全部特性：例如，它不包含 `web_stream`、`object_indexmap`、`deferred_trace`、`node_version_detect`、`tracing`、`error_anyhow` 或所有 Tokio 组件。
+
+由于它会把 Node-API 级别提高到 10 并启用实验性 API，`full` 便于文档构建和广泛的内部测试，但很少适合作为已发布 addon 的默认设置。
+
+## `napi-derive` 特性
+
+过程宏 crate 有自己的特性集合：
+
+| 特性          | 默认 | 效果                                                                                      |
+| ------------- | ---- | ----------------------------------------------------------------------------------------- |
+| `type-def`    | 是   | 生成供 `@napi-rs/cli` 使用的元数据，以生成 `.d.ts` 声明。                                 |
+| `strict`      | 是   | 报告已解析但没有用于所选项的 `#[napi]` 选项。这是编译期宏校验，不是 JavaScript 参数校验。 |
+| `tracing`     | 否   | 向生成的回调包装器添加 tracing 事件。与 `napi/tracing` 配对。                             |
+| `compat-mode` | 否   | 启用兼容性 API 使用的旧 derive 宏。                                                       |
+| `noop`        | 否   | 为纯 Cargo 构建/测试禁用正常宏展开。                                                      |
+| `full`        | 否   | 启用 `type-def`、`strict` 和 `compat-mode`。                                              |
+
+不要混淆 `napi-derive/strict` 与函数级 `#[napi(strict)]` 属性：前者在编译期检查宏的使用，后者在运行时校验 JavaScript 值。
+
+## 已发布 addon 的推荐基线
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = {
+  version = "3",
+  default-features = false,
+  features = ["napi4", "dyn-symbols"]
+}
+napi-derive = "3"
+
+[build-dependencies]
+napi-build = "2"
+```
+
+只根据公开 API 的需要添加集成特性，记录因此产生的最低 Node-API 级别，并在 CI 中测试该最低运行时以及当前支持的运行时。

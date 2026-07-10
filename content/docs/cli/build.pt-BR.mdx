@@ -1,5 +1,5 @@
 ---
-description: Comando napi build do @napi-rs/cli, suas flags de compilação cruzada e os comandos e o ambiente exatos que ele executa.
+description: Comando napi build do @napi-rs/cli, suas flags de compilação cruzada e os comandos e variáveis de ambiente exatos que ele executa.
 ---
 
 # Build
@@ -17,139 +17,171 @@ napi build [--options]
 ```
 
 ```typescript
-// Programmatically
+// Programaticamente
 import { NapiCli } from '@napi-rs/cli'
 
 new NapiCli().build({
-  // options
+  // opções
 })
 ```
 
 ## Opções
 
-| Opções            | Opções da CLI         | tipo     | obrigatório | padrão | descrição                                                                                                                 |
+| Opções | Opções da CLI | tipo | obrigatório | padrão | descrição |
 | ----------------- | --------------------- | -------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
-|                   | --help,-h             |          |          |         | obter ajuda                                                                                                               |
-| target            | --target,-t           | string   | false    |         | Compila para o target triple informado, repassado para <Green>cargo build --target</Green>                               |
-| cwd               | --cwd                 | string   | false    |         | O diretório de trabalho em que o comando napi será executado; todas as outras opções de caminho são relativas a ele       |
-| manifestPath      | --manifest-path       | string   | false    |         | Caminho para o <Rust>Cargo.toml</Rust>                                                                                   |
-| configPath        | --config-path,-c      | string   | false    |         | Caminho para o arquivo json de configuração do <Green>napi</Green>                                                       |
-| packageJsonPath   | --package-json-path   | string   | false    |         | Caminho para o <Green>package.json</Green>                                                                               |
-| targetDir         | --target-dir          | string   | false    |         | Diretório para todos os artefatos gerados do crate, veja <Green>cargo build --target-dir</Green>                         |
-| outputDir         | --output-dir,-o       | string   | false    |         | Caminho onde todos os arquivos compilados serão colocados. O padrão é a pasta do crate                                    |
-| platform          | --platform            | boolean  | false    |         | Adiciona o triple da plataforma ao arquivo de binding nodejs gerado, ex: <Green>[name].linux-x64-gnu.node</Green>        |
-| jsPackageName     | --js-package-name     | string   | false    |         | Nome do pacote no arquivo de binding js gerado. Só funciona com a flag <Green>--platform</Green>                         |
-| constEnum         | --const-enum          | boolean  | false    |         | Se deve gerar const enum para os bindings typescript                                                                      |
+|                   | --help,-h             |          |          |         | obter ajuda                                                                                                                  |
+| target            | --target,-t           | string   | false    |         | Compila para o target triple informado, repassado para <Green>cargo build --target</Green>                                             |
+| cwd               | --cwd                 | string   | false    |         | O diretório de trabalho em que o comando napi será executado; todas as outras opções de caminho são relativas a ele        |
+| manifestPath      | --manifest-path       | string   | false    |         | Caminho para <Rust>Cargo.toml</Rust>                                                                                          |
+| configPath        | --config-path,-c      | string   | false    |         | Caminho para o arquivo JSON de configuração do <Green>napi</Green>                                                                             |
+| packageJsonPath   | --package-json-path   | string   | false    |         | Caminho para <Green>package.json</Green>                                                                                      |
+| targetDir         | --target-dir          | string   | false    |         | Diretório para todos os artefatos gerados do crate; veja <Green>cargo build --target-dir</Green>                                 |
+| outputDir         | --output-dir,-o       | string   | false    |         | Caminho para onde todos os arquivos gerados serão gravados. O padrão é a pasta do crate                                               |
+| platform          | --platform            | boolean  | false    |         | Adiciona o triple da plataforma ao arquivo de binding Node.js gerado, por exemplo: <Green>[name].linux-x64-gnu.node</Green>                  |
+| jsPackageName     | --js-package-name     | string   | false    |         | Nome do pacote no arquivo de binding JS gerado. Só funciona com a flag <Green>--platform</Green>                               |
+| constEnum         | --const-enum          | boolean  | false    | true    | Gera declarações TypeScript <Green>`const enum`</Green>. Use <Green>--no-const-enum</Green> para emitir formas regulares/apenas de tipo.             |
+| runtimeStringEnum | --runtime-string-enum | boolean  | false    | false   | Com <Green>--no-const-enum</Green>, emite <Rust>#[napi(string_enum)]</Rust> como enums de runtime em vez de uniões de strings apenas de tipo. Não tem efeito enquanto const enums estiverem habilitados. |
 | jsBinding         | --js                  | string   | false    |         | Caminho e nome do arquivo de binding JS gerado. Só funciona com a flag <Green>--platform</Green>. Relativo a <Green>--output-dir</Green>. |
-| noJsBinding       | --no-js               | boolean  | false    |         | Se deve desabilitar a geração do arquivo de binding JS. Só funciona com a flag <Green>--platform</Green>.                |
-| dts               | --dts                 | string   | false    |         | Caminho e nome do arquivo de definição de tipos gerado. Relativo a <Green>--output-dir</Green>                           |
-| dtsHeader         | --dts-header          | string   | false    |         | Cabeçalho de arquivo customizado para o arquivo de definição de tipos gerado. Só funciona quando a feature <Green>typedef</Green> está habilitada. |
-| noDtsHeader       | --no-dts-header       | boolean  | false    |         | Se deve desabilitar o cabeçalho de arquivo padrão do arquivo de definição de tipos gerado. Só funciona quando a feature <Green>typedef</Green> está habilitada. |
-| dtsCache          | --dts-cache           | boolean  | false    | true    | Se deve habilitar o cache de dts, o padrão é true                                                                         |
-| esm               | --esm                 | boolean  | false    |         | Se deve emitir um arquivo de binding JS em formato ESM em vez de CJS. Só funciona com a flag <Green>--platform</Green>.  |
-| strip             | --strip,-s            | boolean  | false    |         | Se deve fazer strip da biblioteca para alcançar o tamanho mínimo de arquivo                                               |
-| release           | --release,-r          | boolean  | false    |         | Compila em modo release                                                                                                   |
-| verbose           | --verbose,-v          | boolean  | false    |         | Loga verbosamente o trace do comando de build                                                                             |
-| bin               | --bin                 | string   | false    |         | Compila apenas o binário especificado                                                                                     |
-| package           | --package,-p          | string   | false    |         | Compila a biblioteca especificada ou a que está no cwd                                                                    |
-| profile           | --profile             | string   | false    |         | Compila os artefatos com o profile especificado                                                                           |
-| crossCompile      | --cross-compile,-x    | boolean  | false    |         | [experimental] compila de forma cruzada trocando o subcomando do cargo: qualquer target de plataforma Windows a partir de um host não-Windows usa <Green>cargo-xwin</Green> (que suporta apenas triples MSVC; windows-gnu falha — veja abaixo); todos os outros targets usam <Green>cargo-zigbuild</Green> (requer <Green>zig</Green> no PATH). O subcomando selecionado é instalado automaticamente no primeiro uso. Conflita com <Green>--use-cross</Green> |
-| useCross          | --use-cross           | boolean  | false    |         | [experimental] <Warning>legada, não recomendada</Warning>: compila dentro de um contêiner Docker/Podman via <Green>cross</Green> (cross-rs); prefira <Green>--use-napi-cross</Green> ou <Green>--cross-compile</Green>. Requer que o <Green>cross</Green> seja instalado manualmente e um engine de contêineres em execução. Conflita com <Green>--cross-compile</Green> |
-| useNapiCross      | --use-napi-cross      | boolean  | false    |         | [experimental] baixa uma toolchain cruzada gcc do npm (<Green>@napi-rs/cross-toolchain</Green>) e define as variáveis de ambiente de linker/CC. Apenas targets Linux glibc: x64, arm64, armv7, ppc64le, s390x (glibc 2.17). O host precisa ser Linux x64/arm64; em caso de falha, ele avisa e faz fallback para o <Green>cargo</Green> puro |
-| watch             | --watch,-w            | boolean  | false    |         | observa as mudanças do crate e compila continuamente com o crate <Green>cargo-watch</Green>                              |
-| features          | --features,-F         | string[] | false    |         | Lista de features a ativar, separadas por espaço                                                                          |
-| allFeatures       | --all-features        | boolean  | false    |         | Ativa todas as features disponíveis                                                                                       |
-| noDefaultFeatures | --no-default-features | boolean  | false    |         | Não ativa a feature <Green>default</Green>                                                                               |
+| noJsBinding       | --no-js               | boolean  | false    |         | Define se deve desabilitar a geração do arquivo de binding JS. Só funciona com a flag <Green>--platform</Green>.                       |
+| dts               | --dts                 | string   | false    |         | Caminho e nome do arquivo de definição de tipos gerado. Relativo a <Green>--output-dir</Green>                                    |
+| dtsHeader         | --dts-header          | string   | false    |         | Cabeçalho personalizado para o arquivo de definição de tipos gerado. Só funciona quando a feature <Green>typedef</Green> estiver habilitada.                  |
+| noDtsHeader       | --no-dts-header       | boolean  | false    |         | Define se deve desabilitar o cabeçalho padrão do arquivo de definição de tipos gerado. Só funciona quando a feature <Green>typedef</Green> estiver habilitada. |
+| dtsCache          | --dts-cache           | boolean  | false    | true    | Define se deve habilitar o cache de dts; o padrão é true                                                                          |
+| esm               | --esm                 | boolean  | false    |         | Define se deve emitir um arquivo de binding JS em formato ESM em vez de CJS. Só funciona com a flag <Green>--platform</Green>.            |
+| pipe              | --pipe                | string   | false    |         | Encaminha cada arquivo de saída gerado para o comando informado, por exemplo <Green>napi build --pipe "npx prettier --write"</Green> |
+| strip             | --strip,-s            | boolean  | false    |         | Define se deve aplicar strip à biblioteca para alcançar o menor tamanho possível                                                                |
+| release           | --release,-r          | boolean  | false    |         | Compila em modo release                                                                                                     |
+| verbose           | --verbose,-v          | boolean  | false    |         | Registra verbosamente o trace do comando de build                                                                                         |
+| bin               | --bin                 | string   | false    |         | Compila apenas o binário especificado                                                                                           |
+| package           | --package,-p          | string   | false    |         | Compila a biblioteca especificada ou a que está em `cwd`                                                                             |
+| profile           | --profile             | string   | false    |         | Compila os artefatos com o profile especificado                                                                                |
+| crossCompile      | --cross-compile,-x    | boolean  | false    |         | [experimental] faz compilação cruzada trocando o subcomando do cargo: targets Windows MSVC a partir de um host não Windows usam <Green>cargo-xwin</Green>; targets Windows GNU são rejeitados. Todo target não Windows usa <Green>cargo-zigbuild</Green> (requer <Green>zig</Green> no PATH). O subcomando é instalado automaticamente no primeiro uso. Não combina com as outras flags de cross nem com <Green>--watch</Green>. |
+| useCross          | --use-cross           | boolean  | false    |         | [experimental] <Warning>legada, não recomendada</Warning>: compila dentro de um contêiner Docker/Podman via <Green>cross</Green> (cross-rs); prefira <Green>--use-napi-cross</Green> ou <Green>--cross-compile</Green>. Requer <Green>cross</Green> instalado manualmente e um engine de contêiner em execução. Não combina com as outras flags de cross nem com <Green>--watch</Green>. |
+| useNapiCross      | --use-napi-cross      | boolean  | false    |         | [experimental] baixa uma toolchain gcc cruzada do npm (<Green>@napi-rs/cross-toolchain</Green>) e define variáveis de ambiente de linker/CC. Apenas targets Linux glibc: x64, arm64, armv7, ppc64le, s390x (glibc 2.17), em host Linux x64/arm64. Host/target incompatível e falhas de configuração são erros. Não combina com as outras flags de cross. |
+| watch             | --watch,-w            | boolean  | false    |         | Observa as mudanças do crate e compila continuamente com o crate <Green>cargo-watch</Green>                                    |
+| features          | --features,-F         | string[] | false    |         | Lista de features a ativar, separadas por espaço                                                                              |
+| allFeatures       | --all-features        | boolean  | false    |         | Ativa todas as features disponíveis                                                                                           |
+| noDefaultFeatures | --no-default-features | boolean  | false    |         | Não ativa a feature <Green>default</Green>                                                                       |
 
 ## Flags de compilação cruzada
 
-`napi build` tem três flags de compilação cruzada: `--use-napi-cross`, `--cross-compile` (`-x`) e `--use-cross`. As três são experimentais: o comportamento pode mudar entre releases minor.
+`napi build` tem três flags de compilação cruzada: `--use-napi-cross`,
+`--cross-compile` (`-x`) e `--use-cross`. As três são experimentais: o
+comportamento pode mudar entre releases minor.
 
-As flags recomendadas são `--use-napi-cross` para targets Linux glibc em um host Linux x64/arm64, e `--cross-compile` (`-x`) para targets Windows MSVC a partir de um host não-Windows e para targets musl. `-x` também é o fallback para targets glibc, macOS e FreeBSD quando a configuração preferida não está disponível no seu host. Targets Android, WASI e OpenHarmony não precisam de nenhuma flag de cross: a CLI configura as toolchains deles a partir de variáveis de ambiente da plataforma. `--use-cross` é legada e não recomendada, e as builds baseadas em imagens Docker estão descontinuadas. Esta página é uma referência do que cada flag faz. Para escolher a flag certa para o seu host e target, veja [Compilação cruzada](../cross-build). Para especificidades de Alpine/musl, veja o [FAQ](../more/faq#compilar-para-linux-alpine).
+As flags recomendadas são `--use-napi-cross` para targets Linux glibc em um
+host Linux x64/arm64, e `--cross-compile` (`-x`) para targets Windows MSVC a
+partir de um host não Windows e para targets musl. `-x` também é o fallback
+para targets glibc, macOS e FreeBSD quando a configuração preferida não está
+disponível no seu host. Targets Android, WASI e OpenHarmony não precisam de
+nenhuma flag de cross: a CLI configura suas toolchains a partir de variáveis de
+ambiente da plataforma. `--use-cross` é legada e não recomendada, e as builds
+baseadas em imagens Docker estão obsoletas. Esta página é uma referência do
+que cada flag faz. Para escolher a flag certa para o seu host e target, veja
+[Cross build](../cross-build). Para detalhes de Alpine/musl, veja o
+[FAQ](../more/faq#build-for-linux-alpine).
 
 Cada flag muda exatamente uma coisa na build:
 
-| Flag                    | O que ela muda                                      | Comando resultante                                                               |
+| Flag                    | O que ela muda                                     | Comando resultante                                                                |
 | ----------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------- |
-| _(nenhuma)_             | nada                                                | `cargo build --target <triple>`                                                  |
-| `--use-cross`           | apenas o **binário**                                | `cross build --target <triple>`                                                  |
+| _(nenhuma)_                | nada                                             | `cargo build --target <triple>`                                                  |
+| `--use-cross`           | apenas o **binário**                                 | `cross build --target <triple>`                                                  |
 | `--cross-compile` / `-x` | apenas o **subcomando** (mais dois efeitos colaterais de env) | `cargo zigbuild --target <triple>` ou `cargo xwin build --target <triple>`       |
-| `--use-napi-cross`      | apenas **variáveis de ambiente** (linker, CC, sysroot) | continua `cargo build --target <triple>`                                         |
+| `--use-napi-cross`      | apenas **variáveis de ambiente** (linker, CC, sysroot)             | continua sendo `cargo build --target <triple>`                                            |
 
 ### Escolha exatamente uma
 
 <Callout type="warning">
-  Essas flags não se combinam. Escolha exatamente uma. Duas das combinações
-  imprimem um aviso dizendo que uma das flags será ignorada, mas os dois
-  mecanismos na verdade continuam ativos.
+  Essas flags não se combinam. Escolha exatamente uma. A CLI rejeita qualquer
+  par antes de ler metadata do Cargo, baixar toolchains ou instalar subcomandos.
 </Callout>
 
-| Combinação                             | O que realmente acontece                                                                                                                                          |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--use-cross` + `--cross-compile`      | Erro fatal: a CLI se recusa a compilar. (Ela ainda pode instalar automaticamente o cargo-xwin ou o cargo-zigbuild antes de dar o erro.)                           |
-| `--use-napi-cross` + `--use-cross`     | Imprime um aviso dizendo que `--use-cross` será ignorada — mas o `cross` roda mesmo assim, com caminhos do host injetados no ambiente dele. Não combine.          |
-| `--use-napi-cross` + `--cross-compile` | Imprime um aviso dizendo que `--cross-compile` será ignorada — mas o `cargo zigbuild` roda mesmo assim, com o env do napi-cross também definido (o linker do napi-cross vence o do zig). Não combine. |
-| `--watch` + `--cross-compile`          | Produz um comando inválido (`cargo watch ... -- cargo build zigbuild`). Não combine.                                                                              |
+| Combinação | Resultado |
+| --- | --- |
+| Quaisquer duas entre `--use-cross`, `--use-napi-cross` e `--cross-compile` | Erro fatal antes de efeitos colaterais da build. |
+| `--watch` + `--cross-compile` | Erro fatal; cargo-watch só aceita o fluxo Cargo simples. |
+| `--watch` + `--use-cross` | Erro fatal; cargo-watch só aceita o fluxo Cargo simples. |
 
 ### Pré-requisitos
 
-| Flag                     | Instalado para você                                                                                                                                                                                | Você precisa providenciar                                                                                                                                                                                                                                 |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `-x`, target não-Windows (cargo-zigbuild) | <Green>cargo-zigbuild</Green> via `cargo install` no primeiro uso (o que pode ser lento). | `zig` no `PATH`. A CLI nunca instala nem verifica o zig; o cargo-zigbuild dá erro se ele estiver faltando.                                                                                                                                                 |
-| `-x`, target Windows (cargo-xwin) | <Green>cargo-xwin</Green> via `cargo install`, no primeiro uso. Ele baixa por conta própria a CRT da Microsoft e o SDK do Windows (a licença da Microsoft se aplica). | `clang` (ex: `apt install clang` / `brew install llvm`) — o zig **não** é usado neste caminho. Para dependências que compilam assembly, também as ferramentas LLVM (`rustup component add llvm-tools`). A CLI não verifica nenhum desses.                  |
-| `--use-cross`            | Nada.                                                                                                                                                                                              | O binário `cross` (um binário ausente falha com `spawn cross ENOENT`), mais um Docker >= 20.10 ou Podman >= 3.4 em execução.                                                                                                                              |
-| `--use-napi-cross`       | A toolchain gcc, baixada automaticamente do npm (<Green>@napi-rs/cross-toolchain</Green>) e cacheada em `~/.napi-rs/cross-toolchain`.                                                              | `npm` no `PATH` e um host Linux x64 ou arm64. A CLI não verifica o host: no macOS ou no Windows a toolchain ainda é baixada sem erro, e o gcc de Linux então falha na hora do link. Qualquer falha aqui só imprime um aviso e a build continua como `cargo build` puro. |
+| Flag                     | Instalado para você                                                                                                                                                                                  | Você precisa fornecer                                                                                                                                                                                                                                          |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-x`, target não Windows (cargo-zigbuild) | <Green>cargo-zigbuild</Green> via `cargo install` no primeiro uso (o que pode ser lento). | `zig` no `PATH`. A CLI nunca instala nem verifica `zig`; `cargo-zigbuild` falha se ele estiver ausente.                                                                                                                                                             |
+| `-x`, target Windows (cargo-xwin) | <Green>cargo-xwin</Green> via `cargo install`, no primeiro uso. Ele baixa por conta própria a Microsoft CRT e o Windows SDK (a licença da Microsoft se aplica). | `clang` (por exemplo, `apt install clang` / `brew install llvm`) e `zig` **não** é usado neste caminho. Para dependências que compilam assembly, também as ferramentas LLVM (`rustup component add llvm-tools`). A CLI não verifica nenhum desses requisitos.                                                                                                                                                             |
+| `--use-cross`            | Nada.                                                                                                                                                                                              | O binário `cross` (um binário ausente falha com `spawn cross ENOENT`), além de um Docker >= 20.10 ou Podman >= 3.4 em execução.                                                                                                                                    |
+| `--use-napi-cross`       | A toolchain gcc, baixada automaticamente do npm (<Green>@napi-rs/cross-toolchain</Green>) e armazenada em cache em `~/.napi-rs/cross-toolchain`. | `npm` no `PATH` e um host Linux x64 ou arm64. A CLI valida host e target antes de efeitos colaterais; falhas de download, extração ou configuração interrompem a build. |
 
 ### Exemplos
 
-Um comando de copiar e colar por flag:
+Um comando pronto para copiar e colar por flag:
 
 ```sh
-# Linux glibc targets, from a Linux x64/arm64 host
+# Targets Linux glibc, a partir de um host Linux x64/arm64
 napi build --release --target aarch64-unknown-linux-gnu --use-napi-cross
 
-# Windows MSVC from a macOS/Linux host, musl, or the zigbuild fallback cases
+# Windows MSVC a partir de um host macOS/Linux, musl ou os casos de fallback com zigbuild
 napi build --release --target x86_64-unknown-linux-musl --cross-compile
 
-# Legacy container build (not recommended)
+# Build legada em contêiner (não recomendada)
 napi build --release --target x86_64-unknown-linux-gnu --use-cross
 ```
 
-## O que o `napi build` executa
+## O que `napi build` executa
 
-`napi build` é um wrapper em torno de um comando executado mais um conjunto de variáveis de ambiente. Esta seção detalha os dois.
+`napi build` é um wrapper em torno de um comando executado e de um conjunto de
+variáveis de ambiente. Esta seção detalha os dois.
 
 ### O comando
 
-| Modo                                                              | Comando executado                                                            |
+| Modo                                                             | Comando executado                                                            |
 | ----------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Sem flag de cross                                                 | `cargo build --target <triple>`                                              |
-| `--use-napi-cross`                                                | `cargo build --target <triple>` (apenas o env muda)                          |
-| `--use-cross`                                                     | `cross build --target <triple>` (mesmos argumentos, mesmo env calculado no host) |
-| `--cross-compile`, plataforma do target é Windows, host não é Windows | `cargo xwin build --target <triple>` (`XWIN_ARCH=x86` é definido para `i686`) |
-| `--cross-compile`, qualquer outro target                          | `cargo zigbuild --target <triple>`                                           |
-| `--cross-compile`, target é Windows, host é Windows               | avisa e então roda um `cargo build --target <triple>` puro                   |
+| Sem flag de cross                                                     | `cargo build --target <triple>`                                             |
+| `--use-napi-cross`                                                | `cargo build --target <triple>` (apenas o env muda)                      |
+| `--use-cross`                                                     | `cross build --target <triple>` (mesmos argumentos, mesmo env calculado no host)         |
+| `--cross-compile`, target é Windows MSVC e o host não é Windows | `cargo xwin build --target <triple>` (`XWIN_ARCH=x86` é definido para `i686`)    |
+| `--cross-compile`, qualquer outro target                               | `cargo zigbuild --target <triple>`                                          |
+| `--cross-compile`, target é Windows e o host é Windows             | emite um aviso e depois usa `cargo build --target <triple>`                           |
 
-`--cross-compile` escolhe o cargo-xwin pela **plataforma** do target: todo triple `*-windows-*` compilado a partir de um host não-Windows é roteado pelo cargo-xwin — incluindo `x86_64-pc-windows-gnu`, não só MSVC. Ser roteado não é o mesmo que ser suportado, porém: o cargo-xwin lida apenas com MSVC, então para windows-gnu ele não configura nada e a build falha na hora do link com ``error: linker `x86_64-w64-mingw32-gcc` not found``. Compile esse target sem `-x`, com uma toolchain mingw-w64 — veja a nota sobre windows-gnu em [Receitas por target](../cross-build#receitas-por-target). Todo target não-Windows passa pelo cargo-zigbuild — a CLI não mantém nenhuma lista de targets suportados, e usa o zigbuild mesmo quando o target coincide com o host.
+`--cross-compile` escolhe `cargo-xwin` pela **plataforma** do target, mas só
+aceita targets Windows MSVC em um host não Windows. Targets Windows GNU e
+gnullvm são rejeitados antes de efeitos colaterais porque cargo-xwin não fornece
+suas toolchains. Compile-os sem `-x`, usando mingw-w64 ou llvm-mingw,
+respectivamente; veja a observação sobre windows-gnu em [Recipes per
+target](../cross-build#recipes-per-target). Todo target não Windows passa por
+`cargo-zigbuild`: a CLI não mantém uma lista dos targets aceitos pelo zigbuild e
+o usa mesmo quando o target coincide com o host.
 
-Se a variável de ambiente `CARGO` estiver definida, a CLI executa esse binário no lugar — em todos os modos, inclusive `--use-cross`, onde ele substitui silenciosamente o `cross`.
+Se a variável de ambiente `CARGO` estiver definida, a CLI executará esse
+binário no lugar em todos os modos. Com `--use-cross` ou `--cross-compile`, ela
+avisa que o override substitui o binário exigido pelo mecanismo selecionado.
 
 ### RUSTFLAGS
 
-- Qualquer target `*musl*`: a CLI adiciona `-C target-feature=-crt-static` ao `RUSTFLAGS`.
-- `--strip`: a CLI adiciona `-C link-arg=-s`.
+- Qualquer target `*musl*`: a CLI acrescenta `-C target-feature=-crt-static` a `RUSTFLAGS`.
+- `--strip`: a CLI acrescenta `-C link-arg=-s`.
 
-Ambos são aplicados através da variável de ambiente `RUSTFLAGS` exportada. O Cargo dá precedência à variável de ambiente sobre os `rustflags` do `.cargo/config.toml`, então, uma vez que a CLI a exporta, os rustflags do seu `.cargo/config.toml` são ignorados. Se você precisa de flags extras, adicione-as à variável de ambiente `RUSTFLAGS`, não ao `.cargo/config.toml`.
+Ambos são aplicados por meio da variável de ambiente `RUSTFLAGS` exportada. O
+Cargo dá precedência à variável de ambiente sobre `rustflags` em
+`.cargo/config.toml`, então, depois que a CLI a exporta, os `rustflags` do seu
+`.cargo/config.toml` são ignorados. Se você precisar de flags extras,
+adicione-as à variável de ambiente `RUSTFLAGS`, não ao `.cargo/config.toml`.
 
 ### Compilador C
 
-Quando tanto `TARGET_CC` quanto `CC` estão definidas, `TARGET_CC` vence (desde `@napi-rs/cli` 3.0.0-alpha.92).
+Quando `TARGET_CC` e `CC` estão definidos ao mesmo tempo, `TARGET_CC`
+prevalece (desde `@napi-rs/cli` 3.0.0-alpha.92).
 
 ### Linkers padrão para targets menos comuns
 
-Sem `--cross-compile`, estes targets recebem `CARGO_TARGET_<T>_LINKER` apontando para um gcc cruzado que **você mesmo precisa instalar**. A CLI define a variável de ambiente sem verificá-la: se o binário estiver faltando, a build falha na hora do link. A sua própria variável de ambiente `CARGO_TARGET_<T>_LINKER` sempre vence. Com `--cross-compile` esta tabela é pulada — o link é delegado ao zig ou ao xwin.
+Sem `--cross-compile`, estes targets recebem `CARGO_TARGET_<T>_LINKER`
+apontando para um gcc cruzado que **você mesmo precisa instalar**. A CLI define
+a variável de ambiente sem verificá-la: se o binário estiver ausente, a build
+falha na etapa de link. Sua própria variável de ambiente
+`CARGO_TARGET_<T>_LINKER` sempre prevalece. Com `--cross-compile`, esta tabela
+é ignorada: o link é delegado ao zig ou ao xwin.
 
-| Target                          | Linker definido pela CLI        |
+| Target                          | Linker definido pela CLI          |
 | ------------------------------- | ------------------------------- |
 | `aarch64-unknown-linux-musl`    | `aarch64-linux-musl-gcc`        |
 | `loongarch64-unknown-linux-gnu` | `loongarch64-linux-gnu-gcc-13`  |
@@ -159,27 +191,72 @@ Sem `--cross-compile`, estes targets recebem `CARGO_TARGET_<T>_LINKER` apontando
 
 ### Android, WASI e OpenHarmony
 
-Esses targets recebem o env de toolchain da CLI sempre que a plataforma do target corresponde — com ou sem qualquer flag de cross — mas cada plataforma tem suas próprias condições:
+Esses targets recebem o env da toolchain da CLI sempre que a plataforma do
+target corresponde, com ou sem qualquer flag de cross, mas cada plataforma tem
+suas próprias condições:
 
-- **Android**: o env de linker/CC/AR é construído a partir de `ANDROID_NDK_LATEST_HOME`. Uma variável ausente só imprime um aviso — as variáveis de ambiente ainda são definidas, com caminhos quebrados, e a build falha na hora do link. Toda a configuração é pulada quando o próprio host é Android.
-- **WASI**: `EMNAPI_LINK_DIR` é sempre definida para o emnapi embutido (a CLI dá erro se as versões de `emnapi`, `@emnapi/core` e `@emnapi/runtime` divergirem). O env de linker/CC do wasi-sdk só é definido quando `WASI_SDK_PATH` está definida **e** o diretório existe — caso contrário, o link faz fallback para o padrão do cargo, o `rust-lld` que acompanha o rustup.
-- **OpenHarmony**: o env é construído a partir de `$OHOS_SDK_PATH/native`, ou de `OHOS_SDK_NATIVE` quando `OHOS_SDK_PATH` não está definida. Se nenhuma das duas estiver definida, a CLI avisa e não define nada.
+- **Android**: em um host que não seja Android, o env de linker/CC/AR é construído a partir de `ANDROID_NDK_LATEST_HOME`. Se a variável estiver ausente, a CLI para antes de executar o Cargo, sem exportar caminhos de ferramentas inválidos. Toda a configuração, inclusive a exigência da variável, é ignorada quando o próprio host é Android.
+- **WASI**: `EMNAPI_LINK_DIR` é sempre definido para o `emnapi` embutido (a CLI falha se as versões de `emnapi`, `@emnapi/core` e `@emnapi/runtime` divergirem). O env de linker/CC do wasi-sdk só é definido quando `WASI_SDK_PATH` está definido **e** o diretório existe; caso contrário, o link faz fallback para o padrão do cargo, o `rust-lld` que acompanha o rustup.
+- **OpenHarmony**: o env é construído a partir de `$OHOS_SDK_PATH/native`, ou de `OHOS_SDK_NATIVE` quando `OHOS_SDK_PATH` não está definido. Se nenhum dos dois estiver definido, a CLI avisa e não define nada.
 
 ## Passando flags para o Cargo
 
-Flags depois de `--` serão repassadas para o comando cargo build. Por exemplo:
+Flags depois de `--` serão repassadas ao comando `cargo build`. Por exemplo:
 
 ```sh
 napi build -- --locked
 ```
 
-Isso passará a flag `--locked` para o `cargo build`, resultando em `cargo build --locked`.
+Isso passará a flag `--locked` para `cargo build`, resultando em
+`cargo build --locked`.
 
-## Observações para `--js-package-name`
+## Compilar um executável Cargo
 
-Na seção de [aprofundamento](../introduction/getting-started#aprofundamento), recomendamos que você publique seu pacote sob um [`escopo npm`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/). Mas se você estiver migrando um pacote existente que não está sob um [`escopo npm`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) ou simplesmente não deseja que seu pacote esteja sob um [`escopo npm`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) , você pode acionar a [_deteção de spam do npm_](https://stackoverflow.com/questions/48668389/npm-publish-failed-with-package-name-triggered-spam-detection/54135900#54135900) ao publicar os pacotes de plataforma nativa. Como `snappy-darwin-x64` `snappy-darwin-arm64` etc...
+`--bin <name>` seleciona um target binário do Cargo, inclusive em um pacote que
+também contenha um `cdylib`. A CLI repassa `--bin <name>` ao Cargo e copia o
+executável resultante para `--output-dir` usando seu nome normal (`.exe` no
+Windows):
 
-Nesse caso, você pode publicar seus pacotes de plataforma sob um [`escopo npm`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) para evitar a [_deteção de spam do npm_](https://stackoverflow.com/questions/48668389/npm-publish-failed-with-package-name-triggered-spam-detection/54135900#54135900). E seus usuários não precisam se preocupar com os pacotes nativos da plataforma em `optionalDependencies`. Como [`snappy`](https://github.com/Brooooooklyn/snappy/), os usuários só precisam instalá-lo via `yarn add snappy`. Mas os pacotes nativos da plataforma estão sob o escopo `@napi-rs`:
+```toml filename="Cargo.toml"
+[[bin]]
+name = "my-tool"
+path = "src/main.rs"
+```
+
+```sh
+napi build --release --bin my-tool --output-dir dist
+./dist/my-tool
+```
+
+Esse modo não produz um addon `.node`, loader JavaScript nem declarações
+TypeScript; a geração de bindings após a build só é executada para um `cdylib`.
+
+Sem `--bin`, o `cdylib` do pacote continua sendo o target preferido do addon.
+Em um workspace, combine `--package <cargo-package>` e `--bin <name>` quando o
+binário não estiver no pacote selecionado por `--manifest-path`.
+
+## Observação sobre `--js-package-name` {#note-for---js-package-name}
+
+Na seção [Deep dive](../introduction/getting-started#deep-dive), recomendamos
+que você publique seu pacote sob um
+[`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/).
+Mas, se você estiver migrando um pacote existente que não está sob um
+[`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/)
+ou simplesmente não quiser que seu pacote fique sob um
+[`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/),
+você pode acionar a
+[_npm spam detection_](https://stackoverflow.com/questions/48668389/npm-publish-failed-with-package-name-triggered-spam-detection/54135900#54135900)
+ao publicar os pacotes nativos de plataforma, como `snappy-darwin-x64`,
+`snappy-darwin-arm64` etc.
+
+Nesse caso, você pode publicar seus pacotes de plataforma sob um
+[`npm scope`](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/)
+para evitar a
+[_npm spam detection_](https://stackoverflow.com/questions/48668389/npm-publish-failed-with-package-name-triggered-spam-detection/54135900#54135900).
+E seus usuários não precisam se preocupar com os pacotes nativos de plataforma
+em `optionalDependencies`. Em [`snappy`](https://github.com/Brooooooklyn/snappy/),
+por exemplo, os usuários só precisam instalá-lo com `yarn add snappy`. Mas os
+pacotes nativos de plataforma ficam sob o escopo `@napi-rs`:
 
 ```json
 {
@@ -203,19 +280,22 @@ Nesse caso, você pode publicar seus pacotes de plataforma sob um [`escopo npm`]
 }
 ```
 
-Para este caso, `@napi-rs/cli` fornece o `--js-package-name` para substituir a lógica de carregamento de pacotes gerados. Por exemplo, no `snappy`, temos um <Green>package.json</Green> assim:
+Para esse caso, `@napi-rs/cli` fornece `--js-package-name` para sobrescrever a
+lógica de carregamento dos pacotes gerados. Por exemplo, em `snappy` temos um
+<Green>package.json</Green> assim:
 
 ```json
 {
   "name": "snappy",
   "version": "7.0.0",
   "napi": {
-    "name": "snappy"
+    "binaryName": "snappy"
   }
 }
 ```
 
-Sem a flag `--js-package-name`, `@napi-rs/cli` vai gerar a binding JavaScript para carregar pacotes nativos da plataforma para você:
+Sem a flag `--js-package-name`, `@napi-rs/cli` gerará um binding JavaScript
+para carregar os pacotes nativos de plataforma para você:
 
 ```js {10,22} filename="index.js"
 switch (platform) {
@@ -253,7 +333,10 @@ switch (platform) {
 }
 ```
 
-Isso não é o que queremos. Então, construa com `--js-package-name` para substituir o `package name` no arquivo de binding JavaScript gerado: `napi build --release --platform --js-package-name @napi-rs/snappy`. Em seguida, o arquivo JavaScript gerado se tornará:
+Isso não é o que queremos. Então faça a build com `--js-package-name` para
+sobrescrever o `package name` no arquivo de binding JavaScript gerado:
+`napi build --release --platform --js-package-name @napi-rs/snappy`. Então, o
+arquivo JavaScript gerado passará a ser:
 
 ```js {10,22} filename="index.js"
 switch (platform) {

@@ -1,202 +1,133 @@
 ---
 title: 'Artifacts'
-description: napi artifacts command in @napi-rs/cli.
+description: Collect CI build artifacts into napi-rs platform packages.
 ---
 
 # Artifacts
 
-Copy artifacts from Github Actions into npm packages and ready to publish
+`napi artifacts` recursively finds built `.node` and `.wasm` files, validates
+their binary names and target suffixes, and copies them into the matching
+per-platform npm packages. Native files are also copied to the root package
+directory so the generated loader can resolve a local binding.
 
 ## Usage
 
 ```sh
-# CLI
 napi artifacts [--options]
 ```
 
-```typescript
-// Programatically
+```ts
 import { NapiCli } from '@napi-rs/cli'
 
-new NapiCli().artifacts({
-  // options
+await new NapiCli().artifacts({
+  outputDir: 'artifacts',
+  npmDir: 'npm',
 })
 ```
 
 ## Options
 
-| Options         | CLI Options         | type   | required | default        | description                                                                                                                                                 |
-| --------------- | ------------------- | ------ | -------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|                 | --help,-h           |        |          |                | get help                                                                                                                                                    |
-| cwd             | --cwd               | string | false    | process.cwd()  | The working directory of where napi command will be executed in, all other paths options are relative to this path                                          |
-| configPath      | --config-path,-c    | string | false    |                | Path to <span class="chalk-green">napi</span> config json file                                                                                              |
-| packageJsonPath | --package-json-path | string | false    | 'package.json' | Path to <span class="chalk-green">package.json</span>                                                                                                       |
-| outputDir       | --output-dir,-o,-d  | string | false    | './artifacts'  | Path to the folder where all built <span class="chalk-green">.node</span> files put, same as <span class="chalk-green">--output-dir</span> of build command |
-| npmDir          | --npm-dir           | string | false    | 'npm'          | Path to the folder where the npm packages put                                                                                                               |
-| buildOutputDir  | --build-output-dir  | string | false    |                | Path to the build output dir, only needed when targets contains <span class="chalk-green">wasm32-wasi-\*</span>                                             |
+| Option            | CLI syntax            | Type     | Required | Default                                         | Description                                                                                                                          |
+| ----------------- | --------------------- | -------- | :------: | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `cwd`             | `--cwd`               | `string` |    No    | `process.cwd()`                                 | Base directory for config, package, artifact-download, npm-package, and build-output paths.                                          |
+| `configPath`      | `--config-path,-c`    | `string` |    No    |                                                 | Standalone napi config JSON file.                                                                                                    |
+| `packageJsonPath` | `--package-json-path` | `string` |    No    | <span class="chalk-green">`package.json`</span> | Root package containing the napi config.                                                                                             |
+| `outputDir`       | `--output-dir,-o,-d`  | `string` |    No    | <span class="chalk-green">`./artifacts`</span>  | Directory recursively searched for downloaded `.node` and `.wasm` files. This corresponds to the artifact-download path, not `npm/`. |
+| `npmDir`          | `--npm-dir`           | `string` |    No    | <span class="chalk-green">`npm`</span>          | Directory containing the generated per-platform packages.                                                                            |
+| `buildOutputDir`  | `--build-output-dir`  | `string` |    No    | `cwd`                                           | Directory containing generated WASI JavaScript and worker files. Relative paths resolve from `--cwd`.                                |
 
-## How does it work
+There is no `--dist` option. Use `--output-dir` for downloaded build artifacts
+and `--npm-dir` for platform package destinations.
 
-Assume you have a project which builds native addon for these platform:
+## CI workflow
 
-- `x86_64-apple-darwin`
-- `x86_64-pc-windows-msvc`
-- `x86_64-unknown-linux-gnu`
-- `aarch64-apple-darwin`
-- `aarch64-linux-android`
-- `aarch64-unknown-linux-gnu`
-- `aarch64-unknown-linux-musl`
-- `aarch64-pc-windows-msvc`
-- `armv7-unknown-linux-gnueabihf`
-- `arm-linux-androideabi`
-- `x86_64-unknown-linux-musl`
-- `x86_64-unknown-freebsd`
-- `i686-pc-windows-msvc`
+Each build job should upload files named with the configured binary name and
+target ABI, for example:
 
-And you can download these artifacts via `actions/download-artifact`:
+```text
+cool.darwin-arm64.node
+cool.linux-x64-gnu.node
+cool.win32-x64-msvc.node
+cool.wasm32-wasi.wasm
+```
+
+In the collection job, create the package directories, download all artifacts,
+then collect them:
 
 ```yaml
-- name: Download all artifacts
-  uses: actions/download-artifact@v2
+- name: Create platform packages
+  run: yarn napi create-npm-dirs
+
+- name: Download all build artifacts
+  uses: actions/download-artifact@v8
   with:
-  	path: artifacts
+    path: artifacts
+
+- name: Move artifacts into packages
+  run: yarn napi artifacts --output-dir artifacts --npm-dir npm
 ```
 
-Now the directory structure will look like this:
+`actions/download-artifact` normally creates one nested directory per uploaded
+artifact. The CLI searches recursively, so both of these layouts work:
 
-**directory structure**
+```text
+artifacts/
+├── bindings-aarch64-apple-darwin/
+│   └── cool.darwin-arm64.node
+├── bindings-x86_64-unknown-linux-gnu/
+│   └── cool.linux-x64-gnu.node
+└── bindings-x86_64-pc-windows-msvc/
+    └── cool.win32-x64-msvc.node
+```
 
-```text {4,6,8,10,12,14,16,18,20,22,24,26,28}
+After collection:
+
+```text
 .
-├── artifacts
-|   ├── bindings-x86_64-apple-darwin
-|   │   └── blake.darwin-x64.node
-|   ├── bindings-x86_64-pc-windows-msvc
-|   │   └── blake.win32-x64.node
-|   ├── bindings-x86_64-unknown-linux-gnu
-|   │   └── blake.linux-x64-gnu.node
-|   ├── bindings-aarch64-apple-darwin
-|   │   └── blake.darwin-arm64.node
-|   ├── bindings-aarch64-linux-android
-|   │   └── blake.android-arm64.node
-|   ├── bindings-aarch64-unknown-linux-gnu
-|   │   └── blake.linux-arm64-gnu.node
-|   ├── bindings-aarch64-unknown-linux-musl
-|   │   └── blake.linux-arm64-musl.node
-|   ├── bindings-aarch64-pc-windows-msvc
-|   │   └── blake.win32-arm64-msvc.node
-|   ├── bindings-armv7-unknown-linux-gnueabihf
-|   │   └── blake.linux-arm-gnueabihf.node
-|   ├── bindings-arm-linux-androideabi
-|   │   └── blake.android-arm-eabi.node
-|   ├── bindings-x86_64-unknown-linux-musl
-|   │   └── blake.linux-x64-musl.node
-|   ├── bindings-x86_64-unknown-freebsd
-|   │   └── blake.freebsd-x64.node
-|   └── bindings-i686-pc-windows-msvc
-|       └── blake.win32-ia32-msvc.node
-├── npm
-│   ├── android-arm-eabi
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── android-arm64
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── darwin-arm64
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── darwin-x64
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── freebsd-x64
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── linux-arm-gnueabihf
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── linux-arm64-gnu
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── linux-arm64-musl
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── linux-x64-gnu
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── linux-x64-musl
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── win32-arm64-msvc
-│   │   ├── README.md
-│   │   └── package.json
-│   ├── win32-ia32-msvc
-│   │   ├── README.md
-│   │   └── package.json
-│   └── win32-x64-msvc
-│       ├── README.md
-│       └── package.json
+├── cool.darwin-arm64.node
+├── cool.linux-x64-gnu.node
+├── cool.win32-x64-msvc.node
+└── npm/
+    ├── darwin-arm64/cool.darwin-arm64.node
+    ├── linux-x64-gnu/cool.linux-x64-gnu.node
+    └── win32-x64-msvc/cool.win32-x64-msvc.node
 ```
 
-As you can see, we need to copy all <span class="chalk-green">`.node`</span> files into the `npm` directory so that we can publish them via the [`napi prepublish`](./pre-publish) command.
+## Matching rules
 
-`napi artifacts` command will do this job for you. Assume the <span class="chalk-green">`-d`</span> flag and <span class="chalk-green">`--dist`</span> flags are the default value, and the directory structure is the same as below. After `napi artifacts` command run, the directory structure will become:
+For each discovered file, the CLI:
 
-**directory structure**
+1. Splits the final dot-delimited suffix from the file name, such as
+   `linux-x64-gnu`.
+2. Requires the remaining base name to equal `napi.binaryName`. A mismatched
+   binary name is warned about and skipped.
+3. Finds the configured target package whose directory matches that platform
+   suffix. A file with no target package causes the command to fail, except
+   source binaries that are intentionally combined into a configured universal
+   binary.
+4. Writes the file into that target package and the root package directory.
 
-```text {6,10,14,18,22,26,30,34,38,42,46,50,54}
-.
-├── artifacts
-├── npm
-│   ├── android-arm-eabi
-│   │   ├── README.md
-|   |   ├── blake.android-arm-eabi.node
-│   │   └── package.json
-│   ├── android-arm64
-│   │   ├── README.md
-|   |   ├── blake.android-arm64.node
-│   │   └── package.json
-│   ├── darwin-arm64
-│   │   ├── README.md
-|   |   ├── blake.darwin-arm64.node
-│   │   └── package.json
-│   ├── darwin-x64
-│   │   ├── README.md
-|   |   ├── blake.darwin-x64.node
-│   │   └── package.json
-│   ├── freebsd-x64
-│   │   ├── README.md
-|   |   ├── blake.freebsd-x64.node
-│   │   └── package.json
-│   ├── linux-arm-gnueabihf
-│   │   ├── README.md
-|   |   ├── blake.linux-arm-gnueabihf.node
-│   │   └── package.json
-│   ├── linux-arm64-gnu
-│   │   ├── README.md
-|   |   ├── blake.linux-arm64-gnu.node
-│   │   └── package.json
-│   ├── linux-arm64-musl
-│   │   ├── README.md
-|   |   ├── blake.linux-arm64-musl.node
-│   │   └── package.json
-│   ├── linux-x64-gnu
-│   │   ├── README.md
-|   |   ├── blake.linux-x64-gnu.node
-│   │   └── package.json
-│   ├── linux-x64-musl
-│   │   ├── README.md
-|   |   ├── blake.linux-x64-musl.node
-│   │   └── package.json
-│   ├── win32-arm64-msvc
-│   │   ├── README.md
-|   |   ├── blake.win32-arm64-msvc.node
-│   │   └── package.json
-│   ├── win32-ia32-msvc
-│   │   ├── README.md
-|   |   ├── blake.win32-ia32-msvc.node
-│   │   └── package.json
-│   └── win32-x64-msvc
-│       ├── README.md
-|       ├── blake.win32-x64-msvc.node
-│       └── package.json
-```
+::: warning
+The command trusts the suffix in the file name. It does not inspect the
+native binary to prove its architecture, libc, minimum OS, or Node-API level.
+Test every artifact on the runtime it claims to support before publishing.
+
+:::
+
+## WASI artifacts
+
+When `napi.targets` contains a WASI target, `napi artifacts` also copies the
+generated support files into `npm/wasm32-wasi`:
+
+- `<binaryName>.wasi.cjs`
+- `<binaryName>.wasi-browser.js`
+- `wasi-worker.mjs`
+- `wasi-worker-browser.mjs`
+
+By default these files are read from `--cwd`. Pass `--build-output-dir` when the
+WASI build wrote them elsewhere; a relative value is resolved from `--cwd`.
+The downloaded `.wasm` file is still discovered under `--output-dir`.
+
+After collecting and verifying all targets, [`napi pre-publish`](./pre-publish)
+versions and publishes the platform packages. `napi pre-publish` does not copy
+missing artifacts for you.
