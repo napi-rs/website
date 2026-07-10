@@ -103,12 +103,19 @@ function parseName(value: QueryValue): string | undefined {
 
 function parseEngines(value: QueryValue): string {
   const raw = Array.isArray(value) ? value[0] : value
-  return raw == null ? '' : String(raw).trim()
+  // Cap the raw range so a giant `engines` param can't bloat the model and OOM
+  // the isolate when `card.ts` draws it verbatim. Real `engines.node` fields are
+  // < ~40 chars (the spec's longest example is 24); 64 is generous. Mirrors the
+  // `parseName` cap.
+  return raw == null ? '' : String(raw).trim().slice(0, 64)
 }
 
 function parseNodeTested(value: QueryValue): number[] {
   const out: number[] = []
   for (const token of toList(value)) {
+    // Only clean integers — `parseInt` would otherwise turn `22garbage` into 22
+    // and paint a bogus green major.
+    if (!/^\d+$/.test(token)) continue
     const n = Number.parseInt(token, 10)
     if (Number.isInteger(n) && n > 0 && n < 1000) out.push(n)
   }

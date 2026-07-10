@@ -191,3 +191,30 @@ describe('resolveMatrix — lzma fixture', () => {
     expect(android.chips).toHaveLength(2)
   })
 })
+
+describe('resolveMatrix — hardened params', () => {
+  it('caps an oversized engines param so it cannot bloat the model', () => {
+    const model = resolveMatrix({ engines: 'x'.repeat(5000) })
+    expect(model.node).not.toBeNull()
+    expect(model.node!.enginesRaw.length).toBeLessThanOrEqual(64)
+  })
+
+  it('leaves a normal engines value untouched', () => {
+    const model = resolveMatrix({ engines: '^22.20 || ^24.12 || >=25' })
+    expect(model.node?.enginesRaw).toBe('^22.20 || ^24.12 || >=25')
+  })
+
+  it('drops nodeTested tokens that are not clean integers', () => {
+    const model = resolveMatrix({
+      engines: '>=22',
+      nodeTested: '22garbage,24xyz,junk',
+    })
+    // `22garbage` must NOT survive as 22 — none of these paint a green major.
+    expect(model.node?.pills.some((p) => p.tested)).toBe(false)
+  })
+
+  it('a clean nodeTested integer still marks its major', () => {
+    const model = resolveMatrix({ engines: '>=22', nodeTested: '22' })
+    expect(model.node?.pills.find((p) => p.major === 22)?.tested).toBe(true)
+  })
+})

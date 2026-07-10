@@ -2,11 +2,15 @@
 // Derives the Node.js support card from a package's `engines.node` range. Uses
 // a deliberately tiny in-repo semver-range reader (no npm semver dependency):
 // it understands the handful of forms real engines fields use — `^maj.min`,
-// `^maj`, `>=maj[.min]`, bare `maj[.min]`, and `||` unions — which is all this
-// card needs. Never throws: unparseable input yields an empty, well-formed
-// model so the image service can degrade instead of erroring.
+// `~maj.min`, `>=maj[.min]` / `>maj[.min]`, an upper bound in the same part
+// (`>=22 <25`, `>=22 <=25`), hyphen ranges (`18 - 20`), bare `maj[.min]`, and
+// `||` unions. Each `||`-part is reduced to a covered-major interval, and the
+// union of those intervals drives the headline, pills, and excluded prose — so a
+// bounded range (`>=22 <25`) covers exactly its majors instead of running to the
+// latest. Never throws: unparseable input yields an empty, well-formed model so
+// the image service can degrade instead of erroring.
 
-// The current Node.js "latest" major — the ceiling every headline runs up to.
+// The current Node.js "latest" major — the ceiling an open-above range runs to.
 export const NODE_LATEST = 26
 
 export interface NodePill {
@@ -18,7 +22,8 @@ export interface NodePill {
 }
 
 export interface NodeModel {
-  // e.g. `v22.20 → v26` — floor version to the latest major.
+  // e.g. `v22.20 → v26` — floor version to the ceiling major (just `vFLOOR`
+  // when the floor and ceiling majors coincide, e.g. a lone `^18.12`).
   headline: string
   enginesRaw: string
   // Prose listing the gaps between floor and ceiling (fully-skipped majors and
@@ -27,79 +32,134 @@ export interface NodeModel {
   pills: NodePill[]
 }
 
-// One parsed clause of an engines range.
-type Clause =
-  // `^maj.min` / `^maj` / bare `maj.min`: covers ONLY `major`, from `minor` up.
-  | { kind: 'caret'; major: number; minor: number }
-  // `>=maj[.min]`: covers `major` from `minor`, and every higher major fully.
-  | { kind: 'gte'; major: number; minor: number }
-  // bare `maj`: covers ONLY `major`, fully.
-  | { kind: 'exact'; major: number }
+// One `||`-separated part reduced to major granularity: the contiguous majors
+// `low..high` it covers, with `low` entered at `lowMinor` (0 = the whole major).
+// A caret / bare version is a single major (`low === high`); `>=X` with no upper
+// bound is open above (`high` is the latest ceiling); an upper bound or a hyphen
+// range caps `high`.
+interface Part {
+  low: number
+  lowMinor: number
+  high: number
+}
 
-// Grab the first version-ish token in a clause; a trailing `<` upper bound (as
-// in `>=22 <25`) is ignored — a floor-only reader is enough for this card.
-const CLAUSE_RE = /(\^|~|>=|>)?\s*v?(\d+)(?:\.(\d+))?/
+// A single comparator token: an optional operator, a major, and an optional
+// minor. The regex is anchored at the start so leading junk (`junk22`) fails to
+// parse instead of matching a version mid-string.
+interface Comparator {
+  op: '^' | '~' | '>=' | '>' | '<=' | '<' | ''
+  major: number
+  minor: number | undefined
+}
 
-function parseClause(raw: string): Clause | null {
-  const m = CLAUSE_RE.exec(raw.trim())
+const COMPARATOR_RE = /^(\^|~|>=|>|<=|<)?\s*v?(\d+)(?:\.(\d+))?/
+
+function parseComparator(raw: string): Comparator | null {
+  const m = COMPARATOR_RE.exec(raw.trim())
   if (!m) return null
-  const op = m[1]
   const major = Number.parseInt(m[2], 10)
-  const minor = m[3] === undefined ? undefined : Number.parseInt(m[3], 10)
   if (!Number.isInteger(major)) return null
-  if (op === '^' || op === '~') {
-    return { kind: 'caret', major, minor: minor ?? 0 }
+  return {
+    op: (m[1] as Comparator['op']) ?? '',
+    major,
+    minor: m[3] === undefined ? undefined : Number.parseInt(m[3], 10),
   }
-  if (op === '>=' || op === '>') {
-    return { kind: 'gte', major, minor: minor ?? 0 }
-  }
-  // no operator: bare `maj.min` behaves like a caret (enter the major at that
-  // minor); bare `maj` is that whole major only.
-  return minor === undefined
-    ? { kind: 'exact', major }
-    : { kind: 'caret', major, minor }
 }
 
-function parseRange(engines: string): Clause[] {
-  const clauses: Clause[] = []
-  for (const part of engines.split('||')) {
-    const clause = parseClause(part)
-    if (clause) clauses.push(clause)
-  }
-  return clauses
+// An upper comparator (`<U` / `<=U`) → the highest major it (partially) covers.
+// `<25` / `<25.0` stop below 25 → 24; `<25.3` reaches into 25 → 25; `<=U` → U.
+function ceilingMajor(upper: Comparator): number {
+  if (upper.op === '<=') return upper.major
+  // `<U`: only `<U.m` with m>0 reaches into major U; `<U` / `<U.0` stop at U-1.
+  return upper.minor && upper.minor > 0 ? upper.major : upper.major - 1
 }
 
-// Lowest (major, minor) any clause admits — the overall support floor.
-function rangeFloor(clauses: Clause[]): { major: number; minor: number } {
+// Reduce one `||`-part to its covered-major interval, or null when unparseable.
+function parsePart(raw: string, latest: number): Part | null {
+  const part = raw.trim()
+  if (!part) return null
+
+  // Hyphen range `A - B` (spaces around the dash): contiguous majors A..B,
+  // entered at A's minor (both sides are bare versions, no operator).
+  const hyphen = part.split(/\s+-\s+/)
+  if (hyphen.length === 2) {
+    const lo = parseComparator(hyphen[0])
+    const hi = parseComparator(hyphen[1])
+    if (!lo || !hi || lo.op || hi.op || hi.major < lo.major) return null
+    return { low: lo.major, lowMinor: lo.minor ?? 0, high: hi.major }
+  }
+
+  // Otherwise one or two whitespace-separated comparators: a lower bound
+  // (`>=`/`>`) optionally paired with an upper bound (`<`/`<=`), or a
+  // self-contained pin (`^`/`~`/bare). Glue a comparator to its version first so
+  // the space-after-operator spelling (`>= 22 < 25`, valid semver) tokenizes the
+  // same as the tight form and still respects the upper bound.
+  let pin: Comparator | null = null
+  let lower: Comparator | null = null
+  let upper: Comparator | null = null
+  for (const token of part.replace(/([<>]=?)\s+/g, '$1').split(/\s+/)) {
+    const c = parseComparator(token)
+    if (!c) continue
+    if (c.op === '<' || c.op === '<=') upper = c
+    else if (c.op === '>=' || c.op === '>') lower = c
+    else pin ??= c // `^` / `~` / bare `maj[.min]`
+  }
+
+  if (lower) {
+    // `>=maj[.min]` open above, or capped by an upper bound in the same part.
+    const high = upper ? ceilingMajor(upper) : latest
+    if (high < lower.major) return null // e.g. `>=25 <20` — empty range.
+    return { low: lower.major, lowMinor: lower.minor ?? 0, high }
+  }
+  if (pin) {
+    // Caret/tilde/bare: a single major, entered at its minor (bare `maj` → 0).
+    return { low: pin.major, lowMinor: pin.minor ?? 0, high: pin.major }
+  }
+  // Upper-only or nothing parseable — no floor to anchor a card.
+  return null
+}
+
+function parseRange(engines: string, latest: number): Part[] {
+  const parts: Part[] = []
+  for (const seg of engines.split('||')) {
+    const part = parsePart(seg, latest)
+    if (part) parts.push(part)
+  }
+  return parts
+}
+
+// Lowest (major, minor) any part admits — the overall support floor.
+function rangeFloor(parts: Part[]): { major: number; minor: number } {
   let best = { major: Infinity, minor: Infinity }
-  for (const c of clauses) {
-    const minor = c.kind === 'exact' ? 0 : c.minor
+  for (const p of parts) {
     if (
-      c.major < best.major ||
-      (c.major === best.major && minor < best.minor)
+      p.low < best.major ||
+      (p.low === best.major && p.lowMinor < best.minor)
     ) {
-      best = { major: c.major, minor }
+      best = { major: p.low, minor: p.lowMinor }
     }
   }
   return best
 }
 
-// Does any clause admit `major`, and from which minor? floorMinor 0 means the
+// Highest covered major across all parts, never above `latest` (an open-above
+// part contributes `latest`).
+function rangeCeiling(parts: Part[], latest: number): number {
+  let ceil = -Infinity
+  for (const p of parts) ceil = Math.max(ceil, Math.min(p.high, latest))
+  return ceil
+}
+
+// Does any part admit `major`, and from which minor? floorMinor 0 means the
 // whole major is covered; `covered=false` means the major is fully excluded.
 function coverage(
-  clauses: Clause[],
+  parts: Part[],
   major: number,
 ): { covered: boolean; floorMinor: number } {
   let floorMinor = Infinity
-  for (const c of clauses) {
-    if (c.kind === 'caret' && c.major === major) {
-      floorMinor = Math.min(floorMinor, c.minor)
-    } else if (c.kind === 'exact' && c.major === major) {
-      floorMinor = 0
-    } else if (c.kind === 'gte') {
-      if (major > c.major) floorMinor = 0
-      else if (major === c.major) floorMinor = Math.min(floorMinor, c.minor)
-    }
+  for (const p of parts) {
+    if (major < p.low || major > p.high) continue
+    floorMinor = Math.min(floorMinor, major === p.low ? p.lowMinor : 0)
   }
   return floorMinor === Infinity
     ? { covered: false, floorMinor: 0 }
@@ -112,22 +172,23 @@ export function deriveNode(
   latest: number,
 ): NodeModel {
   const enginesRaw = (engines ?? '').trim()
-  const clauses = parseRange(enginesRaw)
+  const parts = parseRange(enginesRaw, latest)
   const tested = new Set((nodeTested ?? []).filter((n) => Number.isInteger(n)))
 
-  if (clauses.length === 0) {
+  if (parts.length === 0) {
     return { headline: `v${latest}`, enginesRaw, excluded: null, pills: [] }
   }
 
-  const floor = rangeFloor(clauses)
+  const floor = rangeFloor(parts)
+  const ceiling = rangeCeiling(parts, latest)
   const left =
     floor.minor > 0 ? `v${floor.major}.${floor.minor}` : `v${floor.major}`
-  const headline = floor.major < latest ? `${left} → v${latest}` : left
+  const headline = floor.major < ceiling ? `${left} → v${ceiling}` : left
 
   const pills: NodePill[] = []
   const gaps: string[] = []
-  for (let major = floor.major; major <= latest; major++) {
-    const cov = coverage(clauses, major)
+  for (let major = floor.major; major <= ceiling; major++) {
+    const cov = coverage(parts, major)
     if (!cov.covered) {
       // Fully-excluded major — only listed above the floor major (nothing
       // below the floor is ever "excluded", it is simply out of scope).

@@ -24,7 +24,7 @@ Ambos aceitam a mesma query e usam o tema claro por padrão.
 ## Monte sua URL
 
 Você raramente precisa escrever a query à mão. O construtor interativo em
-[/pt-BR/support-matrix](/pt-BR/support-matrix) permite escolher os triples por
+[/support-matrix](/support-matrix) permite escolher os triples por
 tier, informar seu intervalo de `engines` e copia os trechos prontos de
 `<picture>` e PNG para você. O restante desta página documenta o contrato que o
 construtor emite.
@@ -73,11 +73,11 @@ Para um README do GitHub, sirva um SVG claro e um escuro a partir de um único
 <picture>
   <source
     media="(prefers-color-scheme: dark)"
-    srcset="https://napi.rs/support-matrix.svg?theme=dark&tested=full&engines=^22.20 || ^24.12 || >=25"
+    srcset="https://napi.rs/support-matrix.svg?theme=dark&tested=full&engines=%5E22.20+%7C%7C+%5E24.12+%7C%7C+%3E%3D25"
   />
   <img
     alt="napi-rs support matrix"
-    src="https://napi.rs/support-matrix.svg?theme=light&tested=full&engines=^22.20 || ^24.12 || >=25"
+    src="https://napi.rs/support-matrix.svg?theme=light&tested=full&engines=%5E22.20+%7C%7C+%5E24.12+%7C%7C+%3E%3D25"
   />
 </picture>
 ```
@@ -85,7 +85,7 @@ Para um README do GitHub, sirva um SVG claro e um escuro a partir de um único
 npm e crates.io removem `<picture>`, então use um único PNG neles:
 
 ```md
-![support matrix](https://napi.rs/support-matrix.png?tested=full&engines=^22.20 || ^24.12 || >=25)
+![support matrix](https://napi.rs/support-matrix.png?tested=full&engines=%5E22.20+%7C%7C+%5E24.12+%7C%7C+%3E%3D25)
 ```
 
 ## Exemplo completo
@@ -98,7 +98,7 @@ quatro como não testados, acompanha Node 22 e 24 no CI e suporta Node
 https://napi.rs/support-matrix.svg?tested=full
   &nonblocking=powerpc64le-unknown-linux-gnu,s390x-unknown-linux-gnu
   &untested=riscv64gc-unknown-linux-gnu,aarch64-linux-android,arm-linux-androideabi,wasm32-wasi-preview1-threads
-  &engines=^22.20 || ^24.12 || >=25&nodeTested=22,24&name=@napi-rs/lzma
+  &engines=%5E22.20+%7C%7C+%5E24.12+%7C%7C+%3E%3D25&nodeTested=22,24&name=%40napi-rs%2Flzma
 ```
 
 Isso renderiza um título de Node `v22.20 → v26` com `23` e `24.0–24.11` marcados

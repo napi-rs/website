@@ -120,6 +120,22 @@ describe('renderSvg — structural invariants', () => {
     expect(svg.startsWith('<svg')).toBe(true)
     expect(imageCount(svg)).toBe(0)
   })
+
+  it('renders the package name — a named model differs from an unnamed one', async () => {
+    // satori vectorizes the title to <path>s, so the name never appears as a
+    // literal string; comparing an otherwise-identical named vs unnamed model is
+    // the only fake-proof way to prove `name` is consumed by the renderer.
+    const base: MatrixModel = {
+      node: null,
+      platforms: [],
+      browser: null,
+    }
+    const named = await render({ ...base, name: 'x' }, 'light')
+    const unnamed = await render(base, 'light')
+    expect(named).not.toBe(unnamed)
+    // The title adds vector geometry the bare panel does not have.
+    expect(named.length).toBeGreaterThan(unnamed.length)
+  })
 })
 
 describe('renderSvg — snapshots', () => {

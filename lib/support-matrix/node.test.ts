@@ -62,12 +62,45 @@ describe('deriveNode — simpler ranges', () => {
     ])
   })
 
-  it('a caret with a minor floor formats the floor as maj.min', () => {
+  it('a caret is bounded to its own major (no overstating to latest)', () => {
+    // `^18.12` == `>=18.12 <19`, so it covers ONLY major 18 — the headline stops
+    // at v18 and there is no `19..26` excluded run.
     const model = deriveNode('^18.12', [18], 26)
-    expect(model.headline).toBe('v18.12 → v26')
-    // 18 is the floor major; everything above it (19..26) is a gap
-    expect(model.excluded).toContain('19')
+    expect(model.headline).toBe('v18.12')
+    expect(model.excluded).toBeNull()
     expect(model.pills).toEqual([{ major: 18, floor: '18.12', tested: true }])
+  })
+})
+
+describe('deriveNode — upper bounds and hyphen ranges', () => {
+  it('`>=22 <25` covers 22..24 (upper bound excludes 25)', () => {
+    const model = deriveNode('>=22 <25', [], 26)
+    expect(model.headline).toBe('v22 → v24')
+    expect(model.pills.map((p) => p.major)).toEqual([22, 23, 24])
+    expect(model.pills.every((p) => p.floor === null)).toBe(true)
+    expect(model.excluded).toBeNull()
+  })
+
+  it('`>=22 <=25` includes 25 (inclusive upper bound)', () => {
+    const model = deriveNode('>=22 <=25', [], 26)
+    expect(model.headline).toBe('v22 → v25')
+    expect(model.pills.map((p) => p.major)).toEqual([22, 23, 24, 25])
+    expect(model.excluded).toBeNull()
+  })
+
+  it('`>=22 <25.3` reaches into 25 (partial major → included)', () => {
+    const model = deriveNode('>=22 <25.3', [], 26)
+    expect(model.headline).toBe('v22 → v25')
+    expect(model.pills.map((p) => p.major)).toEqual([22, 23, 24, 25])
+    expect(model.excluded).toBeNull()
+  })
+
+  it('a hyphen range `18 - 20` covers 18..20 inclusive', () => {
+    const model = deriveNode('18 - 20', [], 26)
+    expect(model.headline).toBe('v18 → v20')
+    expect(model.pills.map((p) => p.major)).toEqual([18, 19, 20])
+    expect(model.pills.every((p) => p.floor === null)).toBe(true)
+    expect(model.excluded).toBeNull()
   })
 })
 
@@ -82,5 +115,14 @@ describe('deriveNode — never throws on garbage', () => {
 
   it('handles empty string without throwing', () => {
     expect(() => deriveNode('', [], 26)).not.toThrow()
+  })
+
+  it('rejects a number buried in junk (anchored parse, not mid-string)', () => {
+    // `junk22junk` must NOT match the `22` mid-string → all clauses junk → the
+    // empty fallback (headline is just the latest major, no pills).
+    const model = deriveNode('junk22junk', [], 26)
+    expect(model.headline).toBe('v26')
+    expect(model.pills).toHaveLength(0)
+    expect(model.excluded).toBeNull()
   })
 })

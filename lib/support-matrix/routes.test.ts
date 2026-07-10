@@ -1,7 +1,9 @@
 // @vitest-environment node
-// routes/support-matrix.test.ts
+// lib/support-matrix/routes.test.ts
 // Covers the two public badge endpoints (routes/support-matrix.{svg,png}.ts) and
-// the shared query parser (lib/support-matrix/query.ts).
+// the shared query parser (lib/support-matrix/query.ts). Lives under lib/ (not
+// routes/) so Void's route scanner never registers it as a live `/…​.test` route
+// — the regression guard at the bottom asserts routes/ stays test-file free.
 //
 // The route files statically `import … from '*.wasm'`, which Void's build turns
 // into a real WebAssembly.Module at the edge. Vitest has no such transform (the
@@ -11,7 +13,7 @@
 // handlers runs the full parse → resolve → loadFonts → renderMatrix → Response
 // pipeline for real (satori + resvg included), not a re-implementation of it.
 import { describe, it, expect, vi, beforeAll } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 
 vi.mock('satori/yoga.wasm', () => ({
   default: new WebAssembly.Module(
@@ -24,11 +26,8 @@ vi.mock('@resvg/resvg-wasm/index_bg.wasm', () => ({
   ),
 }))
 
-import { parseSupportMatrixQuery } from '../lib/support-matrix/query.ts'
-import {
-  resolveMatrix,
-  type MatrixModel,
-} from '../lib/support-matrix/resolve.ts'
+import { parseSupportMatrixQuery } from './query.ts'
+import { resolveMatrix, type MatrixModel } from './resolve.ts'
 
 // --- a stub Hono context: query getter over URLSearchParams + an ASSETS binding
 // that reads public/fonts/* from disk (exactly what the worker's ASSETS does). ---
@@ -145,8 +144,8 @@ describe('GET /support-matrix.{svg,png}', () => {
   let pngGET: (c: unknown) => Promise<Response> | Response
 
   beforeAll(async () => {
-    svgGET = (await import('./support-matrix.svg.ts')).GET as never
-    pngGET = (await import('./support-matrix.png.ts')).GET as never
+    svgGET = (await import('../../routes/support-matrix.svg.ts')).GET as never
+    pngGET = (await import('../../routes/support-matrix.png.ts')).GET as never
   })
 
   it('svg handler is a function and returns image/svg+xml with a <svg> body', async () => {
@@ -179,5 +178,31 @@ describe('GET /support-matrix.{svg,png}', () => {
     expect(
       Array.from(new Uint8Array(await png.arrayBuffer()).slice(0, 8)),
     ).toEqual(PNG_MAGIC)
+  })
+})
+
+// --- Regression guard: no test/spec file may live under routes/. ---
+// Void's route scanner globs `routes/**/*.ts` (only `_`-prefixed and websocket
+// files are excluded — there is NO test/spec exclusion), so a `*.test.ts` there
+// registers a bogus `/…​.test` route with `methods: []` that throws at runtime
+// (no default export) and drags vitest + node:fs into the worker bundle. This
+// suite USED to live in routes/; keep it — and every future route test — under
+// lib/. Walks routes/ with node:fs (stable across Void's hashed internals).
+describe('routes/ contains no test files', () => {
+  function collectTsFiles(dir: string): string[] {
+    const out: string[] = []
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = `${dir}/${entry.name}`
+      if (entry.isDirectory()) out.push(...collectTsFiles(full))
+      else if (/\.tsx?$/.test(entry.name)) out.push(full)
+    }
+    return out
+  }
+
+  it('no routes/**/*.{test,spec}.{ts,tsx} — those would register as live routes', () => {
+    const offenders = collectTsFiles('routes').filter((f) =>
+      /\.(test|spec)\.tsx?$/.test(f),
+    )
+    expect(offenders).toEqual([])
   })
 })

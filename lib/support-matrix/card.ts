@@ -214,6 +214,18 @@ function subtitle(value: string, p: Palette): Node {
   })
 }
 
+// The package title above the whole card stack — a notch larger/bolder than a
+// card headline (fontSize 30 / weight 700) so the badge leads with the name.
+function titleRow(value: string, p: Palette): Node {
+  return text(value, {
+    color: p.text,
+    fontSize: 34,
+    fontWeight: 700,
+    lineHeight: 1.1,
+    marginBottom: 20,
+  })
+}
+
 // One card container (rounded, bordered). `first` drops the top margin.
 function card(children: Node[], p: Palette, first: boolean): Node {
   return {
@@ -411,6 +423,12 @@ export async function renderSvg(
   if (model.browser)
     push((first) => browserCard(model.browser!.chips, p, first))
 
+  // The title sits above the card stack when `name` is set; the first card keeps
+  // its collapsed top margin, so the title's own marginBottom is the only gap.
+  const children: Node[] = model.name
+    ? [titleRow(model.name, p), ...cards]
+    : cards
+
   const root: Node = {
     type: 'div',
     props: {
@@ -425,7 +443,7 @@ export async function renderSvg(
         paddingRight: 28,
         fontFamily: 'Manrope',
       },
-      children: cards,
+      children,
     },
   }
 

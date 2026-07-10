@@ -71,11 +71,11 @@ badge follows the reader's theme:
 <picture>
   <source
     media="(prefers-color-scheme: dark)"
-    srcset="https://napi.rs/support-matrix.svg?theme=dark&tested=full&engines=^22.20 || ^24.12 || >=25"
+    srcset="https://napi.rs/support-matrix.svg?theme=dark&tested=full&engines=%5E22.20+%7C%7C+%5E24.12+%7C%7C+%3E%3D25"
   />
   <img
     alt="napi-rs support matrix"
-    src="https://napi.rs/support-matrix.svg?theme=light&tested=full&engines=^22.20 || ^24.12 || >=25"
+    src="https://napi.rs/support-matrix.svg?theme=light&tested=full&engines=%5E22.20+%7C%7C+%5E24.12+%7C%7C+%3E%3D25"
   />
 </picture>
 ```
@@ -83,7 +83,7 @@ badge follows the reader's theme:
 npm and crates.io strip `<picture>`, so use a single PNG there:
 
 ```md
-![support matrix](https://napi.rs/support-matrix.png?tested=full&engines=^22.20 || ^24.12 || >=25)
+![support matrix](https://napi.rs/support-matrix.png?tested=full&engines=%5E22.20+%7C%7C+%5E24.12+%7C%7C+%3E%3D25)
 ```
 
 ## Worked example
@@ -95,7 +95,7 @@ untested, tracks Node 22 and 24 in CI, and supports Node `^22.20 || ^24.12 || >=
 https://napi.rs/support-matrix.svg?tested=full
   &nonblocking=powerpc64le-unknown-linux-gnu,s390x-unknown-linux-gnu
   &untested=riscv64gc-unknown-linux-gnu,aarch64-linux-android,arm-linux-androideabi,wasm32-wasi-preview1-threads
-  &engines=^22.20 || ^24.12 || >=25&nodeTested=22,24&name=@napi-rs/lzma
+  &engines=%5E22.20+%7C%7C+%5E24.12+%7C%7C+%3E%3D25&nodeTested=22,24&name=%40napi-rs%2Flzma
 ```
 
 That renders a `v22.20 → v26` Node headline with `23` and `24.0–24.11` marked
