@@ -243,7 +243,7 @@ Rust 代码 → napi-derive 宏 → 以换行分隔的 JSON → generateTypeDef(
 
 #### 平台特定的绑定名称
 
-`parseTriple()` 函数从目标三元组提取平台信息：
+`parseTriple()` 函数从 target triple 提取平台信息：
 
 ```ts
 const triple = parseTriple('x86_64-unknown-linux-gnu')
@@ -282,7 +282,7 @@ await copyFile(sourceLib, join(currentDir, bindingName))
 
 | 选项        | 类型     | 必填 | 默认值     | 描述                                                          |
 | ----------- | -------- | ---- | ---------- | ------------------------------------------------------------- |
-| platform    | boolean  | 否   | false      | 生成 JS 绑定所必需；添加平台三元组                            |
+| platform    | boolean  | 否   | false      | 生成 JS 绑定所必需；添加 platform triple                      |
 | noJsBinding | boolean  | 否   | false      | 跳过 JS 绑定生成                                              |
 | idents      | string[] | 是   |            | <span class="chalk-green">generateTypeDef</span> 导出的标识符 |
 | jsBinding   | string   | 否   | 'index.js' | JS 绑定的自定义文件名                                         |

@@ -16,7 +16,7 @@ description: 创建、构建并测试一个 napi-rs v3 包。
 - **Git**，因为 `napi new` 会通过 Git 下载并更新模板。
 - 开发平台上可用的链接器：macOS 使用 Xcode Command Line Tools，Windows 使用 MSVC Build Tools，Linux 使用常见的 C 构建工具。
 
-Node-API 让原生二进制文件与之后提供相同或更高 Node-API 级别的 Node.js 版本保持 ABI 兼容。这与 napi-rs CI 实际覆盖的 Node.js 版本和目标三元组并不是一回事。选择运行时或发布矩阵前，请阅读[支持与兼容性](/docs/more/support-compatibility)。
+Node-API 让原生二进制文件与之后提供相同或更高 Node-API 级别的 Node.js 版本保持 ABI 兼容。这与 napi-rs CI 实际覆盖的 Node.js 版本和 target triples 并不是一回事。选择运行时或发布矩阵前，请阅读[支持与兼容性](/docs/more/support-compatibility)。
 
 ## 创建项目
 
@@ -37,7 +37,7 @@ pnpm dlx @napi-rs/cli new cool --package-manager pnpm
 
 1. 写入 `package.json` 的包名。
 2. 用于生成 Cargo feature 和包 Node.js 引擎要求的最低 Node-API 级别。
-3. 从所选模板中保留的目标三元组。
+3. 从所选模板中保留的 target triple。
 4. 许可证。
 5. 是否生成 TypeScript 声明。
 6. 是否保留模板中的 GitHub Actions 工作流。

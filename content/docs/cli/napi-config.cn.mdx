@@ -53,7 +53,7 @@ import { Green } from '../../../components/chalk'
 | 字段 | 默认值 | 描述 |
 | --- | :---: | --- |
 | `binaryName` | <Green>`index`</Green> | 生成的原生与 WASI 文件的基本名称。平台构建会生成类似 <Green>`index.win32-x64-msvc.node`</Green> 的名称。 |
-| `targets` | <Green>`[]`</Green> | 项目打包并发布的目标三元组。这不是多目标构建命令。 |
+| `targets` | <Green>`[]`</Green> | 项目打包并发布的 target triples。这不是多目标构建命令。 |
 | `packageName` | 根 `package.json` 的 `name` | 生成的加载器和各平台包使用的包名。当 JavaScript 包名与根包元数据不同时可覆盖它；参见[构建：JS 包名](./build#关于---js-package-name-的说明)。 |
 | `npmClient` | <Green>`npm`</Green> | 发布各平台包等 npm 操作所使用的命令。 |
 | `constEnum` | <Green>`true`</Green> | 生成 TypeScript `const enum` 声明。当配置和 CLI 都未覆盖时，类型生成的实际默认值是 `true`。 |
@@ -97,13 +97,13 @@ CLI 仍会读取这些字段以保持兼容，但新项目不应再使用：
 
 v3 配置规范化器**不会**读取旧的嵌套字段 `napi.package.name`。请显式把该值移到 `napi.packageName`。
 
-## 什么是目标三元组？
+## 什么是 target triple？
 
-参见 [Rust 平台支持](https://doc.rust-lang.org/nightly/rustc/platform-support.html)和 [LLVM 交叉编译](https://clang.llvm.org/docs/CrossCompilation.html#target-triple)。目标三元组描述产物的架构、供应商、操作系统和 ABI，例如：
+参见 [Rust 平台支持](https://doc.rust-lang.org/nightly/rustc/platform-support.html)和 [LLVM 交叉编译](https://clang.llvm.org/docs/CrossCompilation.html#target-triple)。target triple 描述产物的架构、供应商、操作系统和 ABI，例如：
 
 ```text
 x86_64-unknown-linux-gnu
 └─ arch  └ vendor └ system └ ABI
 ```
 
-确定要发布哪些三元组后，请使用[交叉编译](../cross-build)为每个目标选择并验证构建机制。
+确定要发布哪些 target triple 后，请使用[交叉编译](../cross-build)为每个目标选择并验证构建机制。
