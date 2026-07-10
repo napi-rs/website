@@ -1,6 +1,6 @@
 ---
 title: 'External'
-description: External Object holds the native value in a JavaScript Object.
+description: Armazene um valor nativo em um objeto External do JavaScript.
 ---
 
 # External

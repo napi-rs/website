@@ -10,6 +10,19 @@ Rust 中没有类的概念。我们使用 `struct` 来表示 JavaScript 的 `Cla
 
 :::
 
+## 选择正确的 JavaScript 形状
+
+在结构体上使用 `#[napi]` 会创建具有原生身份和方法的 JavaScript 类。其他结构体属性会创建不同的值形状：
+
+| Rust 声明                                | JavaScript 表示                              | 适用场景                                  |
+| ---------------------------------------- | -------------------------------------------- | ----------------------------------------- |
+| `#[napi] struct`                         | 由一个 Rust 值支持的类实例                   | 有状态的原生对象、方法、身份和引用        |
+| `#[napi(object)] struct`                 | 与拥有所有权的 Rust 结构体相互复制的普通对象 | 记录、选项和配置形状                      |
+| `#[napi(transparent)] struct Wrapper(T)` | 内部值 `T`                                   | 不应添加 JavaScript 包装层的 Rust newtype |
+| `#[napi(array)]` 元组结构体              | JavaScript Array / TypeScript 元组           | 固定的位置数据                            |
+
+有关方向和所有权规则，请参阅[类型转换](/cn/docs/concepts/type-conversions)；有关完整的形状控制，请参阅 [`#[napi]` 属性](/cn/docs/concepts/napi-attributes)。
+
 ## `Constructor`
 
 ### 默认 `constructor`
@@ -36,6 +49,8 @@ export class AnimalWithDefaultConstructor {
 }
 ```
 
+每个公开字段都是 JavaScript API 的一部分：napi-rs 会生成 getter，并且在字段没有 `#[napi(readonly)]` 时生成 setter。因此，该字段的 Rust 类型必须支持所生成方向的 JavaScript 转换。仅供原生代码使用的状态应保持私有，就像下方自定义构造函数示例中的 `count` 一样。
+
 ### 自定义 `constructor`
 
 如果你想定义一个自定义的 `constructor`，你可以在结构体的 `impl` 块中的构造函数 `fn` 上面使用 `#[napi(constructor)]`。
@@ -43,19 +58,16 @@ export class AnimalWithDefaultConstructor {
 **lib.rs**
 
 ```rust
-// A complex struct which cannot be exposed to JavaScript directly.
-pub struct QueryEngine {}
-
 #[napi(js_name = "QueryEngine")]
 pub struct JsQueryEngine {
-  engine: QueryEngine,
+  count: u32,
 }
 
 #[napi]
 impl JsQueryEngine {
   #[napi(constructor)]
   pub fn new() -> Self {
-    JsQueryEngine { engine: QueryEngine::new() }
+    JsQueryEngine { count: 0 }
   }
 }
 ```
@@ -81,19 +93,16 @@ export class QueryEngine {
 **lib.rs**
 
 ```rust
-// 一个复杂的结构体，无法直接暴露给 JavaScript。
-pub struct QueryEngine {}
-
 #[napi(js_name = "QueryEngine")]
 pub struct JsQueryEngine {
-  engine: QueryEngine,
+  count: u32,
 }
 
 #[napi]
 impl JsQueryEngine {
   #[napi(factory)]
   pub fn with_initial_count(count: u32) -> Self {
-    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+    JsQueryEngine { count }
   }
 }
 ```
@@ -128,30 +137,27 @@ new QueryEngine() // Error: Class contains no `constructor`, cannot create it!
 **lib.rs**
 
 ```rust
-// A complex struct which cannot be exposed to JavaScript directly.
-pub struct QueryEngine {}
-
 #[napi(js_name = "QueryEngine")]
 pub struct JsQueryEngine {
-  engine: QueryEngine,
+  count: u32,
 }
 
 #[napi]
 impl JsQueryEngine {
   #[napi(factory)]
   pub fn with_initial_count(count: u32) -> Self {
-    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+    JsQueryEngine { count }
   }
 
   /// 类方法
   #[napi]
   pub async fn query(&self, query: String) -> napi::Result<String> {
-    self.engine.query(query).await
+    Ok(format!("{query}: {}", self.count))
   }
 
   #[napi]
   pub fn status(&self) -> napi::Result<u32> {
-    self.engine.status()
+    Ok(self.count)
   }
 }
 ```
@@ -162,8 +168,8 @@ impl JsQueryEngine {
 export class QueryEngine {
   static withInitialCount(count: number): QueryEngine
   constructor()
-  query(query: string) => Promise<string>
-  status() => number
+  query(query: string): Promise<string>
+  status(): number
 }
 ```
 
@@ -185,31 +191,28 @@ Rust 的 `fn` 必须是一个结构体方法，而不是一个关联函数。
 
 **lib.rs**
 
-```rust {22-25}
-// 一个复杂的结构体，无法直接暴露给 JavaScript。
-pub struct QueryEngine {}
-
+```rust
 #[napi(js_name = "QueryEngine")]
 pub struct JsQueryEngine {
-  engine: QueryEngine,
+  count: u32,
 }
 
 #[napi]
 impl JsQueryEngine {
   #[napi(factory)]
   pub fn with_initial_count(count: u32) -> Self {
-    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+    JsQueryEngine { count }
   }
 
   /// 类方法
   #[napi]
   pub async fn query(&self, query: String) -> napi::Result<String> {
-    self.engine.query(query).await
+    Ok(format!("{query}: {}", self.count))
   }
 
   #[napi(getter)]
   pub fn status(&self) -> napi::Result<u32> {
-    self.engine.status()
+    Ok(self.count)
   }
 }
 ```
@@ -231,36 +234,33 @@ Rust 的 `fn` 必须是一个结构体方法，而不是一个关联函数。
 
 **lib.rs**
 
-```rust {27-30}
-// 一个复杂的结构体，无法直接暴露给 JavaScript。
-pub struct QueryEngine {}
-
+```rust
 #[napi(js_name = "QueryEngine")]
 pub struct JsQueryEngine {
-  engine: QueryEngine,
+  count: u32,
 }
 
 #[napi]
 impl JsQueryEngine {
   #[napi(factory)]
   pub fn with_initial_count(count: u32) -> Self {
-    JsQueryEngine { engine: QueryEngine::with_initial_count(count) }
+    JsQueryEngine { count }
   }
 
   /// 类方法
   #[napi]
   pub async fn query(&self, query: String) -> napi::Result<String> {
-    self.engine.query(query).await
+    Ok(format!("{query}: {}", self.count))
   }
 
   #[napi(getter)]
   pub fn status(&self) -> napi::Result<u32> {
-    self.engine.status()
+    Ok(self.count)
   }
 
   #[napi(setter)]
   pub fn count(&mut self, count: u32) {
-    self.engine.count = count;
+    self.count = count;
   }
 }
 ```
@@ -278,17 +278,19 @@ export class QueryEngine {
 
 ## 类作为参数
 
-`Class` 与 [`Object`](./object) 不同， `Class` 可以有 Rust 方法和关联函数。`Class` 中的每个字段都可以在 JavaScript 中被修改。
+`Class` 与 [`Object`](./object) 不同。Rust 值由 JavaScript 实例包装，并由该环境的垃圾回收器管理。将实例传回 Rust 时，使用 `&T` 进行共享访问，或使用 `&mut T` 进行可变访问；该值不是从普通对象克隆而来的。
 
-因此，当您创建类时，该类的所有权实际上已转移到 JavaScript 端，它由 JavaScript GC 管理，您只能通过传递其 `reference` 将其传回。
+只有公开的结构体字段会成为 JavaScript 属性。它们默认可写，因为 napi-rs 会生成两种访问器；`#[napi(readonly)]` 会禁止生成 setter，`#[napi(skip)]` 会禁止生成两个访问器。私有字段仍然是原生实现细节。可写字段同时需要 `ToNapiValue` 和 `FromNapiValue`，只读字段只需要 `ToNapiValue`。请参阅[字段属性参考](/cn/docs/concepts/napi-attributes#fields)，其中也说明了 `#[napi(constructor)]` 结构体简写的限制。
 
 **lib.rs**
 
 ```rust {1,5}
+#[napi]
 pub fn accept_class(engine: &QueryEngine) {
   // ...
 }
 
+#[napi]
 pub fn accept_class_mut(engine: &mut QueryEngine) {
   // ...
 }
@@ -300,6 +302,8 @@ pub fn accept_class_mut(engine: &mut QueryEngine) {
 export function acceptClass(engine: QueryEngine): void
 export function acceptClassMut(engine: QueryEngine): void
 ```
+
+有关嵌套类实例、类实例数组和 `ClassInstance<T>`，请参阅[转换参考中的类章节](/cn/docs/concepts/type-conversions#objects-classes-and-custom-shapes)。
 
 ## 属性描述
 
@@ -351,7 +355,7 @@ qe.getNum = function () {} // TypeError: Cannot assign to read only property 'ge
 
 **lib.rs**
 
-```rust {4, 26}
+```rust
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
@@ -366,9 +370,23 @@ pub struct CustomFinalize {
 impl CustomFinalize {
   #[napi(constructor)]
   pub fn new(mut env: Env, width: u32, height: u32) -> Result<Self> {
-    let inner = vec![0; (width * height * 4) as usize];
-    let inner_size = inner.len();
-    env.adjust_external_memory(inner_size as i64)?;
+    let inner_size = u64::from(width)
+      .checked_mul(u64::from(height))
+      .and_then(|pixels| pixels.checked_mul(4))
+      .and_then(|bytes| usize::try_from(bytes).ok())
+      .ok_or_else(|| Error::new(Status::InvalidArg, "image dimensions are too large"))?;
+    let external_size = i64::try_from(inner_size)
+      .map_err(|_| Error::new(Status::InvalidArg, "image dimensions are too large"))?;
+
+    let mut inner = Vec::new();
+    inner.try_reserve_exact(inner_size).map_err(|err| {
+      Error::new(
+        Status::GenericFailure,
+        format!("failed to allocate image buffer: {err}"),
+      )
+    })?;
+    inner.resize(inner_size, 0);
+    env.adjust_external_memory(external_size)?;
     Ok(Self {
       width,
       height,
@@ -379,7 +397,9 @@ impl CustomFinalize {
 
 impl ObjectFinalize for CustomFinalize {
   fn finalize(self, mut env: Env) -> Result<()> {
-    env.adjust_external_memory(-(self.inner.len() as i64))?;
+    let external_size = i64::try_from(self.inner.len())
+      .map_err(|_| Error::new(Status::InvalidArg, "image buffer is too large"))?;
+    env.adjust_external_memory(-external_size)?;
     Ok(())
   }
 }
@@ -401,12 +421,12 @@ impl ObjectFinalize for CustomFinalize {
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
-#[napi]
+#[napi(constructor)]
 pub struct NativeClass {}
 
 #[napi]
-pub fn is_native_class_instance(env: Env, value: Unknown) -> Result<bool> {
-  NativeClass::instance_of(env, value)
+pub fn is_native_class_instance(env: &Env, value: Unknown) -> Result<bool> {
+  NativeClass::instance_of(env, &value)
 }
 ```
 

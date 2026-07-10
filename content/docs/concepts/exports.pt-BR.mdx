@@ -5,8 +5,6 @@ description: Controle como funções, classes e constantes de Rust são exportad
 
 # Exportações
 
-import { Callout } from 'nextra-theme-docs'
-
 <Callout type="info">
 Ao contrário da definição de módulos no Node.js, não precisamos registrar explicitamente as exportações como `module.exports.xxx = xxx`.
 
@@ -21,7 +19,7 @@ Exportar uma função é incrivelmente simples. Basta decorar uma função rust 
 
 ```rust filename="lib.rs"
 #[napi]
-fn sum(a: u32, b: u32) -> u32 {
+pub fn sum(a: f64, b: f64) -> f64 {
 	a + b
 }
 ```

@@ -1,6 +1,6 @@
 ---
 title: 'AsyncTask'
-description: Run a task in the libuv thread pool and abort it with AbortSignal.
+description: Execute uma tarefa no pool de threads do libuv e cancele-a com AbortSignal.
 ---
 
 # AsyncTask
@@ -49,7 +49,7 @@ chamá-lo de volta em JavaScript.
 
 :::
 
-Você pode usar a API de baixo nível `Env::spawn` para iniciar uma `Task` definida no pool de threads libuv. Veja um exemplo na [Referência](../compat-mode/concepts/ref).
+Você pode usar a API de baixo nível `Env::spawn` para iniciar uma `Task` definida no pool de threads libuv. Veja um exemplo na [Referência](/pt-BR/docs/concepts/reference).
 
 Além de `compute` e `resolve`, você também pode fornecer o método `reject` para fazer alguma limpeza quando a `Task` apresenta erro, como `unref` algum objeto:
 
@@ -79,7 +79,9 @@ impl Task for CountBufferLength {
 
   fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
     self.data.unref(env)?;
-    env.create_uint32(output as _)
+    let output = u32::try_from(output)
+      .map_err(|_| Error::new(Status::InvalidArg, "buffer length exceeds u32"))?;
+    env.create_uint32(output)
   }
 
   fn reject(&mut self, env: Env, err: Error) -> Result<Self::JsValue> {
@@ -117,7 +119,9 @@ impl Task for CountBufferLength {
   }
 
   fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-    env.create_uint32(output as _)
+    let output = u32::try_from(output)
+      .map_err(|_| Error::new(Status::InvalidArg, "buffer length exceeds u32"))?;
+    env.create_uint32(output)
   }
 
   fn finally(&mut self, env: Env) -> Result<()> {
@@ -150,7 +154,7 @@ fn async_fib(input: u32) -> AsyncTask<AsyncFib> {
 **index.d.ts**
 
 ```ts
-export function asyncFib(input: number) => Promise<number>
+export function asyncFib(input: number): Promise<number>
 ```
 
 ### Criar `AsyncTask` com `AbortSignal`
@@ -173,10 +177,12 @@ fn async_fib(input: u32, signal: AbortSignal) -> AsyncTask<AsyncFib> {
 **index.d.ts**
 
 ```ts
-export function asyncFib(input: number, signal: AbortSignal) => Promise<number>
+export function asyncFib(input: number, signal: AbortSignal): Promise<number>
 ```
 
-Se você chamar `AbortController.abort` no código JavaScript e a `AsyncTask` ainda não tiver sido iniciada, a `AsyncTask` será abortada imediatamente e rejeitada com `AbortError`.
+Se você chamar `AbortController.abort` antes que o libuv inicie a `AsyncTask`,
+o Node-API pode cancelar o trabalho enfileirado e a Promise rejeita com um erro
+cujo `name` é `AbortError`.
 
 **test.mjs**
 
@@ -217,7 +223,14 @@ export function asyncFib(
 ```
 
 ::: tip
-Caso a `AsyncTask` já tenha sido iniciada ou concluída, o
-`AbortController.abort` não terá efeito.
+Se `AsyncTask` já tiver iniciado, o Node-API não pode cancelar seu callback
+`compute`; se tiver concluído, o resultado da Promise já está definido. Os
+callbacks `AbortSignal::on_abort` registrados em Rust ainda executam quando o
+signal JavaScript dispara, mesmo quando é tarde demais para cancelar. O
+adaptador atual instala seu handler ao converter o argumento e não consulta
+`signal.aborted`, portanto passe um signal que ainda não tenha sido abortado.
+Ele também atribui `signal.onabort`, substituindo qualquer handler armazenado
+nessa propriedade; use `signal.addEventListener('abort', ...)` para listeners
+JavaScript independentes.
 
 :::

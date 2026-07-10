@@ -21,7 +21,7 @@ Exporting a function is incredibly simple. Just decorate a normal rust function 
 
 ```rust
 #[napi]
-pub fn sum(a: u32, b: u32) -> u32 {
+pub fn sum(a: f64, b: f64) -> f64 {
 	a + b
 }
 ```
@@ -90,7 +90,7 @@ use napi_derive::napi;
 
 #[napi(module_exports)]
 pub fn exports(mut export: Object) -> Result<()> {
-  let symbol = Symbol::for_desc("NAPI_RS_SYMBOL");
+  let symbol = Symbol::new("NAPI_RS_SYMBOL");
   export.set_named_property("NAPI_RS_SYMBOL", symbol)?;
   Ok(())
 }

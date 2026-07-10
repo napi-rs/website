@@ -2,11 +2,12 @@
 description: 创建、使用对象引用。
 ---
 
+import NodeLink from '../../../components/node-link'
+
 # `Reference` / `WeakReference`
 
 ## `Reference`
 
-In some scenarios, you may want to hold a reference to an `Object` created in `Rust`. For example:
 在某些场景下，您可能希望保存一个 `Rust` 创建的 `Object` 的引用，例如：
 
 ```rust {11} filename="lib.rs"
@@ -41,6 +42,7 @@ impl<'repo> Remote<'repo> {
 
 ```rust {37-42,45-48} filename="lib.rs"
 use napi::bindgen_prelude::*;
+use napi_derive::napi;
 
 pub struct Repository {
   dir: String,
@@ -150,7 +152,7 @@ impl CSSRuleList {
 #[napi]
 pub struct CSSStyleSheet {
   name: String,
-  inner: OwnedStyleSheet,
+  inner: Rc<RefCell<OwnedStyleSheet>>,
   rules: Option<Reference<CSSRuleList>>,
 }
 
@@ -158,7 +160,7 @@ pub struct CSSStyleSheet {
 impl CSSStyleSheet {
   #[napi(constructor)]
   pub fn new(name: String, rules: Vec<String>) -> Result<Self> {
-    let inner = OwnedStyleSheet { rules };
+    let inner = Rc::new(RefCell::new(OwnedStyleSheet { rules }));
     Ok(CSSStyleSheet {
       name,
       inner,
@@ -194,3 +196,174 @@ impl CSSStyleSheet {
 因为本例中 `CSSRuleList` 是由 `CSSStyleSheet` 创建的，所以 `CSSStyleSheet` 实例是对其创建的 `CSSRuleList` 实例的循环引用。
 
 `WeakReference` 不会增加原始对象的引用计数，因此如果原始对象被释放， `WeakReference` 的 `upgrade` 函数可能会返回 `None`。
+
+## JavaScript 值引用 {#javascript-value-reference}
+
+### `ObjectRef`
+
+<Callout type="warning">
+  一个拥有所有权的 `ObjectRef` 必须被返回给 JavaScript，或者通过 `unref`
+  消费掉。直接将其丢弃只会报告一次泄漏；在没有 `Env` 的情况下它无法删除
+  Node-API 引用，因此该对象仍然会被强引用。
+</Callout>
+
+在下面的示例中，我们在构造函数中创建 `ObjectRef`，并在之后的 `getOptions` 方法中使用它。
+
+```rust {14} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub struct NativeClass {
+  options: Option<ObjectRef>,
+}
+
+#[napi]
+impl NativeClass {
+  #[napi(constructor)]
+  pub fn new(options: Object) -> Result<Self> {
+    Ok(Self {
+      options: Some(options.create_ref()?),
+    })
+  }
+
+  #[napi]
+  pub fn get_options<'env>(&self, env: &'env Env) -> Result<Object<'env>> {
+    self
+      .options
+      .as_ref()
+      .ok_or_else(|| Error::from_reason("options were released"))?
+      .get_value(env)
+  }
+
+  #[napi]
+  pub fn release_options(&mut self, env: &Env) -> Result<()> {
+    if let Some(options) = self.options.take() {
+      options.unref(env)?;
+    }
+    Ok(())
+  }
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+```ts filename="index.ts"
+import { NativeClass } from './index.js'
+
+const nativeClass = new NativeClass({
+  name: 'John',
+  age: 30,
+})
+
+const options = nativeClass.getOptions() // { name: 'John', age: 30 }
+nativeClass.releaseOptions()
+```
+
+### `SymbolRef`
+
+<Callout type="warning">
+  一个拥有所有权的 `SymbolRef` 必须被返回给 JavaScript，或者通过 `unref`
+  消费掉。直接将其丢弃只会报告一次泄漏；在没有 `Env` 的情况下它无法删除
+  Node-API 引用，因此该 Symbol 仍然会被强引用。
+</Callout>
+
+`SymbolRef` 的 API 与 `ObjectRef` 基本相同。
+
+```rust filename="lib.rs"
+use napi::{SymbolRef, bindgen_prelude::*};
+use napi_derive::napi;
+
+#[napi]
+pub fn create_symbol_ref(env: &Env) -> Result<SymbolRef> {
+  Symbol::new("NAPI_RS_SYMBOL")
+    .into_js_symbol(env)?
+    .create_ref()
+}
+```
+
+### `FunctionRef`
+
+<Callout type="info">
+  `FunctionRef` 是 `Send + Sync` 的，但从中借出的 `Function` 与传给
+  `borrow_back` 的 `Env` 绑定。移动该引用并不会让它可以从任意线程调用
+  JavaScript；只能在允许使用该环境的线程上借出并调用它。
+</Callout>
+
+`FunctionRef` 可以直接在 `Function` 上创建。
+
+在下面的示例中，如果您试图在 `Promise.finally` 回调中调用 `Function`，将会遇到一个生命周期错误：
+
+```rust {15} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn promise_finally_callback(
+  mut promise: PromiseRaw<()>,
+  on_finally: Function<()>,
+) -> Result<()> {
+  // ❌ compile Error
+  // borrowed data escapes outside of function
+  // `on_finally` escapes the function body here
+  // lib.rs(7, 3): `on_finally` is a reference that is only valid in the function body
+  // lib.rs(7, 3): has type `napi::bindgen_prelude::Function<'1, ()>`
+  promise.finally(|env| {
+    on_finally.call(());
+    Ok(())
+  })?;
+  Ok(())
+}
+```
+
+您可以创建 `FunctionRef`，然后在之后从中借回 `Function`：
+
+```rust {11} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn promise_finally_callback(
+  mut promise: PromiseRaw<()>,
+  on_finally: Function<(), ()>,
+) -> Result<()> {
+  let on_finally_ref = on_finally.create_ref()?;
+  promise.finally(move |env| {
+    let on_finally = on_finally_ref.borrow_back(&env)?;
+    on_finally.call(())?;
+    Ok(())
+  })?;
+  Ok(())
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+```ts filename="index.ts"
+import { promiseFinallyCallback } from './index.js'
+
+promiseFinallyCallback(Promise.resolve(), () => {
+  console.log('finally')
+})
+```
+
+### `ExternalRef`
+
+<Callout type="info">
+  `ExternalRef` 不是 `Send` 的，因为它需要在创建 `ExternalRef` 的同一线程中被丢弃。
+</Callout>
+
+`ExternalRef` 持有指向由 <NodeLink href="https://nodejs.org/api/n-api.html#napi_create_external">`napi_create_external`</NodeLink> 函数所创建对象的 <NodeLink href="https://nodejs.org/api/n-api.html#napi_ref">`napi_ref`</NodeLink>。
+
+它与 `ObjectRef` API 基本相同：
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn create_external_ref(env: &Env, size: u32) -> Result<ExternalRef<u32>> {
+  let external = External::new(size).into_js_external(env)?;
+  external.create_ref()
+}
+```

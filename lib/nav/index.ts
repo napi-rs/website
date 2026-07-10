@@ -59,14 +59,18 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/introduction/getting-started',
             },
             {
-              title: 'A simple package',
+              title: 'Build your first package',
               path: 'docs/introduction/simple-package',
+            },
+            {
+              title: 'Manual setup',
+              path: 'docs/introduction/manual-setup',
             },
           ],
         },
         {
           group: 'concepts',
-          title: 'Concepts',
+          title: 'Concepts & reference',
           items: [
             {
               title: 'Exports',
@@ -81,8 +85,16 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/naming-conventions',
             },
             {
+              title: '#[napi] attributes',
+              path: 'docs/concepts/napi-attributes',
+            },
+            {
               title: 'Values',
               path: 'docs/concepts/values',
+            },
+            {
+              title: 'Type conversions',
+              path: 'docs/concepts/type-conversions',
             },
             {
               title: 'Class',
@@ -99,6 +111,10 @@ export const nav: Record<Locale, LocaleNav> = {
             {
               title: 'Function',
               path: 'docs/concepts/function',
+            },
+            {
+              title: 'Errors and panics',
+              path: 'docs/concepts/error-handling',
             },
             {
               title: 'ThreadsafeFunction',
@@ -133,6 +149,10 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/promise',
             },
             {
+              title: 'Iterators',
+              path: 'docs/concepts/iterators',
+            },
+            {
               title: 'Types Overwrite',
               path: 'docs/concepts/types-overwrite',
             },
@@ -149,6 +169,10 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/env',
             },
             {
+              title: 'Cargo features',
+              path: 'docs/concepts/cargo-features',
+            },
+            {
               title: 'WebAssembly',
               path: 'docs/concepts/webassembly',
             },
@@ -159,44 +183,44 @@ export const nav: Record<Locale, LocaleNav> = {
           title: 'CLI',
           items: [
             {
-              title: 'Programmatic API',
-              path: 'docs/cli/programmatic-api',
+              title: 'New project',
+              path: 'docs/cli/new',
+            },
+            {
+              title: 'Rename project',
+              path: 'docs/cli/rename',
             },
             {
               title: 'Build',
               path: 'docs/cli/build',
             },
             {
-              title: 'Artifacts',
-              path: 'docs/cli/artifacts',
-            },
-            {
-              title: 'Prepublish',
-              path: 'docs/cli/pre-publish',
-            },
-            {
               title: 'NAPI Config',
               path: 'docs/cli/napi-config',
             },
             {
-              title: 'Create Npm Dirs',
+              title: 'Programmatic API',
+              path: 'docs/cli/programmatic-api',
+            },
+            {
+              title: 'Create npm directories',
               path: 'docs/cli/create-npm-dirs',
             },
             {
-              title: 'New',
-              path: 'docs/cli/new',
-            },
-            {
-              title: 'Rename',
-              path: 'docs/cli/rename',
+              title: 'Artifacts',
+              path: 'docs/cli/artifacts',
             },
             {
               title: 'Universalize',
               path: 'docs/cli/universalize',
             },
             {
-              title: 'Version',
+              title: 'Version packages',
               path: 'docs/cli/version',
+            },
+            {
+              title: 'Prepublish',
+              path: 'docs/cli/pre-publish',
             },
           ],
         },
@@ -230,10 +254,30 @@ export const nav: Record<Locale, LocaleNav> = {
         },
         {
           group: 'more',
-          title: 'More',
+          title: 'Guides & help',
           items: [
             {
-              title: 'Frequently Asked Questions',
+              title: 'Support and compatibility',
+              path: 'docs/more/support-compatibility',
+            },
+            {
+              title: 'Testing and debugging',
+              path: 'docs/more/testing-debugging',
+            },
+            {
+              title: 'Async and concurrency guide',
+              path: 'docs/more/async-concurrency',
+            },
+            {
+              title: 'Bundlers and frameworks',
+              path: 'docs/more/integrations',
+            },
+            {
+              title: 'Troubleshooting',
+              path: 'docs/more/troubleshooting',
+            },
+            {
+              title: 'Cross-build FAQ',
               path: 'docs/more/faq',
             },
             {
@@ -315,25 +359,29 @@ export const nav: Record<Locale, LocaleNav> = {
           title: '介绍',
           items: [
             {
-              title: '起步',
+              title: '快速开始',
               path: 'docs/introduction/getting-started',
             },
             {
-              title: '编写发布一个简单的包',
+              title: '构建你的第一个包',
               path: 'docs/introduction/simple-package',
+            },
+            {
+              title: '手动配置',
+              path: 'docs/introduction/manual-setup',
             },
           ],
         },
         {
           group: 'concepts',
-          title: '概念',
+          title: '概念与参考',
           items: [
             {
               title: '导出',
               path: 'docs/concepts/exports',
             },
             {
-              title: 'Module Initialization',
+              title: '模块初始化',
               path: 'docs/concepts/module-init',
             },
             {
@@ -341,8 +389,16 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/naming-conventions',
             },
             {
+              title: '#[napi] 属性',
+              path: 'docs/concepts/napi-attributes',
+            },
+            {
               title: '值',
               path: 'docs/concepts/values',
+            },
+            {
+              title: '类型转换',
+              path: 'docs/concepts/type-conversions',
             },
             {
               title: '类',
@@ -361,6 +417,10 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/function',
             },
             {
+              title: '错误与 panic',
+              path: 'docs/concepts/error-handling',
+            },
+            {
               title: '线程安全函数',
               path: 'docs/concepts/threadsafe-function',
             },
@@ -369,11 +429,11 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/async-task',
             },
             {
-              title: '注入Env',
+              title: '注入 Env',
               path: 'docs/concepts/inject-env',
             },
             {
-              title: '注入This',
+              title: '注入 This',
               path: 'docs/concepts/inject-this',
             },
             {
@@ -385,7 +445,7 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/async-fn',
             },
             {
-              title: 'External',
+              title: '外部数据',
               path: 'docs/concepts/external',
             },
             {
@@ -393,20 +453,28 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/promise',
             },
             {
+              title: '迭代器',
+              path: 'docs/concepts/iterators',
+            },
+            {
               title: '重写类型',
               path: 'docs/concepts/types-overwrite',
             },
             {
-              title: 'Typed Array',
+              title: '类型化数组',
               path: 'docs/concepts/typed-array',
             },
             {
-              title: 'Understanding Lifetime',
+              title: '理解生命周期',
               path: 'docs/concepts/understanding-lifetime',
             },
             {
               title: 'Env',
               path: 'docs/concepts/env',
+            },
+            {
+              title: 'Cargo 特性',
+              path: 'docs/concepts/cargo-features',
             },
             {
               title: 'WebAssembly',
@@ -419,61 +487,61 @@ export const nav: Record<Locale, LocaleNav> = {
           title: 'CLI',
           items: [
             {
-              title: 'Programmatic API',
-              path: 'docs/cli/programmatic-api',
-            },
-            {
-              title: 'Build',
-              path: 'docs/cli/build',
-            },
-            {
-              title: 'Artifacts',
-              path: 'docs/cli/artifacts',
-            },
-            {
-              title: 'Prepublish',
-              path: 'docs/cli/pre-publish',
-            },
-            {
-              title: 'NAPI Config',
-              path: 'docs/cli/napi-config',
-            },
-            {
-              title: 'Create Npm Dirs',
-              path: 'docs/cli/create-npm-dirs',
-            },
-            {
-              title: 'New',
+              title: '新建项目',
               path: 'docs/cli/new',
             },
             {
-              title: 'Rename',
+              title: '重命名项目',
               path: 'docs/cli/rename',
             },
             {
-              title: 'Universalize',
+              title: '构建',
+              path: 'docs/cli/build',
+            },
+            {
+              title: 'NAPI 配置',
+              path: 'docs/cli/napi-config',
+            },
+            {
+              title: '编程式 API',
+              path: 'docs/cli/programmatic-api',
+            },
+            {
+              title: '创建 npm 目录',
+              path: 'docs/cli/create-npm-dirs',
+            },
+            {
+              title: '收集构建产物',
+              path: 'docs/cli/artifacts',
+            },
+            {
+              title: '合并通用二进制',
               path: 'docs/cli/universalize',
             },
             {
-              title: 'Version',
+              title: '更新包版本',
               path: 'docs/cli/version',
+            },
+            {
+              title: '发布前处理',
+              path: 'docs/cli/pre-publish',
             },
           ],
         },
         {
           group: 'deep-dive',
-          title: 'Deep dive',
+          title: '深入理解',
           items: [
             {
-              title: 'Native module',
+              title: '原生模块',
               path: 'docs/deep-dive/native-module',
             },
             {
-              title: 'History',
+              title: '历史',
               path: 'docs/deep-dive/history',
             },
             {
-              title: 'Release native packages',
+              title: '发布原生包',
               path: 'docs/deep-dive/release',
             },
           ],
@@ -490,14 +558,34 @@ export const nav: Record<Locale, LocaleNav> = {
         },
         {
           group: 'more',
-          title: 'More',
+          title: '指南与帮助',
           items: [
             {
-              title: 'Frequently Asked Questions',
+              title: '支持与兼容性',
+              path: 'docs/more/support-compatibility',
+            },
+            {
+              title: '测试与调试',
+              path: 'docs/more/testing-debugging',
+            },
+            {
+              title: '异步与并发指南',
+              path: 'docs/more/async-concurrency',
+            },
+            {
+              title: '打包工具与框架',
+              path: 'docs/more/integrations',
+            },
+            {
+              title: '故障排查',
+              path: 'docs/more/troubleshooting',
+            },
+            {
+              title: '交叉编译常见问题',
               path: 'docs/more/faq',
             },
             {
-              title: 'V2 to V3 Migration Guide',
+              title: 'V2 到 V3 迁移指南',
               path: 'docs/more/v2-v3-migration-guide',
             },
           ],
@@ -517,7 +605,7 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'blog/announce-v3',
             },
             {
-              title: 'Announce V2',
+              title: 'NAPI-RS v2 发布',
               path: 'blog/announce-v2',
             },
           ],
@@ -575,50 +663,66 @@ export const nav: Record<Locale, LocaleNav> = {
           title: 'Introdução',
           items: [
             {
-              title: 'Começando',
+              title: 'Primeiros passos',
               path: 'docs/introduction/getting-started',
             },
             {
-              title: 'Um pacote simples',
+              title: 'Crie seu primeiro pacote',
               path: 'docs/introduction/simple-package',
+            },
+            {
+              title: 'Configuração manual',
+              path: 'docs/introduction/manual-setup',
             },
           ],
         },
         {
           group: 'concepts',
-          title: 'Conceitos',
+          title: 'Conceitos e referência',
           items: [
             {
-              title: 'Exports',
+              title: 'Exportações',
               path: 'docs/concepts/exports',
             },
             {
-              title: 'Module Initialization',
+              title: 'Inicialização do módulo',
               path: 'docs/concepts/module-init',
             },
             {
-              title: 'Naming conventions',
+              title: 'Convenções de nomenclatura',
               path: 'docs/concepts/naming-conventions',
             },
             {
-              title: 'Values',
+              title: 'Atributos #[napi]',
+              path: 'docs/concepts/napi-attributes',
+            },
+            {
+              title: 'Valores',
               path: 'docs/concepts/values',
             },
             {
-              title: 'Class',
+              title: 'Conversões de tipos',
+              path: 'docs/concepts/type-conversions',
+            },
+            {
+              title: 'Classes',
               path: 'docs/concepts/class',
             },
             {
-              title: 'Enum',
+              title: 'Enums',
               path: 'docs/concepts/enum',
             },
             {
-              title: 'Object',
+              title: 'Objetos',
               path: 'docs/concepts/object',
             },
             {
-              title: 'Function',
+              title: 'Funções',
               path: 'docs/concepts/function',
+            },
+            {
+              title: 'Erros e panics',
+              path: 'docs/concepts/error-handling',
             },
             {
               title: 'ThreadsafeFunction',
@@ -629,15 +733,15 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/async-task',
             },
             {
-              title: 'Inject Env',
+              title: 'Injetar Env',
               path: 'docs/concepts/inject-env',
             },
             {
-              title: 'Inject This',
+              title: 'Injetar This',
               path: 'docs/concepts/inject-this',
             },
             {
-              title: 'Reference',
+              title: 'Referências',
               path: 'docs/concepts/reference',
             },
             {
@@ -653,6 +757,10 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/promise',
             },
             {
+              title: 'Iteradores',
+              path: 'docs/concepts/iterators',
+            },
+            {
               title: 'Sobrescrita de Tipos',
               path: 'docs/concepts/types-overwrite',
             },
@@ -661,12 +769,16 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/typed-array',
             },
             {
-              title: 'Understanding Lifetime',
+              title: 'Entendendo lifetimes',
               path: 'docs/concepts/understanding-lifetime',
             },
             {
               title: 'Env',
               path: 'docs/concepts/env',
+            },
+            {
+              title: 'Features do Cargo',
+              path: 'docs/concepts/cargo-features',
             },
             {
               title: 'WebAssembly',
@@ -679,44 +791,44 @@ export const nav: Record<Locale, LocaleNav> = {
           title: 'CLI',
           items: [
             {
-              title: 'Programmatic API',
-              path: 'docs/cli/programmatic-api',
-            },
-            {
-              title: 'Build',
-              path: 'docs/cli/build',
-            },
-            {
-              title: 'Artifacts',
-              path: 'docs/cli/artifacts',
-            },
-            {
-              title: 'Prepublish',
-              path: 'docs/cli/pre-publish',
-            },
-            {
-              title: 'NAPI Config',
-              path: 'docs/cli/napi-config',
-            },
-            {
-              title: 'Create Npm Dirs',
-              path: 'docs/cli/create-npm-dirs',
-            },
-            {
-              title: 'New',
+              title: 'Novo projeto',
               path: 'docs/cli/new',
             },
             {
-              title: 'Rename',
+              title: 'Renomear projeto',
               path: 'docs/cli/rename',
             },
             {
-              title: 'Universalize',
+              title: 'Compilação',
+              path: 'docs/cli/build',
+            },
+            {
+              title: 'Configuração NAPI',
+              path: 'docs/cli/napi-config',
+            },
+            {
+              title: 'API programática',
+              path: 'docs/cli/programmatic-api',
+            },
+            {
+              title: 'Criar diretórios npm',
+              path: 'docs/cli/create-npm-dirs',
+            },
+            {
+              title: 'Coletar artefatos',
+              path: 'docs/cli/artifacts',
+            },
+            {
+              title: 'Universalizar',
               path: 'docs/cli/universalize',
             },
             {
-              title: 'Version',
+              title: 'Versionar pacotes',
               path: 'docs/cli/version',
+            },
+            {
+              title: 'Pré-publicação',
+              path: 'docs/cli/pre-publish',
             },
           ],
         },
@@ -733,7 +845,7 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/deep-dive/history',
             },
             {
-              title: 'Release de pacotes nativos',
+              title: 'Publicação de pacotes nativos',
               path: 'docs/deep-dive/release',
             },
           ],
@@ -750,14 +862,34 @@ export const nav: Record<Locale, LocaleNav> = {
         },
         {
           group: 'more',
-          title: 'Mais',
+          title: 'Guias e ajuda',
           items: [
             {
-              title: 'Perguntas Frequentes',
+              title: 'Suporte e compatibilidade',
+              path: 'docs/more/support-compatibility',
+            },
+            {
+              title: 'Testes e depuração',
+              path: 'docs/more/testing-debugging',
+            },
+            {
+              title: 'Guia de async e concorrência',
+              path: 'docs/more/async-concurrency',
+            },
+            {
+              title: 'Bundlers e frameworks',
+              path: 'docs/more/integrations',
+            },
+            {
+              title: 'Solução de problemas',
+              path: 'docs/more/troubleshooting',
+            },
+            {
+              title: 'FAQ de compilação cruzada',
               path: 'docs/more/faq',
             },
             {
-              title: 'V2 to V3 Migration Guide',
+              title: 'Guia de migração da V2 para a V3',
               path: 'docs/more/v2-v3-migration-guide',
             },
           ],

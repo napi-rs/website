@@ -7,6 +7,8 @@ description: Conversions between Rust and JavaScript types.
 
 Conversions between Rust and JavaScript types.
 
+This page introduces common values. For the complete source-backed matrix—including conversion direction, ownership, Cargo features, `Option`, `Either`, collections, paths, functions, Promises, streams, and Node-API levels—see [Type conversions](/docs/concepts/type-conversions).
+
 ### Undefined
 
 Represent `undefined` in JavaScript.
@@ -29,7 +31,7 @@ pub fn log(n: u32) {
 **index.d.ts**
 
 ```ts
-export function getUndefined(): undefined
+export function getUndefined(): void
 export function log(n: number): void
 ```
 
@@ -61,6 +63,8 @@ export function getNull(): null
 export function getEnv(env: string): string | null
 ```
 
+`Option<T>` accepts `T`, `null`, or `undefined` as an argument, but returns `null` for `None`. In an `#[napi(object)]` field, the default representation is an optional property and `None` is omitted on output; `#[napi(use_nullable)]` instead makes it a required `T | null` property. See [`Option`, `null`, and `undefined`](/docs/concepts/type-conversions#option-null-and-undefined) for the full position-dependent mapping.
+
 ### Numbers
 
 JavaScript `Number` type with Rust Int/Float types: `u32`, `i32`, `i64`, `f64`.
@@ -72,7 +76,7 @@ For Rust types like `u64`, `u128`, `i128`, checkout [`BigInt`](#bigint) section.
 ```rust
 #[napi]
 pub fn sum(a: u32, b: i32) -> i64 {
-	(b + a as i32).into()
+	i64::from(a) + i64::from(b)
 }
 ```
 
@@ -132,8 +136,8 @@ pub fn with_buffer(buf: Buffer) {
 }
 
 #[napi]
-pub fn read_buffer(file: String) -> Buffer {
-	Buffer::from(std::fs::read(file).unwrap())
+pub fn read_buffer(file: String) -> Result<Buffer> {
+	Ok(std::fs::read(file)?.into())
 }
 ```
 
@@ -161,20 +165,21 @@ Every call of `Object.get("key")` is actually dispatched to node side including 
 
 ```rust
 #[napi]
-pub fn keys(obj: Object) -> Vec<String> {
-	Object::keys(&obj).unwrap()
+pub fn keys(obj: Object) -> Result<Vec<String>> {
+	Object::keys(&obj)
 }
 
 #[napi]
-pub fn log_string_field(obj: Object, field: String) {
-	println!("{}: {:?}", &field, obj.get::<String>::(field.as_ref()));
+pub fn log_string_field(obj: Object, field: String) -> Result<()> {
+	println!("{}: {:?}", &field, obj.get::<String>(&field)?);
+	Ok(())
 }
 
 #[napi]
-pub fn create_obj(env: Env) -> Object {
-	let mut obj = env.create_object().unwrap();
-	obj.set("test", 1).unwrap();
-	obj
+pub fn create_obj(env: &Env) -> Result<Object> {
+	let mut obj = Object::new(env)?;
+	obj.set("test", 1)?;
+	Ok(obj)
 }
 ```
 
@@ -182,7 +187,7 @@ pub fn create_obj(env: Env) -> Object {
 
 ```ts
 export function keys(obj: object): Array<string>
-export function logStringField(obj: object): void
+export function logStringField(obj: object, field: string): void
 export function createObj(): object
 ```
 
@@ -191,6 +196,8 @@ If you want **NAPI-RS** to convert objects from JavaScript with the same shape d
 **lib.rs**
 
 ```rust
+use std::collections::HashMap;
+
 /// #[napi(object)] requires all struct fields to be public
 #[napi(object)]
 pub struct PackageJson {
@@ -206,8 +213,13 @@ pub fn log_package_name(package_json: PackageJson) {
 }
 
 #[napi]
-pub fn read_package_json() -> PackageJson {
-	// ...
+pub fn example_package_json() -> PackageJson {
+	PackageJson {
+		name: "example".to_owned(),
+		version: "1.0.0".to_owned(),
+		dependencies: None,
+		dev_dependencies: None,
+	}
 }
 ```
 
@@ -217,11 +229,11 @@ pub fn read_package_json() -> PackageJson {
 export interface PackageJson {
   name: string
   version: string
-  dependencies: Record<string, string> | null
-  devDependencies: Record<string, string> | null
+  dependencies?: Record<string, string>
+  devDependencies?: Record<string, string>
 }
 export function logPackageName(packageJson: PackageJson): void
-export function readPackageJson(): PackageJson
+export function examplePackageJson(): PackageJson
 ```
 
 ::: warning
@@ -230,6 +242,8 @@ export function readPackageJson(): PackageJson
 The `#[napi(object)]` struct passed to a Rust `fn` is cloned from the **_JavaScript Object_**. Any mutation on it will not be reflected in the original **_JavaScript_** object.
 
 :::
+
+`#[napi(object)]` is an owned plain-object shape, not a class. Use `#[napi] struct` for native class identity and methods, `#[napi(transparent)]` for a Rust newtype with the inner JavaScript representation, or `#[napi(array)]` for a tuple-shaped array. See [Type conversions](/docs/concepts/type-conversions#objects-classes-and-custom-shapes).
 
 **lib.rs**
 
@@ -275,18 +289,19 @@ pub fn arr_len(arr: Array) -> u32 {
 }
 
 #[napi]
-pub fn get_tuple_array(env: Env) -> Array {
-  let mut arr = env.create_array(2).unwrap();
+pub fn get_tuple_array(env: &Env) -> Result<Array> {
+  let mut arr = env.create_array(2)?;
 
-  arr.insert(1).unwrap();
-  arr.insert("test").unwrap();
+  arr.insert(1)?;
+  arr.insert("test")?;
 
-  arr
+  Ok(arr)
 }
 
 #[napi]
-pub fn vec_len(nums: Vec<u32>) -> u32 {
-  u32::try_from(nums.len()).unwrap()
+pub fn vec_len(nums: Vec<u32>) -> Result<u32> {
+  u32::try_from(nums.len())
+    .map_err(|_| Error::new(Status::InvalidArg, "Array is too large"))
 }
 
 #[napi]
@@ -329,8 +344,18 @@ precision is lost.
 ```rust
 /// the return value of `get_u128` is (signed: bool, value: u128, lossless: bool)
 #[napi]
-pub fn bigint_add(a: BigInt, b: BigInt) -> u128 {
-  a.get_u128().1 + b.get_u128().1
+pub fn bigint_add(a: BigInt, b: BigInt) -> Result<u128> {
+  let (a_signed, a_value, a_lossless) = a.get_u128();
+  let (b_signed, b_value, b_lossless) = b.get_u128();
+  if a_signed || b_signed || !a_lossless || !b_lossless {
+    return Err(Error::new(
+      Status::InvalidArg,
+      "both values must be lossless, non-negative u128 integers",
+    ));
+  }
+  a_value.checked_add(b_value).ok_or_else(|| {
+    Error::new(Status::InvalidArg, "u128 addition overflowed")
+  })
 }
 
 #[napi]
@@ -342,8 +367,8 @@ pub fn create_big_int_i128() -> i128 {
 **index.d.ts**
 
 ```ts
-export function bigintAdd(a: BigInt, b: BigInt): BigInt
-export function createBigIntI128(): BigInt
+export function bigintAdd(a: bigint, b: bigint): bigint
+export function createBigIntI128(): bigint
 ```
 
 ### TypedArray
@@ -370,7 +395,7 @@ pub fn create_external_typed_array() -> Uint32Array {
 
 #[napi]
 pub fn mutate_typed_array(mut input: Float32Array) {
-  for item in input.as_mut() {
+  for item in unsafe { input.as_mut() } {
     *item *= 2.0;
   }
 }
@@ -390,5 +415,7 @@ export function mutateTypedArray(input: Float32Array): void
 import { convertU32Array, mutateTypedArray } from './index.js'
 
 convertU32Array(new Uint32Array([1, 2, 3, 4, 5])) // [1, 2, 3, 4, 5]
-mutateTypedArray(new Float32Array([1, 2, 3, 4, 5])) // Float32Array(5) [ 2, 4, 6, 8, 10 ]
+const values = new Float32Array([1, 2, 3, 4, 5])
+mutateTypedArray(values)
+console.log(values) // Float32Array(5) [ 2, 4, 6, 8, 10 ]
 ```

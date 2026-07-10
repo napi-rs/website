@@ -1,0 +1,35 @@
+---
+description: Comando napi universalize do @napi-rs/cli.
+---
+
+# Universalizar
+
+import { Green } from '../../../components/chalk'
+
+Combina os binários compilados em um único binário universal.
+
+## Uso
+
+```sh
+# CLI
+napi universalize [--options]
+```
+
+```typescript
+// Programaticamente
+import { NapiCli } from '@napi-rs/cli'
+
+new NapiCli().universalize({
+  // opções
+})
+```
+
+## Opções
+
+| Opção            | Opção da CLI        | Tipo   | Obrigatória | Padrão                         | Descrição                                                                                                              |
+| ---------------- | ------------------- | ------ | ----------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+|                  | --help,-h           |        |             |                                | Exibe a ajuda.                                                                                                         |
+| cwd              | --cwd               | string | false       | process.cwd()                  | Diretório de trabalho em que o comando napi será executado. Todos os demais caminhos relativos partem deste diretório. |
+| configPath       | --config-path,-c    | string | false       |                                | Caminho para o arquivo JSON de configuração <Green>napi</Green>.                                                       |
+| packageJsonPath  | --package-json-path | string | false       | <Green>package.json</Green>    | Caminho para o <Green>package.json</Green>.                                                                            |
+| outputDir        | --output-dir,-o     | string | false       | <Green>./</Green>              | Pasta que contém os arquivos <Green>.node</Green> compilados; deve ser a mesma usada em <Green>--output-dir</Green> no comando build. |

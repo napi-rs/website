@@ -1,165 +1,129 @@
 ---
-description: 学习如何开始开发 NAPI-RS
+title: '快速开始'
+description: 创建、构建并测试一个 napi-rs v3 包。
 ---
 
-# 起步
+# 快速开始
 
 import Video from '../../../public/assets/napi-rs-guide.mp4'
 
-## 从 `@napi-rs/cli` 开始
-
-> 这是推荐的方式。
+创建 napi-rs v3 包最快的方式是使用 `napi new`。它会复制持续维护的包模板，应用你的包名与目标平台选择，并可选地创建 GitHub Actions 工作流。
 
 <video controls style={{ width: '100%' }}>
   <source src={Video} type="video/mp4" />
   <track kind="captions" srcLang="en" />
 </video>
 
-### 安装 cli
+## 前置条件
 
-```bash
-yarn global add @napi-rs/cli
-# 或者
-npm install -g @napi-rs/cli
-# 或者
-pnpm add -g @napi-rs/cli
+- 当前 `@napi-rs/cli` 工具链**推荐在 Node 22 系列使用 Node.js 22.13 或更高版本，或者使用 Node.js 24+**。CLI 声明 `>=23.5.0 || ^22.13.0 || ^20.17.0`，与其交互式提示依赖一致。该构建期要求与生成插件的运行时要求彼此独立。参见[支持与兼容性](/cn/docs/more/support-compatibility#cli-与-rust-要求)。
+- **Rust 1.88 或更高版本**，包括 Cargo。推荐通过 [rustup](https://rustup.rs/) 安装 Rust。
+- **Git**，因为 `napi new` 会通过 Git 下载并更新模板。
+- 开发平台上可用的链接器：macOS 使用 Xcode Command Line Tools，Windows 使用 MSVC Build Tools，Linux 使用常见的 C 构建工具。
+
+Node-API 让原生二进制文件与之后提供相同或更高 Node-API 级别的 Node.js 版本保持 ABI 兼容。这与 napi-rs CI 实际覆盖的 Node.js 版本和 target triples 并不是一回事。选择运行时或发布矩阵前，请阅读[支持与兼容性](/cn/docs/more/support-compatibility)。
+
+## 创建项目
+
+无需全局安装 CLI。直接使用你偏好的包运行器执行：
+
+```sh
+# Yarn template (the default)
+npx @napi-rs/cli new cool
+
+# The same template through Yarn
+yarn dlx @napi-rs/cli new cool
+
+# pnpm template
+pnpm dlx @napi-rs/cli new cool --package-manager pnpm
 ```
 
-### 创建项目
+该命令默认以交互方式运行，会询问：
 
-```bash
-napi new
+1. 写入 `package.json` 的包名。
+2. 用于生成 Cargo feature 和包 Node.js 引擎要求的最低 Node-API 级别。
+3. 从所选模板中保留的 target triple。
+4. 许可证。
+5. 是否生成 TypeScript 声明。
+6. 是否保留模板中的 GitHub Actions 工作流。
+
+目前仅支持持续维护的 **Yarn** 和 **pnpm** 模板。模板会固定自身使用的包管理器版本，因此项目创建后请使用对应命令。如果希望无提示创建项目，请传入所有需要修改的值并添加 `--no-interactive`；参见 [`napi new`](/cn/docs/cli/new)。
+
+## 安装、构建与测试
+
+对于默认的 Yarn 模板：
+
+```sh
+cd cool
+yarn install
+yarn build
+yarn test
 ```
 
-#### Package name
+对于 pnpm 模板：
 
-`package.json` 中的 name 字段。
+```sh
+cd cool
+pnpm install
+pnpm build
+pnpm test
+```
 
-#### Choose targets you want to support
+本地构建只编译一个原生目标：默认是当前主机，除非传入 `--target`。构建会生成：
 
-你想要支持的平台。
+- `<binaryName>.<platform-arch-abi>.node`：原生插件。
+- `index.js`：生成的加载器。
+- `index.d.ts`：启用类型生成时创建的 TypeScript 声明。
 
-生成的 CI workflow 是把模板自带的 workflow 按你选择的平台过滤后的结果，因此只有模板本身带有 matrix 记录的目标才会出现构建任务：macOS（x64、arm64）、Windows MSVC（x64、x86、arm64）、Linux gnu 和 musl（x64、arm64）、armv7 gnueabihf、Android（arm64、armv7）、WASI 和 FreeBSD —— 其中大多数通过交叉编译构建，而不是在原生硬件上构建。
+生成项目中的重要源文件包括：
 
-其余可以接受的目标（OpenHarmony、`x86_64-pc-windows-gnu`、`armv7-unknown-linux-musleabihf`、loongarch64、riscv64gc、ppc64le、s390x）虽然可以在提示中选中，但 `napi new` 从不添加模板中不存在的任务。这些目标既不会进入生成的 workflow，也不会进入 `napi create-npm-dirs` 和发布流程所读取的脚手架 `napi.targets` 列表，因此它们既没有 CI 构建任务，也没有 npm 包。要发布其中的某个目标，请把它加入 napi 配置的 `targets`，运行 `napi create-npm-dirs`，并自行添加 CI matrix 记录 —— 完整步骤参见[向现有项目添加新目标](../cross-build#%E5%90%91%E7%8E%B0%E6%9C%89%E9%A1%B9%E7%9B%AE%E6%B7%BB%E5%8A%A0%E6%96%B0%E7%9B%AE%E6%A0%87)。[交叉编译](../cross-build)指南还介绍了生成的 CI 所使用的交叉编译标志。
+| 路径 | 用途 |
+| --- | --- |
+| `src/lib.rs` | 通过 `#[napi]` 导出的 Rust 函数、结构体和类 |
+| `Cargo.toml` | Rust crate 元数据和 napi-rs 依赖 |
+| `build.rs` | 必需的 napi-rs 构建设置 |
+| `package.json` | JavaScript 脚本、包元数据和 `napi` 配置 |
+| `.github/workflows/CI.yml` | 多目标构建、测试、产物与发布工作流 |
 
-#### Enable GitHub actions
+模板不会提交 `npm/`。各平台构建完成后，发布任务会通过 `napi create-npm-dirs` 创建各目标包目录。
 
-是否生成 GitHub actions 配置文件。
+继续阅读[一个简单的包](./simple-package)，修改 Rust API 并从 Node.js 调用它。
 
-### 深入
+## 深入了解 {#deep-dive}
 
-我们推荐你使用 [npm scope](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/) 来发布你的 npm 包， 因为 `@napi-rs/cli` 默认会将不同平台的后缀插入到你的包名后面用于发布不同平台的二进制包。
+### 生成的包如何分发
 
-比如你希望发布一个叫 `@cool/core` 的 npm 包, 支持 `macOS x64`, `Windows x64` 和 `Linux aarch64` 三个平台, `@napi-rs/cli` 会生成这些包用于发布:
-
-- `@cool/core` 只包含 `JavaScript` 代码, 它只在不同的平台上加载对应的二进制包。
-- `@cool/core-darwin-x64` 包含 `macOS x64` 平台的二进制文件。
-- `@cool/core-win32-x64` 包含 `Windows x64` 平台的二进制文件。
-- `@cool/core-linux-arm64-gnu` 包含 `Linux aarch64` 平台的二进制文件。
-
-在每个特定平台的 npm 包中, 它们的 `package.json` 定义了与平台对应的 `cpu` 和 `os` 字段:
+napi-rs 通常发布一个很小的根包，并为每个平台分别发布一个可选包。例如，`@cool/core` 可能依赖：
 
 ```json filename="package.json"
 {
-  "name": "@cool/core-darwin-x64",
-  "version": "1.0.0",
-  "os": ["darwin"],
-  "cpu": ["x64"]
-}
-```
-
-`@cool/core` 会将这些平台相关的二进制包作为 `optionalDependencies`:
-
-```json filename="package.json"
-{
-  "name": "@cool/core",
-  "version": "1.0.0",
   "optionalDependencies": {
-    "@cool/core-darwin-x64": "^1.0.0",
-    "@cool/core-win32-x64": "^1.0.0",
-    "@cool/core-linux-arm64": "^1.0.0"
+    "@cool/core-darwin-x64": "1.0.0",
+    "@cool/core-win32-x64-msvc": "1.0.0",
+    "@cool/core-linux-arm64-gnu": "1.0.0"
   }
 }
 ```
 
-`@cool/core` 中的 `index.js` 文件会有这样的加载逻辑:
+生成的 `index.js` 首先查找开发期间生成的本地插件。对于已安装的包，它会根据当前操作系统、CPU 和 Linux libc 加载对应的可选包。包管理器会利用平台包的 `os`、`cpu` 以及适用时的 `libc` 字段，避免安装不兼容的二进制文件。
 
-```js filename="index.js"
-const { existsSync, readFileSync } = require('fs')
-const { join } = require('path')
+推荐使用 [npm scope](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/)，因为每个受支持目标都需要一个不同的包名。
 
-const { platform, arch } = process
+`napi.targets` 数组描述项目要打包哪些目标；它**不会**让一次 `napi build` 调用编译所有目标。脚手架只能保留其模板中已有的构建任务。若要添加其他可接受目标，需要显式添加配置项、npm 目录和 CI 构建。参见[支持与兼容性](/cn/docs/more/support-compatibility)和[交叉编译](/cn/docs/cross-build)。
 
-let nativeBinding = null
-let localFileExisted = false
-let isMusl = false
-let loadError = null
-
-switch (platform) {
-  case 'darwin':
-    switch (arch) {
-      case 'x64':
-        localFileExisted = existsSync(join(__dirname, 'core.darwin-x64.node'))
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./core.darwin-x64.node')
-          } else {
-            nativeBinding = require('@cool/core-darwin-x64')
-          }
-        } catch (e) {
-          loadError = e
-        }
-        break
-      case 'arm64':
-        localFileExisted = existsSync(join(__dirname, 'core.darwin-arm64.node'))
-        try {
-          if (localFileExisted) {
-            nativeBinding = require('./core.darwin-arm64.node')
-          } else {
-            nativeBinding = require('@cool/core-darwin-arm64')
-          }
-        } catch (e) {
-          loadError = e
-        }
-        break
-      default:
-        throw new Error(`Unsupported architecture on macOS: ${arch}`)
-    }
-    break
-  // ...
-  default:
-    throw new Error(`Unsupported OS: ${platform}, architecture: ${arch}`)
-}
-
-if (!nativeBinding) {
-  if (loadError) {
-    throw loadError
-  }
-  throw new Error(`Failed to load native binding`)
-}
-
-const { plus100 } = nativeBinding
-
-module.exports.plus100 = plus100
-```
-
-这个自动生成的 `index.js` 文件会帮助你找到 **_合适的_** 二进制文件， 无论是在本地开发阶段还是在 npm 包被发布以后。 `index.js` 会处理以下两种情况:
-
-#### 你的包被安装到用户的 `node_modules` 中
-
-为了加载正确二进制文件，`index.js` 函数会尝试加载该平台下所有可能的包(在给定系统和 CPU 架构下可能存在多种可能的二进制包)，比如在 `Linux x64` 平台，`index.js` 会尝试加载 `@cool/core-linux-x64-gnu` 和 `@cool/core-linux-x64-musl`。 如果用户使用的是 `Ubuntu` `Debian` 等预装 `gnu libc` 的操作系统，则 `@cool/core-linux-x64-gnu` 这个包会被加载进来。而如果用户使用的是 `Alpine` 这种预装 `musl libc` 的操作系统，则 `@cool/core-linux-x64-musl` 会被加载进来。
-
-#### 本地开发
-
-使用 `napi new` 命令生成的项目中， package.json 中的 `build` 命令会在当前目录下生成一个动态链接文件，用于本地开发与调试。还是以 `Linux x64` 平台为例，`build` 命令会生成 `cool.linux-x64-musl.node` 或者 `cool.linux-x64-gnu.node` 文件，而 `index.js` 会帮你正确的加载这个文件。
-
-## 从 [GitHub template project](https://github.com/napi-rs/package-template) 开始
+## 直接从模板开始
 
 ![package-template](./package-template.png)
 
-1. 点击进入 [GitHub template project](https://github.com/napi-rs/package-template)
-2. 点击 **Use this template** 按钮。
-3. Clone 你的项目。
-4. 运行 `yarn install` 来安装依赖。
-5. 在项目目录内运行 `npx napi rename` 命令来重命名你的包。
+如果更喜欢 GitHub 的 **Use this template** 流程，请选择对应项目：
+
+- [Yarn 包模板](https://github.com/napi-rs/package-template)
+- [pnpm 包模板](https://github.com/napi-rs/package-template-pnpm)
+
+克隆后，安装依赖，并在以自己的包名发布之前，通过所选包管理器运行 `napi rename`。
+
+## 后续阅读
+
+- [`napi new`](/cn/docs/cli/new)：查看所有脚手架选项。
+- [构建](/cn/docs/cli/build)和[交叉编译](/cn/docs/cross-build)：了解其他目标。
+- [发布原生包](/cn/docs/deep-dive/release)：在向 npm 发布任何内容前阅读。

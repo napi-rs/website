@@ -1,0 +1,229 @@
+---
+title: '#[napi] attributes'
+description: Source-backed reference for every public napi-derive attribute.
+---
+
+# `#[napi]` attributes
+
+The `#[napi]` macro exports Rust items and controls their JavaScript runtime behavior and generated TypeScript declarations. This page covers every public option accepted by `napi-derive` v3, including the two context-specific options parsed on parameters and enum variants.
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi(js_name = "addOne", strict)]
+pub fn add_one(value: u32) -> u32 {
+  value + 1
+}
+```
+
+<Callout type="info">
+  Runtime conversion and TypeScript generation are separate. Options beginning
+  with `ts_`, plus `skip_typescript`, change only the declaration emitted by
+  `napi-derive`'s default `type-def` feature. They do not add runtime validation
+  or conversion.
+</Callout>
+
+## Supported targets
+
+In the tables below:
+
+- **Function** means an exported free function.
+- **Method** includes instance methods, static methods, factories, constructors, getters, and setters where the option makes sense.
+- **Class** means a struct exported with class identity. An `object`, `array`, or `transparent` struct is a value shape instead.
+- **Field** means a struct field or a field of a structured enum variant.
+
+With the default `napi-derive/strict` feature, an option accepted by the parser but unused on that kind of item is a compile error. Prefer the combinations documented here rather than relying on behavior when `strict` is disabled.
+
+## Naming and exports
+
+| Option | Valid target | Runtime effect | TypeScript effect | Feature / status |
+| --- | --- | --- | --- | --- |
+| `js_name = "name"` | Function, method, struct, enum, const, type alias, field, module | Replaces the default camelCase function/member name or PascalCase type name. On a `mod`, names the namespace object. A type alias has no runtime export. | Uses the same exported name; on a type alias, this only renames the declaration. | Supported |
+| `namespace = "name"` | Function, struct, impl, enum, const, type alias | Registers the item under `exports.name`. Apply the same namespace to a class and its `impl` blocks. A type alias has no runtime registration. | Places the declaration in the same generated namespace; on a type alias, this is the only effect. | Supported |
+| `module_exports` | Free function only | Runs the function during module initialization with the module `exports` object. | No function declaration is emitted. | Supported |
+| `no_export` | Free function only | Generates the Node-API callback wrapper without registering the function on `exports`. This is useful when passing the generated `*_c_callback` to a low-level API. | No declaration is emitted. | Supported |
+
+An inline Rust module can be turned into a JavaScript namespace. Only children that also carry `#[napi]` are exported, and nested napi modules are not supported.
+
+```rust filename="lib.rs"
+#[napi(js_name = "math")]
+mod arithmetic {
+  #[napi]
+  pub fn add(a: u32, b: u32) -> u32 {
+    a + b
+  }
+}
+```
+
+```ts filename="index.d.ts"
+export namespace math {
+  export function add(a: number, b: number): number
+}
+```
+
+### `module_exports`
+
+The callback must be a non-generic free function. It can accept only `Env`, `Object`, or references to them, and it can return only `()` or `Result<()>`. It cannot be combined with `constructor`, `factory`, `getter`, `setter`, `js_name`, `strict`, `return_if_invalid`, or `no_export`.
+
+```rust filename="lib.rs"
+#[napi(module_exports)]
+pub fn initialize(mut exports: Object) -> Result<()> {
+  exports.set("build", "release")?;
+  Ok(())
+}
+```
+
+For initialization that does not need the exports object, see [Module initialization](/docs/concepts/module-init).
+
+## Functions and methods
+
+| Option | Valid target | Runtime effect | TypeScript effect | Feature / status |
+| --- | --- | --- | --- | --- |
+| `constructor` | Method returning `Self`/`Result<Self>`; class struct shorthand | Exposes a JavaScript constructor. Constructors cannot be async. On a struct, public fields become constructor arguments. | Emits `constructor(...)`. | Supported |
+| `factory` | Associated method returning `Self`/`Result<Self>` | Exposes a static factory that constructs the class. It may be async. | Emits a static method returning the class or `Promise<Class>`. | Supported |
+| `getter` or `getter = name` | Method | Defines a JavaScript property getter. Without a name, `get_value` becomes `value`. | Emits a `get` accessor. | Supported |
+| `setter` or `setter = name` | Method | Defines a JavaScript property setter. Without a name, `set_value` becomes `value`. | Emits a `set` accessor. | Supported |
+| `strict` | Function or method | Calls `ValidateNapiValue` for every JavaScript argument before conversion and throws on a mismatch. | None. | Supported |
+| `return_if_invalid` | Function or method | Performs validation, but returns `undefined` instead of throwing for an invalid argument. | None. | Supported |
+| `catch_unwind` | Function or method | Catches an unwinding Rust panic at the generated callback boundary and converts its payload into a JavaScript `Error`. | None. | Requires an unwind-capable panic strategy; supported |
+| `async_runtime` | Synchronous function or method | Enters the napi-rs Tokio runtime while executing the function when that runtime is enabled. Without it, the wrapper is a no-op. | None. | Useful with `napi/tokio_rt`; supported |
+| `enumerable = false` | Method | Clears the enumerable descriptor flag. Omitting the value is equivalent to `true`. | None. | Supported |
+| `writable = false` | Method | Clears the writable descriptor flag. Omitting the value is equivalent to `true`. | None. | Supported |
+| `configurable = false` | Method | Clears the configurable descriptor flag. Omitting the value is equivalent to `true`. | None. | Supported |
+
+`strict` and `return_if_invalid` are mutually exclusive. They validate the `ValidateNapiValue` implementation for the Rust type; they do not perform arbitrary schema validation. Nested `Vec<T>` elements are converted one by one, and conversion can still fail after the initial array check.
+
+Validation happens in the generated JavaScript callback before an async Rust
+future is created. On an async export, `strict` can therefore throw
+synchronously, while `return_if_invalid` returns synchronous `undefined` for
+invalid input rather than a Promise. These attributes do not change the
+generated async return type, so document that exceptional path explicitly.
+
+<Callout type="warning">
+  `catch_unwind` is not a process-safety boundary. It cannot catch an aborting
+  panic, and Rust explicitly does not guarantee that every panic is unwindable.
+  Use `Result` for expected failures. See [Error handling](/docs/concepts/error-handling).
+</Callout>
+
+## Classes and value shapes
+
+| Option | Valid target | Runtime effect | TypeScript effect | Feature / status |
+| --- | --- | --- | --- | --- |
+| `object` | Struct | Converts a JavaScript object to/from an owned Rust value. All fields must be public. It has no JavaScript class identity. | Emits an interface. | Supported |
+| `array` | Tuple struct | Converts the tuple struct to/from a JavaScript array. | Emits a tuple type. | Supported |
+| `transparent` | Single-field tuple struct | Delegates conversion to the inner field instead of creating a wrapper object. | Emits an alias of the inner TypeScript type. | Supported |
+| `object_from_js = false` | Object, array, transparent struct; enum | Omits `FromNapiValue`; the type cannot be accepted from JavaScript through generated conversion. | None. | Supported |
+| `object_to_js = false` | Object, array, transparent struct; enum | Omits `ToNapiValue`; the type cannot be returned to JavaScript through generated conversion. | None. | Supported |
+| `use_nullable` or `use_nullable = true` | Class, object, array, structured enum | For object and structured-enum fields, emits `None` as `null` instead of omitting it and requires the input property. For arrays, writes/requires the tuple index instead of leaving/accepting a hole. Class accessor and constructor conversion is unchanged. | Emits a required `T | null` property or tuple element. For a class, this is the option's only effect. | Supported; default is `false` |
+| `custom_finalize` | Class struct | Stops napi-derive from generating the default empty `ObjectFinalize` implementation, so the class must implement it itself. | None. | Supported |
+| `iterator` | Class struct | Makes each instance implement the synchronous iterator protocol. | Extends `Iterator<Yield, Return, Next>`. | **Experimental** |
+| `async_iterator` | Class struct | Makes each instance implement the async iterator protocol. | Adds `[Symbol.asyncIterator](): AsyncGenerator<...>`. | `napi/tokio_rt`; **experimental** |
+
+Direction controls are compile-time controls: disabling a direction removes the corresponding conversion trait implementation. This is useful for input-only shapes containing callbacks or output-only shapes containing data that cannot be read from JavaScript.
+
+```rust filename="lib.rs"
+#[napi(object, object_to_js = false)]
+pub struct Request {
+  pub path: String,
+  pub on_chunk: ThreadsafeFunction<Buffer>,
+}
+
+#[napi(transparent)]
+pub struct UserId(pub String);
+
+#[napi(array)]
+pub struct Point(pub f64, pub f64);
+```
+
+For an object or structured-enum field, the default mode accepts a missing property as `None` and omits `None` on output. A present value is converted as the inner `T`, so `null` and `undefined` are not universally accepted. With `use_nullable = true`, the property is required, `Option<T>` conversion accepts `null` as `None`, and output uses `null`; a missing or `undefined` property is still rejected. Arrays apply the same distinction to a missing tuple index versus a required index containing `null`. On a class, accessors and shorthand-constructor arguments already use normal `Option<T>` conversion and getters return `null` for `None`; `use_nullable` only changes the generated TypeScript shape.
+
+### Fields
+
+| Option | Valid target | Runtime effect | TypeScript effect | Feature / status |
+| --- | --- | --- | --- | --- |
+| `js_name = "name"` | Struct or structured-enum field | Uses a different JavaScript property name. | Uses the renamed property. | Supported |
+| `skip` | Class or value-shape field | On a class, omits the generated property accessors. Value-shape conversion still reads and writes the field. | Omits the field. | Supported; see the shorthand-constructor limitation below |
+| `readonly` | Class or value-shape field | On a class, generates a getter but no setter. It does not change value-shape conversion. | Adds `readonly`. | Supported |
+| `writable`, `enumerable`, `configurable` | Exposed field | Controls class property descriptor flags. Object and structured-enum output always uses writable, enumerable, configurable data properties. | None. | Supported |
+| `ts_type = "..."` | Exposed field | None. | Replaces the inferred field type. | `napi-derive/type-def` |
+| `skip_typescript` | Exposed field | The field is still present at runtime. | Omits only that field from the declaration. | `napi-derive/type-def` |
+
+For a normal class, `skip` removes the generated JavaScript accessor, while `skip_typescript` leaves the accessor at runtime and hides only its declaration. On an object, array, or structured enum, `skip` and `readonly` affect the generated declaration but the runtime conversion still processes the field. Avoid `skip` with the `#[napi(constructor)]` struct shorthand: the generated constructor still consumes every field even though the skipped field is absent from its TypeScript signature.
+
+## Enums
+
+| Option | Valid target | Runtime effect | TypeScript effect | Feature / status |
+| --- | --- | --- | --- | --- |
+| `string_enum` | Fieldless enum | Converts variants to strings instead of integer values. | Emits string-valued enum members. | Supported |
+| `string_enum = "case"` | Fieldless enum | Converts variant names using the selected case. | Uses the converted string values. | Supported |
+| `value = "literal"` | Variant of a `string_enum` | Overrides the JavaScript string for one variant. | Uses the literal value. | Supported |
+| `discriminant = "key"` | Structured enum | Changes the discriminating property from the default `type`. | Uses the same property in the discriminated union. | Supported |
+| `discriminant_case = "case"` | Structured enum | Changes how variant names are encoded in the discriminator. | Uses the same encoded values. | Supported |
+| `use_nullable` | Structured enum | Applies nullable-field behavior to variant fields. | Controls optional versus `T | null` fields. | Supported |
+| `object_from_js`, `object_to_js` | Any enum | Enables or disables generated conversion in one direction. | None. | Supported |
+
+Accepted case names are `lowercase`, `UPPERCASE`, `PascalCase`, `camelCase`, `snake_case`, `UPPER_SNAKE`, `kebab-case`, and `UPPER-KEBAB-CASE`.
+
+```rust filename="lib.rs"
+#[napi(string_enum = "kebab-case")]
+pub enum Mode {
+  ReadOnly,
+  #[napi(value = "read-write")]
+  Writable,
+}
+
+#[napi(discriminant = "kind", discriminant_case = "camelCase")]
+pub enum Event {
+  Ready,
+  FileChanged { path: String },
+  Progress(u32, u32),
+}
+```
+
+`string_enum` accepts only fieldless variants and cannot be combined with explicit Rust discriminants. An enum containing any data-carrying variant is a structured enum; each variant becomes an object with the discriminator plus its fields. A field whose JavaScript name equals the discriminator is rejected.
+
+## TypeScript overrides
+
+| Option | Valid target | Declaration effect | Important constraints |
+| --- | --- | --- | --- |
+| `ts_arg_type = "..."` | One function parameter | Replaces the inferred type of that parameter. | Context-specific parameter attribute. Mutually exclusive with function-level `ts_args_type`. |
+| `ts_args_type = "..."` | Function or method | Replaces the complete comma-separated parameter list. | Mutually exclusive with every parameter-level `ts_arg_type`. |
+| `ts_return_type = "..."` | Function or method | Replaces the inferred return type. | For an async function, include the complete intended type, normally `Promise<T>`. |
+| `ts_generic_types = "..."` | Function or method | Adds the text between `<...>` before the arguments. | The string must be valid TypeScript generic parameter syntax. |
+| `ts_type = "..."` | Function/method or field | On a function, replaces the entire signature suffix after its exported name; on a field, replaces its type. | Function-level `ts_type` cannot be combined with `ts_args_type` or `ts_return_type`. It also replaces the generic section, so include any generics inside `ts_type` instead of combining it with `ts_generic_types`. |
+| `skip_typescript` | Function, method, field, enum, const, type alias | Omits the declaration while retaining the runtime export. A type alias has no runtime export, so the alias disappears entirely. | Not valid on a whole struct or `impl` block. |
+
+```rust filename="lib.rs"
+#[napi(
+  ts_generic_types = "T",
+  ts_args_type = "value: T",
+  ts_return_type = "T"
+)]
+pub fn identity<'env>(value: Unknown<'env>) -> Unknown<'env> {
+  value
+}
+
+#[napi(ts_type = "(operation: 'add' | 'subtract', a: number, b: number): number")]
+pub fn calculate(operation: String, a: i32, b: i32) -> i32 {
+  match operation.as_str() {
+    "add" => a + b,
+    "subtract" => a - b,
+    _ => 0,
+  }
+}
+```
+
+These strings are inserted into the generated declaration; napi-rs does not parse them as TypeScript or verify that they describe the runtime behavior. Keep runtime conversions authoritative and test the generated `.d.ts` file.
+
+## Iterators
+
+`iterator` and `async_iterator` are mutually exclusive. A generator class cannot expose public fields named `next`, `return`, or `throw`, because napi-rs installs those protocol methods. See [Iterators and async iterators](/docs/concepts/iterators) for the required traits and lifecycle constraints.
+
+## Option index
+
+The general parser accepts these options:
+
+`catch_unwind`, `async_runtime`, `module_exports`, `js_name`, `constructor`, `factory`, `getter`, `setter`, `readonly`, `enumerable`, `writable`, `configurable`, `skip`, `strict`, `return_if_invalid`, `object`, `object_from_js`, `object_to_js`, `custom_finalize`, `namespace`, `iterator`, `async_iterator`, `ts_args_type`, `ts_return_type`, `ts_type`, `ts_generic_types`, `string_enum`, `use_nullable`, `discriminant`, `discriminant_case`, `transparent`, `array`, `no_export`, and `skip_typescript`.
+
+The context-specific parsers additionally accept `ts_arg_type` on a function parameter and `value` on a string-enum variant.

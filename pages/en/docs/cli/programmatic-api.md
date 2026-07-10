@@ -28,12 +28,15 @@ import oxfmtConfig from './.oxfmtrc.json' with { type: 'json' }
 
 const buildCommand = createBuildCommand(process.argv.slice(2))
 const cli = new NapiCli()
-const buildOptions = buildCommand.getOptions()
+const buildOptions = {
+  ...buildCommand.getOptions(),
+  cargoOptions: buildCommand.cargoOptions,
+}
 const { task } = await cli.build(buildOptions)
 const outputs = await task
 
 for (const output of outputs) {
-  if (output.kind !== 'node') {
+  if (output.kind === 'js' || output.kind === 'dts') {
     const { code } = await format(
       output.path,
       await readFile(output.path, 'utf-8'),
@@ -44,16 +47,18 @@ for (const output of outputs) {
 }
 ```
 
-Run this script with the same arguments you would pass to <span class="chalk-green">napi build</span>:
+Run this script with the same arguments you would pass to <span class="chalk-green">napi build</span>,
+including Cargo arguments after `--`:
 
 ```sh
-node ./build.ts --release --platform
+oxnode ./build.ts --release --platform
 ```
 
 ### How It Works
 
 1. `createBuildCommand(args)` parses CLI arguments and returns a `BuildCommand` instance
-2. `buildCommand.getOptions()` extracts the parsed options as a plain object
+2. `buildCommand.getOptions()` extracts the named options; `cargoOptions` carries
+   the trailing arguments after `--`
 3. `cli.build(options)` starts the build and returns `{ task, abort }`
 4. `await task` waits for completion and returns an array of `Output` objects
 
@@ -104,27 +109,21 @@ const currentTarget = 'x86_64-unknown-linux-gnu'
 const currentDir = dirname(fileURLToPath(import.meta.url))
 const typeDefDir = join(currentDir, 'target', 'napi-rs', 'YOUR_PKG_NAME')
 const triple = parseTriple(currentTarget)
-const bindingName = `customized.${triple.platformArchABI}.node`
+const binaryName = pkg.napi.binaryName
+const bindingName = `${binaryName}.${triple.platformArchABI}.node`
 
 await mkdir(typeDefDir, { recursive: true })
 
-const childProcess = spawn('cargo', ['build', '--release'], {
-  stdio: 'pipe',
-  env: {
-    NAPI_TYPE_DEF_TMP_FOLDER: typeDefDir,
-    ...process.env,
+const childProcess = spawn(
+  'cargo',
+  ['build', '--release', '--target', currentTarget],
+  {
+    stdio: 'pipe',
+    env: {
+      ...process.env,
+      NAPI_TYPE_DEF_TMP_FOLDER: typeDefDir,
+    },
   },
-})
-
-// Remove old binding file, this is necessary on some platforms like macOS
-// copy the new binding file without removing the old one will cause weird segmentation fault
-await rm(join(currentDir, bindingName)).catch(() => {
-  // ignore error
-})
-
-await copyFile(
-  join(currentDir, 'target', currentTarget, 'release', 'libfoo.so'),
-  join(currentDir, bindingName),
 )
 
 childProcess.stdout.on('data', (data) => {
@@ -148,6 +147,17 @@ await new Promise((resolve, reject) => {
   })
 })
 
+// Remove an old loaded binding before replacing it. Overwriting it in place
+// can cause crashes on platforms such as macOS.
+await rm(join(currentDir, bindingName)).catch(() => {
+  // ignore a missing old binding
+})
+
+await copyFile(
+  join(currentDir, 'target', currentTarget, 'release', 'libfoo.so'),
+  join(currentDir, bindingName),
+)
+
 const { dts, exports } = await generateTypeDef({
   typeDefDir,
   cwd: process.cwd(),
@@ -158,7 +168,7 @@ await writeFile(join(currentDir, 'customized.d.ts'), dts)
 await writeJsBinding({
   jsBinding: 'customized.js',
   platform: true,
-  binaryName: pkg.napi.binaryName,
+  binaryName,
   packageName: pkg.name,
   version: pkg.version,
   outputDir: currentDir,
@@ -187,15 +197,15 @@ The `typeDefDir` must contain the intermediate type definition files generated b
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           BUILD PHASE                                   │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  5. spawn('cargo', ['build', '--release'])                              │
+│  5. spawn('cargo', ['build', '--release', '--target', currentTarget])   │
 │     └─ env: { NAPI_TYPE_DEF_TMP_FOLDER: typeDefDir }                    │
 │        ▲                                                                │
 │        └─ This env var tells napi-derive where to write type defs       │
 │                                                                         │
-│  6. rm(old binding) → Remove old .node file (prevents macOS segfault)   │
-│  7. copyFile(libfoo.so → customized.{platform}.node)                    │
-│  8. Stream stdout/stderr from cargo                                     │
-│  9. await cargo completion                                              │
+│  6. Stream stdout/stderr from cargo                                     │
+│  7. await cargo completion                                              │
+│  8. rm(old binding) → Remove old .node file before replacement          │
+│  9. copyFile(libfoo.so → <binaryName>.{platform}.node)                  │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
@@ -203,7 +213,7 @@ The `typeDefDir` must contain the intermediate type definition files generated b
 │                      TYPE GENERATION PHASE                              │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ 10. generateTypeDef({ typeDefDir, cwd })                                │
-│     └─ Reads intermediate .json files from typeDefDir                   │
+│     └─ Reads newline-delimited JSON files from typeDefDir               │
 │     └─ Returns { dts: string, exports: string[] }                       │
 │                                                                         │
 │ 11. writeFile('customized.d.ts', dts)                                   │
@@ -227,10 +237,10 @@ The `typeDefDir` must contain the intermediate type definition files generated b
 
 #### The `NAPI_TYPE_DEF_TMP_FOLDER` Environment Variable
 
-When you run `cargo build` with `NAPI_TYPE_DEF_TMP_FOLDER` set, the `napi-derive` proc macro writes intermediate type definition files (JSON format) to that directory. This is how type information flows from Rust to TypeScript:
+When you run `cargo build` with `NAPI_TYPE_DEF_TMP_FOLDER` set, the `napi-derive` proc macro writes one extensionless file per Cargo package to that directory. Each file contains one JSON object per line. This is how type information flows from Rust to TypeScript:
 
 ```
-Rust Code → napi-derive macro → JSON files → generateTypeDef() → .d.ts
+Rust Code → napi-derive macro → newline-delimited JSON → generateTypeDef() → .d.ts
 ```
 
 #### Platform-Specific Binding Names
@@ -258,16 +268,17 @@ await copyFile(sourceLib, join(currentDir, bindingName))
 
 ### GenerateTypeDefOptions
 
-| Option              | Type    | Required | Default | Description                                                                  |
-| ------------------- | ------- | -------- | ------- | ---------------------------------------------------------------------------- |
-| typeDefDir          | string  | Yes      |         | Directory containing intermediate type def files                             |
-| cwd                 | string  | Yes      |         | Working directory for resolving relative paths                               |
-| noDtsHeader         | boolean | No       | false   | Skip the default file header                                                 |
-| dtsHeader           | string  | No       |         | Custom header string for the <span class="chalk-green">.d.ts</span> file     |
-| dtsHeaderFile       | string  | No       |         | Path to a file containing the header content                                 |
-| configDtsHeader     | string  | No       |         | Header from config (lower priority than dtsHeader)                           |
-| configDtsHeaderFile | string  | No       |         | Header file from config (highest priority)                                   |
-| constEnum           | boolean | No       | true    | Generate <span class="chalk-green">const enum</span> instead of regular enum |
+| Option              | Type    | Required | Default | Description                                                                                                            |
+| ------------------- | ------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------- |
+| typeDefDir          | string  | Yes      |         | Directory containing intermediate type def files                                                                       |
+| cwd                 | string  | Yes      |         | Working directory for resolving relative paths                                                                         |
+| noDtsHeader         | boolean | No       | false   | Skip the default file header                                                                                           |
+| dtsHeader           | string  | No       |         | Custom header string for the <span class="chalk-green">.d.ts</span> file; used when neither header-file option is set  |
+| dtsHeaderFile       | string  | No       |         | Header file resolved from `cwd`; takes precedence over every other custom header option                                |
+| configDtsHeader     | string  | No       |         | Header from config (lower priority than dtsHeader)                                                                     |
+| configDtsHeaderFile | string  | No       |         | Header file from config; lower priority than `dtsHeaderFile`, but higher than inline header strings                    |
+| constEnum           | boolean | No       | true    | Generate <span class="chalk-green">const enum</span> instead of regular enum                                           |
+| runtimeStringEnum   | boolean | No       | false   | With `constEnum: false`, generate runtime enums for `#[napi(string_enum)]`; otherwise generate type-only string unions |
 
 ### WriteJsBindingOptions
 
@@ -335,8 +346,12 @@ import { parseTriple, readNapiConfig } from '@napi-rs/cli'
 const triple = parseTriple('x86_64-unknown-linux-gnu')
 // { platform: 'linux', arch: 'x64', abi: 'gnu', ... }
 
-// Read napi config from package.json or napi.json
-const config = await readNapiConfig('/path/to/project')
+// The first argument is the exact package.json path. The optional second
+// argument is a standalone napi config that takes precedence.
+const config = await readNapiConfig(
+  '/path/to/project/package.json',
+  '/path/to/project/napi.config.json',
+)
 ```
 
 ## Aborting a Build

@@ -1,11 +1,13 @@
 ---
 title: 'Values'
-description: Conversions between Rust and JavaScript types.
+description: Converta valores com segurança entre tipos Rust e JavaScript.
 ---
 
 # Valores
 
 Conversões entre tipos Rust e JavaScript.
+
+Esta página apresenta valores comuns. Para consultar a matriz completa baseada no código-fonte — incluindo direção de conversão, propriedade, recursos do Cargo, `Option`, `Either`, coleções, caminhos, funções, Promises, streams e níveis do Node-API — veja [Conversões de tipos](/pt-BR/docs/concepts/type-conversions).
 
 ### Undefined
 
@@ -29,7 +31,7 @@ fn log(n: u32) {
 **index.d.ts**
 
 ```ts
-export function getUndefined(): undefined
+export function getUndefined(): void
 export function log(n: number): void
 ```
 
@@ -61,6 +63,8 @@ export function getNull(): null
 export function getEnv(env: string): string | null
 ```
 
+`Option<T>` aceita `T`, `null` ou `undefined` como argumento, mas retorna `null` para `None`. Em um campo `#[napi(object)]`, a representação padrão é uma propriedade opcional, e `None` é omitido na saída; `#[napi(use_nullable)]` a transforma em uma propriedade obrigatória `T | null`. Consulte [`Option`, `null` e `undefined`](/pt-BR/docs/concepts/type-conversions#option-null-and-undefined) para o mapeamento completo, que depende da posição.
+
 ### Numbers
 
 Tipo JavaScript `Number` com tipos Rust Int/Float: `u32`, `i32`, `i64`, `f64`.
@@ -72,7 +76,7 @@ Para tipos Rust como `u64`, `u128`, `i128`, confira a seção [`BigInt`](#bigint
 ```rust
 #[napi]
 fn sum(a: u32, b: i32) -> i64 {
-	(b + a as i32).into()
+	i64::from(a) + i64::from(b)
 }
 ```
 
@@ -132,8 +136,8 @@ fn with_buffer(buf: Buffer) {
 }
 
 #[napi]
-fn read_buffer(file: String) -> Buffer {
-	Buffer::from(std::fs::read(file).unwrap())
+fn read_buffer(file: String) -> Result<Buffer> {
+	Ok(std::fs::read(file)?.into())
 }
 ```
 
@@ -161,20 +165,21 @@ Cada chamada de `Object.get("key")` é na verdade despachada para o lado do node
 
 ```rust
 #[napi]
-fn keys(obj: Object) -> Vec<String> {
-	Object::keys(&obj).unwrap()
+pub fn keys(obj: Object) -> Result<Vec<String>> {
+	Object::keys(&obj)
 }
 
 #[napi]
-fn log_string_field(obj: Object, field: String) {
-	println!("{}: {:?}", &field, obj.get::<String>::(field.as_ref()));
+pub fn log_string_field(obj: Object, field: String) -> Result<()> {
+	println!("{}: {:?}", &field, obj.get::<String>(&field)?);
+	Ok(())
 }
 
 #[napi]
-fn create_obj(env: Env) -> Object {
-	let mut obj = env.create_object().unwrap();
-	obj.set("test", 1).unwrap();
-	obj
+pub fn create_obj(env: &Env) -> Result<Object> {
+	let mut obj = Object::new(env)?;
+	obj.set("test", 1)?;
+	Ok(obj)
 }
 ```
 
@@ -182,7 +187,7 @@ fn create_obj(env: Env) -> Object {
 
 ```ts
 export function keys(obj: object): Array<string>
-export function logStringField(obj: object): void
+export function logStringField(obj: object, field: string): void
 export function createObj(): object
 ```
 
@@ -191,9 +196,11 @@ Se você deseja que o **NAPI-RS** converta objetos do JavaScript com a mesma for
 **lib.rs**
 
 ```rust
+use std::collections::HashMap;
+
 /// #[napi(object)] requer que todos os campos da struct sejam públicos
 #[napi(object)]
-struct PackageJson {
+pub struct PackageJson {
 	pub name: String,
 	pub version: String,
 	pub dependencies: Option<HashMap<String, String>>,
@@ -201,13 +208,18 @@ struct PackageJson {
 }
 
 #[napi]
-fn log_package_name(package_json: PackageJson) {
+pub fn log_package_name(package_json: PackageJson) {
 	println!("name: {}", package_json.name);
 }
 
 #[napi]
-fn read_package_json() -> PackageJson {
-	// ...
+pub fn example_package_json() -> PackageJson {
+	PackageJson {
+		name: "example".to_owned(),
+		version: "1.0.0".to_owned(),
+		dependencies: None,
+		dev_dependencies: None,
+	}
 }
 ```
 
@@ -217,11 +229,11 @@ fn read_package_json() -> PackageJson {
 export interface PackageJson {
   name: string
   version: string
-  dependencies: Record<string, string> | null
-  devDependencies: Record<string, string> | null
+  dependencies?: Record<string, string>
+  devDependencies?: Record<string, string>
 }
 export function logPackageName(packageJson: PackageJson): void
-export function readPackageJson(): PackageJson
+export function examplePackageJson(): PackageJson
 ```
 
 ::: warning
@@ -230,6 +242,8 @@ export function readPackageJson(): PackageJson
 A estrutura `#[napi(object)]` passada na função Rust `fn` é clonada do **_JavaScript Object_**. Qualquer mutação nela não será refletida no objeto **_JavaScript_**.
 
 :::
+
+`#[napi(object)]` é uma forma de objeto simples e própria, não uma classe. Use `#[napi] struct` para identidade e métodos de classe nativa, `#[napi(transparent)]` para um newtype Rust com a representação JavaScript do valor interno ou `#[napi(array)]` para um array em forma de tupla. Consulte [Conversões de tipos](/pt-BR/docs/concepts/type-conversions#objects-classes-and-custom-shapes).
 
 **lib.rs**
 
@@ -262,7 +276,7 @@ em Rust só pode conter elementos do mesmo tipo. Portanto, existem duas maneiras
 
 Como o tipo `Array` do JavaScript é realmente suportado por `Object`, o desempenho de manipulação de `Array`s seria o mesmo que o de `Object`s.
 
-A conversão entre `Array` e `Vec<T>` é ainda mais pesada, com complexidade `O(2n)`.
+A conversão entre `Array` e `Vec<T>` é ainda mais pesada, com complexidade `O(n)`.
 
 :::
 
@@ -275,18 +289,19 @@ fn arr_len(arr: Array) -> u32 {
 }
 
 #[napi]
-fn get_tuple_array(env: Env) -> Array {
-  let mut arr = env.create_array(2).unwrap();
+fn get_tuple_array(env: &Env) -> Result<Array> {
+  let mut arr = env.create_array(2)?;
 
-  arr.insert(1).unwrap();
-  arr.insert("test").unwrap();
+  arr.insert(1)?;
+  arr.insert("test")?;
 
-  arr
+  Ok(arr)
 }
 
 #[napi]
-fn vec_len(nums: Vec<u32>) -> u32 {
-  u32::try_from(nums.len()).unwrap()
+fn vec_len(nums: Vec<u32>) -> Result<u32> {
+  u32::try_from(nums.len())
+    .map_err(|_| Error::new(Status::InvalidArg, "Array is too large"))
 }
 
 #[napi]
@@ -329,12 +344,22 @@ indica se houve perda de precisão.
 ```rust
 /// O valor de retorno de `get_u128` é (signed: bool, value: u128, lossless: bool)
 #[napi]
-fn bigint_add(a: BigInt, b: BigInt) -> u128 {
-  a.get_u128().1 + b.get_u128().1
+pub fn bigint_add(a: BigInt, b: BigInt) -> Result<u128> {
+  let (a_signed, a_value, a_lossless) = a.get_u128();
+  let (b_signed, b_value, b_lossless) = b.get_u128();
+  if a_signed || b_signed || !a_lossless || !b_lossless {
+    return Err(Error::new(
+      Status::InvalidArg,
+      "both values must be lossless, non-negative u128 integers",
+    ));
+  }
+  a_value.checked_add(b_value).ok_or_else(|| {
+    Error::new(Status::InvalidArg, "u128 addition overflowed")
+  })
 }
 
 #[napi]
-fn create_big_int_i128() -> i128 {
+pub fn create_big_int_i128() -> i128 {
   100
 }
 ```
@@ -342,8 +367,8 @@ fn create_big_int_i128() -> i128 {
 **index.d.ts**
 
 ```ts
-export function bigintAdd(a: BigInt, b: BigInt): BigInt
-export function createBigIntI128(): BigInt
+export function bigintAdd(a: bigint, b: bigint): bigint
+export function createBigIntI128(): bigint
 ```
 
 ### TypedArray
@@ -370,7 +395,7 @@ fn create_external_typed_array() -> Uint32Array {
 
 #[napi]
 fn mutate_typed_array(mut input: Float32Array) {
-  for item in input.as_mut() {
+  for item in unsafe { input.as_mut() } {
     *item *= 2.0;
   }
 }
@@ -390,5 +415,7 @@ export function mutateTypedArray(input: Float32Array): void
 import { convertU32Array, mutateTypedArray } from './index.js'
 
 convertU32Array(new Uint32Array([1, 2, 3, 4, 5])) // [1, 2, 3, 4, 5]
-mutateTypedArray(new Float32Array([1, 2, 3, 4, 5])) // Float32Array(5) [ 2, 4, 6, 8, 10 ]
+const values = new Float32Array([1, 2, 3, 4, 5])
+mutateTypedArray(values)
+console.log(values) // Float32Array(5) [ 2, 4, 6, 8, 10 ]
 ```

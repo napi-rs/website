@@ -21,7 +21,7 @@ Exportar uma função é incrivelmente simples. Basta decorar uma função rust 
 
 ```rust
 #[napi]
-fn sum(a: u32, b: u32) -> u32 {
+pub fn sum(a: f64, b: f64) -> f64 {
 	a + b
 }
 ```

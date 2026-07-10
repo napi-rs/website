@@ -3,8 +3,6 @@ title: Reference
 description: Create and use Object References.
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 import NodeLink from '../../../components/node-link'
 
 # `Reference` / `WeakReference`
@@ -59,6 +57,7 @@ Like the [`Env`](./inject-env) and [`This`](./inject-this), the `Reference` is i
 
 ```rust {37-42,45-48} filename="lib.rs"
 use napi::bindgen_prelude::*;
+use napi_derive::napi;
 
 pub struct Repository {
   dir: String,
@@ -168,7 +167,7 @@ impl CSSRuleList {
 #[napi]
 pub struct CSSStyleSheet {
   name: String,
-  inner: OwnedStyleSheet,
+  inner: Rc<RefCell<OwnedStyleSheet>>,
   rules: Option<Reference<CSSRuleList>>,
 }
 
@@ -176,7 +175,7 @@ pub struct CSSStyleSheet {
 impl CSSStyleSheet {
   #[napi(constructor)]
   pub fn new(name: String, rules: Vec<String>) -> Result<Self> {
-    let inner = OwnedStyleSheet { rules };
+    let inner = Rc::new(RefCell::new(OwnedStyleSheet { rules }));
     Ok(CSSStyleSheet {
       name,
       inner,
@@ -217,9 +216,9 @@ The `WeakReference` will not increase the reference count of the raw Object, so 
 ### `ObjectRef`
 
 <Callout type="warning">
-  The `SymbolRef` must be return back to the `JavaScript` side, or call the
-  `unref` on it manually. Otherwise, the `Symbol` under the hood will never be
-  garbage collected.
+  An owned `ObjectRef` must either be returned to JavaScript or be consumed by
+  `unref`. Dropping it only reports a leak; it cannot delete the Node-API
+  reference without an `Env`, so the object remains strongly referenced.
 </Callout>
 
 In the example below, we create the `ObjectRef` in the constructor and use it later in the `getOptions` method.
@@ -230,21 +229,33 @@ use napi_derive::napi;
 
 #[napi]
 pub struct NativeClass {
-  options: ObjectRef,
+  options: Option<ObjectRef>,
 }
 
 #[napi]
 impl NativeClass {
-  #[napi]
+  #[napi(constructor)]
   pub fn new(options: Object) -> Result<Self> {
     Ok(Self {
-      options: options.create_ref()?,
+      options: Some(options.create_ref()?),
     })
   }
 
   #[napi]
-  pub fn get_options(&self, env: &Env) -> Result<Object> {
-    self.options.get_value(env)
+  pub fn get_options<'env>(&self, env: &'env Env) -> Result<Object<'env>> {
+    self
+      .options
+      .as_ref()
+      .ok_or_else(|| Error::from_reason("options were released"))?
+      .get_value(env)
+  }
+
+  #[napi]
+  pub fn release_options(&mut self, env: &Env) -> Result<()> {
+    if let Some(options) = self.options.take() {
+      options.unref(env)?;
+    }
+    Ok(())
   }
 }
 ```
@@ -260,14 +271,15 @@ const nativeClass = new NativeClass({
 })
 
 const options = nativeClass.getOptions() // { name: 'John', age: 30 }
+nativeClass.releaseOptions()
 ```
 
 ### `SymbolRef`
 
 <Callout type="warning">
-  The `SymbolRef` must be return back to the `JavaScript` side, or call the
-  `unref` on it manually. Otherwise, the `Symbol` under the hood will never be
-  garbage collected.
+  An owned `SymbolRef` must either be returned to JavaScript or be consumed by
+  `unref`. Dropping it only reports a leak; it cannot delete the Node-API
+  reference without an `Env`, so the symbol remains strongly referenced.
 </Callout>
 
 The `SymbolRef` API is basically the same as the `ObjectRef`.
@@ -287,8 +299,10 @@ pub fn create_symbol_ref(env: &Env) -> Result<SymbolRef> {
 ### `FunctionRef`
 
 <Callout type="info">
-  The `FunctionRef` is not `Send` because it needs to be dropped in the same
-  thread as the `FunctionRef` is created.
+  `FunctionRef` is `Send + Sync`, but the `Function` borrowed from it is tied
+  to the `Env` supplied to `borrow_back`. Moving the reference does not make it
+  valid to call JavaScript from an arbitrary thread; borrow and call it only on
+  a thread where that environment may be used.
 </Callout>
 
 `FunctionRef` can be created on the `Function` directly.

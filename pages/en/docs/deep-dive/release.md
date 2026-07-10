@@ -1,89 +1,201 @@
 ---
 title: 'Release native packages'
-description: The history of how to release native packages.
+description: Build, verify, publish, and recover a multi-platform napi-rs release.
 ---
 
 # Release native packages
 
-As you can see from the previous section, the dominant distribution method on the community is **_distribute `C/C++` source code directly_**. However, this approach is not an acceptable distribution solution for developers using `Rust` to write Node.js native addons, because the complexity and compilation time of the Rust toolchain makes distributing the source code directly a huge ordeal for developers using these native addons.
+napi-rs distributes prebuilt addons as npm packages. Consumers install one
+small root package, and the package manager selects a matching optional package
+for the current operating system, CPU, and libc. No compiler or install-time
+download script is required on the consumer's machine.
 
-Next I will describe several ways of distributing native addon including **_distribute source code directly_**. After this introduction, I believe you can find the most suitable native addon distribution for `Rust`.
+::: warning
+A multi-platform publication is not atomic. npm versions are immutable, and
+a failure can occur after some platform packages exist but before the root
+package is published. Treat release jobs as production changes, not as build
+previews.
 
-## 1. Distribute source code
+:::
 
-Using this approach requires the user to install build tools such as `node-gyp`, `cmake`, `g++`, etc. This is not a problem during the development phase, but with the popularity of `Docker`, installing a bunch of build toolchains in a given `Docker` environment is a nightmare for many teams. And if this problem is not handled well, it will increase the size of the `Docker image` for no reason (actually this problem can be solved by building the Docker image in a special Builder image before compiling it, but I have talked to various companies and few teams will do this).
+## Distribution model
 
-## 2. Distribute only JavaScript code, download the corresponding product in `postinstall` phase
+For a root package such as `@scope/addon`, napi-rs creates packages such as:
 
-Some native addon build dependencies are so complex that it's not practical for the average Node developer to install a full set of build tools during the development phase. Another scenario is that the native addon itself is so complex that it can take a lot of time to compile, and the library author wouldn't want people to spend hours just installing it when using his library.
-
-So another popular way is to use the `CI` tools to **_precompile_** the native addon in the `CI` task for each platform (win32/darwin/linux/...) and distribute only the corresponding JavaScript code, while the **_precompiled_** addon file is downloaded from the **CDN/GitHub release** via the `postinstall` script. For example, there is a popular tool in the community that does this: [node-pre-gyp](https://github.com/mapbox/node-pre-gyp). This tool automatically uploads the native addon compiled in `CI` to a specific location based on the user's configuration, and then downloads it from the upload location during installation.
-
-This distribution method seems flawless, but there are several problems that can't be circumvented:
-
-- Tools such as `node-pre-gyp` will add a lot of **runtime irrelevant** dependencies to a project.
-- No matter which `CDN` you upload to, it's hard to accommodate users from all over the world. Do you recall the painful memories of being stuck in `postinstall` for hours to download files from some GitHub release and then failing? It's true that building a binary mirror in the nearest region can partially alleviate this problem, but mirror is not synchronized/missing from time to time.
-- Not friendly to private networks. Many companies may not be able to access the extranet on their CI/CD machines (they will have a private NPM to go along with it, but if they don't there is no point in discussing it), let alone downloading native addon from some CDN.
-
-## 3. The native addon for different platforms is distributed through different npm packages
-
-The new generation build tool [esbuild](https://github.com/evanw/esbuild), which is very popular on the front-end, uses this approach. Each native addon corresponds to an npm package, and then the `postinstall` script installs the native addon package for the current system.
-
-Another way is to expose the packages to be installed by the user, use all native packages as `optionalDependencies`, and then use the `os` and `cpu` fields in `package.json` to have `npm/yarn/pnpm` automatically select them during _automatically choose which native package to install (which actually fails if it doesn't match the system requirements)_ when installing, e.g.:
-
-```json
-{
-  "name": "@node-rs/bcrypt",
-  "version": "0.5.0",
-  "os": ["linux", "win32", "darwin"],
-  "cpu": ["x64"],
-  "optionalDependencies": {
-    "@node-rs/bcrypt-darwin": "^0.5.0",
-    "@node-rs/bcrypt-linux": "^0.5.0",
-    "@node-rs/bcrypt-win32": "^0.5.0"
-  }
-}
+```text
+@scope/addon
+@scope/addon-darwin-arm64
+@scope/addon-win32-x64-msvc
+@scope/addon-linux-x64-gnu
+@scope/addon-linux-x64-musl
 ```
 
-```json
-{
-  "name": "@node-rs/bcrypt-darwin",
-  "version": "0.5.0",
-  "os": ["darwin"],
-  "cpu": ["x64"]
-}
+Each platform package contains one native artifact and declares npm `os`,
+`cpu`, and where applicable `libc` constraints. The root package lists exact
+versions of those packages in `optionalDependencies`; its generated loader
+then loads the package matching the running system.
+
+This model avoids the two common alternatives:
+
+- Shipping Rust/C/C++ source and requiring every consumer to install a native
+  toolchain.
+- Downloading a binary from GitHub or a CDN in `postinstall`, which introduces
+  install-time network and private-network failures.
+
+## Commands in the release pipeline
+
+| Command                                          | Responsibility                                                                                                            |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| [`napi create-npm-dirs`](../cli/create-npm-dirs) | Create one package directory for every configured target.                                                                 |
+| [`napi build`](../cli/build)                     | Build one target per invocation. CI runs it once for every matrix row.                                                    |
+| [`napi artifacts`](../cli/artifacts)             | Collect downloaded `.node`/`.wasm` files into the root and platform packages.                                             |
+| [`napi pre-publish`](../cli/pre-publish)         | Synchronize versions and optional dependencies, publish platform packages, and optionally create/upload a GitHub release. |
+| `npm publish`                                    | Publish the root package. In the template, this invokes `napi prepublish -t npm` through `prepublishOnly` first.          |
+
+`napi pre-publish` does not build or collect artifacts, and it does not publish
+the root package by itself.
+
+## One-time release setup
+
+Before the first release:
+
+1. Use an npm scope or confirm that the root name and every suffixed target
+   package name are available.
+2. Set the final `name`, `repository`, `license`, and `publishConfig` in
+   `package.json`. The repository must match the GitHub workflow for npm
+   provenance.
+3. Review `napi.binaryName` and `napi.targets`. Every target needs a package,
+   build job, and runtime test; an accepted target triple alone is not a support
+   guarantee.
+4. Configure an npm automation token as the `NPM_TOKEN` Actions secret, unless
+   you have deliberately replaced the template with npm trusted publishing.
+   The identity must be allowed to publish the root and every platform name.
+5. Keep `contents: write` for GitHub release creation and `id-token: write` for
+   npm provenance in the publish job.
+6. Run the normal branch/PR workflow successfully before enabling a release.
+
+See [Support and compatibility](/docs/more/support-compatibility) and [Cross
+build](../cross-build) before expanding the generated matrix.
+
+## Preflight every version
+
+Before creating a version commit, verify:
+
+- The release commit is built from the intended clean branch and reviewed
+  source.
+- Local formatting, Rust checks, JavaScript tests, generated declarations, and
+  a local native load all pass.
+- The CI matrix builds every entry in `napi.targets`, and every produced file
+  has the expected `binaryName.platform-arch-abi` suffix.
+- The new root and platform versions do not already exist on npm.
+- `npm whoami` succeeds with the release identity and the token is valid for
+  all package names.
+- The changelog and Node-API/runtime support statements match the release.
+
+Inspect the root tarball without running lifecycle scripts:
+
+```sh
+npm pack --dry-run --ignore-scripts
 ```
 
-```json
-{
-  "name": "@node-rs/bcrypt-linux",
-  "version": "0.5.0",
-  "os": ["linux"],
-  "cpu": ["x64"]
-}
+Do not rely on `npm publish --dry-run`: npm lifecycle scripts may still invoke
+`napi prepublish`, which can publish the real platform packages. Use [`napi
+pre-publish --dry-run`](../cli/pre-publish#preview-safely) separately, knowing
+that it does not validate artifact completeness or registry authorization.
+
+## Release with the generated workflow
+
+The maintained templates publish from their GitHub Actions workflow. The job:
+
+1. Waits for lint, build, and runtime-test jobs.
+2. Downloads all workflow artifacts with `actions/download-artifact@v8`.
+3. Creates the target npm directories.
+4. Runs `napi artifacts` to populate the root and platform packages.
+5. Enables npm provenance.
+6. Runs `npm publish` for the root package. Its `prepublishOnly` script runs
+   `napi prepublish -t npm`, which publishes the platform packages and uploads
+   GitHub release assets first.
+7. Publishes a stable version with the default npm tag, or a prerelease with
+   the `next` tag.
+
+The current template decides whether to publish from the latest commit
+message. `npm version` already writes the bare version as the commit message
+(its `message` config defaults to `%s`); only the Git tag carries the `v`
+prefix (`tag-version-prefix` defaults to `v`), and the template's publish gate
+accepts both `1.2.3` and `v1.2.3`. So `npm version patch` alone already
+produces a commit message the gate matches — passing `-m "%s"` below is
+optional and only pins the message format:
+
+```sh
+# Creates the version commit and v-prefixed Git tag, but makes the commit
+# message itself exactly the new version (for example, 1.2.3).
+npm version patch -m "%s"
+git push --follow-tags
 ```
 
-```json
-{
-  "name": "@node-rs/bcrypt-win32",
-  "version": "0.5.0",
-  "os": ["win32"],
-  "cpu": ["x64"]
-}
+For a prerelease:
+
+```sh
+npm version prerelease --preid next -m "%s"
+git push --follow-tags
 ```
 
-This approach is the least intrusive distribution for users using native addon, and is used by [@ffmpeg-installer/ffmpeg](https://github.com/kribblo/node-ffmpeg-installer#readme).
+Review the generated `.github/workflows/CI.yml` before using these commands.
+If your project has changed its trigger or release tooling, follow the checked
+in workflow rather than this template convention.
 
-However, this approach imposes an additional workload on the native addon authors, including the need to write tools to manage the release binary and a bunch of packages, which are generally very difficult to debug (and typically span several systems and CPU architectures).
+## Release gates inside CI
 
-These tools need to manage the entire addon flow through the development -> local release version -> CI -> artifacts -> deploy phase. On top of that, there are a lot of CI/CD configurations to write/debug, which is time consuming and tedious.
+Because the CLI warns and continues when an expected target file is missing,
+add an explicit gate before the publish step. It should prove that:
 
-## Conclusion
+- Every configured target directory exists.
+- Every directory contains exactly the expected `.node` or `.wasm` file.
+- WASI packages contain their generated loader and worker support files.
+- No artifact has an unexpected binary name or target suffix.
+- Platform runtime tests consumed the same artifacts that will be published.
 
-The native addon with the 3rd distribution method (**distribution of native addons for different platforms via different npm packages**) is the easiest to use and the least mentally taxing for the developers who use it, but this distribution method imposes additional maintenance costs on the native addon authors.
+Do not publish the root package unless all platform gates pass. Once the root
+version exists, clients may immediately attempt to resolve every listed
+optional dependency.
 
-**NAPI-RS** takes over this workload:
+## Verify the published release
 
-- [Cross build](../cross-build) — build every target platform from a handful of CI hosts.
-- [`napi artifacts`](../cli/artifacts) — copy the binaries built in CI into the per-platform npm packages.
-- [`napi pre-publish`](../cli/pre-publish) — update `package.json` and publish the per-platform packages.
+A green workflow is not enough. After publication:
+
+1. Read the root metadata with `npm view @scope/addon@<version> --json` and
+   confirm its dist-tag and exact `optionalDependencies`.
+2. Query every platform package at the same version and inspect its `os`,
+   `cpu`, `libc`, and tarball file list.
+3. Confirm npm displays provenance when the workflow promised it.
+4. Confirm the GitHub release points to the intended tag and contains every
+   expected binary asset.
+5. Install the root package into clean projects on representative glibc, musl,
+   macOS, and Windows systems and call a native export.
+6. Test native-to-WASI fallback separately when WASI is part of the release.
+
+Keep the release workflow URL and verification results with the release notes.
+
+## Recover from a partial release
+
+Do not immediately bump the version or rebuild. First inventory npm packages,
+the root package, and GitHub assets for the failed version. Published binaries
+must never be replaced with different bits under the same version.
+
+The recovery tools are:
+
+- Re-run `napi prepublish -t npm` with the unchanged artifacts to publish
+  missing platform packages. Already-published versions are skipped when npm
+  returns its standard duplicate-version error.
+- Pass `--gh-release-id <id>` to upload to an existing release instead of
+  creating another one.
+- Pass `--skip-optional-publish` only after independently confirming that every
+  platform package already exists.
+- If only the root package remains, publish the unchanged root tarball from the
+  trusted release job with lifecycle scripts disabled so the platform phase is
+  not repeated.
+
+Follow the detailed [partial failure and recovery
+procedure](../cli/pre-publish#partial-failure-and-recovery). If the root was
+published with a missing platform dependency, publish the missing package
+immediately or deprecate the broken root version; npm has no atomic rollback.

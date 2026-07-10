@@ -4,6 +4,8 @@ import Contributors from "../../../components/contributors.jsx" with { island: "
 
 ---
 title: 'NAPI-RS v2 发布'
+date: '2021-12-17'
+description: 'NAPI-RS v2 —— 更快、更安全的 Rust 构建 Node.js 原生插件框架。'
 ---
 
 # NAPI-RS v2 发布

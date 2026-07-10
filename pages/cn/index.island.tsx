@@ -67,8 +67,9 @@ export default function CnHome({ sponsors }: Props) {
             👷‍♂️ 由 <code>Rust</code> 编译器保障的内存安全
           </p>
           <p>
-            ⚡️ <code>Rust</code> 与 <code>Node.js</code> 之间通过{' '}
-            <code>Buffer</code> 和 <code>TypedArray</code> 实现零数据拷贝交互
+            ⚡️ 通过 <code>Buffer</code> 和 <code>TypedArray</code> 在{' '}
+            <code>Rust</code> 与 <code>Node.js</code>
+            之间高效传输二进制数据，并可按需使用零拷贝视图
           </p>
           <p>⚙️ 轻松并行代码</p>
 
@@ -78,8 +79,19 @@ export default function CnHome({ sponsors }: Props) {
           <h2>生态</h2>
           <Ecosystem />
 
-          <h2>支持列表</h2>
-          <SupportMatrix />
+          <h2>支持与兼容性</h2>
+          <p>
+            Node-API 的 ABI 兼容范围、构建 CLI 的 Node.js
+            要求，以及源码仓库当前持续测试的版本并不是同一件事。当前 CLI
+            构建建议使用 Node.js 22.13+ 或 24+；源码仓库的主要矩阵测试 Node.js
+            22、24 和 26。每个原生产物仍然只适用于其操作系统、CPU 和 libc 目标。
+          </p>
+          <SupportMatrix locale="cn" />
+          <p>
+            请阅读
+            <a href="/cn/docs/more/support-compatibility">支持与兼容性</a>
+            ，了解 Node-API 等级、运行时、模板目标和 CI 覆盖范围之间的区别。
+          </p>
 
           <h2>相关项目</h2>
           <ul>

@@ -29,7 +29,7 @@ use napi::{
 use napi_derive::napi;
 
 #[napi]
-pub fn call_threadsafe_function(callback: ThreadsafeFunction<u32>) -> Result<()> {
+pub fn call_threadsafe_function(callback: ThreadsafeFunction<u32, ()>) -> Result<()> {
   let tsfn = Arc::new(callback);
   for n in 0..100 {
     let tsfn = tsfn.clone();
@@ -67,7 +67,7 @@ use napi_derive::napi;
 pub fn call_threadsafe_function(callback: ThreadsafeFunction<u32, u32>) {
   thread::spawn(move || {
     callback.call_with_return_value(Ok(1), ThreadsafeFunctionCallMode::Blocking, |ret, _| {
-      println!("ret: {:?}", ret); // 101
+      println!("ret: {:?}", ret); // Ok(101)
       Ok(())
     });
   });
@@ -119,6 +119,18 @@ pub fn call_threadsafe_function(callback: Function<String, ()>) -> Result<()> {
   Ok(())
 }
 ```
+
+::: warning
+The callback argument and return types stored by a ThreadsafeFunction must be
+`'static`, because the callback can run after the exported Rust function has
+returned. Do not use scoped values such as `Unknown<'env>`, `Object<'env>`, or
+`Function<'env, ...>` as `CallJsBackArgs`. Convert to owned Rust data such as
+`String`, `Buffer`, or a plain owned struct before crossing the thread
+boundary. An explicit scoped lifetime here produces `E0521` because the
+borrowed JavaScript value would escape its callback scope; see
+[napi-rs#3383](https://github.com/napi-rs/napi-rs/issues/3383).
+
+:::
 
 ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
 
@@ -181,14 +193,14 @@ pub fn call_threadsafe_function(
 }
 ```
 
-## ErrorStrategy
+## `CalleeHandled` error behavior
 
 There are two different error-handling strategies for `Threadsafe Function`. The strategy can be defined in the fifth generic parameter of `ThreadsafeFunction`:
 
 **lib.rs**
 
 ```rust
-let tsfn: ThreadsafeFunction<u32, u32, u32, false> = ...
+let tsfn: ThreadsafeFunction<u32, u32, u32, Status, false> = ...
 ```
 
 ### `CalleeHandled: true` (default behavior)
@@ -210,7 +222,7 @@ use napi_derive::napi;
 
 #[napi]
 pub fn call_threadsafe_function(
-  tsfn: Arc<ThreadsafeFunction<u32, u32, u32, Status, true>>,
+  tsfn: Arc<ThreadsafeFunction<u32, (), u32, Status, true>>,
 ) -> Result<()> {
   for n in 0..100 {
     let tsfn = tsfn.clone();
@@ -254,9 +266,15 @@ With the `CalleeHandled: false` strategy, the `ThreadsafeFunction` will not be
 able to handle the error in the Rust threads, so you can't pass the `Error` back
 to the JavaScript side.
 
-The `ThreadsafeFunction` will also not be able to handle the synchronously thrown errors in the callback function. If you throw an synchronous error in the callback, it will cause the Node.js process to crash. Asynchronous errors (like `Promise` rejections) can be handled by the `ThreadsafeFunction`.
+The plain `call` method has no error channel back to Rust. A synchronous throw
+in the JavaScript callback is routed through `napi_fatal_exception`, and a
+returned `Promise` is not awaited automatically. If Rust needs the callback's
+result, set a concrete `Return` type and use `call_async_catch`, or use
+`call_with_return_value` and handle the `Result` passed to its completion
+callback.
 
-It's only recommended if you are sure the threads where the `ThreadsafeFunction` is called will not return `Err` or panic and the callback will not throw a synchronous error.
+Use this mode only when native failures are handled before `call` and the
+JavaScript callback cannot throw.
 
 :::
 
@@ -314,7 +332,7 @@ use napi_derive::napi;
 
 #[napi]
 pub fn call_threadsafe_function(
-  tsfn: Arc<ThreadsafeFunction<u32, u32, u32, Status, false, true>>,
+  tsfn: Arc<ThreadsafeFunction<u32, (), u32, Status, false, true>>,
 ) -> Result<()> {
   for n in 0..100 {
     let tsfn = tsfn.clone();
@@ -333,24 +351,20 @@ If you call this function like this:
 ```ts
 import { callThreadsafeFunction } from './index.js'
 
-// log nothing because the event loop exit immediately
-callThreadsafeFunction((err, n) => {
-  if (err) {
-    console.error(err)
-  } else {
-    console.log(n)
-  }
-})
+// Weak mode does not keep the event loop alive by itself.
+callThreadsafeFunction((n) => console.log(n))
 ```
 
-There won't be any logs in the console, because the event loop and Node.js process exit immediately.
+If nothing else keeps the event loop alive, Node.js may exit before some or all queued callbacks run. Other active handles or work can keep the process alive long enough to deliver them. Weak mode does not guarantee callback delivery or suppress callbacks; it only removes this `ThreadsafeFunction` as a reason to keep the loop alive.
 
 ## `MaxQueueSize`
 
 You can set the `MaxQueueSize` parameter of `ThreadsafeFunction` to limit the number of messages in the queue.
 
 ::: info
-If call the `ThreadsafeFunction` with the `Blocking` mode, the `MaxQueueSize` parameter will have no effect. `Blocking` mode would block the queue when the queue is full. `NonBlocking` mode would return immediately with the `Status::QueueFull` when the queue is full. See [`napi_call_threadsafe_function`](https://nodejs.org/api/n-api.html#napi_call_threadsafe_function) for more details.
+`MaxQueueSize` sets the queue capacity in both call modes. When that capacity is
+reached, `Blocking` waits for space; `NonBlocking` returns immediately with
+`Status::QueueFull`. See [`napi_call_threadsafe_function`](https://nodejs.org/api/n-api.html#napi_call_threadsafe_function) for more details.
 
 :::
 
@@ -387,7 +401,7 @@ When you call this function, and add heavy work in the callback, you will see th
 ```ts
 import { callThreadsafeFunction } from './index.js'
 
-function fib(n) {
+function fib(n: number): number {
   if (n <= 1) return n
   return fib(n - 1) + fib(n - 2)
 }
@@ -397,7 +411,7 @@ callThreadsafeFunction(() => {
 })
 ```
 
-this would produce the following output:
+An illustrative run might produce output like this:
 
 ```
 Ok
@@ -412,3 +426,5 @@ QueueFull
 QueueFull
 ...
 ```
+
+The exact number and order of `Ok` and `QueueFull` results depends on when the JavaScript thread drains the queue relative to the producer thread. A capacity of one guarantees the backpressure behavior, not a fixed output sequence.

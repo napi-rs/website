@@ -5,8 +5,6 @@ description: Map Rust enums to JavaScript string unions and numeric enums in NAP
 
 # Enum
 
-import { Callout } from 'nextra-theme-docs'
-
 <Callout type="warning" emoji="⚠️">
   There is no `enum` in JavaScript, and Rust `enum` is very different from
   TypeScript `enum`. You need to read this section carefully before you use Rust
@@ -36,11 +34,13 @@ export const enum Kind {
 
 In `TypeScript`, numeric `enum` members also get a reverse mapping from enum values to enum names. However, in Rust, we don't have this reverse mapping behavior. It is just a plain JavaScript Object.
 
+Numeric variants default to consecutive `i32` values starting at zero. Explicit Rust integer discriminants are preserved, and following implicit variants continue from the previous value.
+
 ## String enum
 
 ```rust filename="lib.rs"
 #[napi(string_enum)]
-enum Kind {
+pub enum Kind {
   Duck,
   Dog,
   Cat,
@@ -56,5 +56,40 @@ export const enum Kind {
   Cat = 'Cat',
 }
 ```
+
+Use `string_enum = "case"` to transform every variant name, or `#[napi(value = "...")]` on one variant to choose its exact JavaScript value. Supported cases are listed in the [`#[napi]` attribute reference](/docs/concepts/napi-attributes#enums).
+
+```rust filename="lib.rs"
+#[napi(string_enum = "kebab-case")]
+pub enum AccessMode {
+  ReadOnly,
+  #[napi(value = "read-write")]
+  Writable,
+}
+```
+
+## Structured enum
+
+An enum with a data-carrying variant becomes a discriminated object union rather than a JavaScript enum object.
+
+```rust filename="lib.rs"
+#[napi]
+pub enum Event {
+  Ready,
+  FileChanged { path: String },
+  Progress(u32, u32),
+}
+```
+
+```ts filename="index.d.ts"
+export type Event =
+  | { type: 'Ready' }
+  | { type: 'FileChanged'; path: string }
+  | { type: 'Progress'; field0: number; field1: number }
+```
+
+The discriminator is `type` by default. Change it with `discriminant = "kind"`, and transform variant values with `discriminant_case = "camelCase"` or another supported case. Named variant fields keep their names; tuple fields become `field0`, `field1`, and so on. A field cannot have the same JavaScript name as the discriminator.
+
+Structured enum conversion is owned: accepting one reads and converts its fields into a Rust enum value, while returning one creates a new JavaScript object. `object_from_js = false` or `object_to_js = false` can make the type one-directional. See [Type conversions](/docs/concepts/type-conversions#objects-classes-and-custom-shapes).
 
 **NAPI-RS** doesn't support generating Rust `enum` `impl` into JavaScript.

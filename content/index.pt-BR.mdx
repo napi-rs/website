@@ -60,7 +60,7 @@ console.log(fibonacci(5))
 
 👷‍♂️ Segurança de memória, garantida pelo compilador do `Rust`
 
-⚡️ Transferência interativa de dados sem cópia entre `Rust` e `Node.js` via `Buffer` e `TypedArray`
+⚡️ Transferência eficiente de dados binários entre `Rust` e `Node.js` via `Buffer` e `TypedArray`, com visualizações zero-copy quando apropriado
 
 ⚙️ Paralelismo em poucas linhas
 
@@ -72,26 +72,11 @@ console.log(fibonacci(5))
 
 <Ecosystem />
 
-## Matriz de suporte
+## Suporte e compatibilidade
 
-### Node.js
+A compatibilidade de ABI do Node-API, o requisito de Node.js da CLI de build e as versões testadas continuamente pelo repositório-fonte são contratos diferentes. Para builds atuais da CLI, use Node.js 22.13+ ou 24+; a matriz principal do repositório-fonte testa Node.js 22, 24 e 26. Cada artefato nativo continua específico ao seu sistema operacional, CPU e libc.
 
-| Node10 | Node12 | Node14 | Node16 | Node18 | Node20 |
-| ------ | ------ | ------ | ------ | ------ | ------ |
-| ✓      | ✓      | ✓      | ✓      | ✓      | ✓      |
-
-### Plataformas suportadas
-
-> ✅ Significa testado oficialmente no repositório napi-rs. <br/> `-` Significa nenhuma release oficial do Node.js.
-
-|            | i686 | x64 | aarch64 | arm |
-| ---------- | ---- | --- | ------- | --- |
-| Windows    | ✅   | ✅  | ✅      | -   |
-| macOS      | -    | ✅  | ✅      | ✅  |
-| Linux      | -    | ✅  | ✅      | ✅  |
-| Linux musl | -    | ✅  | ✅      | -   |
-| FreeBSD    | -    | ✅  | -       | -   |
-| Android    | -    | -   | ✅      | ✅  |
+Leia [Suporte e compatibilidade](/pt-BR/docs/more/support-compatibility) para distinguir nível de Node-API, runtime, destinos dos templates e cobertura de CI.
 
 ## Projetos relacionados
 

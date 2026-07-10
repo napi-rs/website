@@ -97,7 +97,8 @@ impl Task for CountBufferLength {
   }
 
   fn resolve(&mut self, _: Env, output: Self::Output) -> Result<Self::JsValue> {
-    Ok(output as u32)
+    u32::try_from(output)
+      .map_err(|_| Error::new(Status::InvalidArg, "buffer length exceeds u32"))
   }
 
   fn reject(&mut self, _: Env, err: Error) -> Result<Self::JsValue> {
@@ -149,7 +150,8 @@ impl Task for CountBufferLength {
   }
 
   fn resolve(&mut self, _: Env, output: Self::Output) -> Result<Self::JsValue> {
-    Ok(output as u32)
+    u32::try_from(output)
+      .map_err(|_| Error::new(Status::InvalidArg, "buffer length exceeds u32"))
   }
 
   fn reject(&mut self, _: Env, err: Error) -> Result<Self::JsValue> {
@@ -197,7 +199,7 @@ fn async_fib(input: u32) -> AsyncTask<AsyncFib> {
 **index.d.ts**
 
 ```ts
-export function asyncFib(input: number) => Promise<number>
+export function asyncFib(input: number): Promise<number>
 ```
 
 ### Create `AsyncTask` With `AbortSignal`
@@ -220,10 +222,12 @@ fn async_fib(input: u32, signal: AbortSignal) -> AsyncTask<AsyncFib> {
 **index.d.ts**
 
 ```ts
-export function asyncFib(input: number, signal: AbortSignal) => Promise<number>
+export function asyncFib(input: number, signal: AbortSignal): Promise<number>
 ```
 
-If you invoke `AbortController.abort` in the JavaScript code and the `AsyncTask` has not been started yet, the `AsyncTask` will be aborted immediately, and reject with `AbortError`.
+If you invoke `AbortController.abort` before libuv starts the `AsyncTask`,
+Node-API can cancel the queued work and the Promise rejects with an error whose
+`name` is `AbortError`.
 
 **test.mjs**
 
@@ -264,8 +268,15 @@ export function asyncFib(
 ```
 
 ::: tip
-If `AsyncTask` has already been started or completed, the
-`AbortController.abort` will have no effect.
+If `AsyncTask` has already started, Node-API cannot cancel its `compute`
+callback; if it has completed, its Promise result is already settled.
+`AbortSignal::on_abort` callbacks registered in Rust still run when the
+JavaScript signal fires, even when cancellation is too late. The current
+adapter installs its handler while converting the argument and does not
+inspect `signal.aborted`, so pass a signal that has not already been aborted.
+It assigns `signal.onabort`, replacing any handler stored in that property;
+use `signal.addEventListener('abort', ...)` for independent JavaScript
+listeners.
 
 :::
 

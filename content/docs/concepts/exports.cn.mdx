@@ -5,8 +5,6 @@ description: 使用 NAPI-RS 控制 Rust 函数、类和常量如何导出到 Jav
 
 # 导出
 
-import { Callout } from 'nextra-theme-docs'
-
 <Callout type="info">
 与在 Node.js 中定义模块不同，我们不需要像 `module.exports.xxx = xxx` 这样显式注册导出。
 
@@ -20,7 +18,7 @@ import { Callout } from 'nextra-theme-docs'
 
 ```rust filename="lib.rs"
 #[napi]
-fn sum(a: u32, b: u32) -> u32 {
+pub fn sum(a: f64, b: f64) -> f64 {
 	a + b
 }
 ```

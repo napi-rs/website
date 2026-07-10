@@ -1,0 +1,305 @@
+---
+description: Load NAPI-RS addons from CommonJS, ESM, bundlers, frameworks, Electron, and serverless deployments.
+---
+
+# Integrations and bundlers
+
+A `.node` file is a shared library loaded by the JavaScript runtime. It is not
+JavaScript and should not be transformed, concatenated into a bundle, or sent
+to a browser. Most integration problems disappear once the generated loader is
+kept intact and executed by Node at runtime.
+
+## Understand the generated loader
+
+With `napi build --platform`, NAPI-RS generates a JavaScript loader that:
+
+1. Detects `process.platform`, `process.arch`, and Linux libc.
+2. Tries a local file such as `addon.linux-x64-gnu.node`.
+3. Tries the separately published optional package such as
+   `@scope/addon-linux-x64-gnu`.
+4. Falls back to the configured WASI binding when native loading failed.
+5. Throws one error whose `cause` chain contains the native-candidate load
+   failures. Ordinary WASI fallback failures are not appended to that chain;
+   use `NAPI_RS_FORCE_WASI=error` when diagnosing WASI specifically.
+
+The loader also recognizes two diagnostic controls:
+
+- `NAPI_RS_NATIVE_LIBRARY_PATH=/absolute/addon.node` **replaces** normal native
+  platform and package selection with one explicit library. If that load fails,
+  the loader records the error and can proceed to a configured WASI fallback,
+  but it does not try the ordinary native candidates.
+- `NAPI_RS_ENFORCE_VERSION_CHECK=1` rejects a separately published platform
+  package whose version differs from the root package.
+
+Keep the loader outside the application bundle whenever possible. It must be
+able to perform its runtime detection and resolve optional dependencies from a
+real `node_modules` tree.
+
+## Choose CommonJS or ESM deliberately
+
+The native library itself has no module format. Only the generated JavaScript
+loader is CommonJS or ESM.
+
+### CommonJS package
+
+```sh
+napi build --platform --js index.cjs
+```
+
+```json filename="package.json"
+{
+  "main": "./index.cjs",
+  "types": "./index.d.ts"
+}
+```
+
+```js
+const { add } = require('@scope/addon')
+```
+
+Use a `.cjs` extension if the package has `"type": "module"`; otherwise Node
+will parse a CommonJS loader as ESM.
+
+### ESM package
+
+```sh
+napi build --platform --esm --js index.js
+```
+
+```json filename="package.json"
+{
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts"
+}
+```
+
+```js
+import { add } from '@scope/addon'
+```
+
+The generated ESM loader uses `createRequire` internally because Node still
+loads `.node` libraries through `require`. `--esm` changes the exported wrapper
+to real static named ESM exports; it does not convert the native binary.
+
+### Dual CommonJS and ESM exports
+
+Generate both loaders from the same native artifact:
+
+```json filename="package.json"
+{
+  "type": "module",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "napi build --platform --js index.cjs && napi build --platform --esm --js index.js"
+  }
+}
+```
+
+Test both `import()` and `require()` in CI. Test runners that transpile ESM can
+exercise a different path than plain Node, which is why an ESM-only Jest error
+is not proof that the native library failed to load.
+
+## Recommended bundler strategy: externalize
+
+The most robust application build leaves the root addon package external. The
+deployment then contains:
+
+- the generated loader;
+- the root package metadata;
+- the matching optional platform package and its `.node` file.
+
+This is the packaging model recommended for the open bundler request
+([napi-rs#1948](https://github.com/napi-rs/napi-rs/issues/1948)). It avoids
+hashed asset names, relocated `__dirname`, and bundlers eagerly following every
+platform-specific `require` branch.
+
+<Callout type="warning">
+  Marking a dependency external means the deployed runtime must still be able
+  to resolve it. Copy production dependencies, install them in the deployment
+  image, or provide them through a serverless layer. Externalization alone does
+  not package the addon.
+</Callout>
+
+### esbuild
+
+```js filename="build.mjs"
+import * as esbuild from 'esbuild'
+
+await esbuild.build({
+  entryPoints: ['src/server.js'],
+  bundle: true,
+  platform: 'node',
+  format: 'esm',
+  outdir: 'dist',
+  external: ['@scope/addon', '@scope/addon-*'],
+})
+```
+
+Copy/install `@scope/addon` and its matching optional dependency beside the
+bundle. Do not use a `file`/`copy` loader unless you have deliberately chosen a
+single-platform, inline-binary package and verified the final relative paths.
+
+### webpack
+
+```js filename="webpack.config.cjs"
+module.exports = {
+  target: 'node',
+  externals: {
+    '@scope/addon': 'commonjs @scope/addon',
+  },
+}
+```
+
+If the import name is computed or wrapped, use an externals function/plugin
+that keeps the entire addon package external. `node-loader` can copy a direct
+`.node` import, but it does not by itself preserve the generated loader's
+platform and optional-package control flow.
+
+### A single-platform inline binary
+
+Sometimes an internal application ships only one known target and keeps the
+`.node` file in the root package rather than separate optional packages. In
+that case:
+
+1. Keep the generated wrapper as an external file.
+2. Copy the `.node` file without a content hash.
+3. Preserve the relative path expected by the wrapper.
+4. Fail the build if more than one target could reach the deployment.
+5. Test from the final archive/image, not from the source tree.
+
+This is a deployment-specific optimization, not a portable npm package.
+
+## Vite SSR and Astro
+
+Native addons are server-only dependencies. Keep them out of Vite dependency
+optimization and SSR bundling:
+
+```ts filename="vite.config.ts"
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  optimizeDeps: {
+    exclude: ['@scope/addon'],
+  },
+  ssr: {
+    external: ['@scope/addon'],
+  },
+})
+```
+
+Import the addon only from server modules. A component that is bundled for the
+browser cannot load a native `.node` library.
+
+Astro uses Vite, so the same externalization applies through its `vite` config.
+When a CommonJS package does not expose named exports to Rollup, either emit the
+NAPI-RS wrapper with `--esm` or load the CommonJS package in server code:
+
+```ts
+import { createRequire } from 'node:module'
+
+const require = createRequire(import.meta.url)
+const { add } = require('@scope/addon')
+```
+
+The Astro integration report remains open as
+[napi-rs#2206](https://github.com/napi-rs/napi-rs/issues/2206). Verify the
+adapter's final server output because an adapter may run another bundling step
+after Vite.
+
+## Next.js
+
+Use the addon only in the Node.js runtime: route handlers, server actions, or
+server components that are not assigned to the Edge runtime. Externalize the
+package from the server bundle:
+
+```js filename="next.config.mjs"
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  serverExternalPackages: ['@scope/addon'],
+}
+
+export default nextConfig
+```
+
+```ts filename="app/api/add/route.ts"
+export const runtime = 'nodejs'
+
+import { add } from '@scope/addon'
+
+export function GET() {
+  return Response.json({ value: add(20, 22) })
+}
+```
+
+Do not import the addon from a Client Component, middleware using the Edge
+runtime, or code shared with either one. Ensure your deployment platform copies
+the external package and its optional binary dependency.
+
+## Electron
+
+Electron can load a Node-API addon in the main process and in Node-enabled
+preload/renderer contexts. Prefer loading it in the main process or a preload
+script and expose a narrow IPC API; enabling unrestricted Node integration in a
+renderer expands the application's security boundary.
+
+For packaged applications:
+
+- build/install the binary for Electron's actual operating system and CPU;
+- keep `.node` files outside ASAR compression (`asarUnpack`) or use the
+  packager's native-module unpack support;
+- keep optional platform packages in production dependencies;
+- test an installed/package artifact, including window reload and shutdown;
+- test every Electron architecture you distribute.
+
+Node-API reduces dependence on a particular V8 ABI, but it does not make a
+Linux x64 binary load on Windows or macOS. If another dependency uses the V8
+addon ABI instead of Node-API, it may still need Electron-specific rebuilding.
+
+## Serverless and containers
+
+Build and install for the **deployment runtime**, not the developer laptop.
+For example, a Linux Lambda deployment needs a Linux binary for the function's
+x64 or arm64 architecture and compatible glibc version.
+
+A reliable flow is:
+
+1. Build/publish separate platform packages from CI.
+2. Install production dependencies for the deployment platform.
+3. Externalize the addon from the JavaScript bundle.
+4. Copy the root and optional platform packages into the image, function, or
+   layer.
+5. Start the final artifact in the provider's base image and call one native
+   export as a smoke test.
+
+For Linux libc and target selection, follow [Cross build](/docs/cross-build).
+If the provider does not allow native addons but supplies the required WASI
+runtime features, consider the documented [WASI fallback](/docs/concepts/webassembly)
+and test that host explicitly.
+
+## Diagnose a bundled deployment
+
+Run these probes inside the final container/archive environment:
+
+```sh
+node -p "process.execPath"
+node -p "process.platform + ' ' + process.arch"
+node -p "process.report?.getReport?.().header.glibcVersionRuntime || 'no glibc version reported'"
+npm ls @scope/addon
+```
+
+Then import the external package with plain Node. If it works before bundling
+but not from the final bundle, inspect whether the bundler relocated the loader,
+renamed the `.node` file, removed an optional dependency, or selected an Edge/
+browser runtime. The [troubleshooting guide](/docs/more/troubleshooting) shows
+how to print the native loader failures in the `cause` chain and how to force a
+separate WASI diagnostic.

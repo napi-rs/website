@@ -1,0 +1,378 @@
+---
+description: 在 Node.js 和浏览器中构建、打包、测试并运行 NAPI-RS WASI 回退。
+---
+
+import TransformImage from '../../../components/transform-image'
+import { LinkPreview } from '../../../components/link-preview'
+import ViteLogo from '../../../public/assets/vite.svg'
+import WebpackLogo from '../../../public/assets/webpack.svg'
+import PnpmLogo from '../../../public/assets/pnpm.svg'
+import YarnLogo from '../../../public/assets/yarn.svg'
+import NpmLogo from '../../../public/assets/npm.png'
+
+export const getStaticProps = async () => {
+  const { createHash } = await import('node:crypto')
+
+  const wasmIssueJson = await fetch(
+    'https://api.github.com/repos/napi-rs/napi-rs/issues/1794',
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+      },
+    },
+  ).then((res) => res.json())
+  return {
+    props: {
+      ssg: {
+        linkPreview: {
+          [`https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/`]: {
+            json: {
+              title: 'Mitigations: Landing new class of timing attacks',
+              body: 'Several recently-published research articles have demonstrated a new class of timing attacks (Meltdown and Spectre) that work on modern CPUs. Our internal experiments confirm that it is possible to use similar techniques from Web content to read private information between different origins.',
+              user: {
+                login: 'Luke Wagner',
+              },
+              repoUrl: 'blog.mozilla.org',
+            },
+            og: await fetch(
+              'https://blog.mozilla.org/wp-content/blogs.dir/278/files/2021/02/moz_blog_header_som_002_1200x600.jpg',
+            )
+              .then((res) => res.bytes())
+              .then((bytes) => Buffer.from(bytes).toString('base64')),
+            userAvatar: await fetch(
+              'https://avatars.githubusercontent.com/u/9660325?v=4',
+            )
+              .then((res) => res.bytes())
+              .then((bytes) => Buffer.from(bytes).toString('base64')),
+          },
+          [`https://github.com/napi-rs/napi-rs/issues/1794`]: {
+            json: {
+              title: wasmIssueJson.title,
+              body: wasmIssueJson.body,
+              user: {
+                login: wasmIssueJson.user.login,
+              },
+              repoUrl: `napi-rs/napi-rs`,
+            },
+            og: await fetch(
+              `https://opengraph.githubassets.com/${createHash('sha256').update(wasmIssueJson.updated_at).digest('hex')}/napi-rs/napi-rs/issues/1794`,
+            )
+              .then((res) => res.bytes())
+              .then((bytes) => Buffer.from(bytes).toString('base64')),
+            userAvatar: await fetch(wasmIssueJson.user.avatar_url)
+              .then((res) => res.bytes())
+              .then((bytes) => Buffer.from(bytes).toString('base64')),
+          },
+        },
+      },
+    },
+  }
+}
+
+# WebAssembly 与 WASI
+
+NAPI-RS 可以将插件编译到 [`wasm32-wasip1-threads`](https://doc.rust-lang.org/rustc/platform-support/wasm32-wasip1-threads.html)，并生成 Node.js 与浏览器加载器。主要用例包括：
+
+- 宿主机没有匹配的预构建原生插件时，提供可移植的回退方案；
+- 在浏览器、StackBlitz 或 WebContainer 中演示相同的 Rust API；
+- 发布明确以 WASI 为目标的包。
+
+当前支持的默认目标是 `wasm32-wasip1-threads`。更底层的 `wasm32-unknown-unknown` 和无线程 WASI 目标需要自行调整线程与依赖，本工作流不会生成它们。
+
+<Callout type="warning">
+  WASI 构建并不自动等同于原生插件。操作系统 API、原生 C/C++ 依赖、文件系统行为、线程、内存限制和宿主运行时支持都可能不同。请把 WASI 产物作为独立发布目标测试。
+</Callout>
+
+## 快速开始
+
+最简单的起点是启用 WASI 目标的 `napi new`。对于现有项目，请安装 Rust 目标并加入 `napi.targets`：
+
+```sh
+rustup target add wasm32-wasip1-threads
+```
+
+```json filename="package.json"
+{
+  "name": "@scope/my-addon",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "browser": "browser.js",
+  "napi": {
+    "binaryName": "my-addon",
+    "targets": [
+      "x86_64-unknown-linux-gnu",
+      "aarch64-apple-darwin",
+      "x86_64-pc-windows-msvc",
+      "wasm32-wasip1-threads"
+    ],
+    "wasm": {
+      "initialMemory": 4000,
+      "maximumMemory": 65536,
+      "browser": {
+        "fs": false,
+        "asyncInit": false,
+        "buffer": false,
+        "errorEvent": true
+      }
+    }
+  }
+}
+```
+
+项目必须使用相互兼容的 `@emnapi/core` 和 `@emnapi/runtime` 依赖。当前 `napi new` 创建的脚手架已经包含它们。如果项目解析出的版本与 CLI 使用的 `emnapi` 版本不同，构建会因明确的版本不匹配错误而停止；请一起升级它们，不要绕过该检查。
+
+构建 WASI 目标：
+
+```sh
+napi build --platform --release --target wasm32-wasip1-threads
+```
+
+无需交叉编译标志。纯 Rust crate 使用 Rust 的 WASI 链接器。只有依赖树中的 C/C++ 代码需要 WASI C 工具链时才需要 `WASI_SDK_PATH`。
+
+## 生成的产物
+
+对于 `binaryName: "my-addon"`，构建会创建：
+
+| 文件 | 用途 |
+| --- | --- |
+| `my-addon.wasm32-wasi.wasm` | strip 后的 release WASM 模块 |
+| `my-addon.wasm32-wasi.debug.wasm` | 生成成功时，保留调试/名称信息的模块 |
+| `my-addon.wasi.cjs` | Node.js WASI 加载器 |
+| `my-addon.wasi-browser.js` | 浏览器 ESM 加载器 |
+| `wasi-worker.mjs` | emnapi 线程使用的 Node worker |
+| `wasi-worker-browser.mjs` | emnapi 线程使用的浏览器 worker |
+| `browser.js` | 重新导出 WASI 平台包的 browser 包入口 |
+| `index.js` 和 `index.d.ts` | 普通平台选择加载器和共享类型 |
+
+每个加载器都要与其 worker 和 WASM 文件放在一起。不重新生成加载器就重命名或移动其中某个文件，会破坏相对 URL。
+
+## 原生到 WASI 的回退原理
+
+普通 `index.js` 加载器首先尝试当前平台的原生二进制文件。如果原生加载失败，再依次尝试：
+
+1. 本地 `my-addon.wasi.cjs`；
+2. 单独发布的 `@scope/my-addon-wasm32-wasi` 包。
+
+即使宿主机支持原生插件，也可以用 `NAPI_RS_FORCE_WASI` 测试回退。对于 `@napi-rs/cli` 3.7 或更新版本生成的加载器：
+
+| 值 | 行为 |
+| --- | --- |
+| 未设置或其他任意字符串 | 优先原生；仅在原生失败后尝试 WASI |
+| `true` | 即使原生已加载也尝试并选择 WASI；不会严格断言 WASI 缺失 |
+| `error` | 尝试 WASI；没有本地或已打包 WASI 绑定时抛出错误 |
+
+`1`、`0` 和 `false` 等值不会强制使用 WASI。测试中请使用 `error`，以免缺失产物时静默使用原生实现：
+
+```sh
+NAPI_RS_FORCE_WASI=error node ./test.cjs
+```
+
+在 Node 中，生成的 WASI 加载器会：
+
+- 依次使用 `NAPI_RS_ASYNC_WORK_POOL_SIZE`、`UV_THREADPOOL_SIZE` 和 `4` 作为 emnapi async-work pool 大小；
+- 通过 Node 的 WASI 实现预打开宿主文件系统根目录；
+- 复用 worker thread 并取消其引用，使空闲 worker 不会阻止 Node 退出；
+- 同目录中存在 `.debug.wasm` 文件时优先使用它。
+
+<Callout type="warning">
+  Node WASI 加载器会预打开文件系统根目录。请把 WASI 插件视为受信任的原生应用代码，而不是隔离不受信任模块或输入的安全沙箱。
+</Callout>
+
+## 浏览器演示
+
+这个图片转换器通过 WASI 浏览器入口使用 [`@napi-rs/image`](https://github.com/Brooooooklyn/Image)：
+
+<TransformImage />
+
+```ts
+import { Transformer } from '@napi-rs/image'
+
+export async function transform() {
+  const imageBytes = await fetch(
+    'https://images-assets.nasa.gov/image/carina_nebula/carina_nebula~orig.png',
+  ).then((res) => res.arrayBuffer())
+  const transformer = new Transformer(new Uint8Array(imageBytes))
+  return transformer.webp()
+}
+```
+
+安装 WASI 包并配置跨源隔离后，可使用 <img src={ViteLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> <span className="text-violet-500">Vite</span> 或 <img src={WebpackLogo.src} style={{ verticalAlign: 'text-bottom' }} width={20} height={20} /> <span className="text-sky-500">Webpack</span> 打包。
+
+对于本地未发布构建，直接导入 `./my-addon.wasi-browser.js`。对于已发布包，根 `browser` 入口会重新导出单独发布的 `-wasm32-wasi` 包。
+
+## 浏览器服务器配置
+
+threads 目标使用共享 WebAssembly 内存、`SharedArrayBuffer`、worker 和 atomics。由于侧信道安全缓解措施，浏览器只在跨源隔离页面中公开 `SharedArrayBuffer`：
+
+<LinkPreview href="https://blog.mozilla.org/security/2018/01/03/mitigations-landing-new-class-timing-attack/" />
+
+提供页面时必须同时设置两个 header：
+
+```text
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+```
+
+例如在 Vite 中：
+
+```ts filename="vite.config.ts"
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
+  },
+  plugins: [
+    {
+      name: 'configure-preview-response-headers',
+      configurePreviewServer(server) {
+        server.middlewares.use((_req, res, next) => {
+          res.setHeader('Cross-Origin-Opener-Policy', 'same-origin')
+          res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp')
+          next()
+        })
+      },
+    },
+  ],
+})
+```
+
+生产 CDN/服务器也要配置；开发 header 不会自动带入部署。跨源脚本、worker、WASM、图片和字体也必须满足所选 COEP 策略。
+
+在浏览器中验证结果：
+
+```js
+console.log(globalThis.crossOriginIsolated) // true
+console.log(typeof SharedArrayBuffer) // 'function'
+```
+
+## 浏览器运行时配置
+
+`napi.wasm` 字段控制生成的浏览器胶水代码：
+
+| 字段 | 默认值 | 作用 |
+| --- | --- | --- |
+| `initialMemory` | `4000` pages | 初始共享内存（一个 WebAssembly page 为 64 KiB） |
+| `maximumMemory` | `65536` pages | 最大共享内存，4 GiB |
+| `browser.fs` | `false` | 创建内存文件系统、预打开 `/`，并导出 `__fs` / `__volume` |
+| `browser.asyncInit` | `false` | 使用 emnapi 的异步实例化 API |
+| `browser.buffer` | `false` | 将 `buffer` 包的 `Buffer` 注入 emnapi 上下文 |
+| `browser.errorEvent` | `false` | 将 worker 故障转发为 `napi-rs-worker-error` window event |
+
+浏览器入口会 fetch WASM 文件，因此即使 `asyncInit` 为 `false`，也使用顶层 `await`。请确保 bundler/输出目标支持 ESM worker、`import.meta.url` 和顶层 await。
+
+设置 `fs: true` 后，文件系统访问的是 memfs，而非用户的宿主文件系统：
+
+```ts
+import { __fs } from './my-addon.wasi-browser.js'
+
+__fs.writeFileSync('/input.txt', 'hello')
+```
+
+设置 `errorEvent: true` 后，请在开始工作前监听 worker 错误：
+
+```ts
+window.addEventListener('napi-rs-worker-error', (event) => {
+  const { detail } = event as CustomEvent<unknown>
+  console.error('NAPI-RS WASI worker failed', detail)
+})
+```
+
+## 安装 WebAssembly 包
+
+为避免增大每次原生安装，NAPI-RS 会给 WASI 平台包添加 `cpu: ["wasm32"]`。除非 wasm32 是启用的安装架构，否则包管理器会跳过它。
+
+<LinkPreview href="https://github.com/napi-rs/napi-rs/issues/1794" />
+
+### <img src={YarnLogo.src} style={{ verticalAlign: 'text-top' }} width={30} height={30} /> Yarn
+
+对于 Yarn 4，在 `.yarnrc.yml` 中加入 `wasm32`：
+
+```yaml filename=".yarnrc.yml"
+supportedArchitectures:
+  cpu:
+    - current
+    - wasm32
+```
+
+Yarn 1 没有对应的受维护架构设置。其 `--ignore-engines` 变通方式影响范围过大，还会绕过其他兼容性检查；依赖 WASI 回退的包应使用当前包管理器。
+
+### <img src={PnpmLogo.src} style={{ verticalAlign: 'text-top' }} width={30} height={30} /> pnpm
+
+```yaml filename="pnpm-workspace.yaml"
+supportedArchitectures:
+  cpu:
+    - current
+    - wasm32
+```
+
+### <img src={NpmLogo.src} style={{ verticalAlign: 'text-top' }} width={30} height={30} /> npm
+
+当前 npm 版本支持目标 CPU 标志：
+
+```sh
+npm install --cpu=wasm32
+```
+
+安装后请验证包，不要假设设置已经生效：
+
+```sh
+npm ls @scope/my-addon-wasm32-wasi
+```
+
+## 打包并发布 WASI
+
+WASI 使用与原生目标相同的独立包发布流程：
+
+1. 在 `napi.targets` 中加入 `wasm32-wasip1-threads`。
+2. 在独立 CI 任务中构建并测试它。
+3. 运行 `napi create-npm-dirs`；生成的 WASI 包会得到 `cpu: ["wasm32"]`、与加载器兼容的最低 Node engine，以及 emnapi/runtime 依赖。
+4. 下载所有目标产物并运行 `napi artifacts`。这会把 WASM 模块、Node/浏览器加载器和两个 worker 复制到 WASI 包。
+5. 使用 `NAPI_RS_FORCE_WASI=error` 运行 Node 测试，并在跨源隔离环境中运行浏览器测试。
+6. 遵循普通[发布指南](/cn/docs/deep-dive/release)。
+
+检查根包和 WASI 平台包最终的 `npm pack --dry-run` 输出。后者必须包含 `.wasm`、`.wasi.cjs`、`.wasi-browser.js` 和 worker 文件。
+
+## 构建 C/C++ 依赖
+
+如果依赖树会编译 C 或 C++，请安装 [`wasi-sdk`](https://github.com/WebAssembly/wasi-sdk/releases)，并把 `WASI_SDK_PATH` 设为解压后的 SDK 根目录：
+
+```sh
+export WASI_SDK_PATH=/absolute/path/to/wasi-sdk
+test -x "$WASI_SDK_PATH/bin/clang"
+test -x "$WASI_SDK_PATH/bin/wasm-ld"
+napi build --platform --release --target wasm32-wasip1-threads
+```
+
+CLI 总会把 Cargo 的 WASI 链接器变量指向 `$WASI_SDK_PATH/bin/wasm-ld`。对于 C/C++ 工具链变量（`TARGET_CC`、`TARGET_CXX`、`TARGET_AR`、`TARGET_RANLIB`、`TARGET_CFLAGS`、`TARGET_CXXFLAGS` 和 `TARGET_LDFLAGS`），已有的环境变量值优先；CLI 只填充尚未设置的变量。如果依赖假设了 WASI 不提供的 POSIX API，它仍可能不兼容；原生构建成功不能证明同一依赖支持 WASI。
+
+## 运行时支持矩阵
+
+| 宿主 | 状态与约束 |
+| --- | --- |
+| Node.js | 生成的 `.wasi.cjs` 路径；平台包要求 Node 14 或更高版本，并使用 Node WASI/worker API |
+| 跨源隔离浏览器 | 生成的 ESM + module worker 路径；需要共享内存、顶层 await 和正确的静态资源服务 |
+| 未隔离浏览器 | 不支持 threads 目标，因为共享内存不可用 |
+| Bun 和 Deno | 未经运行时测试不要声称支持；Node 兼容的 WASI 加载目前有一个未解决的不兼容报告 |
+| Edge/serverless isolate | 取决于宿主；许多环境不提供生成加载器所需的 Node WASI、文件系统或 worker API |
+
+Bun/Deno 限制记录在 [napi-rs#2965](https://github.com/napi-rs/napi-rs/issues/2965)。这是运行时兼容性缺口，无法通过包安装说明解决。
+
+## 测试清单
+
+发布 WASI 目标前，请测试：
+
+- 使用 `NAPI_RS_FORCE_WASI=error` 进行一次普通 Node 导入；
+- 错误和被拒绝的异步操作，而不仅是成功函数；
+- 线程和异步工作完成后的进程退出；
+- 最终单独打包并安装的 WASI npm 包；
+- 带 COOP/COEP header 的生产风格浏览器服务器；
+- worker 启动、多个并发调用和 worker 错误转发；
+- 代表性输入下的浏览器内存增长与内存不足行为；
+- 文件系统 API 属于公开契约时的 memfs 行为；
+- 你列为受支持的每个非 Node 运行时。
+
+故障特征和精确探针参见[故障排除：WASI 故障](/cn/docs/more/troubleshooting#wasi-故障)。

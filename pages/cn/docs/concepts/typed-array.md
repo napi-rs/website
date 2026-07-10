@@ -1,12 +1,13 @@
 ---
 title: 'TypedArray'
-description: JavaScript TypedArray primitive.
+description: 在 Rust 与 JavaScript 之间安全地传递 TypedArray、Buffer 和外部内存。
 ---
 
 # TypedArray
 
-`TypedArray` 描述了一个底层 [二进制数据缓冲区](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer) 的类数组视图，
-使用 `TypedArray` 允许你在 Node.js 和 Rust 之间无需复制或移动底层数据也可共享数据。
+`TypedArray` 描述了底层[二进制数据缓冲区](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
+上的类数组视图。NAPI-RS 可以让 Rust 在不复制数据的情况下访问这块存储，
+但必须遵守下文的生命周期和同步规则。
 
 ## Buffer
 
@@ -14,7 +15,10 @@ description: JavaScript TypedArray primitive.
 [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)
 的子类，它经常用于在 Node.js 和 Rust 之间共享数据。
 
-`Buffer` 可以通过 `Vec<u8>` 创建，如果你以这种方式创建 `Buffer`，`Vec<u8>` 的所有权将被转移给 `v8`，当 `v8` GC `Buffer` 时，`Vec<u8>` 将被丢弃。
+可以使用 `Vec<u8>` 创建 `Buffer`。如果运行时允许 external buffer，
+NAPI-RS 会在不复制数据的情况下把这次分配交给 JavaScript `Buffer`，并在
+JavaScript 回收 buffer 后由 finalizer 释放 `Vec<u8>`。如果运行时拒绝
+external buffer，NAPI-RS 会回退为把字节复制到运行时拥有的 buffer 中。
 
 **lib.rs**
 
@@ -28,7 +32,331 @@ pub fn create_buffer() -> Buffer {
 }
 ```
 
-::: tip
-底层的 `Vec<u8>` 不会以这种方式被移动或复制。
+::: info
+在支持 external buffer 的运行时中，这种方式不会复制底层 `Vec<u8>`。
 
 :::
+
+::: warning
+`Electron` 无法以零拷贝的方式创建 `Buffer`。详见 [V8 内存隔离区（V8 Memory
+Cage）](https://www.electronjs.org/blog/v8-memory-cage)。在这种情况下，
+**NAPI-RS** 会把 `Vec<u8>` 的数据复制到底层 `Buffer` 中。
+
+:::
+
+## Buffer 与 TypedArray 类型
+
+**NAPI-RS** 针对不同的使用场景提供了两类 buffer 类型。有关这些类型的生命周期如何工作的更多细节，请参见[理解生命周期](/cn/docs/concepts/understanding-lifetime#buffer-和-typedarray-的生命周期)。
+
+### 拥有型类型（Owned Types）
+
+这些类型可以活过当前原生调用，并跨越异步边界：
+
+- `Buffer` —— 以引用为后盾的 Node.js Buffer 包装器
+- `Uint8Array`、`Int32Array`、`Float64Array` 等 —— 拥有型 typed array 包装器
+
+对于从 JavaScript 接收的值，NAPI-RS 会创建一个 [`napi_ref`](https://nodejs.org/api/n-api.html#napi_create_reference)，使 JavaScript 对象及其底层存储一直存活到 Rust 包装器被丢弃。丢弃包装器只会释放 Rust 持有的引用；JavaScript 仍可能独立保留同一个对象。
+
+**lib.rs**
+
+```rust {5}
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn process_buffer(env: &Env, buffer: Buffer) -> Result<AsyncBlock<Buffer>> {
+  // 在同步的 JavaScript 回调仍持有控制权时进行复制。
+  let mut data = buffer.to_vec();
+  AsyncBlockBuilder::new(async move {
+    data.reverse();
+    Ok(data.into())
+  })
+  .build(env)
+}
+```
+
+::: info
+`AsyncBlock` 和 `AsyncBlockBuilder` 是在 napi 的 `async` feature 下重新导出的，
+因此不启用它这个示例就无法编译。请在 `Cargo.toml` 的 `napi` 依赖上启用该
+feature：`napi = { version = "3", features = ["async"] }`。`tokio_time` feature
+仅在使用后文的 `napi::tokio::time::sleep` 辅助函数时才需要。
+
+:::
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+**index.d.ts**
+
+```ts
+export declare function processBuffer(buffer: Buffer): Promise<Buffer>
+```
+
+::: warning
+`Buffer` 和拥有型 typed array 包装器实现了 `Send` 与 `Sync`，因此包装器
+的生命周期和清理可以跨线程；这些 trait 并不会同步共享字节。Rust 持有
+包装器时，JavaScript 仍可保留并修改同一块底层存储。如果 JavaScript
+或另一个 Rust 线程可能修改它，Rust 工作线程同时访问这块内存就会形成
+数据竞争，并可能导致未定义行为——即使 Rust 只读取也一样。请在分派工作
+前复制字节，或者实施一个能排除所有未同步访问的所有权协议。
+
+:::
+
+### 借用型类型（Borrowed Types，`BufferSlice`、`Uint8ArraySlice` 等）
+
+这些类型借用数据，其生命周期被绑定到函数作用域内：
+
+- `BufferSlice<'env>` —— 零拷贝的 Buffer 切片
+- `Uint8ArraySlice<'env>`、`Int32ArraySlice<'env>` 等 —— 零拷贝的 TypedArray 切片
+- `ArrayBuffer<'env>` —— 零拷贝的 ArrayBuffer 视图
+- `&[u8]/&[i8]/&[f32]/&[f64]...` —— 零拷贝切片
+
+**lib.rs**
+
+```rust {4}
+use napi_derive::napi;
+
+#[napi]
+pub fn sum_array_slice(input: &[u32]) -> u32 {
+  // 零拷贝地访问底层数据
+  input.iter().sum()
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+**index.d.ts**
+
+```ts
+export declare function sumArraySlice(input: Uint32Array): number
+```
+
+**index.ts**
+
+```ts {5}
+import { sumArraySlice } from './index.js'
+
+const input = new Uint32Array([1, 2, 3, 4, 5])
+
+const result = sumArraySlice(input)
+console.log(result) // 15
+```
+
+### 何时使用哪种类型
+
+**在以下情况使用 `&[u8]/&[i8]/&[f32]/&[f64]...`**：
+
+- 你需要零拷贝的性能
+- 仅在同步上下文中工作
+- 数据的生命周期被限定在该函数调用之内
+
+**在以下情况使用 `BufferSlice<'env>` 或 `Uint8ArraySlice<'env>/Int32ArraySlice<'env>/...`**：
+
+- 你需要零拷贝的性能
+- 在某些场景下你需要把它们转换为拥有型类型
+- 你需要把它们转换为 `Object` 或 `Unknown`
+
+**在以下情况使用 `Buffer`**：
+
+- 你需要在函数调用结束后继续保存该 buffer
+- 你在使用异步函数
+
+## 常见用法模式
+
+### 在类型之间转换
+
+**lib.rs**
+
+```rust {7,10}
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn buffer_slice_to_buffer(env: &Env, slice: BufferSlice) -> Result<AsyncBlock<u8>> {
+  // 将 BufferSlice 转换为拥有型 Buffer 以用于异步场景
+  let buffer = slice.into_buffer(env)?;
+  // 在异步工作可能与 JavaScript 并发运行之前先复制。
+  let data = buffer.to_vec();
+  AsyncBlockBuilder::new(async move {
+    Ok(data.iter().sum())
+  })
+  .build(env)
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+**index.d.ts**
+
+```ts
+export declare function bufferSliceToBuffer(slice: Buffer): Promise<number>
+```
+
+**index.ts**
+
+```ts {5}
+import { bufferSliceToBuffer } from './index.js'
+
+const slice = Buffer.from([1, 2, 3, 4, 5])
+
+const result = await bufferSliceToBuffer(slice)
+console.log(result) // 15
+```
+
+### 异步与同步模式
+
+**lib.rs**
+
+```rust
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+// ✅ 正确：在异步上下文中使用拥有型 Buffer
+#[napi]
+pub async fn process_async(buffer: Buffer) -> Result<Buffer> {
+    // Buffer 可以跨越 await 边界
+    napi::tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    Ok(buffer)
+}
+
+// ❌ 无法编译：BufferSlice 不能跨越 await 边界
+// #[napi]
+// pub async fn process_async_slice(slice: BufferSlice<'_>) -> Result<BufferSlice<'_>> {
+//     napi::tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+//     Ok(slice) // Error: slice doesn't live long enough
+// }
+
+#[napi]
+// ✅ 正确：将 slice 转换为拥有型以用于异步场景
+pub fn process_slice_async(env: &Env, slice: BufferSlice<'_>) -> Result<AsyncBlock<Buffer>> {
+  let buffer = slice.into_buffer(env)?;
+  AsyncBlockBuilder::new(async move { Ok(buffer) }).build(env)
+}
+```
+
+上面所有的 `AsyncBlock` 示例都借助 `napi` crate 的异步支持来构建它们的
+future，而这依赖于 `napi` 依赖上的 `async` feature（`napi = { version = "3",
+features = ["async"] }`）。正是该 feature 重新导出了
+`AsyncBlock`/`AsyncBlockBuilder` 以及 Tokio 运行时。上面用到的
+`napi::tokio::time::sleep` 辅助函数还额外需要 `tokio_time` feature。
+
+## 内存管理
+
+### 复制的 Buffer
+
+在某些情况下，你无法把数据的所有权转移给 `Buffer` 或 typed array。这时可以
+使用 `copy_from` 创建一份副本。
+
+::: warning
+如果以这种方式创建 `Buffer` 或 `TypedArray`，数据的所有权不会被转移给
+`Buffer` 或 `TypedArray`，而是会复制底层数据，因此会有数据复制带来的
+性能开销。
+
+:::
+
+**lib.rs**
+
+```rust
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn create_copied_buffer(env: &Env) -> Result<BufferSlice<'_>> {
+  let data = b"Hello, World!";
+  BufferSlice::copy_from(env, data)
+}
+```
+
+### External Buffer
+
+有时，你可能希望从那些能够 `deref` 到 `[u8]` 或能取得像 `*mut u8` 这样的裸指针的数据类型创建 `Buffer` 或 `TypedArray`，同时又不想把整块数据复制进 `Vec<u8>`——那可能非常昂贵。我们提供了 `from_external` 方法来实现这一点，但它是 unsafe 的，你必须确保数据在 `finalize` 回调被调用之前一直有效。
+
+::: info
+`finalize_hint` 参数会被传给 finalizer。在下面的第一个示例中，boxed slice
+既是分配的所有者，也是这个 hint，因此它会一直存活到回调收到并丢弃它为止。
+如果运行时拒绝 external buffer，NAPI-RS 会先复制字节，然后在 `from_external`
+执行期间立即调用该回调；否则该回调会在 JavaScript 终结这个 external buffer
+时运行。不要指望这个回调会被推迟到垃圾回收时才执行。
+
+:::
+
+**lib.rs**
+
+```rust
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn create_shared_buffer(env: &Env) -> Result<BufferSlice<'_>> {
+  let mut data = vec![1, 2, 3, 4, 5].into_boxed_slice();
+  let data_ptr = data.as_mut_ptr();
+  let len = data.len();
+
+  unsafe {
+    BufferSlice::from_external(env, data_ptr, len, data, move |_, boxed_data| {
+      drop(boxed_data);
+    })
+  }
+}
+
+#[napi]
+pub fn create_external_buffer(env: &Env) -> Result<BufferSlice<'_>> {
+  let mut data = vec![1, 2, 3, 4, 5];
+  let data_ptr = data.as_mut_ptr();
+  let len = data.len();
+  let capacity = data.capacity();
+
+  // 确保数据在 finalize 回调被调用之前一直有效
+  std::mem::forget(data);
+
+  unsafe {
+    BufferSlice::from_external(env, data_ptr, len, data_ptr, move |_, ptr| {
+      // 当 JavaScript GC 运行时清理数据
+      std::mem::drop(Vec::from_raw_parts(ptr, len, capacity));
+    })
+  }
+}
+```
+
+## 安全性注意事项
+
+### External Buffer 的安全性
+
+使用 `from_external` 方法时，请确保：
+
+1. **指针有效性**：指针必须在 finalize 回调之前保持有效
+2. **内存布局**：内存必须与期望的类型兼容
+3. **正确清理**：finalize 回调必须正确地释放内存
+
+**lib.rs**
+
+```rust
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn unsafe_external_example(env: &Env) -> Result<BufferSlice<'_>> {
+  let mut data = vec![1u8, 2, 3, 4, 5];
+  let ptr = data.as_mut_ptr();
+  let len = data.len();
+  let capacity = data.capacity();
+
+  // ⚠️ 关键：必须 forget 掉 Vec 以防止二次释放（double-free）
+  std::mem::forget(data);
+
+  unsafe {
+    BufferSlice::from_external(env, ptr, len, ptr, move |_, ptr| {
+      // ✅ 正确地重建并丢弃 Vec
+      std::mem::drop(Vec::from_raw_parts(ptr, len, capacity));
+      // Vec 在被丢弃时会自动释放内存
+    })
+  }
+}
+```
+
+### 不安全的可变访问
+
+unsafe 的 `as_mut` 方法会暴露一个指向存储的可变切片，而 JavaScript 可能也会
+访问这块存储。只有当你能保证在整个可变借用期间，JavaScript 以及其他所有
+Rust 别名都不会读取或写入这块底层存储时，调用该方法才是健全（sound）的。
+违反这一契约可能导致未定义行为。在跨线程代码中，除非你拥有一个横跨
+JavaScript 和 Rust 的显式同步与所有权协议，否则请优先使用拥有型的副本。

@@ -1,0 +1,283 @@
+---
+title: 'Async and concurrency'
+description: Choose an asynchronous NAPI-RS API and manage cancellation, JavaScript access, workers, and runtime shutdown safely.
+---
+
+# Async and concurrency
+
+The right abstraction depends on where work must run and whether Rust needs to
+call JavaScript while it is running. Start with the smallest abstraction that
+matches the work; moving a synchronous function to another thread does not make
+its dependencies safe to use there.
+
+## Decision table
+
+| Need                                       | Use                                 | Work runs on                                      | JavaScript result             |
+| ------------------------------------------ | ----------------------------------- | ------------------------------------------------- | ----------------------------- |
+| Fast conversion or computation             | Ordinary `#[napi] fn`               | JavaScript thread                                 | Immediate value or throw      |
+| Rust async I/O or async ecosystem          | `#[napi] async fn`                  | NAPI-RS Tokio runtime                             | `Promise<T>`                  |
+| Blocking/CPU work using Node's worker pool | `AsyncTask<T>`                      | libuv thread pool; `resolve` returns to JS thread | `Promise<T>`                  |
+| Call a JS function from an OS/Tokio thread | `ThreadsafeFunction`                | Producer thread, callback on JS thread            | Callback or awaited return    |
+| Deliver a sequence lazily                  | iterator or async iterator          | Pull-based                                        | `for...of` / `for await...of` |
+| Stream bytes with Web Streams              | `ReadableStream` / `WritableStream` | Tokio plus JS stream callbacks                    | Web Streams API               |
+
+Two rules apply to every row:
+
+1. Only the JavaScript thread may use `Env` or raw `napi_value` handles.
+2. Data crossing a thread or `await` boundary must be owned for long enough;
+   borrowed JavaScript values are function-scoped.
+
+See [Understanding lifetime](/docs/concepts/understanding-lifetime) before
+moving buffers, objects, or class instances into background work.
+
+## Tokio `async fn`
+
+Enable `async` (which enables the NAPI-RS Tokio runtime) and only the Tokio
+features your crate uses:
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = { version = "3", features = ["async"] }
+napi-derive = "3"
+tokio = { version = "1", features = ["fs", "time"] }
+```
+
+**src/lib.rs**
+
+```rust
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub async fn read_config(path: String) -> Result<Buffer> {
+  Ok(tokio::fs::read(path).await?.into())
+}
+```
+
+The future and its output cross threads, so they must be `Send + 'static`.
+Prefer owned inputs such as `String`, `Buffer`, and owned typed arrays. Do not
+hold `JsString<'_>`, `Object<'_>`, or an `Env` across an `await` point.
+
+`async fn` is appropriate for async I/O. A long synchronous calculation inside
+it still occupies a Tokio worker thread; use `tokio::task::spawn_blocking` or an
+`AsyncTask` for blocking work.
+
+### Cancellation is not automatic
+
+Dropping the JavaScript `Promise` does not cancel its Rust future. Design a
+cancellation protocol for long-running work:
+
+- accept an explicit cancellation handle or operation ID;
+- bridge cancellation to an atomic flag, channel, or library cancellation
+  token owned by Rust;
+- stop creating JavaScript work after cancellation;
+- await or abort every spawned Tokio `JoinHandle` during owner shutdown.
+
+Detached work spawned with `napi::tokio::spawn` must not outlive the environment
+or the Rust/JavaScript resources it uses. Keep its `JoinHandle` in an owning
+class and abort or await it in your shutdown path.
+
+## `AsyncTask` and the libuv worker pool
+
+Use [`AsyncTask`](/docs/concepts/async-task) for bounded blocking work that fits
+Node's shared libuv thread pool. `Task::compute` runs off the JavaScript thread;
+`resolve`, `reject`, and `finally` run after completion where an `Env` is
+available.
+
+**src/lib.rs**
+
+```rust
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+pub struct HashFile {
+  path: String,
+}
+
+#[napi]
+impl Task for HashFile {
+  type Output = Vec<u8>;
+  type JsValue = Buffer;
+
+  fn compute(&mut self) -> Result<Self::Output> {
+    // Blocking file and CPU work is allowed here. Do not call JavaScript.
+    Ok(std::fs::read(&self.path)?)
+  }
+
+  fn resolve(&mut self, _env: Env, bytes: Self::Output) -> Result<Self::JsValue> {
+    Ok(bytes.into())
+  }
+}
+
+#[napi]
+pub fn hash_file(path: String) -> AsyncTask<HashFile> {
+  AsyncTask::new(HashFile { path })
+}
+```
+
+`AsyncTask::with_signal` accepts an `AbortSignal`, but Node-API can cancel only
+work that has not started. Once `compute` is running, calling
+`AbortController.abort()` does not interrupt it. If running work must stop,
+combine `AbortSignal::on_abort` with your own cooperative flag/channel and make
+`compute` check it.
+
+The libuv pool is shared with Node filesystem, DNS, crypto, and other native
+work. Flooding it with long CPU tasks can delay unrelated application work.
+Bound concurrency at the JavaScript API or use a dedicated Rust pool when that
+is part of your performance design.
+
+## ThreadsafeFunction
+
+Use a [`ThreadsafeFunction`](/docs/concepts/threadsafe-function) when a Rust
+thread must schedule a JavaScript callback. The producer sends owned Rust data;
+the conversion and callback execute on the owning JavaScript environment.
+
+Choose its queue behavior deliberately:
+
+- `NonBlocking` returns immediately. With a bounded queue, handle
+  `Status::QueueFull` as backpressure instead of dropping data silently.
+- `Blocking` waits for queue space. Never use it from the JavaScript thread and
+  avoid it in shutdown paths where the event loop may no longer drain.
+- A queue size of `0` is unbounded. It avoids `QueueFull` but can turn a slow
+  callback into unbounded memory growth.
+- A strong ThreadsafeFunction keeps the event loop alive. Build with
+  `.weak::<true>()` when pending callbacks are not a reason to keep the process
+  running.
+
+Drop all clones to release a ThreadsafeFunction. Calling `abort` closes it
+immediately; later calls report `Status::Closing`.
+
+### JavaScript errors and return values
+
+`callee_handled::<true>()` uses the Node callback convention: Rust calls the
+ThreadsafeFunction with a `Result`, and JavaScript receives an error-first
+callback. With `false`, the Rust call accepts only the value and JavaScript
+receives no error parameter; handle recoverable native failures before calling
+it. Use `call_async` when Rust must await the callback result, and use the
+variant that catches JavaScript-thrown values when those failures are
+recoverable.
+
+Never let a JavaScript exception cross an FFI callback as an unchecked Rust
+panic. Return or explicitly handle the `napi::Error`.
+
+### AsyncLocalStorage and request context
+
+A ThreadsafeFunction is registered as its own Node async resource. Do not
+assume a callback scheduled later from a Rust thread inherits the
+`AsyncLocalStorage` store that happened to be active when the native API was
+called. If context is part of correctness, pass a request ID or context object
+as owned data and restore it in JavaScript (for example with an `AsyncResource`)
+rather than relying on ambient state.
+
+Promise continuations may preserve JavaScript async context differently from a
+ThreadsafeFunction callback. Test the exact API/runtime combination you ship.
+
+## Iterators and streams
+
+Use an iterator when JavaScript should pull one value at a time. Use an async
+iterator when producing the next value is asynchronous. Their pull model is
+usually easier to cancel and bound than pushing every item through an unbounded
+ThreadsafeFunction queue.
+
+Use the `web_stream` feature when consumers require the Web Streams API:
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = { version = "3", features = ["web_stream"] }
+```
+
+Web Streams are best established for byte-oriented data. Structured Rust
+objects in `ReadableStream` have an unresolved behavior report
+([napi-rs#2826](https://github.com/napi-rs/napi-rs/issues/2826)); add a runtime
+test before exposing structured chunks as a supported API.
+
+Whichever abstraction you choose, define what happens when the consumer stops:
+
+- cancel the producer when `return()`, `cancel()`, or `abort()` is called;
+- release JavaScript references and queue senders;
+- ensure a blocked producer wakes during shutdown;
+- decide whether buffered values are delivered or discarded.
+
+## Runtime lifecycle
+
+With `tokio_rt`, NAPI-RS creates a Tokio runtime and starts it when the native
+module is registered. On native Node targets it is shut down after the last
+Node-API environment using the module exits, and it can be started again for an
+Electron renderer reload.
+
+Register environment-specific resources for each environment. Do not cache one
+`Env`, JavaScript reference, class constructor, or ThreadsafeFunction globally
+and reuse it from the main thread in a worker isolate.
+
+### Custom Tokio runtime
+
+Install a custom runtime during module initialization, before async exports use
+the default runtime:
+
+**src/lib.rs**
+
+```rust
+use napi::create_custom_tokio_runtime;
+
+#[napi_derive::module_init]
+fn init() {
+  let runtime = tokio::runtime::Builder::new_multi_thread()
+    .worker_threads(4)
+    .enable_all()
+    .build();
+  match runtime {
+    Ok(runtime) => create_custom_tokio_runtime(runtime),
+    Err(err) => eprintln!("failed to create custom Tokio runtime: {err}"),
+  }
+}
+```
+
+::: warning
+A custom runtime instance is currently consumed once. After
+`shutdown_async_runtime()` followed by `start_async_runtime()`, NAPI-RS falls
+back to its default runtime rather than recreating the custom configuration.
+This is an open product limitation, not a supported restart contract
+([napi-rs#3251](https://github.com/napi-rs/napi-rs/issues/3251)).
+
+:::
+
+WASI has different runtime teardown constraints. If your WASI API starts the
+runtime explicitly or exposes a shutdown function, test repeated startup and
+shutdown in the actual WASI host. See [WebAssembly](/docs/concepts/webassembly).
+
+## Worker shutdown protocol
+
+Do not make abrupt termination the normal cancellation mechanism for native
+work. A resilient worker protocol is:
+
+1. The parent sends `stop`.
+2. The worker stops accepting native calls.
+3. Rust cancellation tokens are triggered.
+4. The worker awaits active promises and drops ThreadsafeFunction producers.
+5. The worker replies `stopped` and closes its message port.
+6. The parent uses `worker.terminate()` only after a deadline.
+
+Node worker lifecycle and Bun worker lifecycle are not interchangeable. Abrupt
+termination during an async native operation still has an open Bun crash report
+([napi-rs#2938](https://github.com/napi-rs/napi-rs/issues/2938)). Mark such a
+runtime as unsupported for that API, or keep the graceful protocol mandatory,
+until your own stress test proves otherwise.
+
+## Review checklist
+
+Before shipping an async export, answer these questions in its documentation
+and tests:
+
+- Which pool/runtime/thread performs the work?
+- Can it access JavaScript, and only on the correct environment?
+- What owns every value across `await` and thread boundaries?
+- Is the queue bounded, and what happens under backpressure?
+- How does the caller cancel queued and already-running work?
+- What keeps the Node event loop alive?
+- What happens during worker termination, Electron reload, and process exit?
+- Are JavaScript exceptions and Rust panics converted into defined failures?
+- Is ambient async context required, or is context passed explicitly?

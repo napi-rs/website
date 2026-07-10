@@ -50,7 +50,7 @@ impl Task for AsyncFib {
 
 :::
 
-你可以使用底层 API `Env::spawn` 在 libuv 线程池中生成一个定义的 `Task` ，参见 [引用](../compat-mode/concepts/ref) 中的示例。
+你可以使用底层 API `Env::spawn` 在 libuv 线程池中生成一个定义的 `Task`，参见[引用](/cn/docs/concepts/reference)中的示例。
 
 除了 `compute` 和 `resolve`，您还可以提供 `reject` 方法，当 `Task` 遇到错误时，可以执行一些清理工作，例如 `unref` 一些对象：
 
@@ -80,7 +80,9 @@ impl Task for CountBufferLength {
 
   fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
     self.data.unref(env)?;
-    env.create_uint32(output as _)
+    let output = u32::try_from(output)
+      .map_err(|_| Error::new(Status::InvalidArg, "buffer length exceeds u32"))?;
+    env.create_uint32(output)
   }
 
   fn reject(&mut self, env: Env, err: Error) -> Result<Self::JsValue> {
@@ -118,7 +120,9 @@ impl Task for CountBufferLength {
   }
 
   fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-    env.create_uint32(output as _)
+    let output = u32::try_from(output)
+      .map_err(|_| Error::new(Status::InvalidArg, "buffer length exceeds u32"))?;
+    env.create_uint32(output)
   }
 
   fn finally(&mut self, env: Env) -> Result<()> {
@@ -154,7 +158,7 @@ fn async_fib(input: u32) -> AsyncTask<AsyncFib> {
 **index.d.ts**
 
 ```ts
-export function asyncFib(input: number) => Promise<number>
+export function asyncFib(input: number): Promise<number>
 ```
 
 ### 结合 `AbortSignal` 创建 `AsyncTask`
@@ -177,11 +181,11 @@ fn async_fib(input: u32, signal: AbortSignal) -> AsyncTask<AsyncFib> {
 **index.d.ts**
 
 ```ts
-export function asyncFib(input: number, signal: AbortSignal) => Promise<number>
+export function asyncFib(input: number, signal: AbortSignal): Promise<number>
 ```
 
-如果您在 JavaScript 代码中调用 `AbortController.abort`，并且 `AsyncTask` 尚未启动，
-`AsyncTask` 将立即被中止，并 reject `AbortError`。
+如果在 libuv 开始执行 `AsyncTask` 之前调用 `AbortController.abort`，
+Node-API 可以取消队列中的工作，Promise 会以 `name` 为 `AbortError` 的错误 reject。
 
 **test.mjs**
 
@@ -223,6 +227,12 @@ export function asyncFib(
 ```
 
 ::: tip
-如果 `AsyncTask` 已经启动或完成，`AbortController.abort` 将不会有任何效果。
+如果 `AsyncTask` 已经开始，Node-API 无法取消正在运行的 `compute`；
+如果已经完成，Promise 结果也已经确定。即使取消时机太晚，
+Rust 中注册的 `AbortSignal::on_abort` 回调仍会在 JavaScript signal 触发时运行。
+当前 adapter 在转换参数时安装处理函数，不会检查 `signal.aborted`，
+因此请传入尚未 abort 的 signal。它还会给 `signal.onabort` 赋值，覆盖该属性中
+已有的处理函数；独立的 JavaScript 监听器请使用
+`signal.addEventListener('abort', ...)`。
 
 :::

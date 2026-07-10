@@ -28,15 +28,16 @@ export function Features() {
     },
     {
       emoji: '⚡️',
-      title: 'Rich Platform Support',
-      description: 'Supports all common Node.js runtime platforms.',
+      title: 'Portable Native Packages',
+      description:
+        'Package per-target native binaries with an optional WASI fallback.',
       lugeReveal: 'fade-to-right',
       Component: RichPlatformsCard,
     },
     {
       emoji: '⚙️',
       title: 'Optimized Performance',
-      description: 'Zero cost abstraction with high level features.',
+      description: 'Low-overhead generated bindings with high-level features.',
       lugeReveal: 'fade-to-left',
       Component: OptimizedPerformanceCard,
     },

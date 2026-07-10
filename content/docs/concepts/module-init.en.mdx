@@ -5,8 +5,6 @@ description: Run custom setup when your NAPI-RS native module is loaded.
 
 # Module Initialization
 
-import { Callout } from 'nextra-theme-docs'
-
 NAPI-RS provides two APIs for module initialization: `#[napi_derive::module_init]` and `#[napi(module_exports)]`. While they may seem similar, they serve different purposes and execute at different times.
 
 ## Execution Timeline
@@ -22,7 +20,7 @@ Understanding when each API executes is crucial for using them correctly:
 ┌─────────────────────────────────────────────────────────────────┐
 │  1. #[napi_derive::module_init] runs                            │
 │     (via ctor - runs at dynamic library load time)              │
-│     Runs ONCE per process, regardless of threads                │
+│     Runs once for this native library load                     │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -46,12 +44,15 @@ Understanding when each API executes is crucial for using them correctly:
 
 ## `#[napi_derive::module_init]`
 
-This macro marks a function to run **once** when the native module (`.node` file) is first loaded into the process. It uses the [`ctor`](https://crates.io/crates/ctor) crate internally to execute before any JavaScript code runs.
+This macro marks a function to run when the native module is loaded. It uses
+the [`ctor`](https://crates.io/crates/ctor) crate internally to execute before
+Node-API registers the JavaScript exports.
 
 ### Timing
 
 - Runs at **dynamic library load time** (before `napi_register_module_v1`)
-- Executes **exactly once per process**, even with worker threads
+- Executes once for a native library load, not once per Node-API environment;
+  workers in the same process normally share that loaded library
 - No access to Node.js environment or exports object
 
 ### Signature
@@ -81,17 +82,22 @@ use napi::bindgen_prelude::create_custom_tokio_runtime;
 
 #[napi_derive::module_init]
 fn init() {
-  let rt = tokio::runtime::Builder::new_multi_thread()
+  let runtime = napi::tokio::runtime::Builder::new_multi_thread()
     .enable_all()
     .thread_name("my-native-module")
-    .build()
-    .unwrap();
-  create_custom_tokio_runtime(rt);
+    .build();
+  match runtime {
+    Ok(rt) => create_custom_tokio_runtime(rt),
+    Err(err) => eprintln!("failed to create custom Tokio runtime: {err}"),
+  }
 }
 ```
 
 <Callout type="warning">
-`#[napi_derive::module_init]` is not available for WebAssembly targets. Use `#[cfg(not(target_family = "wasm"))]` to conditionally compile.
+  The multi-thread Tokio runtime configured in the example above is
+  target-dependent. Gate that runtime setup or choose a runtime configuration
+  supported by your WebAssembly target. The `module_init` macro itself supports
+  WebAssembly builds.
 </Callout>
 
 ## `#[napi(module_exports)]`
@@ -106,7 +112,10 @@ This macro marks a function that receives the module's `exports` object, allowin
 
 ### Signature
 
-The function can have one of two signatures:
+The function can return `()` or `Result<()>`. Each parameter, if present, must
+be `Env`, `Object`, or a reference to one of those types. `Object` receives the
+module's exports object, while `Env` receives the current Node-API environment.
+The usual signatures are:
 
 ```rust
 // With just the exports object
@@ -140,8 +149,8 @@ use napi::bindgen_prelude::*;
 
 #[napi(module_exports)]
 pub fn init(mut exports: Object) -> Result<()> {
-  // Add a well-known symbol to exports
-  let symbol = Symbol::for_desc("MY_MODULE_SYMBOL");
+  // Add a unique symbol to exports
+  let symbol = Symbol::new("MY_MODULE_SYMBOL");
   exports.set_named_property("MY_SYMBOL", symbol)?;
 
   // Add a version string
@@ -155,7 +164,6 @@ pub fn init(mut exports: Object) -> Result<()> {
 const native = require('./index.node')
 
 console.log(native.MY_SYMBOL) // Symbol(MY_MODULE_SYMBOL)
-console.log(native.MY_SYMBOL === Symbol.for('MY_MODULE_SYMBOL')) // true
 console.log(native.VERSION) // "1.0.0"
 ```
 
@@ -164,7 +172,7 @@ console.log(native.VERSION) // "1.0.0"
 | Aspect | `#[napi_derive::module_init]` | `#[napi(module_exports)]` |
 |--------|-------------------------------|---------------------------|
 | **Execution time** | At `.node` file load | During module registration |
-| **Runs per** | Process (once) | Thread/context (each) |
+| **Runs per** | Native library/module load | Node-API environment/context |
 | **Receives exports** | No | Yes |
 | **Can modify exports** | No | Yes |
 | **Access to Env** | No | Yes (Optional) |
@@ -181,17 +189,19 @@ use napi::bindgen_prelude::*;
 #[cfg(not(target_family = "wasm"))]
 #[napi_derive::module_init]
 fn setup_runtime() {
-  let rt = tokio::runtime::Builder::new_multi_thread()
+  let runtime = napi::tokio::runtime::Builder::new_multi_thread()
     .enable_all()
-    .build()
-    .unwrap();
-  create_custom_tokio_runtime(rt);
+    .build();
+  match runtime {
+    Ok(rt) => create_custom_tokio_runtime(rt),
+    Err(err) => eprintln!("failed to create custom Tokio runtime: {err}"),
+  }
 }
 
 // Runs per thread - customize exports
 #[napi(module_exports)]
 pub fn customize_exports(mut exports: Object) -> Result<()> {
-  exports.set_named_property("THREAD_SAFE_SYMBOL", Symbol::for_desc("THREAD_SAFE"))?;
+  exports.set_named_property("THREAD_SAFE_SYMBOL", Symbol::new("THREAD_SAFE"))?;
   Ok(())
 }
 
@@ -199,9 +209,18 @@ pub fn customize_exports(mut exports: Object) -> Result<()> {
 #[napi]
 pub async fn do_async_work() -> String {
   // This uses the tokio runtime set up in module_init
-  tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+  napi::tokio::time::sleep(std::time::Duration::from_millis(100)).await;
   "done".to_string()
 }
+```
+
+The custom-runtime examples require `napi`'s `async` (or `tokio_rt`) feature.
+The sleep example additionally requires `tokio_time`:
+
+```toml filename="Cargo.toml"
+[dependencies]
+napi = { version = "3", features = ["async", "tokio_time"] }
+napi-derive = "3"
 ```
 
 ## Worker Thread Behavior

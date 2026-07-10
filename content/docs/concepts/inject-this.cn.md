@@ -7,7 +7,7 @@ description: 给函数和方法注入 This 对象。
 在类方法中，您可能希望访问 `Class` 实例的原始 `Object` 值。
 
 ```rust {15} filename="lib.rs"
-use napi::{bindgen_prelude::*, JsObject};
+use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
 #[napi]
@@ -21,7 +21,7 @@ impl QueryEngine {
   }
 
   #[napi]
-  pub fn get_ref_count(&self, this: This<JsObject>) -> Result<Option<i32>> {
+  pub fn get_ref_count(&self, this: This<'_>) -> Result<Option<i32>> {
     this.get::<i32>("refCount")
   }
 }
@@ -48,7 +48,7 @@ pub struct Width {
 
 #[napi]
 pub fn plus_one(this: This<&Width>) -> i32 {
-  this.value + 1
+  this.object.value + 1
 }
 ```
 

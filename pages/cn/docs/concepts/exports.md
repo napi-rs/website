@@ -20,7 +20,7 @@ description: 使用 NAPI-RS 控制 Rust 函数、类和常量如何导出到 Jav
 
 ```rust
 #[napi]
-fn sum(a: u32, b: u32) -> u32 {
+pub fn sum(a: f64, b: f64) -> f64 {
 	a + b
 }
 ```

@@ -1,0 +1,349 @@
+---
+title: 'Iteradores e iteradores assíncronos'
+description: Implemente os protocolos de iteração JavaScript com Generator e AsyncGenerator.
+---
+
+# Iteradores e iteradores assíncronos
+
+O napi-rs pode fazer uma classe nativa implementar o protocolo de iteração síncrono ou assíncrono do JavaScript. Essas APIs estão atualmente marcadas como **experimentais** no código-fonte Rust: teste exatamente as versões do napi-rs e do runtime que você publica e espere refinamentos no comportamento de traits ou ciclo de vida.
+
+| Marcador e trait Rust                                  | Protocolo JavaScript                                                    | Recurso do Cargo        |
+| ------------------------------------------------------ | ----------------------------------------------------------------------- | ----------------------- |
+| `#[napi(iterator)]` + `Generator` ou `ScopedGenerator` | `Symbol.iterator`, `next`, `return`, `throw`                            | API `napi` base         |
+| `#[napi(async_iterator)]` + `AsyncGenerator`           | `Symbol.asyncIterator`, `next`, `return` e `throw` que retornam Promise | `tokio_rt` (ou `async`) |
+
+Os dois atributos marcadores são mutuamente exclusivos em uma classe. Uma classe marcada também não pode ter campos públicos chamados `next`, `return` ou `throw`, pois o napi-rs instala esses métodos de protocolo.
+
+## Iterador síncrono
+
+Implemente `Generator` quando os valores produzidos forem valores Rust próprios:
+
+**lib.rs**
+
+```rust
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi(iterator)]
+pub struct Counter {
+  current: u32,
+  end: u32,
+}
+
+#[napi]
+impl Generator for Counter {
+  type Yield = u32;
+  type Next = u32;
+  type Return = ();
+
+  fn next(&mut self, value: Option<Self::Next>) -> Option<Self::Yield> {
+    if let Some(next) = value {
+      self.current = next;
+    }
+    if self.current >= self.end {
+      return None;
+    }
+    let value = self.current;
+    self.current += 1;
+    Some(value)
+  }
+}
+
+#[napi]
+impl Counter {
+  #[napi(constructor)]
+  pub fn new(end: u32) -> Self {
+    Self { current: 0, end }
+  }
+}
+```
+
+**index.mjs**
+
+```js
+const counter = new Counter(3)
+
+console.log(counter.next()) // { value: 0, done: false }
+console.log(counter.next(2)) // { value: 2, done: false }
+console.log(counter.next()) // { done: true }
+
+console.log([...new Counter(3)]) // [0, 1, 2]
+```
+
+A declaração gerada estende `Iterator<Yield, Return, Next>`.
+
+### Tipos associados
+
+| Tipo associado | Trait obrigatório | Uso                                                               |
+| -------------- | ----------------- | ----------------------------------------------------------------- |
+| `Yield`        | `ToNapiValue`     | Converte `Some(value)` de `next` ou `catch` para JavaScript.      |
+| `Next`         | `FromNapiValue`   | Converte o argumento opcional passado a `iterator.next(value)`.   |
+| `Return`       | `FromNapiValue`   | Converte o argumento opcional passado a `iterator.return(value)`. |
+
+O método recebe `Option<Next>` porque o JavaScript pode chamar `next()` sem argumento. `Some(yielded)` produz `{ value: yielded, done: false }`; `None` produz `{ done: true }` para essa chamada. O adaptador síncrono não persiste a conclusão natural: uma chamada posterior de `next()` invoca o Rust novamente. Se as chamadas posteriores precisarem continuar concluídas, registre esse estado na struct e continue retornando `None`.
+
+### `return()` e `complete`
+
+Sobrescreva `complete` para fazer a limpeza quando o JavaScript encerrar a iteração antecipadamente, por exemplo, quando um loop `for...of` executar `break`.
+
+**lib.rs**
+
+```rust
+fn complete(&mut self, _value: Option<Self::Return>) -> Option<Self::Yield> {
+  self.release_native_cursor();
+  None
+}
+```
+
+O adaptador síncrono atual invoca `complete`, marca o gerador como concluído e usa o argumento fornecido pelo JavaScript como valor do resultado de iterador retornado. O `Option<Yield>` retornado por `complete` não é exposto atualmente. Trate-o como um hook de limpeza e não dependa de seu valor de retorno até que esta API experimental seja estabilizada.
+
+### `throw()` e `catch`
+
+O `catch` padrão retorna o valor JavaScript original como `Err`, então `iterator.throw(error)` lança esse valor e conclui o iterador.
+
+Sobrescreva-o para recuperar:
+
+**lib.rs**
+
+```rust
+fn catch<'env>(
+  &'env mut self,
+  _env: Env,
+  value: Unknown<'env>,
+) -> std::result::Result<Option<Self::Yield>, Unknown<'env>> {
+  if self.can_recover() {
+    Ok(Some(self.fallback()))
+  } else {
+    Err(value)
+  }
+}
+```
+
+- `Err(value)` lança `value` e conclui a iteração.
+- `Ok(Some(value))` produz o valor com `done: false`.
+- `Ok(None)` conclui sem lançar.
+
+Use `std::result::Result` na assinatura acima porque o lado do erro é o `Unknown` original, não `napi::Error`.
+
+## Produções síncronas com escopo
+
+`Generator::Yield` deve ser um valor próprio ou diretamente conversível. Implemente `ScopedGenerator<'env>` quando um valor produzido tomar emprestado o ambiente JavaScript atual:
+
+**lib.rs**
+
+```rust
+use napi::iterator::ScopedGenerator;
+
+#[napi(iterator)]
+pub struct ObjectCounter {
+  current: u32,
+  end: u32,
+}
+
+#[napi]
+impl<'env> ScopedGenerator<'env> for ObjectCounter {
+  type Yield = Object<'env>;
+  type Next = ();
+  type Return = ();
+
+  fn next(
+    &mut self,
+    env: &'env Env,
+    _value: Option<Self::Next>,
+  ) -> Option<Self::Yield> {
+    if self.current >= self.end {
+      return None;
+    }
+    let mut object = Object::new(env).ok()?;
+    object.set("value", self.current).ok()?;
+    self.current += 1;
+    Some(object)
+  }
+}
+```
+
+O trait com escopo recebe `&Env` em `next` e `catch`. O valor produzido é convertido imediatamente na thread JavaScript; ele não pode ser armazenado na classe nem movido para outra thread.
+
+## Helpers de iterador e protótipos
+
+`Symbol.iterator` retorna a própria instância da classe. Em runtimes que expõem o construtor global `Iterator`, o napi-rs ajusta o protótipo da classe gerada para herdar de `Iterator.prototype`, disponibilizando métodos auxiliares de iterador como `map`, `filter`, `take` e `drop`. Em runtimes sem esse global, o protocolo básico de iteração continua funcionando, mas esses helpers não estão disponíveis.
+
+Como a integração de protótipo faz parte desta API experimental, teste subclasses e qualquer código que congele ou substitua protótipos de classe.
+
+## Iterador assíncrono
+
+Habilite o runtime assíncrono:
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = { version = "3", features = ["async", "tokio_time"] }
+napi-derive = "3"
+```
+
+Em seguida, marque a classe e implemente `AsyncGenerator`:
+
+**lib.rs**
+
+```rust
+use std::future::Future;
+
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi(async_iterator)]
+pub struct DelayedCounter {
+  current: u32,
+  end: u32,
+  delay_ms: u64,
+}
+
+#[napi]
+impl AsyncGenerator for DelayedCounter {
+  type Yield = u32;
+  type Next = ();
+  type Return = ();
+
+  fn next(
+    &mut self,
+    _value: Option<Self::Next>,
+  ) -> impl Future<Output = Result<Option<Self::Yield>>> + Send + 'static {
+    let value = self.current;
+    let end = self.end;
+    let delay_ms = self.delay_ms;
+    self.current += 1;
+
+    async move {
+      napi::tokio::time::sleep(std::time::Duration::from_millis(delay_ms)).await;
+      Ok((value < end).then_some(value))
+    }
+  }
+}
+
+#[napi]
+impl DelayedCounter {
+  #[napi(constructor)]
+  pub fn new(end: u32, delay_ms: u32) -> Self {
+    Self { current: 0, end, delay_ms: delay_ms as u64 }
+  }
+}
+```
+
+**index.mjs**
+
+```js
+for await (const value of new DelayedCounter(3, 10)) {
+  console.log(value) // 0, 1, 2
+}
+```
+
+A classe gerada implementa:
+
+```ts
+[Symbol.asyncIterator](): AsyncGenerator<Yield, Return, Next | undefined>
+```
+
+### Limites assíncronos
+
+`AsyncGenerator` impede deliberadamente que valores com escopo JavaScript atravessem um ponto de await:
+
+```rust
+type Yield: ToNapiValue + Send + 'static;
+
+fn next(
+  &mut self,
+  value: Option<Self::Next>,
+) -> impl Future<Output = Result<Option<Self::Yield>>> + Send + 'static;
+```
+
+A future não pode tomar `self` emprestado. Atualize o estado síncrono e copie ou clone tudo de que a future precisa antes de criar o bloco `async move`, como no exemplo. Um `Object<'env>`, `Function<'env, ...>` ou `BufferSlice<'env>` com escopo não pode ser o tipo produzido. Retorne valores próprios ou crie um valor JavaScript posteriormente em outra API que forneça explicitamente `Env` na thread JavaScript.
+
+### `next()` assíncrono
+
+Cada chamada retorna uma Promise:
+
+- `Ok(Some(value))` resolve com `{ value, done: false }`.
+- `Ok(None)` resolve com `{ value: undefined, done: true }`.
+- `Err(error)` rejeita a Promise.
+
+O adaptador assíncrono experimental atual não mantém um sinalizador separado de estado terminal após `Ok(None)`. Se uma chamada posterior precisar continuar concluída, mantenha esse estado em sua struct Rust e continue retornando `Ok(None)`.
+
+Não presuma que chamadas sobrepostas de `next()` sejam serializadas para você. A mutação do estado antes de a future ser retornada acontece imediatamente na thread JavaScript, enquanto as futures resultantes podem continuar em andamento ao mesmo tempo. Projete a máquina de estados para operações simultâneas em andamento ou documente que os chamadores devem aguardar um resultado antes de solicitar o próximo.
+
+### `return()` assíncrono
+
+Sobrescreva `complete` para fazer limpeza assíncrona:
+
+**lib.rs**
+
+```rust
+fn complete(
+  &mut self,
+  _value: Option<Self::Return>,
+) -> impl Future<Output = Result<Option<Self::Yield>>> + Send + 'static {
+  let handle = self.take_handle();
+  async move {
+    handle.close().await.map_err(Error::from)?;
+    Ok(None)
+  }
+}
+```
+
+A Promise retornada sempre resolve com `done: true`; `Some(value)` se torna seu valor final, e `None` se torna `undefined`. Um erro causa rejeição. Assim como em `next`, o próprio adaptador não persiste um sinalizador terminal para operações posteriores, portanto registre a conclusão em sua classe se os chamadores puderem reter e reutilizar o objeto iterador.
+
+Há uma incompatibilidade experimental de tipos aqui: em tempo de execução, `complete` retorna `Option<Self::Yield>`, enquanto a declaração gerada `AsyncGenerator<Yield, Return, Next>` tipa o valor final como `Return`. Se `complete` puder retornar `Some(value)`, use o mesmo tipo para `Yield` e `Return`; caso contrário, retorne `None`. Com tipos `Yield` e `Return` diferentes, a declaração gerada pode divergir do valor em tempo de execução.
+
+O JavaScript normalmente chama `return()` quando um loop `for await...of` termina antecipadamente, mas a limpeza ainda deve tolerar que o iterador seja coletado sem um return ordenado.
+
+### `throw()` assíncrono
+
+O `catch` padrão transforma o valor JavaScript lançado em `napi::Error`, então a Promise retornada é rejeitada.
+
+**lib.rs**
+
+```rust
+fn catch(
+  &mut self,
+  _env: Env,
+  value: Unknown,
+) -> impl Future<Output = Result<Option<Self::Yield>>> + Send + 'static {
+  let error: Error = value.into();
+  async move { Err(error) }
+}
+```
+
+Um `catch` personalizado pode recuperar com `Ok(Some(value))`. No adaptador experimental atual, um `Ok(None)` recuperado é representado como um resultado não terminal com valor null; use `Err` para relançar ou `Ok(Some(...))` para recuperar e use `return()`/estado explícito da classe para modelar a conclusão.
+
+Consulte [Tratamento de erros](/pt-BR/docs/concepts/error-handling) para preservar erros JavaScript em trabalho assíncrono.
+
+## Ciclo de vida e coleta de lixo
+
+Na iteração assíncrona, `[Symbol.asyncIterator]()` cria um objeto iterador que mantém uma referência oculta, não enumerável e não gravável à instância da classe nativa. Isso impede que a classe seja coletada enquanto o iterador estiver retido. A referência é liberada quando o objeto iterador é finalizado.
+
+Essa referência não cancela uma future Rust em andamento. Futures e os recursos externos que possuem precisam de seu próprio projeto de cancelamento e encerramento. Mantenha a limpeza idempotente para que possa ser chamada com segurança a partir de `complete`, métodos explícitos da classe e caminhos de `Drop`/finalização.
+
+O iterador síncrono é a própria instância da classe, portanto a alcançabilidade normal da instância mantém o valor Rust vivo.
+
+## Escolhendo outra abstração
+
+Use um iterador quando cada solicitação produzir naturalmente um item e o consumidor controlar o ritmo.
+
+- Use um array normal ou `Vec<T>` para resultados pequenos e já materializados.
+- Use `ReadableStream` para streaming com backpressure e semântica de cancelamento de Web Streams.
+- Use `AsyncTask` para um único resultado que exige muita CPU no pool de workers do libuv.
+- Use uma função assíncrona para uma future Tokio e uma Promise.
+- Use ThreadsafeFunction para callbacks repetidos que se originam em uma thread nativa.
+
+Como o suporte a iteradores é experimental, prefira essas abstrações estabelecidas quando a interoperabilidade ou a estabilidade da API no longo prazo importar mais do que a sintaxe de iterador.
+
+## Checklist de testes
+
+- `next()` com e sem seu argumento.
+- Conclusão natural e chamadas após a conclusão.
+- `break` antecipado, `return(value)` explícito e falha na limpeza.
+- Comportamento padrão e recuperado de `throw(error)`.
+- Duas chamadas assíncronas sobrepostas de `next()` se a API permitir.
+- Descartar a classe assíncrona original mantendo somente seu iterador.
+- Coleta de lixo forçada e encerramento do ambiente de worker.
+- Runtimes com e sem a API helper global `Iterator`.

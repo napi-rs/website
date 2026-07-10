@@ -1,0 +1,311 @@
+---
+title: '故障排除'
+description: 从故障层向外诊断 NAPI-RS 构建、加载器、平台、TypeScript、异步和 WASI 问题。
+---
+
+# 故障排除
+
+首先确定故障发生在哪一层。Rust 编译器错误、生成加载器错误，以及成功导入后的崩溃，分别由不同组件负责，需要不同证据。
+
+| 故障点                                  | 从这里开始                                    |
+| --------------------------------------- | --------------------------------------------- |
+| `cargo` 或 `napi build` 以非零状态退出  | [构建故障](#构建故障)                         |
+| `require()` / `import` 无法加载包       | [加载器故障](#加载器故障)                     |
+| 加载器找到二进制文件但操作系统拒绝它    | [二进制文件与平台故障](#二进制文件与平台故障) |
+| 运行时值正常，但 `.d.ts` 错误           | [TypeScript 生成](#typescript-生成)           |
+| Promise 挂起、进程无法退出、worker 崩溃 | [异步与生命周期故障](#异步与生命周期故障)     |
+| WASI/浏览器初始化失败                   | [WASI 故障](#wasi-故障)                       |
+
+在加入测试运行器、打包器、框架或 Electron 前，先把问题缩减为一个导出函数和一个普通 Node 脚本。如果普通脚本可以工作，那么集成层就是复现的一部分。
+
+## 捕获环境信息
+
+在发生故障的同一个 shell、container 或 CI 任务中运行：
+
+```sh
+node -p "process.version"
+node -p "process.execPath"
+node -p "process.platform + ' ' + process.arch"
+node -p "JSON.stringify(process.versions, null, 2)"
+rustc -vV
+cargo -V
+napi --version
+```
+
+在 Linux 上还要记录运行时 libc：
+
+```sh
+node -p "process.report?.getReport?.().header.glibcVersionRuntime || 'musl or unknown'"
+ldd --version 2>&1 | head -1
+```
+
+同时启用 CLI 与 Rust 诊断：
+
+```sh
+DEBUG='napi:*' RUST_BACKTRACE=full napi build --platform --verbose
+DEBUG='napi:*' RUST_BACKTRACE=full node ./repro.cjs
+```
+
+保留第一个错误及其完整 cause/backtrace。后面的“build failed”通常只是摘要。
+
+## 构建故障
+
+### `No crate found in manifest`
+
+`--cwd` 是所有相对路径的基准。验证 CLI 将读取什么：
+
+```sh
+pwd
+ls -l Cargo.toml package.json
+cargo metadata --manifest-path Cargo.toml --format-version 1 --no-deps
+```
+
+在拆分工作区中，请显式传入所有路径。如果 manifest 是虚拟工作区，还要传入确切 Cargo 包名：
+
+```sh
+napi build \
+  --cwd packages/addon \
+  --manifest-path ../../Cargo.toml \
+  --package my-addon-native \
+  --package-json-path package.json \
+  --output-dir . \
+  --platform
+```
+
+各选项含义参见[手动设置](/cn/docs/introduction/manual-setup)。
+
+### Cargo 成功，但 NAPI-RS 无法复制产物
+
+确认所选包包含 `cdylib` 目标：
+
+**Cargo.toml**
+
+```toml
+[lib]
+crate-type = ["cdylib"]
+```
+
+检查 `CARGO_BUILD_TARGET_DIR`、`--target-dir`、自定义 Cargo profile 或 `CARGO_BUILD_TARGET` 是否重定向了 Cargo 输出。构建与复制步骤应使用相同的 `--target` 和 `--profile` 值。`DEBUG=napi:*` 会打印 CLI 使用的确切源与目标路径。
+
+### C/C++ 依赖找不到编译器或库
+
+安装 Rust target 只是原生交叉构建的一部分。`openssl-sys`、`ring`、`zstd-sys` 等 crate 的构建脚本还需要目标对应的 C 编译器和库。不要让它们指向宿主机库。
+
+使用[交叉编译决策矩阵](/cn/docs/cross-build)，然后检查第一个失败的编译器调用。记录 `CC`、目标特定 `CC_*`、链接器、SDK、sysroot 和 `pkg-config` 变量。WASI C/C++ 依赖请按照 [WebAssembly](/cn/docs/concepts/webassembly) 配置 `WASI_SDK_PATH`。
+
+## 加载器故障
+
+生成的加载器会把原生候选项的加载失败记录在错误 `cause` 链中。请打印它，而不是只报告 “Cannot find native binding”：
+
+**load-repro.cjs**
+
+```js
+try {
+  require('./index.js')
+} catch (error) {
+  let current = error
+  let depth = 0
+  while (current) {
+    console.error(`[cause ${depth}]`, current.stack || current)
+    current = current.cause
+    depth += 1
+  }
+  process.exitCode = 1
+}
+```
+
+各个原生 cause 能区分文件缺失、架构错误、共享库缺失或不支持的 Node-API 符号。普通 WASI 回退失败不会加入该链。要明确诊断这条路径，请使用 `NAPI_RS_FORCE_WASI=error` 重新运行；此时抛出的错误会串联 WASI 绑定失败。
+
+### 可选平台包缺失
+
+记录检测到的平台和已安装依赖树：
+
+```sh
+node -p "process.platform + ' ' + process.arch"
+npm ls your-package
+find node_modules -type f \( -name '*.node' -o -name '*.wasm' \)
+```
+
+常见原因：
+
+- 安装使用了 `--no-optional` 或省略可选依赖；
+- 在另一个平台生成的 lockfile 未包含当前目标；
+- 部署只复制生产 JavaScript，丢弃了 `.node` 文件；
+- pnpm/Yarn 支持架构设置排除了部署 CPU/libc；
+- 根包与可选平台包版本不同。
+
+设置 `NAPI_RS_ENFORCE_VERSION_CHECK=1` 可把最后一种情况变成明确的版本不匹配错误。如果 npm 因 lockfile 行为省略可选平台依赖，请同时删除 `node_modules` 与受影响 lockfile，然后在目标平台重新安装。如果旧 lockfile 需要用于错误报告，请先检查或保存它。
+
+### 强制使用一个确切原生库
+
+为了区分加载器选择与二进制加载，可让生成的加载器指向一个绝对路径：
+
+```sh
+NAPI_RS_NATIVE_LIBRARY_PATH="$PWD/addon.linux-x64-gnu.node" node load-repro.cjs
+```
+
+如果成功，则二进制文件有效，故障位于普通平台/包选择层。如果失败，新的 cause 就是操作系统的直接加载器错误。不要把该环境变量作为正常包配置发布。
+
+### CommonJS/ESM 解析或导出错误
+
+- 位于 `"type": "module"` 包中的 CommonJS wrapper 必须使用 `.cjs`。
+- 使用者需要静态具名 ESM 导出时，使用 `napi build --platform --esm` 生成真正的 ESM wrapper。
+- 通过转译测试运行器导入 CommonJS wrapper，与使用普通 Node 测试不同。
+- 原生包应保持在服务器 bundle 之外。
+
+经过验证的包形状与 externalize 配方参见[集成与打包器](/cn/docs/more/integrations)。
+
+## 二进制文件与平台故障
+
+检查加载器实际选择的文件：
+
+```sh
+file ./addon.*.node
+```
+
+再检查动态依赖：
+
+```sh
+# Linux
+ldd ./addon.linux-x64-gnu.node
+
+# macOS
+otool -L ./addon.darwin-arm64.node
+
+# Windows Developer Command Prompt
+dumpbin /DEPENDENTS addon.win32-x64-msvc.node
+```
+
+常见消息含义：
+
+| 消息                                                                    | 可能原因                                                    |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `wrong ELF class`、`Exec format error`、`not a valid Win32 application` | CPU 或操作系统不匹配                                        |
+| `GLIBC_x.y not found`                                                   | 二进制文件针对比运行时更新的 glibc 构建                     |
+| 找不到 `lib*.so` / `.dylib` / `.dll`                                    | 非系统原生依赖未分发，或其搜索路径错误                      |
+| `undefined symbol: napi_*`                                              | 插件启用了比运行时更新的 Node-API 级别，或链接/加载方式错误 |
+| 在 Alpine 加载时出现 `invalid ELF header`                               | 为 musl 运行时选择了 glibc 二进制文件，或相反               |
+
+不要把 musl 二进制文件重命名为 `gnu` 后缀，也不要把 x64 二进制文件重命名为 arm64 后缀。后缀是选择契约，不是转换。
+
+对于 `GLIBC_x.y not found`，请按[交叉编译：glibc 版本](/cn/docs/cross-build#glibc-版本)所述，针对更旧 glibc 重新构建。只有部署实际使用 musl 时，切换到 musl 目标才是正确方案。
+
+## TypeScript 生成
+
+如果未生成 `.d.ts` 文件，请确认所选 Cargo 包直接依赖启用了 `type-def` feature 的 `napi-derive`。默认 feature 包含它；禁用默认 feature 时需要显式加回：
+
+**Cargo.toml**
+
+```toml
+napi-derive = { version = "3", default-features = false, features = ["strict", "type-def"] }
+```
+
+如果声明缺失或陈旧：
+
+1. 确认导出为当前目标编译，且未被 `#[cfg(...)]` 或 `#[napi(skip_typescript)]` 隐藏。
+2. 确认 CLI 选择了预期 Cargo 包和 `package.json`。
+3. 不使用 watch 模式重新构建，并检查 `DEBUG=napi:*` 输出。
+4. 只移除 `target/napi-rs` 下生成的类型定义缓存，然后重新构建。
+5. 对新生成文件运行 `tsc --noEmit`。
+
+不要手动编辑生成的声明；下次构建会覆盖。Rust 到 TypeScript 的映射有意不同，请使用 `ts_args_type`、`ts_return_type`、`dtsHeader` 或手写公开 wrapper。
+
+## 异步与生命周期故障
+
+### Promise 永不 settle
+
+确定由哪种抽象拥有它：
+
+- Tokio `async fn`：检查异步 runtime 上的阻塞工作，以及永不完成的分离任务。
+- `AsyncTask`：检查 `compute`、`resolve`、`reject` 或 `finally` 是否被阻塞。除非任务实现协作式取消，否则 `AbortSignal` 只能取消未开始的工作。
+- ThreadsafeFunction：处理 `QueueFull` 与 `Closing`；JavaScript 线程等待 producer 时不要阻塞。
+- Stream/iterator：确保取消会唤醒 producer 并关闭所有 sender。
+
+在边界两侧添加时间戳和操作 ID。Rust 日志说“queued”、JavaScript 日志说“awaiting”并不能证明 completion callback 已运行。
+
+### Node 无法退出
+
+将复现移到带截止时间的子进程，然后检查：
+
+- 应为 weak 的 ThreadsafeFunction 是否为强引用；
+- 未丢弃的 ThreadsafeFunction clone 或 JavaScript 引用；
+- 没有 owner/shutdown 路径的 Tokio 任务；
+- JavaScript 或 Rust 留下的 worker、timer、stream 或 socket。
+
+测试真实退出路径，不要调用 `process.exit()`；后者会隐藏活动 handle 和被跳过的清理。
+
+### Worker 终止时崩溃或挂起
+
+在每个 worker isolate 中独立加载插件。不要在 isolate 间全局共享 `Env`、类构造函数或 JavaScript handle。请在 `worker.terminate()` 前实现优雅的 stop/cancel/await 协议。
+
+活动原生异步工作期间突然终止仍是运行时敏感限制；Bun 的未解决报告见 [napi-rs#2938](https://github.com/napi-rs/napi-rs/issues/2938)。请分别在普通 Node 和目标 Bun/Electron 运行时中复现。
+
+生命周期测试参见[异步与并发](/cn/docs/more/async-concurrency)和[测试与调试](/cn/docs/more/testing-debugging)。
+
+### 原生 panic 或进程 abort
+
+使用 `RUST_BACKTRACE=full` 运行调试构建并附加原生调试器。panic 不一定能安全地跨 FFI 边界恢复。将预期故障转换为 `napi::Result`；panic 只应用于内部不变量被破坏，并应说明是否使用 `#[napi(catch_unwind)]`。
+
+CodeLLDB、LLDB、GDB、worker 压力测试与泄漏测试参见[测试与调试](/cn/docs/more/testing-debugging)。
+
+## WASI 故障
+
+### `SharedArrayBuffer is not defined` 或内存创建失败
+
+浏览器页面未进行跨源隔离。为主文档和子资源提供：
+
+```text
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Embedder-Policy: require-corp
+```
+
+在浏览器控制台确认：
+
+```js
+console.log(globalThis.crossOriginIsolated, typeof SharedArrayBuffer)
+```
+
+还要确保跨源脚本、worker、WASM 和图片满足所选 COEP 策略；一个被阻止的子资源就可能让本来正确的构建失败。
+
+### 未安装 WASI 可选包
+
+WASI 包使用 `cpu: ["wasm32"]`，默认会被跳过。请按照 [WebAssembly：安装包](/cn/docs/concepts/webassembly#安装-webassembly-包)配置包管理器支持的架构，或使用 npm 的 `--cpu=wasm32` 安装。
+
+对于 `@napi-rs/cli` 3.7 或更新版本生成的加载器：
+
+- `NAPI_RS_FORCE_WASI=true` 即使原生加载成功也会尝试 WASI 路径。
+- `NAPI_RS_FORCE_WASI=error` 在找不到 WASI 绑定时还会抛出错误。
+- `1`、`0`、`false` 和其他字符串不会强制使用 WASI。
+
+测试中请使用 `error`，确保 WASI 包缺失时不会静默回退到原生插件。
+
+### 浏览器 worker 错误不可见
+
+将 `napi.wasm.browser.errorEvent` 设为 `true`。生成的 worker 会把错误作为 `napi-rs-worker-error` 转发到 window：
+
+```js
+window.addEventListener('napi-rs-worker-error', (event) => {
+  console.error(event.detail)
+})
+```
+
+### 在 Node 中可用，在 Bun 或 Deno 中不可用
+
+不要假设其他运行时以相同 API 提供 Node 的 WASI 实现。Bun 与 Deno 中的 WASI 执行有未解决不兼容报告（[napi-rs#2965](https://github.com/napi-rs/napi-rs/issues/2965)）。在该产品缺口解决前，请将运行时标记为不支持，或提供单独测试的加载器。
+
+## 报告可处理的问题
+
+请包含：
+
+- 最小 Rust 源码、`Cargo.toml`、`build.rs`、`package.json` 与 JavaScript 复现；
+- 完整命令，以及带 `cause` 链的第一个错误；
+- Node/运行时、CLI、Rust、宿主机、目标、CPU 和 libc 版本；
+- 加入测试运行器或打包器前，普通 Node 是否能工作；
+- `file` 和平台依赖检查命令的输出；
+- 产物属于 debug/release、native/WASI、local/optional package 中哪一种；
+- 对于生命周期缺陷，提供有界压力测试和确切关闭顺序。
+
+::: info
+请移除凭据、私有绝对路径和专有输入数据，但不要移除平台、target triple 或原始操作系统加载器消息。这些细节通常能立刻确定故障层。
+
+:::

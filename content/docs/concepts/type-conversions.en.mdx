@@ -1,0 +1,223 @@
+---
+title: 'Type conversions'
+description: Rust to JavaScript conversion matrix, directionality, ownership, and feature requirements.
+---
+
+# Type conversions
+
+Every exported argument must implement `FromNapiValue` (or one of the reference conversion traits), and every returned value must implement `ToNapiValue`. The generated TypeScript type is useful documentation, but the Rust trait implementation is what determines whether a conversion is actually available.
+
+This reference describes napi-rs v3's bindgen runtime. For the lower-level handles such as `JsString` and `JsObject`, see [Env and low-level values](/docs/concepts/env).
+
+## Direction legend
+
+| Mark | Meaning |
+| --- | --- |
+| JS → Rust | The type can be used as an exported function argument. |
+| Rust → JS | The type can be returned or assigned to a JavaScript value. |
+| Scoped | The Rust value borrows a Node-API environment or JavaScript callback scope and must not escape it. |
+| Owned | Conversion creates or retains Rust-owned data that can outlive the callback, subject to the type's `Send` rules. |
+
+<Callout type="warning">
+  A TypeScript mapping does not imply both conversion directions. For example,
+  `u64` generates `bigint` but is output-only; use `BigInt` when accepting an
+  arbitrary JavaScript `bigint` so you can check whether narrowing is lossless.
+</Callout>
+
+## Primitive values
+
+| Rust type | JavaScript / TypeScript | Direction | Ownership and caveats | Feature / minimum Node-API |
+| --- | --- | --- | --- | --- |
+| `()` / `Undefined` | `undefined`; a function return becomes `void` | Both | Zero-sized marker. Under `strict`, input must be `undefined`. | Base API |
+| `Null` | `null` | Both | Explicit null marker. Plain input conversion accepts and discards any value; under `strict`, input must be `null`. | Base API |
+| `bool` | `boolean` | Both | Copied. | Base API |
+| `i8`, `u8`, `i16`, `u16`, `i32`, `u32` | `number` | Both | Integer conversion; JavaScript still stores a Number. | Base API |
+| `f32` | `number` | Rust → JS | Widened to a JavaScript double; there is no `FromNapiValue` implementation. Use `f64` for input. | Base API |
+| `f64` | `number` | Both | JavaScript Number is IEEE-754 double precision. | Base API |
+| `i64` | `number` | Both | Uses Node-API's signed 64-bit Number conversion. Values outside JavaScript's safe-integer range can lose precision. | Base API |
+| `BigInt` | `bigint` | Both | Keeps a sign bit and little-endian `u64` words. Its getters report whether narrowing was lossless. | `napi6` |
+| `u64`, `u128`, `i128`, `usize`, `isize`, `i64n` | `bigint` | Rust → JS | Output-only to avoid silently narrowing arbitrary JavaScript BigInts. | `napi6` |
+| `String` | `string` | Both | Owned UTF-8 string. | Base API |
+| `&str` | `string` | Rust → JS | Borrowed Rust output only; JavaScript strings cannot be accepted as `&str`. Use `String` for input. | Base API |
+| `Utf16String` | `string` | Both | Owned UTF-16 code units; useful when exact UTF-16 representation matters. | Base API |
+| `Latin1String` | `string` | Both | Owns Latin-1 bytes. Formatting it as UTF-8 requires `latin1`. | Base API; `latin1` for decoding/display |
+| `OsString`, `PathBuf` | `string` | Both | Owned. Windows uses UTF-16 and preserves unpaired surrogates. Unix output rejects a non-Unicode path rather than replacing bytes. | Base API |
+| `&OsStr`, `&Path` | `string` | Rust → JS | Borrowed output. Same platform caveats as the owned forms. | Base API |
+| `Symbol` | `symbol` | Both | Plain input conversion discards the value without retaining identity or description. `#[napi(strict)]` first validates that it is a symbol, but still does not retain it. Returning `Symbol` creates one from Rust descriptor state. Use scoped `JsSymbol` to preserve an existing value. `Symbol::for_desc` needs Node-API 9. | Base API; `napi9` for global symbols |
+
+`i64` deliberately maps to `number`, while `i64n` maps to `bigint`. Prefer the wrapper only when the JavaScript API is intended to expose a BigInt.
+
+```rust filename="lib.rs"
+#[napi]
+pub fn inspect_bigint(value: BigInt) -> Result<u64> {
+  let (negative, narrowed, lossless) = value.get_u64();
+  if negative || !lossless {
+    return Err(Error::from_reason("value does not fit in u64"));
+  }
+  Ok(narrowed)
+}
+```
+
+The return type above is `bigint` because `u64` is a BigInt output type.
+
+## `Option`, `null`, and `undefined` {#option-null-and-undefined}
+
+`Option<T>` has an intentionally asymmetric mapping:
+
+| Position | JavaScript accepted or produced | Generated TypeScript |
+| --- | --- | --- |
+| Function argument | `T`, `null`, or `undefined`; both nullish values become `None` | `T | null | undefined` and normally an optional trailing parameter |
+| Function return | `Some(T)` becomes `T`; `None` becomes `null` | `T | null` |
+| `#[napi(object)]` or structured-shape field with default `use_nullable = false` | Missing or `undefined` becomes `None`; explicit `null` is passed to the inner `T` conversion and normally fails; `None` is omitted on output | `field?: T` |
+| `#[napi(object)]` or structured-shape field with `use_nullable = true` | Missing or `undefined` is an error; `null` becomes `None`; `None` is emitted as `null` | `field: T | null` |
+| Public class field | The accessor always exists. An `Option` getter emits `null` for `None`, and a writable setter accepts the normal nullish `Option` inputs. `use_nullable` changes the generated property/constructor shape, not whether the accessor exists. | Default: `field?: T`; with `use_nullable`: `field: T | null` |
+
+Use `Null` or `Undefined` when the distinction itself is part of the API. Use `Either<T, Null>` or `Either<T, Undefined>` when exactly one nullish value is accepted.
+
+```rust filename="lib.rs"
+#[napi]
+pub fn optional_name(value: Option<String>) -> Option<String> {
+  value.filter(|name| !name.is_empty())
+}
+
+#[napi]
+pub fn null_but_not_undefined(value: Either<String, Null>) -> bool {
+  matches!(value, Either::B(Null))
+}
+```
+
+<Callout type="info">
+  Non-trailing optional parameters may be emitted as required unions so that a
+  later required parameter remains callable in TypeScript. The union still
+  accepts `undefined` and `null`.
+</Callout>
+
+## Unions with `Either`
+
+`Either<A, B>` through `Either26<A, ..., Z>` map to TypeScript unions. On input, napi-rs tests variants from left to right with each type's `ValidateNapiValue` implementation, then converts the first match.
+
+```rust filename="lib.rs"
+#[napi]
+pub fn normalize_id(value: Either<u32, String>) -> String {
+  match value {
+    Either::A(number) => number.to_string(),
+    Either::B(text) => text,
+  }
+}
+```
+
+```ts filename="index.d.ts"
+export function normalizeId(value: number | string): string
+```
+
+Order overlapping alternatives from most specific to least specific. Validation for a plain `Object`, for example, cannot prove a complete object schema. `Either` is a runtime union, not a serde-style untagged enum with backtracking after arbitrary user code.
+
+## Arrays, tuples, maps, and sets
+
+| Rust type | JavaScript / TypeScript | Direction | Conversion behavior | Feature |
+| --- | --- | --- | --- | --- |
+| `Vec<T>` | `Array<T>` | Both | Copies/converts every element. Input requires each element to implement `FromNapiValue`. | Base API |
+| `[T; N]` | `Array<T>` | Rust → JS | Creates a JavaScript array. | Base API |
+| Rust tuples, up to supported generated arity | TypeScript tuple / JS Array | Both | Input must have at least the tuple's length; each indexed element is converted. | Base API |
+| `Array<'env>` | `unknown[]` | JS → Rust and scoped pass-through | Scoped handle with `get`, `get_ref`, `set`, and `insert`; avoids converting the whole array up front. | Base API |
+| `HashMap<K, V>`, `BTreeMap<K, V>` | `Record<K, V>` / plain object | Both | Uses own enumerable string-keyed properties. This is **not** JavaScript `Map`. Keys must convert to/from strings. | Base API |
+| `IndexMap<K, V>` | `Record<K, V>` / plain object | Both | Uses the same own enumerable string-keyed property shape while preserving Rust insertion order where JavaScript's property rules allow it. | `object_indexmap` |
+| `HashSet<T>`, `BTreeSet<T>` | `Set<T>` | Both | Constructs or iterates an actual JavaScript `Set`. | Base API |
+| `IndexSet<T>` | `Set<T>` | Both | Insertion-ordered Rust set. | `object_indexmap` |
+
+Conversion of `Vec<T>` and collections is O(n). Use scoped `Array`, `Object`, typed-array views, or a stream when you need incremental access rather than an owned copy.
+
+## Objects, classes, and custom shapes {#objects-classes-and-custom-shapes}
+
+| Rust type or declaration | JavaScript / TypeScript | Direction | Ownership / identity |
+| --- | --- | --- | --- |
+| `Object<'env>` | `object` | Both within scope | Direct scoped handle. Property access crosses the Node-API boundary on each operation. |
+| `ObjectRef` | `object` | Both | Holds a Node-API reference so the object can outlive the callback. |
+| `Unknown<'env>` | `unknown` | Both within scope | Unchecked scoped handle; inspect/coerce it explicitly. |
+| `#[napi(object)] struct` | Plain object / interface | Controlled by `object_from_js` and `object_to_js`, both on by default | JavaScript input is converted into a new owned Rust struct. Mutating it does not mutate the source object. |
+| `#[napi] struct` | JavaScript class | Through class references and instances | Preserves native class identity. Methods receive `&self`/`&mut self`; public fields become accessors. |
+| `ClassInstance<'env, T>` | An instance of class `T` | JS → Rust / scoped output | Use inside object fields or collections when the JavaScript class instance itself is needed. |
+| `#[napi(transparent)] struct Wrapper(T)` | Same representation as `T` | Controlled per direction | Rust newtype without a JavaScript wrapper object. |
+| `#[napi(array)]` tuple struct | JavaScript array / TypeScript tuple | Controlled per direction | Named Rust type with positional JavaScript representation. |
+| Structured `#[napi] enum` | Discriminated object union | Controlled per direction | Owned conversion; discriminator defaults to `type`. |
+
+Do not treat a class as an object shape. A normal read-write public class field
+needs both output conversion for its getter and input conversion for its setter;
+a `readonly` field needs only output conversion, while a skipped class field has
+no accessor. For nested class values, accept `&T`, `ClassInstance<T>`, or use
+`Array::get_ref`; `Vec<T>` requires an owned `FromNapiValue` implementation and
+is therefore not the way to accept a list of class instances.
+
+See [Classes](/docs/concepts/class), [Objects](/docs/concepts/object), [Enums](/docs/concepts/enum), and [`#[napi]` attributes](/docs/concepts/napi-attributes) for shape-specific examples.
+
+## Buffers, ArrayBuffers, and typed arrays
+
+| Rust type | JavaScript / TypeScript | Direction | Lifetime and data behavior | Feature / minimum Node-API |
+| --- | --- | --- | --- | --- |
+| `BufferSlice<'env>` | Node.js `Buffer` | Both within a synchronous scope | Mutable borrowed view for synchronous code. Do not hold it across `await`. | Base API |
+| `Buffer` | Node.js `Buffer` | Both | Keeps a reference to JavaScript-owned data and is designed for async use. Cloning references the same underlying buffer. | Best lifecycle handling with `napi4` |
+| `ArrayBuffer<'env>` | `ArrayBuffer` | JS → Rust and scoped pass-through | Borrowed bytes tied to the environment. | Base API |
+| `Int8Array`, `Uint8Array`, … | Corresponding typed array | Both | Owned/reference-retaining wrappers suitable for async use. | BigInt array variants require `napi6` |
+| `Int8ArraySlice<'env>`, `Uint8ArraySlice<'env>`, … | Corresponding typed array | Both within scope | Borrowed views for synchronous code. | BigInt array variants require `napi6` |
+| `&[i8]`, `&[u8]`, `&[i16]`, … | Corresponding typed array | JS → Rust in a synchronous callback | Borrowed slice; cannot outlive the callback. | BigInt slices require `napi6` |
+
+External buffers and ArrayBuffers can be zero-copy when the runtime accepts external backing stores. A runtime may reject external buffers; constructors such as `BufferSlice::from_data` then fall back to a copy. Do not promise zero-copy behavior across every Node-compatible runtime. See [Typed arrays](/docs/concepts/typed-array) and [Understanding lifetime](/docs/concepts/understanding-lifetime).
+
+## Dates and serde JSON
+
+| Rust type | JavaScript / TypeScript | Direction | Feature / caveat |
+| --- | --- | --- | --- |
+| `Date` (`JsDate`) | `Date` | Scoped low-level value | `napi5` |
+| `chrono::DateTime<Tz>`, `NaiveDateTime` | `Date` | Both | `chrono_date`, which enables `chrono` and `napi5`; milliseconds since epoch determine precision. |
+| `serde_json::Value` | JSON-compatible JavaScript value | Both | `serde-json`; rejects functions, `undefined`, symbols, and external values. |
+| `serde_json::Map<String, Value>` | Plain object | Both | `serde-json` |
+| `serde_json::Number` | Number, BigInt, or string depending value and enabled API | Both | `serde-json`; with `napi6`, out-of-safe-range integers are emitted as BigInt. |
+
+`serde_json::Value` is not a lossless representation of arbitrary JavaScript. In particular, a large input BigInt may become a JSON number when it fits or a decimal string when it does not. Use `BigInt` when BigInt identity and exact narrowing rules matter.
+
+`serde-json-ordered` additionally enables serde_json's `preserve_order` behavior.
+
+## Functions, promises, and streams
+
+| Rust type | JavaScript / TypeScript | Direction | Lifetime / feature |
+| --- | --- | --- | --- |
+| `Function<'env, Args, Return>` | Typed JavaScript function | JS → Rust in scope; can be passed through in scope | Calls JavaScript only on its owning thread. Use `FnArgs<(...)>` for multiple positional arguments. |
+| `FunctionRef<Args, Return>` | Typed JavaScript function | JS → Rust / retained reference | Owns a Node-API reference but does not implement `ToNapiValue`. To pass it back, call `borrow_back(env)` to obtain a scoped `Function`; still use it only in the owning environment/thread. |
+| `ThreadsafeFunction<...>` | Typed callback | JS → Rust, then callable from other threads | `napi4`; see [ThreadsafeFunction](/docs/concepts/threadsafe-function). |
+| `Promise<T>` | `Promise<T>` | JS → Rust only | Awaitable Rust future. Requires the async runtime for normal exported async use. |
+| `PromiseRaw<'env, T>` | `Promise<T>` | Scoped JS promise handle | Supports `then`, `catch`, and `finally` without moving the promise to another thread. |
+| Rust `async fn` return | `Promise<T>` | Rust → JS | `async` or `tokio_rt`; `Result::Err` rejects. |
+| `AsyncTask<T>` | `Promise<T::JsValue>` | Rust → JS | Runs `compute` on libuv's worker pool. |
+| `ReadableStream<'env, T>` | Web `ReadableStream<T>` | Both | `web_stream`; construction needs `T: Send + 'static` and a `Send + 'static` Rust stream. |
+| `WriteableStream<'env>` | Web `WritableStream` | JS → Rust and scoped pass-through | `web_stream`; the Rust API is currently spelled `WriteableStream`, and the type generator does not canonicalize that spelling, so use `ts_arg_type = "WritableStream"` for a public parameter. |
+
+`ReadableStream::new` checks that the runtime provides a global `ReadableStream`. Node-API 4 alone does not guarantee the Web Streams global; `with_readable_stream_class` accepts a compatible constructor explicitly.
+
+## External native data
+
+`External<T>` exposes an opaque, type-tagged native allocation to JavaScript. It is not serialized and its generated type is `ExternalObject<T>`.
+
+- Return an owned `External<T>` to transfer it into a JavaScript external value.
+- Accept `&External<T>` or `&mut External<T>` to borrow and type-check the wrapped value.
+- Use `ExternalRef<T>` when Rust must keep a JavaScript reference to the external.
+- `External::new_with_size_hint` reports native allocation size to the JavaScript garbage collector; the number is a GC accounting hint, not a memory limit.
+
+See [External](/docs/concepts/external) for lifecycle details.
+
+## Validation is not coercion
+
+Most generated functions convert according to their `FromNapiValue` implementation. Adding `#[napi(strict)]` first invokes `ValidateNapiValue` and rejects a mismatched top-level JavaScript type. It does not coerce strings to numbers, and it does not recursively validate every property before conversion.
+
+`#[napi(return_if_invalid)]` performs the same validation but returns `undefined` on invalid input instead of throwing. See [`#[napi]` attributes](/docs/concepts/napi-attributes) for its constraints.
+
+## Choosing an ownership model
+
+Use this order of preference:
+
+1. Use owned Rust values (`String`, `Vec<T>`, `#[napi(object)]`) when a copy is acceptable and the value must cross threads or await points.
+2. Use scoped handles and slices (`Object<'env>`, `Array<'env>`, `BufferSlice<'env>`, typed-array slices) for synchronous, zero- or low-copy access.
+3. Use reference-retaining wrappers (`Buffer`, `ObjectRef`, `FunctionRef`, `Reference<T>`) when JavaScript-owned data must outlive the callback.
+4. Use `ThreadsafeFunction` to invoke JavaScript from another thread; never move a scoped JavaScript handle there.
+5. Use a stream when data should be produced incrementally instead of copied into one collection.
+
+The compiler enforces many of these boundaries through lifetimes and `Send`, but an `unsafe` method or raw Node-API handle can bypass them. Read [Understanding lifetime](/docs/concepts/understanding-lifetime) before doing so.

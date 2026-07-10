@@ -1,49 +1,114 @@
 ---
-description: napi new command in @napi-rs/cli.
+description: Create a napi-rs project from the maintained Yarn or pnpm template.
 ---
 
 # New
 
-import { Callout } from 'nextra-theme-docs'
+import { Green } from '../../../components/chalk'
 
-import { Green, Rust } from '../../../components/chalk'
+`napi new` creates a project from a maintained external template, renames the
+package and Rust crate, filters targets and CI jobs, writes a Node.js engine
+range derived from the selected Node-API level, and applies the license and
+type-generation settings.
 
-Create a new project with pre-configured boilerplate
-
-<Callout>
-  The `napi new` command requires `git` to be installed, and it will clone the repository from the GitHub, be sure you can access the GitHub.
+<Callout type="warning">
+  Git must be installed and GitHub must be reachable. The destination must not
+  be an existing file or a non-empty directory.
 </Callout>
 
 ## Usage
 
+The CLI is interactive by default:
+
 ```sh
-# CLI
-napi new <path> [--options]
+napi new <path>
 ```
 
-```typescript
-// Programmatically
+The path may be omitted; the first prompt then asks for it. Use
+`--no-interactive` for automation:
+
+```sh
+napi new cool \
+  --name @scope/cool \
+  --min-node-api 8 \
+  --targets x86_64-unknown-linux-gnu \
+  --targets aarch64-apple-darwin \
+  --no-interactive
+```
+
+Programmatic calls never prompt. Supply `path` and any non-default values
+explicitly:
+
+```ts
 import { NapiCli } from '@napi-rs/cli'
 
-new NapiCli().new({
-  // options
+await new NapiCli().new({
+  path: 'cool',
+  name: '@scope/cool',
+  packageManager: 'pnpm',
+  targets: [
+    'x86_64-unknown-linux-gnu',
+    'aarch64-apple-darwin',
+  ],
 })
 ```
 
+## Interactive prompts
+
+When `--interactive` is enabled, the command asks for the package name,
+minimum Node-API level, targets, license, TypeScript declaration generation,
+and GitHub Actions. Pass `--package-manager pnpm` before the prompts if you
+want the pnpm template; package manager is not an interactive question.
+
 ## Options
 
-| Options              | CLI Options              | type     | required | default             | description                                                                                   |
-| -------------------- | ------------------------ | -------- | -------- | ------------------- | --------------------------------------------------------------------------------------------- |
-|                      | --help,-h                |          |          |                     | get help                                                                                      |
-| path                 | <Green>\<path\></Green>  | false    | string   |                     | The path where the NAPI-RS project will be created.                                           |
-| name                 | --name,-n                | string   | false    |                     | The name of the project, default to the name of the directory if not provided                 |
-| minNodeApiVersion    | --min-node-api,-v        | number   | false    | 4                   | The minimum Node-API version to support                                                       |
-| packageManager       | --package-manager        | string   | false    | <Green>yarn</Green> | The package manager to use. Only support yarn 4.x for now.                                    |
-| license              | --license,-l             | string   | false    | <Green>MIT</Green>  | License for open-sourced project                                                              |
-| targets              | --targets,-t             | string[] | false    | []                  | All targets the crate will be compiled for.                                                   |
-| enableDefaultTargets | --enable-default-targets | boolean  | false    | true                | Whether enable default targets                                                                |
-| enableAllTargets     | --enable-all-targets     | boolean  | false    | false               | Whether enable all targets                                                                    |
-| enableTypeDef        | --enable-type-def        | boolean  | false    | true                | Whether enable the <Green>type-def</Green> feature for typescript definitions auto-generation |
-| enableGithubActions  | --enable-github-actions  | boolean  | false    | true                | Whether generate preconfigured GitHub Actions workflow                                        |
-| testFramework        | --test-framework         | string   | false    | <Green>ava</Green>  | The JavaScript test framework to use, only support <Green>ava</Green> for now                 |
-| dryRun               | --dry-run                | boolean  | false    | false               | Whether to run the command in dry-run mode                                                    |
+Boolean options accept the `--no-` prefix, such as `--no-interactive`,
+`--no-enable-type-def`, and `--no-enable-github-actions`.
+
+| Option | CLI syntax | Type | Required | Default | Description |
+| --- | --- | --- | :---: | --- | --- |
+| `path` | <Green>`<path>`</Green> | `string` | Yes for non-interactive/programmatic use | | Empty destination directory, resolved from the current working directory. |
+| `interactive` | `--interactive,-i` | `boolean` | No | `true` | Ask for project information. This is a CLI-only option; use `--no-interactive` in automation. |
+| `name` | `--name,-n` | `string` | No | destination directory name | `package.json` package name. Scoped names are recommended for publishing. |
+| `minNodeApiVersion` | `--min-node-api,-v` | `number` | No | `4` | Minimum Node-API level used for both the generated package's Node.js engine requirement and the `napi` dependency feature. |
+| `packageManager` | `--package-manager` | `yarn \| pnpm` | No | `yarn` | Select the maintained Yarn or pnpm template. The selected template pins its own package-manager version. |
+| `license` | `--license,-l` | `string` | No | `MIT` | License written to `package.json`. |
+| `targets` | `--targets,-t` | `string[]` | No | `[]` | Target triples to retain. Repeat the flag for multiple targets. |
+| `enableDefaultTargets` | `--enable-default-targets` | `boolean` | No | `true` | When non-interactive `targets` is empty, use the default target set. |
+| `enableAllTargets` | `--enable-all-targets` | `boolean` | No | `false` | Select every target accepted by the CLI. This does not create missing template CI jobs. |
+| `enableTypeDef` | `--enable-type-def` | `boolean` | No | `true` | Keep the `type-def` feature and generated TypeScript declarations. |
+| `enableGithubActions` | `--enable-github-actions` | `boolean` | No | `true` | Keep and filter the template's GitHub Actions workflow. |
+| `testFramework` | `--test-framework` | `string` | No | `ava` | Test framework request. Only AVA is currently implemented by the templates. |
+| `dryRun` | `--dry-run` | `boolean` | No | `false` | Validate the options, Git availability, and destination without cloning or writing the project. |
+
+`napi new` writes the selected `napiN` feature into `Cargo.toml` and the
+corresponding Node.js range into `package.json#engines.node`. Other Cargo
+features can imply a higher Node-API level, so review the final feature set when
+you add async or other optional integrations.
+
+## Templates and cache
+
+The only supported template selections are:
+
+| Value | Repository |
+| --- | --- |
+| `yarn` | [`napi-rs/package-template`](https://github.com/napi-rs/package-template) |
+| `pnpm` | [`napi-rs/package-template-pnpm`](https://github.com/napi-rs/package-template-pnpm) |
+
+The CLI caches them under `~/.napi-rs/template/<package-manager>/repo`. On a
+later run it fetches the repository and resets the cache to `origin/main`
+before copying it. The template's `.git` directory is not copied into your new
+project.
+
+## Target selection is not a support guarantee
+
+The prompt lists every target triple understood by the CLI. The generated
+workflow can only retain matrix rows that already exist in the selected
+template, and the generated `napi.targets` list can only retain targets already
+present in that template's package config. An additional accepted target may
+therefore require manual config, npm-directory, CI, and runtime-test work.
+
+Read [Support and compatibility](/docs/more/support-compatibility) before using
+`--enable-all-targets`, and follow [Add a target to an existing
+project](/docs/cross-build#add-a-target-to-an-existing-project) for the complete
+workflow.

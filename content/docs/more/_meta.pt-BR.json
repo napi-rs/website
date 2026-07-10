@@ -1,3 +1,9 @@
 {
-  "faq": "Perguntas Frequentes"
+  "support-compatibility": "Suporte e compatibilidade",
+  "testing-debugging": "Testes e depuração",
+  "async-concurrency": "Guia de async e concorrência",
+  "integrations": "Bundlers e frameworks",
+  "troubleshooting": "Solução de problemas",
+  "faq": "FAQ de compilação cruzada",
+  "v2-v3-migration-guide": "Guia de migração da V2 para a V3"
 }

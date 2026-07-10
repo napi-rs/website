@@ -1,6 +1,6 @@
 ---
 title: 'Await Promise'
-description: Await a JavaScript Promise in Rust.
+description: Aguarde uma Promise JavaScript no Rust.
 ---
 
 # Await Promise
@@ -8,8 +8,14 @@ description: Await a JavaScript Promise in Rust.
 Aguardar uma `Promise` JavaScript em Rust parece loucura, mas é viável em **NAPI-RS**.
 
 ::: tip
-Aguardar uma `Promise` JavaScript requer que os recursos `tokio_rt` e `napi4`
-estejam habilitados.
+Aguardar uma `Promise` JavaScript requer a feature `async` ou `tokio_rt`;
+`tokio_rt` habilita `napi4` automaticamente.
+
+:::
+
+::: info
+`Promise<T>` é `Send` quando `T` é `Send`; assim, o compilador impede que um
+valor resolvido não-`Send` atravesse threads worker do Tokio.
 
 :::
 
@@ -17,11 +23,13 @@ estejam habilitados.
 
 ```rust
 use napi::bindgen_prelude::*;
+use napi_derive::napi;
 
 #[napi]
 pub async fn async_plus_100(p: Promise<u32>) -> Result<u32> {
   let v = p.await?;
-  Ok(v + 100)
+  v.checked_add(100)
+    .ok_or_else(|| Error::new(Status::InvalidArg, "result exceeds u32"))
 }
 ```
 

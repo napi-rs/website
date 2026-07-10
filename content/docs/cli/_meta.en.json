@@ -1,7 +1,12 @@
 {
-  "programmatic-api": "Programmatic API",
+  "new": "New project",
+  "rename": "Rename project",
   "build": "Build",
+  "napi-config": "NAPI Config",
+  "programmatic-api": "Programmatic API",
+  "create-npm-dirs": "Create npm directories",
   "artifacts": "Artifacts",
-  "pre-publish": "Prepublish",
-  "napi-config": "NAPI Config"
+  "universalize": "Universalize",
+  "version": "Version packages",
+  "pre-publish": "Prepublish"
 }

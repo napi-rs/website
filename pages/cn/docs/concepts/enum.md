@@ -17,7 +17,7 @@ JavaScript 中没有 `enum`，并且 Rust 中的 `enum` 与 TypeScript 中的 `e
 
 ```rust
 #[napi]
-enum Kind {
+pub enum Kind {
   Duck,
   Dog,
   Cat,
@@ -39,13 +39,15 @@ export const enum Kind {
 在 `TypeScript` 中，数字 `enums` 成员还会获得从枚举值到枚举名称的反向映射。
 但在 Rust 中，我们没有这种反向映射行为，它只是一个普通的 JavaScript 对象。
 
+数字变体默认使用从零开始的连续 `i32` 值。显式的 Rust 整数判别值会被保留，之后的隐式变体会从前一个值继续递增。
+
 ## 字符串枚举
 
 **lib.rs**
 
 ```rust
 #[napi(string_enum)]
-enum Kind {
+pub enum Kind {
   Duck,
   Dog,
   Cat,
@@ -63,5 +65,46 @@ export const enum Kind {
   Cat = 'Cat',
 }
 ```
+
+使用 `string_enum = "case"` 可以转换所有变体名称，也可以在单个变体上使用 `#[napi(value = "...")]` 来指定确切的 JavaScript 值。支持的大小写形式列在 [`#[napi]` 属性参考](/cn/docs/concepts/napi-attributes#enums)中。
+
+**lib.rs**
+
+```rust
+#[napi(string_enum = "kebab-case")]
+pub enum AccessMode {
+  ReadOnly,
+  #[napi(value = "read-write")]
+  Writable,
+}
+```
+
+## 结构化枚举
+
+只要一个枚举包含携带数据的变体，它就会变成可辨识对象联合，而不是 JavaScript 枚举对象。
+
+**lib.rs**
+
+```rust
+#[napi]
+pub enum Event {
+  Ready,
+  FileChanged { path: String },
+  Progress(u32, u32),
+}
+```
+
+**index.d.ts**
+
+```ts
+export type Event =
+  | { type: 'Ready' }
+  | { type: 'FileChanged'; path: string }
+  | { type: 'Progress'; field0: number; field1: number }
+```
+
+判别字段默认为 `type`。使用 `discriminant = "kind"` 可以改变它，使用 `discriminant_case = "camelCase"` 或其他支持的形式可以转换变体值。具名变体字段会保留其名称；元组字段会变成 `field0`、`field1`，依此类推。字段的 JavaScript 名称不能与判别字段相同。
+
+结构化枚举转换拥有所有权：接收枚举时会读取其字段并将其转换为 Rust 枚举值，返回枚举时则会创建新的 JavaScript 对象。`object_from_js = false` 或 `object_to_js = false` 可以让类型变为单向转换。参阅[类型转换](/cn/docs/concepts/type-conversions#objects-classes-and-custom-shapes)。
 
 **NAPI-RS** 不支持将 Rust `enum` 的 `impl` 生成到 JavaScript 中。

@@ -1,6 +1,6 @@
 ---
 title: 'Inject Env'
-description: Inject Node-API Env into functions and methods.
+description: Injete o Env do Node-API em funções e métodos.
 ---
 
 # Inject Env

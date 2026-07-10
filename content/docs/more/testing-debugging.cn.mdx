@@ -1,0 +1,331 @@
+---
+description: 在 Rust 与 JavaScript 边界测试 NAPI-RS 插件，并调试 Node.js 中的原生代码。
+---
+
+# 测试与调试
+
+原生插件有两个测试边界：
+
+- Rust 测试验证不需要真实 JavaScript 引擎的逻辑。
+- JavaScript 集成测试把 `.node` 库加载到 Node.js，验证转换、异常、promise、垃圾回收和环境生命周期行为。
+
+两者都要使用。Rust 测试无法证明生成的绑定接受预期 JavaScript 值，而只使用 JavaScript 的测试套件会让普通 Rust 逻辑更慢、更难隔离。
+
+## 使用 Cargo 测试纯 Rust 逻辑
+
+尽可能让算法与操作系统集成不依赖 NAPI-RS 值：
+
+```rust filename="src/core.rs"
+pub fn normalize_count(value: i32) -> Result<u32, &'static str> {
+  value.try_into().map_err(|_| "count must not be negative")
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn rejects_negative_counts() {
+    assert_eq!(normalize_count(-1), Err("count must not be negative"));
+  }
+}
+```
+
+导出函数可以只是很薄的转换层：
+
+```rust filename="src/lib.rs"
+mod core;
+
+use napi::{Error, Result, Status};
+use napi_derive::napi;
+
+#[napi]
+pub fn normalize_count(value: i32) -> Result<u32> {
+  core::normalize_count(value)
+    .map_err(|reason| Error::new(Status::InvalidArg, reason))
+}
+```
+
+正常运行这些测试：
+
+```sh
+cargo test
+```
+
+### 使用 `noop` 测试导出的纯函数
+
+原生注册通常引用 Node 进程提供的符号。如果测试二进制无法链接这些符号，请在仅用于测试的 crate feature 中为 `napi` 和 `napi-derive` 同时启用 `noop`：
+
+```toml filename="Cargo.toml"
+[features]
+test-noop = ["napi/noop", "napi-derive/noop"]
+```
+
+```sh
+cargo test --features test-noop
+```
+
+在 `noop` 模式下，`#[napi]` 不会生成 JavaScript 注册层，因此只使用普通 Rust 值的导出函数可由 Rust 测试直接调用。它**不会**创建假的 JavaScript 引擎。涉及 `Env`、`Function`、`Object`、JavaScript 引用、promise 或通过 `napi_value` 转换的代码仍应放在 Node 集成测试中。
+
+对于编译期宏诊断，请使用 [`trybuild`](https://docs.rs/trybuild) 测试，并将其 `.stderr` snapshot 与运行时测试分开提交。
+
+## 在 Node.js 中测试生成的绑定
+
+构建调试插件并导入生成的加载器：
+
+```json filename="package.json"
+{
+  "scripts": {
+    "build:debug": "napi build --platform",
+    "test": "node --test"
+  }
+}
+```
+
+```js filename="test/add.test.cjs"
+const assert = require('node:assert/strict')
+const test = require('node:test')
+
+const addon = require('../index.js')
+
+test('native add', () => {
+  assert.equal(addon.add(20, 22), 42)
+})
+
+test('invalid input throws synchronously', () => {
+  assert.throws(() => addon.normalizeCount(-1), /must not be negative/)
+})
+```
+
+```sh
+npm run build:debug
+npm test
+```
+
+测试时应通过用户实际导入的同一个加载器。从 `target/debug` require 文件会绕过平台选择，并可能隐藏打包缺陷。
+
+集成测试至少应覆盖：
+
+- 参数与返回值转换，包括 null 和省略的值；
+- 同步错误与被拒绝的 promise；
+- 使用 `tsc --noEmit` 检查生成的 TypeScript；
+- 一次干净的进程启动和退出；
+- 你声称已测试的每个 Node 版本和目标。
+
+## 测试 worker 与环境拆除
+
+每个 `worker_threads` worker 都有自己的 Node-API 环境。应在 worker 内加载插件，不要从另一个 isolate 传递原生类或 JavaScript handle：
+
+```js filename="test/worker.cjs"
+const { parentPort } = require('node:worker_threads')
+const { add } = require('../index.js')
+
+parentPort.postMessage(add(2, 3))
+```
+
+```js filename="test/worker.test.cjs"
+const assert = require('node:assert/strict')
+const { join } = require('node:path')
+const test = require('node:test')
+const { Worker } = require('node:worker_threads')
+
+test('loads in a worker isolate', async () => {
+  const worker = new Worker(join(__dirname, 'worker.cjs'))
+  const value = await new Promise((resolve, reject) => {
+    worker.once('message', resolve)
+    worker.once('error', reject)
+  })
+
+  assert.equal(value, 5)
+  await worker.terminate()
+})
+```
+
+如果插件拥有后台工作或 JavaScript 引用，请添加独立压力测试：
+
+1. 启动许多 worker，并发 require 插件。
+2. 调用异步 API 并等待正常完成。
+3. 要求 worker 停止、取消拥有的工作，并等待确认。
+4. 只有优雅路径成功后才终止 worker。
+5. 把突然 `worker.terminate()` 的竞态放入独立测试，以免把产品限制误认为普通关闭行为。
+
+原生异步工作期间突然终止仍有运行时特定的未解决故障报告，尤其是 Bun（[napi-rs#2938](https://github.com/napi-rs/napi-rs/issues/2938)）。请把取消和 worker 关闭视为 API 契约的一部分；文档变更无法让进行中的操作系统调用变得可取消。
+
+## 测试进程退出
+
+强引用 ThreadsafeFunction、打开的 handle 或后台 worker 都可能让 Node 保持运行。请在子进程中测试退出行为，避免主测试运行器隐藏泄漏：
+
+```js filename="test/exit.test.cjs"
+const assert = require('node:assert/strict')
+const { spawn } = require('node:child_process')
+const { join } = require('node:path')
+const test = require('node:test')
+
+test('process exits after async work', async () => {
+  const child = spawn(process.execPath, [join(__dirname, 'exit-repro.cjs')])
+
+  let timer
+  const code = await Promise.race([
+    new Promise((resolve, reject) => {
+      child.once('exit', resolve)
+      child.once('error', reject)
+    }),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        child.kill()
+        reject(new Error('child did not exit'))
+      }, 5_000)
+    }),
+  ]).finally(() => clearTimeout(timer))
+
+  assert.equal(code, 0)
+})
+```
+
+如果 ThreadsafeFunction 不应让 event loop 保持活动，请以 weak 模式构建。生命周期权衡参见[异步与并发](/cn/docs/more/async-concurrency)。
+
+## 测试垃圾回收与泄漏
+
+垃圾回收具有不确定性。一种实用的回归测试会创建 `WeakRef`、丢弃所有强 JavaScript 引用、反复请求 GC，并设置截止时间：
+
+```js filename="test/leak.cjs"
+const { NativeResource } = require('../index.js')
+
+let resource = new NativeResource()
+const weak = new WeakRef(resource)
+resource = undefined
+
+const deadline = Date.now() + 10_000
+const interval = setInterval(() => {
+  global.gc()
+  if (weak.deref() === undefined) {
+    clearInterval(interval)
+    process.exit(0)
+  }
+  if (Date.now() > deadline) {
+    console.error('NativeResource was not collected before the deadline')
+    process.exit(1)
+  }
+}, 50)
+```
+
+```sh
+node --expose-gc test/leak.cjs
+```
+
+不要断言一次 `global.gc()` 调用后立即完成回收。如果插件拥有内存分配，还应在平台内存工具下运行更长的压力任务：
+
+- AddressSanitizer 或 LeakSanitizer：检查 Rust/C/C++ 内存错误；
+- macOS 上的 Instruments；
+- 受支持 Linux 配置上的 Valgrind；
+- Windows 上的 Application Verifier 或 WinDbg。
+
+sanitizer 构建应与普通 release 产物分开。
+
+## 从有用的诊断运行开始
+
+附加调试器前，先使用调试插件与完整 CLI/Rust 诊断重现问题：
+
+```sh
+DEBUG='napi:*' RUST_BACKTRACE=full napi build --platform --verbose
+DEBUG='napi:*' RUST_BACKTRACE=full node ./repro.cjs
+```
+
+不要传入 `--release` 或 `--strip`。确认涉及哪个 Node 可执行文件和绑定：
+
+```sh
+node -p "process.execPath"
+node -p "process.platform + ' ' + process.arch"
+file ./*.node
+```
+
+使用 `NAPI_RS_NATIVE_LIBRARY_PATH=/absolute/path/to/addon.node` 可让生成的加载器尝试一个确切本地二进制文件。这是诊断覆盖，不是打包配置。
+
+## 使用 VS Code 与 CodeLLDB 调试
+
+安装 CodeLLDB 扩展并创建构建任务：
+
+```json filename=".vscode/tasks.json"
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "napi build debug",
+      "type": "shell",
+      "command": "napi build --platform",
+      "problemMatcher": ["$rustc"]
+    }
+  ]
+}
+```
+
+然后启动 **Node**，而不是 `.node` 库。如果 CodeLLDB 无法从 `PATH` 解析 `node`，请将 `program` 替换为 `node -p "process.execPath"` 打印的绝对路径：
+
+```json filename=".vscode/launch.json"
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug NAPI-RS in Node",
+      "type": "lldb",
+      "request": "launch",
+      "program": "node",
+      "args": ["${workspaceFolder}/repro.cjs"],
+      "cwd": "${workspaceFolder}",
+      "sourceLanguages": ["rust"],
+      "env": {
+        "RUST_BACKTRACE": "full",
+        "DEBUG": "napi:*"
+      },
+      "preLaunchTask": "napi build debug"
+    }
+  ]
+}
+```
+
+在 JavaScript 首次导入插件之前，于 Rust 中设置断点。Node 加载 `.node` image 前，断点可能显示为未绑定。
+
+该设置已知适用于 macOS、Linux 和 WSL。使用 `cppvsdbg` 的原生 Windows 调试仍是未解决的文档与工具缺口（[napi-rs#2830](https://github.com/napi-rs/napi-rs/issues/2830)）；不要因为某个 `cppvsdbg` 配置能启动 Node，就假设它受支持。Windows 或 WSL 上的 CodeLLDB 目前是更可复现的起点。
+
+## 使用 CLion 或其他原生调试器
+
+所有原生调试器都使用相同的进程模型：
+
+1. 使用 `napi build --platform` 构建。
+2. 创建 **Native Application** 配置。
+3. 将可执行文件设为确切 Node 可执行文件。
+4. 将 `repro.cjs` 设为程序参数，将包目录设为工作目录。
+5. 把构建命令添加为启动前任务。
+
+也可以启动 `node --inspect-brk repro.cjs`，将原生调试器附加到该 Node PID，设置 Rust 断点，然后继续 JavaScript 执行。JavaScript inspector 与原生调试器可以同时附加到同一进程。
+
+命令行形式适合获取崩溃 backtrace：
+
+```sh
+# macOS or Linux with LLDB
+lldb -- node ./repro.cjs
+# at the LLDB prompt
+run
+thread backtrace all
+```
+
+```sh
+# Linux with GDB
+gdb --args node ./repro.cjs
+# at the GDB prompt
+run
+thread apply all bt
+```
+
+## 断点无法绑定时
+
+按顺序检查：
+
+1. 构建未使用 `--release` 和 `--strip`。
+2. 加载器选择的是刚构建的二进制文件，而不是 `node_modules` 中的平台包。
+3. `process.execPath` 正是调试器启动的可执行文件。
+4. Rust 源代码属于生成该 `.node` 文件所使用的确切 Cargo target。
+5. 只有 `require()` 或 `import` 加载插件后才能命中断点。
+6. 在 macOS 上，二进制文件与 Node 进程架构匹配。
+
+加载器故障、符号错误、libc 不匹配和陈旧 TypeScript，请使用[故障排除决策树](/cn/docs/more/troubleshooting)。

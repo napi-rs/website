@@ -2,36 +2,39 @@
 description: Understand the lifetime of the JavaScript values.
 ---
 
-import { Callout } from 'nextra-theme-docs'
-
 import NodeLink from '../../../components/node-link'
 
 # Understanding Lifetime
 
-Interoperability between the `Rust` lifetime system and `JavaScript` memory management is tricky. In most cases, you can't use the JavaScript values passed into the Rust function. However, there are <NodeLink href="https://nodejs.org/api/n-api.html#references-to-values-with-a-lifespan-longer-than-that-of-the-native-method">a bunch of APIs in Node-API</NodeLink> that can extend the lifetime of the `JavaScript` values. **NAPI-RS** uses these APIs to align the lifetime of the `JavaScript` values with the `Rust` lifetime system as much as possible.
+Interoperability between the `Rust` lifetime system and `JavaScript` memory management is tricky. In most cases, you can't keep using a JavaScript handle after the Rust function returns. However, there are <NodeLink href="https://nodejs.org/api/n-api.html#references-to-values-with-a-lifespan-longer-than-that-of-the-native-method">a bunch of APIs in Node-API</NodeLink> that can extend the lifetime of the `JavaScript` values. **NAPI-RS** uses these APIs to align the lifetime of the `JavaScript` values with the `Rust` lifetime system as much as possible.
 
-In a Node-API function call, JavaScript values pointer only valid until the function call ends, see <NodeLink href="https://nodejs.org/api/n-api.html#object-lifetime-management">Object Lifetime Management</NodeLink>.
+During a Node-API function call, JavaScript value handles are normally valid only until the call's handle scope closes; see <NodeLink href="https://nodejs.org/api/n-api.html#object-lifetime-management">Object Lifetime Management</NodeLink>.
 
 > As Node-API calls are made, handles to objects in the heap for the underlying VM may be returned as napi_values. These handles must hold the objects 'live' until they are no longer required by the native code, otherwise the objects could be collected before the native code was finished using them. <br/><br/>
 > As object handles are returned they are associated with a 'scope'. The lifespan for the default scope is tied to the lifespan of the native method call. The result is that, by default, handles remain valid and the objects associated with these handles will be held live for the lifespan of the native method call.
 
-## Lifetime of primitive values
+## Lifetime of owned primitive conversions
 
-Primitive values like `boolean`, `number`, `string`, `null`, and `undefined` are passed by value, so the underlying values are copied when passed to the Rust side. These values don't have a lifetime.
+When JavaScript primitives are accepted as owned Rust values such as `bool`, a
+Rust integer or float, or `String`, NAPI-RS copies their value into Rust-owned
+data. That Rust data is not tied to a Node-API handle scope. This is different
+from accepting a handle wrapper such as `JsString<'env>` or `JsNumber<'env>`.
 
 ## Lifetime of `JsValue`
 
-Some JavaScript values, like `JsNumber` or `JsString`, they can be consumed in various forms.
-For example, `JsNumber` can be consumed as `f64` or `i32` in Rust.
+Handle wrappers such as `JsNumber<'env>` and `JsString<'env>` refer to a
+`napi_value` in the current environment's handle scope. You can read an owned
+Rust value from them—for example, a `JsNumber` can be read as `f64` or
+`u32`—but the wrapper itself remains scoped.
 
 ```rust filename="lib.rs"
-use napi::{bindgen_prelude::Either, JsNumber};
+use napi::{bindgen_prelude::{Either, Result}, JsNumber};
 use napi_derive::napi;
 
 #[napi]
-pub fn add(a: JsNumber) -> Result<Either<u32, f64>> {
-  let input_u32 = input.get_uint32()?;
-  let input_f64 = input.get_double()?;
+pub fn read_number(a: JsNumber) -> Result<Either<f64, u32>> {
+  let input_u32 = a.get_uint32()?;
+  let input_f64 = a.get_double()?;
   if input_u32 as f64 == input_f64 {
     Ok(Either::B(input_u32))
   } else {
@@ -40,7 +43,11 @@ pub fn add(a: JsNumber) -> Result<Either<u32, f64>> {
 }
 ```
 
-So we preserve the underlying raw pointer to the JavaScript value. These values come with a lifetime: `JsNumber<'a>`, which means you can't use them outside the function call. You don't need to specify the lifetime explicitly in most cases—it equals the function's default lifetime.
+The returned numbers in this example are owned Rust values. The `JsNumber`
+handle is not: its lifetime prevents it from being used after the native call's
+scope closes. The same distinction applies to strings: `String` contains a
+copy, while `JsString<'env>` is a scoped JavaScript handle. In most signatures,
+Rust infers the scope lifetime for you.
 
 ## Lifetime of class instances
 
@@ -79,11 +86,10 @@ The following flowchart illustrates the lifetime of a NAPI-RS struct instance li
 
 ```mermaid
 flowchart
-  A[Create Engine struct in Rust]
-  B[Box leak Engine]
-  C[napi_wrap]
-  D[napi_new_instance Engine class]
-  E[Engine JavaScript Instance]
+  A[JavaScript calls new Engine]
+  B[Rust constructor creates Engine]
+  C[Box Engine and attach it with napi_wrap]
+  D[Return the JavaScript Engine instance]
   F[Pass back to Rust]
   G[napi_unwrap]
   H[Get &Engine or &mut Engine]
@@ -92,29 +98,35 @@ flowchart
   K[Delete Engine struct]
   A --> B
   B --> C
-  D --> C
-  C --> E
-  E --> F
+  C --> D
+  D --> F
   F --> G
   G --> H
-  E --> I
+  D --> I
   I --> J
   J --> K
 ```
 
 ## Lifetime of `Buffer` and `TypedArray`
 
-`Buffer` and `TypedArray` are special types in NAPI-RS. They are not just a wrapper of the underlying raw pointer, but also a wrapper of the data of the underlying `ArrayBuffer`.
+`Buffer` and the concrete owned typed-array types (`Uint8Array`,
+`Int32Array`, and so on) can outlive a native call. Their wrappers keep the
+backing store alive while Rust holds them. The scoped `BufferSlice<'env>`,
+typed-array slice types, and `TypedArray<'env>` instead borrow a handle from the
+current environment scope.
 
 NAPI-RS provides two categories of buffer types with different lifetime characteristics:
 
 ### Owned Types - Cross-Thread Lifetime
 
-Owned types (`Buffer`, `Uint8Array`, etc.) use reference counting to manage their lifetime:
+For a JavaScript-origin value, converting to an owned `Buffer`, `Uint8Array`,
+and similar type creates a <NodeLink href="https://nodejs.org/api/n-api.html#napi_create_reference">`napi_ref`</NodeLink>:
 
-- The underlying data is wrapped with <NodeLink href="https://nodejs.org/api/n-api.html#napi_create_reference">`napi_ref`</NodeLink>
-- They can be used across async boundaries and threads
-- Lifetime extends beyond the function scope until the JavaScript GC runs
+- The reference keeps the JavaScript object and its backing data alive until
+  the Rust wrapper is dropped
+- The wrapper can be moved across async boundaries and threads
+- Dropping the wrapper releases Rust's reference; JavaScript may still retain
+  the same object independently
 
 ```rust filename="lib.rs"
 use napi::bindgen_prelude::*;
@@ -122,25 +134,42 @@ use napi_derive::napi;
 
 #[napi]
 pub fn print_buffer(buffer: Buffer) {
+  // Make a Rust-owned copy while this synchronous callback has control.
+  let data = buffer.to_vec();
   std::thread::spawn(move || {
-    // Buffer can be moved across threads
-    let data: Vec<u8> = buffer.into();
     println!("data: {:?}", data);
   });
 }
 ```
 
+<Callout type="warning">
+  `Send` and `Sync` make it possible to move the wrapper; they do not
+  synchronize access to the bytes. JavaScript can retain and mutate the same
+  backing store while Rust holds it. Reading or writing that memory on a Rust
+  worker while JavaScript or another Rust thread can mutate it is a data race
+  and can cause undefined behavior. Copy the data before dispatching work, or
+  enforce an ownership protocol that rules out all unsynchronized access.
+</Callout>
+
 <Callout type="info">
-  We don't provide the
-  <NodeLink href="https://nodejs.org/api/n-api.html#napi_reference_ref">`napi_reference_ref`</NodeLink>
-  and
+  Cleanup is tied to the Rust wrapper's `Drop`, not to JavaScript GC. With the
+  `napi4` feature, each Node-API environment/isolate has its own unreferenced
+  custom-GC `ThreadsafeFunction`. A wrapper dropped on its owning JavaScript
+  thread calls
   <NodeLink href="https://nodejs.org/api/n-api.html#napi_reference_unref">`napi_reference_unref`</NodeLink>
-  in NAPI-RS. Because these APIs are not threadsafe and don't conform to the
-  *RAII* pattern.
+  and
+  <NodeLink href="https://nodejs.org/api/n-api.html#napi_delete_reference">`napi_delete_reference`</NodeLink>
+  directly. A wrapper dropped elsewhere sends its `napi_ref` to the
+  `ThreadsafeFunction` captured from the value's owning environment, whose
+  callback releases it on that environment's JavaScript thread.
+  If that environment has already shut down, NAPI-RS detects the aborted
+  handle and makes no further Node-API call because the runtime has already
+  invalidated the reference.
 
-The owned types will be dropped when they go out of scope. At that time, the underlying `napi_ref` will be deleted via the <NodeLink href="https://nodejs.org/api/n-api.html#napi_delete_reference">`napi_delete_reference`</NodeLink> API.
-
-If the owned types are sent to other threads, there will be a global `ThreadsafeFunction` to receive the `napi_ref` in threads that cannot access the `napi_env` and delete it in the `ThreadsafeFunction` callback, which is guaranteed to be in the JavaScript thread. This mechanism ensures no memory leaks occur.
+  Releasing the Rust reference only makes the JavaScript value eligible for GC
+  if JavaScript holds no other references. For Rust-created buffers, Rust owns
+  the allocation until it is exported; then the JavaScript finalizer owns that
+  allocation (or NAPI-RS copies it when the runtime rejects external buffers).
 
 </Callout>
 
@@ -167,32 +196,43 @@ pub fn process_buffer_slice<'env>(env: &'env Env, data: &'env [u8]) -> Result<Bu
 
 ```mermaid
 flowchart TD
-    A[Rust Function Call]
-    B{Buffer Type}
-    C[BufferSlice&lt;'env&gt;]
-    D[Buffer owned]
-    E[Function scope ends]
-    F[napi_ref created]
-    G[Zero-copy access]
-    H[Lifetime ends]
-    I[Async context/threads]
-    J[JavaScript GC]
-    K[napi_delete_reference]
-    L[Memory freed]
+    A[JavaScript calls Rust with a Buffer]
+    B{Rust parameter type}
+    C[BufferSlice&lt;'env&gt; or another scoped view]
+    D[Use only while the native call scope is open]
+    E[Native call returns]
+    F[Scoped Rust handle expires; JavaScript lifetime is independent]
+    G[Buffer or an owned typed array]
+    H[napi_create_reference in FromNapiValue]
+    I[Owned wrapper may cross await or thread boundaries]
+    J[Rust wrapper Drop]
+    K{Dropped on its owning environment thread?}
+    L[Unref and delete the napi_ref directly]
+    M[Queue the napi_ref on that environment's custom-GC TSFN]
+    N[Owning JavaScript thread unrefs and deletes it]
+    O[Rust's reference is released]
+    P{Does JavaScript retain another reference?}
+    Q[JavaScript value remains alive]
+    R[Value is eligible for JavaScript GC]
 
     A --> B
     B -->|Borrowed| C
-    B -->|Owned| D
-    C --> G
-    D --> F
-    C --> E
-    E --> H
-    H --> L
-    D --> I
-    F --> I
+    C --> D
+    D --> E
+    E --> F
+    B -->|Owned| G
+    G --> H
+    H --> I
     I --> J
     J --> K
-    K --> L
+    K -->|Yes| L
+    K -->|No| M
+    M --> N
+    L --> O
+    N --> O
+    O --> P
+    P -->|Yes| Q
+    P -->|No| R
 ```
 
 ### When Lifetimes Matter
@@ -213,12 +253,15 @@ pub fn sync_only(env: &Env) -> Result<BufferSlice<'_>> {
 // #[napi]
 // async fn async_fail(env: &Env) -> Result<BufferSlice<'_>> {
 //     let slice = BufferSlice::from_data(env, vec![1, 2, 3])?;
-//     tokio::time::sleep(Duration::from_millis(100)).await;
+//     napi::tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 //     Ok(slice) // Error: slice doesn't live long enough
 // }
 ```
 
-**Reference-counted lifetime (`Buffer`):**
+The sleep examples require the `async` and `tokio_time` features on the `napi`
+dependency.
+
+**Reference-backed lifetime (`Buffer`):**
 
 ```rust filename="lib.rs"
 use napi::bindgen_prelude::*;
@@ -227,7 +270,7 @@ use napi_derive::napi;
 #[napi]
 pub async fn async_works(buffer: Buffer) -> Result<Buffer> {
   // ✅ Works: Buffer is Send + Sync
-  tokio::time::sleep(Duration::from_millis(100)).await;
+  napi::tokio::time::sleep(std::time::Duration::from_millis(100)).await;
   Ok(buffer)
 }
 ```
@@ -236,8 +279,13 @@ For more details on Buffer and TypedArray usage patterns, see the [TypedArray do
 
 ## JavaScript Value Reference
 
-Except for `Buffer` and `TypedArray`, you can also create `ObjectRef`, `ExternalRef`, `SymbolRef`, and `FunctionRef`.
-
-These reference types own the underlying `JavaScript` values, so they don't need to have a lifetime.
+For other values, reference wrappers such as `ObjectRef`, `UnknownRef`,
+`SymbolRef`, `FunctionRef`, and `ExternalRef` use a `napi_ref` to keep a
+JavaScript value alive beyond the current callback. The wrapper itself has no
+scope lifetime, but that does not make JavaScript APIs environment-independent
+or safe to call from arbitrary threads. Borrow the scoped value back with the
+owning `Env`, and follow the type's release contract: some wrappers release on
+`Drop`, while `ObjectRef`, `UnknownRef`, and `SymbolRef` require an explicit
+`unref(env)` (or must be returned to JavaScript).
 
 See [Reference](/docs/concepts/reference#javascript-value-reference) for more details.

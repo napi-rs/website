@@ -69,9 +69,10 @@ export default function PtBrHome({ sponsors }: Props) {
             <code>Rust</code>
           </p>
           <p>
-            ⚡️ Transferência interativa de dados sem cópia entre{' '}
-            <code>Rust</code> e <code>Node.js</code> via <code>Buffer</code> e{' '}
-            <code>TypedArray</code>
+            ⚡️ Transferência eficiente de dados binários entre <code>Rust</code>{' '}
+            e <code>Node.js</code> via <code>Buffer</code> e{' '}
+            <code>TypedArray</code>, com visualizações zero-copy quando
+            apropriado
           </p>
           <p>⚙️ Paralelismo em poucas linhas</p>
 
@@ -81,8 +82,24 @@ export default function PtBrHome({ sponsors }: Props) {
           <h2>Ecossistema</h2>
           <Ecosystem />
 
-          <h2>Matriz de suporte</h2>
-          <SupportMatrix />
+          <h2>Suporte e compatibilidade</h2>
+          <p>
+            A compatibilidade de ABI do Node-API, o requisito de Node.js da CLI
+            de build e as versões testadas continuamente pelo repositório-fonte
+            são contratos diferentes. Para builds atuais da CLI, use Node.js
+            22.13+ ou 24+; a matriz principal do repositório-fonte testa Node.js
+            22, 24 e 26. Cada artefato nativo continua específico ao seu sistema
+            operacional, CPU e libc.
+          </p>
+          <SupportMatrix locale="pt-BR" />
+          <p>
+            Leia{' '}
+            <a href="/pt-BR/docs/more/support-compatibility">
+              Suporte e compatibilidade
+            </a>{' '}
+            para distinguir nível de Node-API, runtime, destinos dos templates e
+            cobertura de CI.
+          </p>
 
           <h2>Projetos relacionados</h2>
           <ul>

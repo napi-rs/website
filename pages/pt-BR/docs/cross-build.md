@@ -40,7 +40,7 @@ A coluna **CI gerada** mostra o que o workflow de CI gerado pelo `napi new` faz 
 
 [^2]: o cargo-xwin baixa por conta própria a CRT da Microsoft e o SDK do Windows; a licença da Microsoft se aplica. Ele precisa do `clang` instalado (por exemplo, `brew install llvm` no macOS).
 
-[^3]: `--use-napi-cross` só funciona em hosts Linux x64/arm64 (a toolchain baixada é um binário Linux); portanto, a partir de macOS ou Windows use `-x` — mas o piso de glibc passa a ser o padrão do zig, não 2.17. Veja [Versões de glibc](#vers%C3%B5es-de-glibc).
+[^3]: `--use-napi-cross` só funciona em hosts Linux x64/arm64 (a toolchain baixada é um binário Linux); portanto, a partir de macOS ou Windows use `-x` — mas o piso de glibc passa a ser o padrão do zig, não 2.17. Veja [Versões de glibc](#glibc-versions).
 
 [^4]: Sob `-x`, o FreeBSD passa pelo cargo-zigbuild como qualquer outro target não-Windows — tenha o `zig` no `PATH`; hosts Linux são a rota mais comprovada na prática. Se você quiser que seus testes também rodem no FreeBSD, execute-os em uma VM FreeBSD. Veja a [receita do FreeBSD](#freebsd).
 
@@ -50,10 +50,12 @@ A coluna **CI gerada** mostra o que o workflow de CI gerado pelo `napi new` faz 
 flowchart TD
     A[Quero o target T a partir do host H] --> B{T é o triple do host?}
     B -- sim --> N0[sem flag]
-    B -- não --> C{T é Windows?}
+    B -- não --> C{T é Windows MSVC?}
     C -- "H é Windows" --> N1["sem flag - o MSVC faz link cruzado de todas as arquiteturas Windows"]
     C -- "H é macOS ou Linux" --> X1["-x (o cargo-xwin baixa o SDK da MS)"]
-    C -- não --> D{T é macOS?}
+    C -- não --> WG{T é Windows GNU ou gnullvm?}
+    WG -- sim --> WGN["sem flag + mingw/llvm-mingw + LIBNODE_PATH"]
+    WG -- não --> D{T é macOS?}
     D -- "H é macOS" --> N2[sem flag + rustup target]
     D -- "H é Linux" --> X2["-x (zig, apenas Rust puro - prefira um runner macOS)"]
     D -- não --> E{T é Linux glibc?}
@@ -67,22 +69,22 @@ flowchart TD
     H2 -- sim --> VM["VM FreeBSD (referência) ou -x + zig"]
 ```
 
-O ramo do Windows roteia pela _plataforma_ do target, então `x86_64-pc-windows-gnu` também cai no ramo do xwin — mas o cargo-xwin é somente MSVC, e `-x` falha para esse triple. Prefira os triples `*-pc-windows-msvc`; se você precisa de windows-gnu, compile-o sem flag de cross — veja a nota sobre windows-gnu em [Receitas por target](#receitas-por-target).
+O caminho do Windows com `-x` é exclusivo para MSVC. Em um host que não seja Windows, a CLI rejeita um target Windows GNU ou gnullvm explícito antes de ler metadados do Cargo, baixar toolchains ou instalar subcomandos do Cargo. Compile esses targets sem flag de cross e forneça mingw-w64 ou llvm-mingw, além de `LIBNODE_PATH`; veja a nota sobre Windows em [Receitas por target](#recipes-per-target).
 
 ## As três flags em resumo
 
-|                        | `--use-napi-cross`                                                                                                                                                                                                                    | `--cross-compile` / `-x`                                                                                                                                                                                                                    | `--use-cross` (legada)                                                                     |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| **Status**             | Recomendada para targets Linux glibc                                                                                                                                                                                                  | Recomendada para targets Windows MSVC a partir de um host não-Windows e para musl; o fallback via zig para glibc/macOS/FreeBSD quando o caminho preferido não está disponível                                                               | **Legada, não recomendada**                                                                |
-| **Mecanismo**          | Apenas variáveis de ambiente: baixa uma toolchain cruzada gcc do npm ([`@napi-rs/cross-toolchain`](https://github.com/napi-rs/cross-toolchain)) e aponta as env de linker/CC/sysroot para ela; o comando continua sendo `cargo build` | Troca o subcomando do cargo: `cargo zigbuild` para a maioria dos targets, `cargo xwin build` para targets Windows a partir de um host não-Windows (o roteamento cobre todo triple `*-windows-*`, mas o cargo-xwin suporta apenas MSVC)      | Troca o binário: `cross build` executa a compilação dentro de um contêiner Docker/Podman   |
-| **Targets**            | Cinco triples Linux glibc: x64, arm64, armv7, ppc64le, s390x                                                                                                                                                                          | Targets Linux (gnu e musl) e macOS via zig; Windows MSVC via xwin                                                                                                                                                                           | O que o cross-rs tiver imagens para — apenas Linux, sem imagens para macOS ou Windows MSVC |
-| **Piso de glibc**      | 2.17                                                                                                                                                                                                                                  | O padrão do zig (2.28 para zig 0.12–0.14)                                                                                                                                                                                                   | A glibc da imagem (majoritariamente 2.31; variantes `:centos` 2.17)                        |
-| **Pré-requisitos**     | Host Linux x64/arm64, `npm` no `PATH`; a toolchain é baixada e cacheada automaticamente                                                                                                                                               | `zig` no `PATH` para o caminho do zigbuild, `clang` para o caminho do xwin (a CLI nunca instala nem verifica nenhum dos dois); o subcomando do cargo selecionado (cargo-zigbuild ou cargo-xwin) é instalado automaticamente no primeiro uso | `cross` instalado manualmente, mais um Docker >= 20.10 ou Podman >= 3.4 em execução        |
-| **Dependências C/C++** | Compiladas com o gcc embutido; o gcc de aarch64 é antigo — veja a [limitação conhecida](#depend%C3%AAncias-nativas)                                                                                                                   | Compiladas com `zig cc`; dependências de frameworks da Apple precisam de um SDK macOS                                                                                                                                                       | Toolchain completa do contêiner — último recurso para build scripts com autotools/CMake    |
+|                        | `--use-napi-cross`                                                                                                                                                                                                                    | `--cross-compile` / `-x`                                                                                                                                                                                                                             | `--use-cross` (legada)                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **Status**             | Recomendada para targets Linux glibc                                                                                                                                                                                                  | Recomendada para targets Windows MSVC a partir de um host não-Windows e para musl; o fallback via zig para glibc/macOS/FreeBSD quando o caminho preferido não está disponível                                                                        | **Legada, não recomendada**                                                                |
+| **Mecanismo**          | Apenas variáveis de ambiente: baixa uma toolchain cruzada gcc do npm ([`@napi-rs/cross-toolchain`](https://github.com/napi-rs/cross-toolchain)) e aponta as env de linker/CC/sysroot para ela; o comando continua sendo `cargo build` | Troca o subcomando do cargo: `cargo zigbuild` para targets não-Windows, ou `cargo xwin build` para targets Windows MSVC a partir de um host não-Windows; targets Windows GNU/gnullvm explícitos são rejeitados antes da execução de qualquer comando | Troca o binário: `cross build` executa a compilação dentro de um contêiner Docker/Podman   |
+| **Targets**            | Cinco triples Linux glibc: x64, arm64, armv7, ppc64le, s390x                                                                                                                                                                          | Targets Linux (gnu e musl) e macOS via zig; Windows MSVC via xwin                                                                                                                                                                                    | O que o cross-rs tiver imagens para — apenas Linux, sem imagens para macOS ou Windows MSVC |
+| **Piso de glibc**      | 2.17                                                                                                                                                                                                                                  | O padrão do zig (2.28 para zig 0.12–0.14)                                                                                                                                                                                                            | A glibc da imagem (majoritariamente 2.31; variantes `:centos` 2.17)                        |
+| **Pré-requisitos**     | Host Linux x64/arm64, `npm` no `PATH`; a toolchain é baixada e cacheada automaticamente                                                                                                                                               | `zig` no `PATH` para o caminho do zigbuild, `clang` para o caminho do xwin (a CLI nunca instala nem verifica nenhum dos dois); o subcomando do cargo selecionado (cargo-zigbuild ou cargo-xwin) é instalado automaticamente no primeiro uso          | `cross` instalado manualmente, mais um Docker >= 20.10 ou Podman >= 3.4 em execução        |
+| **Dependências C/C++** | Compiladas com o gcc embutido; o gcc de aarch64 é antigo — veja a [limitação conhecida](#native-dependencies)                                                                                                                         | Compiladas com `zig cc`; dependências de frameworks da Apple precisam de um SDK macOS                                                                                                                                                                | Toolchain completa do contêiner — último recurso para build scripts com autotools/CMake    |
 
-Escolha exatamente uma flag por build. As flags não se combinam, nem mesmo nas combinações que apenas imprimem um aviso — veja [as regras de combinação](./cli/build#escolha-exatamente-uma).
+Escolha exatamente uma flag por build. Qualquer par é rejeitado antes da leitura dos metadados do Cargo, do download de toolchains ou da instalação de subcomandos do Cargo. Veja [as regras de combinação](./cli/build#escolha-exatamente-uma).
 
-## Receitas por target
+## Receitas por target {#recipes-per-target}
 
 Seja qual for o mecanismo escolhido, a biblioteca padrão do Rust para o target precisa estar instalada primeiro: `rustup target add <triple>`. Cada receita termina com um comando de copiar e colar e uma nota sobre como a CI gerada compila o mesmo target.
 
@@ -98,7 +100,7 @@ A CI gerada compila `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu` e `a
 
 ### Linux musl (x64, arm64)
 
-Use `-x` a partir de qualquer host, com o `zig` instalado e no `PATH`. A CLI adiciona automaticamente `-C target-feature=-crt-static` ao `RUSTFLAGS` para targets musl. Não recorra ao musl para consertar um erro `GLIBC_x.yy not found` — isso é um problema de piso de glibc, veja [Versões de glibc](#vers%C3%B5es-de-glibc).
+Use `-x` a partir de qualquer host, com o `zig` instalado e no `PATH`. A CLI adiciona automaticamente `-C target-feature=-crt-static` ao `RUSTFLAGS` para targets musl. Não recorra ao musl para consertar um erro `GLIBC_x.yy not found` — isso é um problema de piso de glibc, veja [Versões de glibc](#glibc-versions).
 
 ```sh
 napi build --release --target aarch64-unknown-linux-musl --cross-compile
@@ -116,7 +118,7 @@ napi build --release --target x86_64-pc-windows-msvc --cross-compile
 
 A CI gerada compila os três targets MSVC no `windows-latest` sem flag; use `-x` quando você não tiver um runner Windows.
 
-E quanto a `*-pc-windows-gnu`? `x86_64-pc-windows-gnu` é um target aceito pela CLI desde [napi-rs#2935](https://github.com/napi-rs/napi-rs/pull/2935) (o loader JS gerado escolhe o binário `win32-x64-gnu` quando o próprio Node é um build MINGW); as outras arquiteturas windows-gnu não são aceitas. **Não** use `-x` para ele: o cargo-xwin suporta apenas triples MSVC, então para windows-gnu ele não configura nada e a compilação falha mais tarde com ``error: linker `x86_64-w64-mingw32-gcc` not found``. Em vez disso, compile-o sem flag de cross: `rustup target add x86_64-pc-windows-gnu`, instale uma toolchain mingw-w64 (`apt install mingw-w64` / `brew install mingw-w64`) e defina `LIBNODE_PATH` para um diretório contendo o `libnode.dll` do Node do MSYS2 — o napi-build linka addons windows-gnu diretamente contra ele. Esse target normalmente é compilado dentro do MSYS2/MINGW, onde os dois pré-requisitos já estão disponíveis. Ainda não existem builds oficiais do Node.js para windows-gnu, então, a menos que você mire especificamente o Node do MSYS2/MINGW, compile para o triple `*-pc-windows-msvc` — contexto histórico em [napi-rs#2001](https://github.com/napi-rs/napi-rs/issues/2001).
+E quanto a `*-pc-windows-gnu`? `x86_64-pc-windows-gnu` é um target aceito pela CLI desde [napi-rs#2935](https://github.com/napi-rs/napi-rs/pull/2935) (o loader JS gerado escolhe o binário `win32-x64-gnu` quando o próprio Node é um build MINGW); as outras arquiteturas windows-gnu não são aceitas. **Não** use `-x` para ele: em um host que não seja Windows, a CLI rejeita essa combinação antes de ler metadados do Cargo ou instalar o cargo-xwin, pois o cargo-xwin suporta somente triples MSVC. Em vez disso, compile-o sem flag de cross: `rustup target add x86_64-pc-windows-gnu`, instale uma toolchain mingw-w64 (`apt install mingw-w64` / `brew install mingw-w64`) e defina `LIBNODE_PATH` para um diretório contendo o `libnode.dll` do Node do MSYS2 — o napi-build linka addons windows-gnu diretamente contra ele. Esse target normalmente é compilado dentro do MSYS2/MINGW, onde os dois pré-requisitos já estão disponíveis. Ainda não existem builds oficiais do Node.js para windows-gnu, então, a menos que você mire especificamente o Node do MSYS2/MINGW, compile para o triple `*-pc-windows-msvc` — contexto histórico em [napi-rs#2001](https://github.com/napi-rs/napi-rs/issues/2001).
 
 ### macOS
 
@@ -130,7 +132,7 @@ A CI gerada compila os dois targets darwin nativamente no `macos-latest` sem fla
 
 ### Android
 
-Sem flag de cross. A CLI configura a toolchain a partir da variável de ambiente `ANDROID_NDK_LATEST_HOME` (pré-instalada nos runners `ubuntu-latest` do GitHub), seja uma flag de cross passada ou não.
+Sem flag de cross. Em um host que não seja Android, a CLI configura a toolchain a partir de `ANDROID_NDK_LATEST_HOME` (pré-instalada nos runners `ubuntu-latest` do GitHub) e para antes do Cargo se a variável estiver ausente. Em um host Android, ela mantém o ambiente da toolchain nativa sem alterações.
 
 ```sh
 napi build --release --target aarch64-linux-android
@@ -150,7 +152,7 @@ A CI gerada já compila `wasm32-wasip1-threads` no `ubuntu-latest` — nenhuma f
 
 ### FreeBSD
 
-Há duas configurações que funcionam. A configuração de referência é a da CI gerada: compilar nativamente dentro de uma VM FreeBSD 15 (via `cross-platform-actions/action`) em um runner `ubuntu-latest` — sem flag de cross. O job gerado apenas compila e faz upload do artefato; se você quiser que seus testes também rodem no FreeBSD, adicione essa etapa ao script da VM você mesmo. O FreeBSD também pode ser compilado de forma cruzada a partir do Linux: sob `-x` ele passa pelo cargo-zigbuild como qualquer outro target não-Windows — execute em um host Linux com o zig instalado. As ressalvas usuais do zig se aplicam: dependências C/C++ são compiladas pelo `zig cc` (veja [Dependências nativas](#depend%C3%AAncias-nativas)).
+Há duas configurações que funcionam. A configuração de referência é a da CI gerada: compilar nativamente dentro de uma VM FreeBSD 15 (via `cross-platform-actions/action`) em um runner `ubuntu-latest` — sem flag de cross. O job gerado apenas compila e faz upload do artefato; se você quiser que seus testes também rodem no FreeBSD, adicione essa etapa ao script da VM você mesmo. O FreeBSD também pode ser compilado de forma cruzada a partir do Linux: sob `-x` ele passa pelo cargo-zigbuild como qualquer outro target não-Windows — execute em um host Linux com o zig instalado. As ressalvas usuais do zig se aplicam: dependências C/C++ são compiladas pelo `zig cc` (veja [Dependências nativas](#native-dependencies)).
 
 ```sh
 napi build --release --target x86_64-unknown-freebsd --cross-compile
@@ -158,7 +160,7 @@ napi build --release --target x86_64-unknown-freebsd --cross-compile
 
 A CI gerada compila nativamente na VM FreeBSD 15; o comando `-x` acima é a alternativa de compilação cruzada a partir de um host Linux.
 
-## Versões de glibc
+## Versões de glibc {#glibc-versions}
 
 Um binário `*-linux-gnu` linka a glibc dinamicamente e, na hora de carregar, exige pelo menos a versão de glibc contra a qual foi compilado. **Seu binário herda a glibc do host de build como piso**: compile em uma distro recente sem flag de cross, e os usuários em distros mais antigas recebem:
 
@@ -186,7 +188,7 @@ objdump -T my-package.linux-arm64-gnu.node | grep -o 'GLIBC_[0-9.]*' | sort -Vu 
 
 Espere no máximo `GLIBC_2.17` quando compilado com `--use-napi-cross`, e o padrão do zig quando compilado com `-x`.
 
-## Dependências nativas
+## Dependências nativas {#native-dependencies}
 
 Dependências C/C++ são o obstáculo mais comum na compilação cruzada: crates como `ring`, `openssl-sys` ou `zstd-sys` compilam código C via build script, que precisa de um compilador C que mire o seu _target_ — configurar apenas o rustc não é suficiente.
 
@@ -219,7 +221,7 @@ em um runner `ubuntu-latest` comum.
 
 Se você ainda usa as imagens, siga duas regras. Primeiro, rode um `napi build --target <triple>` puro dentro delas, **sem flags de cross** — a imagem já fixa a toolchain e a glibc, e adicionar flags de cross por cima disso é o que quebra as builds. Segundo, fixe a imagem por digest (`nodejs-rust@sha256:...`), porque as tags `lts-*` mudam com o tempo.
 
-## Adicionar um target a um projeto existente
+## Adicionar um target a um projeto existente {#add-a-target-to-an-existing-project}
 
 1. Adicione o triple a `targets` na sua configuração `napi` (veja [napi config](./cli/napi-config)).
 2. Execute `napi create-npm-dirs` para gerar a estrutura dos pacotes npm por plataforma.
@@ -229,7 +231,7 @@ Se você ainda usa as imagens, siga duas regras. Primeiro, rode um `napi build -
 ## Veja também
 
 - [Referência de flags de compilação cruzada do `napi build`](./cli/build#flags-de-compila%C3%A7%C3%A3o-cruzada) — comandos exatos, contrato de variáveis de ambiente, regras de combinação
-- [FAQ: Compilar para Linux alpine](./more/faq#compilar-para-linux-alpine) — especificidades do musl
+- [FAQ: Compilar para Linux alpine](./more/faq#build-for-linux-alpine) — especificidades do musl
 
 ## Patrocine nossa equipe
 

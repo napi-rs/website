@@ -12,8 +12,12 @@ You must enable the **_async_** or **_tokio_rt_** feature in `napi` to use `asyn
 
 ```toml {2}
 [dependencies]
-napi = { version = "3", features = ["async"] }
+napi = { version = "3", features = ["async", "tokio_fs", "tokio_time"] }
+napi-derive = "3"
 ```
+
+The examples below use the `tokio_fs` and `tokio_time` subfeatures. Enable only
+the Tokio APIs your addon uses.
 
 :::
 
@@ -21,14 +25,16 @@ napi = { version = "3", features = ["async"] }
 
 You can do a lot of async/multi-threaded work with `AsyncTask` and `ThreadsafeFunction`, but sometimes you may want to use the crates from the Rust async ecosystem directly.
 
-**NAPI-RS** supports the `tokio` runtime by default. If you `await` a tokio `future` in `async fn`, **NAPI-RS** will execute it in the tokio runtime and convert it into a JavaScript `Promise`.
+With `async` or `tokio_rt` enabled, **NAPI-RS** provides a Tokio runtime. If you
+`await` a Tokio future in an exported `async fn`, **NAPI-RS** executes it on
+that runtime and converts the result into a JavaScript `Promise`.
 
 **lib.rs**
 
 ```rust {6}
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
-use tokio::fs;
+use napi::tokio::fs;
 
 #[napi]
 pub async fn read_file_async(path: String) -> Result<Buffer> {
@@ -127,7 +133,7 @@ impl NativeClass {
 
   #[napi]
   pub async fn sleep(&self, delay: u32) -> Result<&str> {
-    tokio::time::sleep(std::time::Duration::new(delay as u64, 0)).await;
+    napi::tokio::time::sleep(std::time::Duration::new(delay as u64, 0)).await;
     Ok(&self.name)
   }
 }

@@ -1,0 +1,254 @@
+---
+description: Node.js 原生插件的发展历史。
+---
+
+import NodeLink from '../../../components/node-link'
+
+# 历史
+
+> 部分内容借鉴自 https://xcoder.in/2017/07/01/nodejs-addon-history/
+
+## 封建时代：直接使用 `v8 C++` 头文件
+
+早期开发者直接使用 `v8/Node C++` 头文件构建 Node.js 原生插件。
+
+```cpp
+Handle<Value> Echo(const Arguments& args)
+{
+    HandleScope scope;
+
+    if(args.Length() < 1)
+    {
+        ThrowException(
+            Exception::TypeError(
+                String::New("Wrong number of arguments.")));
+        return scope.Close(Undefined());
+    }
+
+    return scope.Close(args[0]);
+}
+
+void Init(Handle<Object> exports)
+{
+    exports->Set(String::NewSymbol("echo"),
+        FunctionTemplate::New(Echo)->GetFunction());
+}
+```
+
+这段代码定义了一个简单的 Node.js 函数 `echo`，始终返回传入的第一个参数。它等价于以下 `Node.js` 代码：
+
+```js
+exports.echo = function () {
+  if (arguments.length < 1) throw new Error('Wrong number of arguments.')
+  return arguments[0]
+}
+```
+
+如果把这段代码发布为 `npm` 包，它只能在 `node 0.10.x` 中运行。
+
+为什么？简单来说，**_v8 和 Node.js API 变化很快。_** 例如在 `Node.js 6.x` 中，定义 `JsFunction` 的方式发生了变化：
+
+```cpp
+Handle<Value> Echo(const Arguments& args);    // 0.10.x
+void Echo(FunctionCallbackInfo<Value>& args); // 6.x
+```
+
+因此，以这种方式开发的原生包只能支持少量 Node.js 版本。`v8` 或 `Node.js` API 一旦变化，这些包就无法继续编译；而维护者将 API 更新到最新 Node.js 和 `v8` 后，包又无法在旧版 Node.js 下编译。
+
+## 城堡时代：Native Abstractions for Node.js
+
+回到 2013 年，随着 `Node.js` 和 `v8` 快速迭代，使用旧方式构建原生插件的包越来越痛苦。于是 [`NAN`](https://github.com/nodejs/nan) 出现了，其全称是 **Native Abstractions for Node.js**。
+
+> NAN 最初由 [Rod Vagg](https://github.com/rvagg) 创建，后来由 [Benjamin Byholm](https://github.com/kkoopa) 维护。NAN 一开始属于 Rod Vagg 的 GitHub 账户；在 `Node.js` 分裂为 `io.js` 与 `Node.js` 的时期转移到 `io.js` 组织；两者重新合并后，NAN 最终转入 `Node.js` 组织。
+
+NAN 出现后，原生插件包的开发体验进入了**_城堡时代_**，并延续了很长时间。
+
+“Native abstractions for Node.js”仍不足以完整描述 NAN。更具体地说，它是一组 **_C 宏_**。例如，可以这样定义 JavaScript 函数：
+
+```cpp
+NAN_METHOD(Echo)
+{
+}
+```
+
+编译时，NAN 宏会根据不同 Node.js 版本展开为不同 C++ 代码：
+
+```cpp
+Handle<Value> Echo(const Arguments& args);    // 0.10.x
+void Echo(FunctionCallbackInfo<Value>& args); // 6.x
+```
+
+也就是说，`NAN_METHOD` 会由 NAN 展开为相应的代码片段。
+
+除了 `NAN_METHOD`，NAN 还提供大量其他宏，开发者几乎可以用它们完成所有操作。
+
+例如，`Nan::HandleScope` 用于声明 **_handle scope_**，`Nan::AsyncWorker` 用于在 `libuv` 上派发任务。
+
+因此在**城堡时代**，一个 `C++` 原生插件大致如下：
+
+```cpp
+NAN_METHOD(Echo)
+{
+    if(info.Length() < 1)
+    {
+        Nan::ThrowError("Wrong number of arguments.");
+        return info.GetReturnValue().Set(Nan::Undefined());
+    }
+
+    info.GetReturnValue().Set(info[0]);
+}
+
+NAN_MODULE_INIT(InitAll)
+{
+    Nan::Set(
+        target,
+        Nan::New<String>("echo").ToLocalChecked(),
+        Nan::GetFunction(Nan::New<v8::FunctionTemplate>(Echo)).ToLocalChecked());
+}
+```
+
+这种写法的优点是代码可以随 NAN 升级而自动适配，从而兼容不同版本的 Node.js。
+
+> 即使是 NAN 这样的优秀工具也有明确使命；不属于该使命的内容会逐步移除。例如 0.10.x 和 0.12.x 等版本终将退役，NAN 也会逐渐停止对它们的兼容与支持。
+
+## 帝国时代：ABI 兼容的 N-API
+
+从 Node.js v8.0.0 开始，Node.js 引入了一个用于开发 C++ 原生模块的全新接口：**N-API**。
+
+> 根据官方文档，它读作一个 N 加 API，也就是四个英文字母分别发音。
+
+它与之前的时代有何不同？为何称为进一步的帝国时代？
+
+即便使用 NAN，一份代码仍需针对不同 Node.js 版本重新编译；版本不匹配时，Node.js 无法正确加载 C++ 扩展。换句话说，就是一次编写、到处编译。
+
+与 NAN 相比，N-API 把 Node.js 的底层数据结构全部隐藏起来，抽象为 N-API 接口。
+
+不同 Node.js 版本使用同一套接口，并保持稳定的 ABI（Application Binary Interface，应用程序二进制接口）兼容性。只要不同 Node.js 版本之间的 ABI 版本号相同，编译后的 C++ 扩展就可以直接使用，无需重新编译。实际上，支持 N-API 接口的 Node.js 会声明当前使用的 ABI 版本。
+
+为实现上述目标，N-API 采用以下方式：
+
+- 提供头文件 `node_api.h`。
+- 所有 N-API 调用都返回 `napi_status` 枚举，表示调用是否成功。
+- 因为 N-API 的返回值位置被 `napi_status` 占用，真正的返回值通过传入参数返回。
+- 所有 JavaScript 数据类型都包装为黑盒类型 `napi_value`，不再暴露 `v8::Object`、`v8::Number` 等类型。
+- 如果函数调用失败，可以使用 `napi_get_last_error_info` 获取最近一次错误的信息。
+
+有关 N-API 函数的更多细节，请阅读其<NodeLink href="https://nodejs.org/api/n-api.html">文档</NodeLink>。下面先看一些不那么抽象的例子，建立对 N-API 的初步印象。
+
+### 模块初始化
+
+在**_封建时代_**和 NAN 时代，模块初始化由 Node.js 提供的宏完成。
+
+```cpp
+NODE_MODULE(addon, Init)
+```
+
+到了 N-API，它变为 N-API 的宏。
+
+```cpp
+NODE_MODULE(addon, Init)
+```
+
+对应的初始化函数 `Init` 也需要换一种写法。例如，封建时代和 NAN 时代分别这样写：
+
+```cpp
+// Feudal style
+void Init(Local<Object> exports) {
+    NODE_SET_METHOD(exports, "echo", Echo);
+}
+
+// NAN style
+NAN_MODULE_INIT(Init)
+{
+    Nan::Set(
+        target,
+        Nan::New<String>("echo").ToLocalChecked(),
+        Nan::GetFunction(Nan::New<v8::FunctionTemplate>(Echo)).ToLocalChecked());
+}
+```
+
+使用 N-API 时，`Init` 函数如下：
+
+```cpp
+void Init(napi_env env, napi_value exports, napi_value module, void* priv)
+{
+    napi_status status;
+
+    // Description constructs for setting exports
+    napi_property_descriptor desc =
+        { "echo", 0, Echo, 0, 0, 0, napi_default, 0 };
+
+    // set "echo" into `module.exports`
+    status = napi_define_properties(env, exports, 1, &desc);
+}
+```
+
+<blockquote>
+
+`napi_property_descriptor` 是设置对象属性时使用的描述结构，其声明如下：
+
+```cpp
+typedef struct {
+  const char* utf8name;
+  napi_value name;
+
+  napi_callback method;
+  napi_callback getter;
+  napi_callback setter;
+  napi_value value;
+
+  napi_property_attributes attributes;
+  void* data;
+} napi_property_descriptor;
+```
+
+> 因此，上面 `Init` 函数中的 desc 表示：在目标对象上设置名为 “echo” 的内容，其函数为 `Echo`，其他 `getter`、`setter` 等均为空指针，属性为 `napi_default`。
+
+</blockquote>
+
+### 声明函数
+
+还记得前两种函数声明吗？现在第三次改写：
+
+```cpp
+Handle<Value> Echo(const Arguments& args);    // 0.10.x
+void Echo(FunctionCallbackInfo<Value>& args); // 6.x
+```
+
+使用 N-API 时不再需要 `C++` 背景，掌握 `C` 即可，因为 Echo 的声明如下：
+
+```c
+napi_value Echo(napi_env env, napi_callback_info info)
+{
+    napi_status status;
+
+    size_t argc = 1;
+    napi_value argv[1];
+    status = napi_get_cb_info(env, info, &argc, argv, 0, 0);
+    if(status != napi_ok || argc < 1)
+    {
+        napi_throw_type_error(env, "Wrong number of arguments");
+        return 0; // `napi_value` is actually a pointer, returning a null pointer means no return value.
+    }
+
+    return argv[0];
+}
+
+```
+
+逐步分析上述代码：
+
+- `napi_get_cb_info` 获取当前函数调用的参数信息，包括参数数量与参数本身（以 napi_value 数组表示）。
+- 检查调用是否出错（status 不等于 napi_ok）或参数数量是否小于 1。
+  - 如果调用出错或参数少于 1，通过 `napi_throw_type_error` 在 JavaScript 层抛出错误对象并返回。
+  - 没有错误则继续执行。
+- 返回第一个参数 `argv[0]`。
+
+## 总结
+
+本章介绍了 Node.js 原生 C++ 模块开发方式的演变：
+
+- 从 node-waf 到 node-gyp，是构建工具的变化；未来也可能变为 GN 或其他工具。
+- 从频繁破坏的代码到 NAN，再到为原生 C++ 模块开发带来新生命的 N-API，Node.js 社区经历了漫长演进。
+
+希望这些内容能帮助你理解 Node.js 原生模块开发的曲折历史，以及 N-API 出现的原因与背景。

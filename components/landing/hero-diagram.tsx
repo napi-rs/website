@@ -60,15 +60,25 @@ export const HeroDiagram: React.FC = () => {
   ])
 
   const [outputLines, setOutputLines] = useState<SvgNodeProps[]>([
-    { position: 0, visible: false, labelVisible: false, label: 'Browser' },
     {
       position: 0,
       visible: false,
       labelVisible: false,
-      label: 'Node/Bun/Deno',
+      label: 'Node.js addon',
     },
-    { position: 0, visible: false, labelVisible: false, label: 'React Native' },
-    { position: 0, visible: false, labelVisible: false, label: 'StackBlitz' },
+    {
+      position: 0,
+      visible: false,
+      labelVisible: false,
+      label: 'WASI module',
+    },
+    {
+      position: 0,
+      visible: false,
+      labelVisible: false,
+      label: 'TypeScript types',
+    },
+    { position: 0, visible: false, labelVisible: false, label: 'npm packages' },
   ])
 
   const [blueIndicator, setBlueIndicator] = useState(false)

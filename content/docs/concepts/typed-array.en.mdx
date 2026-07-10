@@ -3,12 +3,11 @@ title: 'TypedArray'
 description: JavaScript TypedArray primitive.
 ---
 
-import { Callout } from 'nextra-theme-docs'
 import NodeLink from '../../../components/node-link'
 
 # TypedArray
 
-`TypedArray` describes an array-like view of an underlying [binary data buffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer). Using `TypedArray` allows you to share data between Node.js and Rust without copy or move data underlying.
+`TypedArray` describes an array-like view of an underlying [binary data buffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer). NAPI-RS can expose a view of that storage to Rust without copying it, subject to the lifetime and synchronization rules below.
 
 ## Buffer
 
@@ -17,7 +16,11 @@ subclass of JavaScript's
 [`Uint8Array`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array).
 It is often used to share data between Node.js and Rust.
 
-`Buffer` could be created with `Vec<u8>`, if you created `Buffer` in this way, the ownership of the `Vec<8>` will be transferred into the `v8`, and the `Vec<u8>` will be dropped when `v8` GC the `Buffer`.
+A `Buffer` can be created from `Vec<u8>`. Where the runtime permits external
+buffers, NAPI-RS transfers the allocation to the JavaScript `Buffer` without a
+copy, and its finalizer releases the `Vec<u8>` after JavaScript collects the
+buffer. If the runtime rejects external buffers, NAPI-RS falls back to copying
+the bytes into a runtime-owned buffer.
 
 ```rust {6} filename="lib.rs"
 use napi::bindgen_prelude::*;
@@ -30,7 +33,8 @@ pub fn create_buffer() -> Buffer {
 ```
 
 <Callout type="info">
-  The underlying `Vec<u8>` will not be copied in this way.
+  On runtimes that support external buffers, the underlying `Vec<u8>` is not
+  copied in this path.
 </Callout>
 
 <Callout type="warning">
@@ -45,32 +49,52 @@ pub fn create_buffer() -> Buffer {
 
 ### Owned Types
 
-These types own their data and can be used across async boundaries:
+These types can outlive the current native call and cross async boundaries:
 
-- `Buffer` - Owned Node.js Buffer with reference counting
-- `Uint8Array`, `Int32Array`, `Float64Array`, etc. - Owned TypedArrays
+- `Buffer` - Reference-backed Node.js Buffer wrapper
+- `Uint8Array`, `Int32Array`, `Float64Array`, etc. - Owned typed-array wrappers
 
-The underlying owned types are wrapped with <NodeLink href="https://nodejs.org/api/n-api.html#napi_create_reference">`napi_ref`</NodeLink>. So they can be used across threads.
+For a value received from JavaScript, NAPI-RS creates a <NodeLink href="https://nodejs.org/api/n-api.html#napi_create_reference">`napi_ref`</NodeLink>. It keeps the JavaScript object and backing store alive until the Rust wrapper is dropped. Dropping the wrapper only releases Rust's reference; JavaScript may retain the same object independently.
 
 ```rust {5} filename="lib.rs"
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
 #[napi]
-pub async fn process_buffer(buffer: Buffer) -> Buffer {
-  // Buffer can be used in async context
-  // It maintains a reference to the underlying data
-  let mut data: Vec<u8> = buffer.into();
-  data.reverse();
-  data.into()
+pub fn process_buffer(env: &Env, buffer: Buffer) -> Result<AsyncBlock<Buffer>> {
+  // Copy while the synchronous JavaScript callback still has control.
+  let mut data = buffer.to_vec();
+  AsyncBlockBuilder::new(async move {
+    data.reverse();
+    Ok(data.into())
+  })
+  .build(env)
 }
 ```
+
+<Callout type="info">
+  `AsyncBlock` and `AsyncBlockBuilder` are re-exported under napi's `async`
+  feature, so this example does not compile without it. Enable the feature on the
+  `napi` dependency in your `Cargo.toml`:
+  `napi = { version = "3", features = ["async"] }`. The `tokio_time` feature is
+  only required for the `napi::tokio::time::sleep` helper shown later.
+</Callout>
 
 ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
 
 ```ts filename="index.d.ts"
 export declare function processBuffer(buffer: Buffer): Promise<Buffer>
 ```
+
+<Callout type="warning">
+  `Buffer` and the owned typed-array wrappers implement `Send` and `Sync` so
+  their lifetime and cleanup can cross threads. Those traits do not synchronize
+  the shared bytes. JavaScript can retain and mutate the same backing store
+  while Rust holds a wrapper. Accessing it on a Rust worker while JavaScript or
+  another Rust thread may mutate it is a data race and can cause undefined
+  behavior—even if Rust only reads. Copy the bytes before dispatching work, as
+  above, or enforce an ownership protocol that rules out unsynchronized access.
+</Callout>
 
 ### Borrowed Types (`BufferSlice`, `Uint8ArraySlice`, etc.)
 
@@ -137,9 +161,10 @@ use napi_derive::napi;
 pub fn buffer_slice_to_buffer(env: &Env, slice: BufferSlice) -> Result<AsyncBlock<u8>> {
   // Convert BufferSlice to owned Buffer for async usage
   let buffer = slice.into_buffer(env)?;
+  // Copy before the async work can run concurrently with JavaScript.
+  let data = buffer.to_vec();
   AsyncBlockBuilder::new(async move {
-    // use the buffer in async context
-    Ok(buffer.iter().sum())
+    Ok(data.iter().sum())
   })
   .build(env)
 }
@@ -170,14 +195,14 @@ use napi_derive::napi;
 #[napi]
 pub async fn process_async(buffer: Buffer) -> Result<Buffer> {
     // Buffer can cross await boundaries
-    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    napi::tokio::time::sleep(std::time::Duration::from_millis(100)).await;
     Ok(buffer)
 }
 
 // ❌ Won't compile: BufferSlice cannot cross await boundaries
 // #[napi]
 // pub async fn process_async_slice(slice: BufferSlice<'_>) -> Result<BufferSlice<'_>> {
-//     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+//     napi::tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 //     Ok(slice) // Error: slice doesn't live long enough
 // }
 
@@ -189,11 +214,19 @@ pub fn process_slice_async(env: &Env, slice: BufferSlice<'_>) -> Result<AsyncBlo
 }
 ```
 
+All of the `AsyncBlock` examples above build their futures with the `napi`
+crate's async support, which is gated behind the `async` feature on the `napi`
+dependency (`napi = { version = "3", features = ["async"] }`). That feature is
+what re-exports `AsyncBlock`/`AsyncBlockBuilder` and the Tokio runtime. The
+`napi::tokio::time::sleep` helper used above additionally requires the
+`tokio_time` feature.
+
 ## Memory Management
 
 ### Copied Buffers
 
-For some cases, you can't transferred the ownership of the data to the `Buffer` or `TypedArray`. You can use the `copy_from` method to create a copy of the data.
+In some cases, you cannot transfer ownership of the data to a `Buffer` or typed
+array. Use `copy_from` to create a copy instead.
 
 <Callout type="warning">
   If you create the `Buffer` or `TypedArray` in this way, the ownership of the
@@ -209,7 +242,7 @@ use napi_derive::napi;
 #[napi]
 pub fn create_copied_buffer(env: &Env) -> Result<BufferSlice<'_>> {
   let data = b"Hello, World!";
-  BufferSlice::copy_from(env, &data)
+  BufferSlice::copy_from(env, data)
 }
 ```
 
@@ -218,26 +251,28 @@ pub fn create_copied_buffer(env: &Env) -> Result<BufferSlice<'_>> {
 Sometimes, you may want to create a `Buffer` or `TypedArray` from data types that can `deref` to `[u8]` or get the raw pointer like `*mut u8`. And you don't want to copy the whole data into a `Vec<u8>` which can be very expensive. We provide the `from_external` method to achieve this, but it's unsafe and you must ensure the data is valid until the `finalize` callback is called.
 
 <Callout type="info">
-  The `finalize_hint` param will be passed to the `finalize` callback. In the example below, the `finalize_hint` is the `Arc<Vec<u8>>` itself. So NAPI-RS will hold the `Arc<Vec<u8>>` until the `finalize` callback is called.
-  So you don't need to worry about the data being invalid when the `finalize` callback is called.
+  The `finalize_hint` parameter is passed to the finalizer. In the first example
+  below, the boxed slice is both the allocation owner and the hint, so it stays
+  alive until the callback receives and drops it. If the runtime rejects
+  external buffers, NAPI-RS first copies the bytes and then invokes that
+  callback immediately during `from_external`; otherwise the callback runs
+  when JavaScript finalizes the external buffer. Do not require the callback
+  to be deferred until garbage collection.
 </Callout>
 
 ```rust filename="lib.rs"
-use std::sync::Arc;
-
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
-// Safe external buffer management
 #[napi]
 pub fn create_shared_buffer(env: &Env) -> Result<BufferSlice<'_>> {
-  let data = Arc::new(vec![1, 2, 3, 4, 5]);
-  let data_ptr = data.as_ptr() as *mut u8;
+  let mut data = vec![1, 2, 3, 4, 5].into_boxed_slice();
+  let data_ptr = data.as_mut_ptr();
   let len = data.len();
 
   unsafe {
-    BufferSlice::from_external(env, data_ptr, len, data, move |_, arc_data| {
-      drop(arc_data);
+    BufferSlice::from_external(env, data_ptr, len, data, move |_, boxed_data| {
+      drop(boxed_data);
     })
   }
 }
@@ -247,6 +282,7 @@ pub fn create_external_buffer(env: &Env) -> Result<BufferSlice<'_>> {
   let mut data = vec![1, 2, 3, 4, 5];
   let data_ptr = data.as_mut_ptr();
   let len = data.len();
+  let capacity = data.capacity();
 
   // make sure the data is valid until the finalize callback is called
   std::mem::forget(data);
@@ -254,7 +290,7 @@ pub fn create_external_buffer(env: &Env) -> Result<BufferSlice<'_>> {
   unsafe {
     BufferSlice::from_external(env, data_ptr, len, data_ptr, move |_, ptr| {
       // Cleanup data when JavaScript GC runs
-      std::mem::drop(Vec::from_raw_parts(ptr, len, len));
+      std::mem::drop(Vec::from_raw_parts(ptr, len, capacity));
     })
   }
 }
@@ -279,6 +315,7 @@ pub fn unsafe_external_example(env: &Env) -> Result<BufferSlice<'_>> {
   let mut data = vec![1u8, 2, 3, 4, 5];
   let ptr = data.as_mut_ptr();
   let len = data.len();
+  let capacity = data.capacity();
 
   // ⚠️ CRITICAL: Must forget the Vec to prevent double-free
   std::mem::forget(data);
@@ -286,15 +323,19 @@ pub fn unsafe_external_example(env: &Env) -> Result<BufferSlice<'_>> {
   unsafe {
     BufferSlice::from_external(env, ptr, len, ptr, move |_, ptr| {
       // ✅ Properly reconstruct and drop the Vec
-      std::mem::drop(Vec::from_raw_parts(ptr, len, len));
+      std::mem::drop(Vec::from_raw_parts(ptr, len, capacity));
       // Vec automatically deallocates when dropped
     })
   }
 }
 ```
 
-### Unsafe `as_mut`
+### Unsafe mutable access
 
-You can call `as_mut` method to get the mutable reference of the `Buffer` or `TypedArray`, but it's a **undefined behavior**. Because the `JavaScript` owned the same data access at the same time.
-
-Only call this method when you are sure the underlying data will not be modified by the `JavaScript` side.
+The unsafe `as_mut` methods expose a mutable slice into storage that JavaScript
+may also access. Calling the method is only sound when you can guarantee that
+JavaScript and every other Rust alias will neither read nor write the backing
+store for the entire mutable borrow. Violating that contract can cause
+undefined behavior. In cross-thread code, prefer an owned copy unless you have
+an explicit synchronization and ownership protocol spanning both JavaScript
+and Rust.

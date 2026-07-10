@@ -1,6 +1,12 @@
 {
-  "build": "Build",
-  "artifacts": "Artifacts",
-  "pre-publish": "Prepublish",
-  "napi-config": "NAPI Config"
+  "new": "Novo projeto",
+  "rename": "Renomear projeto",
+  "build": "Compilação",
+  "napi-config": "Configuração NAPI",
+  "programmatic-api": "API programática",
+  "create-npm-dirs": "Criar diretórios npm",
+  "artifacts": "Coletar artefatos",
+  "universalize": "Universalizar",
+  "version": "Versionar pacotes",
+  "pre-publish": "Pré-publicação"
 }
