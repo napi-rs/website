@@ -87,6 +87,8 @@ describe('TARGETS', () => {
       'x86_64-unknown-linux-ohos',
       'aarch64-unknown-linux-ohos',
       'armv7-unknown-linux-ohos',
+      'loongarch64-unknown-linux-gnu',
+      'x86_64-pc-windows-gnu',
     ]
     for (const triple of additional) {
       expect(TARGETS[triple as keyof typeof TARGETS]).toBeTruthy()
@@ -112,9 +114,11 @@ describe('TARGETS', () => {
       'armv7-unknown-linux-musleabihf': 'armv7 musl',
       'powerpc64le-unknown-linux-gnu': 'ppc64le',
       's390x-unknown-linux-gnu': 's390x',
+      'loongarch64-unknown-linux-gnu': 'loong64',
       'riscv64gc-unknown-linux-gnu': 'riscv64 gnu',
       'riscv64gc-unknown-linux-musl': 'riscv64 musl',
       'x86_64-pc-windows-msvc': 'x64',
+      'x86_64-pc-windows-gnu': 'x64 gnu',
       'i686-pc-windows-msvc': 'x32',
       'aarch64-pc-windows-msvc': 'arm64',
       'x86_64-apple-darwin': 'x64',

@@ -58,10 +58,13 @@ function parseTargets(raw: string): string[] {
   return out
 }
 
-// Comma/space list of node majors → finite integers.
+// Comma/space list of node majors → finite integers. Only whole-digit tokens
+// count, so a mistyped `22garbage` is dropped rather than becoming 22 (which
+// would render a bogus CI-tested pill in the live preview).
 function parseMajors(raw: string): number[] {
   const out: number[] = []
   for (const piece of raw.split(/[\s,]+/)) {
+    if (!/^\d+$/.test(piece)) continue
     const n = Number.parseInt(piece, 10)
     if (Number.isInteger(n)) out.push(n)
   }

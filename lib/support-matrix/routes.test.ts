@@ -125,6 +125,15 @@ describe('parseSupportMatrixQuery', () => {
     expect(query.nodeTested).toEqual([3])
   })
 
+  it('drops digit-prefixed junk in nodeTested (22garbage is not Node 22)', () => {
+    const { query } = parseSupportMatrixQuery(
+      get('nodeTested=22garbage,24,3.5,18'),
+    )
+    // `22garbage` and `3.5` are not whole-digit tokens → dropped, so the badge
+    // never marks a major CI-tested from a mistyped value.
+    expect(query.nodeTested).toEqual([24, 18])
+  })
+
   it('round-trips the spec lzma query string → the exact 17-target model', () => {
     const { query, theme } = parseSupportMatrixQuery(get(LZMA_SEARCH))
     expect(theme).toBe('dark')

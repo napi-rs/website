@@ -38,6 +38,11 @@ function parseNodeTested(raw: string | undefined): number[] | undefined {
   if (list === undefined) return undefined
   const out: number[] = []
   for (const token of list) {
+    // Require the whole token to be digits — bare `parseInt` would turn a
+    // mistyped `22garbage` into 22 and paint Node 22 as CI-tested. This is the
+    // first parser on the route path, so the guard must live here (the resolver
+    // only sees already-parsed numbers).
+    if (!/^\d+$/.test(token)) continue
     const n = Number.parseInt(token, 10)
     if (Number.isInteger(n)) out.push(n)
   }

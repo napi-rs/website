@@ -20,8 +20,9 @@ export interface TargetInfo {
   // the Rust arch — this is what the chip shows.
   arch: string
   // Display ABI suffix appended to the label (`gnu` / `musl`). Absent when the
-  // label is arch-only (windows/macos/android/freebsd/ohos, and the ppc64le /
-  // s390x linux targets whose label is intentionally just the arch).
+  // label is arch-only (windows-msvc/macos/android/freebsd/ohos, and the
+  // ppc64le / s390x / loong64 linux targets whose label is intentionally just
+  // the arch).
   abi?: string
   // Pre-derived chip label = `{arch}[ {abi}]`.
   label: string
@@ -45,6 +46,7 @@ export const TARGETS = {
 
   // Windows
   'x86_64-pc-windows-msvc': t('Windows', 'x64'),
+  'x86_64-pc-windows-gnu': t('Windows', 'x64', 'gnu'),
   'i686-pc-windows-msvc': t('Windows', 'x32'),
   'aarch64-pc-windows-msvc': t('Windows', 'arm64'),
 
@@ -59,6 +61,7 @@ export const TARGETS = {
   'riscv64gc-unknown-linux-musl': t('Linux', 'riscv64', 'musl'),
   'powerpc64le-unknown-linux-gnu': t('Linux', 'ppc64le'),
   's390x-unknown-linux-gnu': t('Linux', 's390x'),
+  'loongarch64-unknown-linux-gnu': t('Linux', 'loong64'),
 
   // Android
   'aarch64-linux-android': t('Android', 'arm64'),
