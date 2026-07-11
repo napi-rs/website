@@ -61,7 +61,6 @@ export const routeMap: Record<string, Locale[]> = {
   '/docs/more/faq': ['cn', 'en', 'pt-BR'],
   '/docs/more/integrations': ['cn', 'en', 'pt-BR'],
   '/docs/more/support-compatibility': ['cn', 'en', 'pt-BR'],
-  '/docs/more/support-matrix-badge': ['cn', 'en', 'pt-BR'],
   '/docs/more/testing-debugging': ['cn', 'en', 'pt-BR'],
   '/docs/more/troubleshooting': ['cn', 'en', 'pt-BR'],
   '/docs/more/v2-v3-migration-guide': ['cn', 'en', 'pt-BR'],

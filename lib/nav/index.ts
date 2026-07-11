@@ -261,10 +261,6 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/more/support-compatibility',
             },
             {
-              title: 'Support matrix badge',
-              path: 'docs/more/support-matrix-badge',
-            },
-            {
               title: 'Testing and debugging',
               path: 'docs/more/testing-debugging',
             },
@@ -569,10 +565,6 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/more/support-compatibility',
             },
             {
-              title: '支持矩阵徽章',
-              path: 'docs/more/support-matrix-badge',
-            },
-            {
               title: '测试与调试',
               path: 'docs/more/testing-debugging',
             },
@@ -875,10 +867,6 @@ export const nav: Record<Locale, LocaleNav> = {
             {
               title: 'Suporte e compatibilidade',
               path: 'docs/more/support-compatibility',
-            },
-            {
-              title: 'Badge da matriz de suporte',
-              path: 'docs/more/support-matrix-badge',
             },
             {
               title: 'Testes e depuração',
