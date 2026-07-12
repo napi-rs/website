@@ -104,6 +104,62 @@ describe('deriveNode — upper bounds and hyphen ranges', () => {
   })
 })
 
+describe('deriveNode — omit majors (drop EOL runtimes the range still permits)', () => {
+  // 25 reached EOL 2026-06-01; omit it even though `>=25` permits it. The engines
+  // string is shown verbatim on the card, so nothing is concealed — the pill for
+  // an EOL runtime just goes away so the card does not steer users onto it.
+  it('drops an omitted major from the pills, keeping the rest in order', () => {
+    const model = deriveNode('^22.20 || ^24.12 || >=25', [22, 24], 26, [25])
+    expect(model.pills).toEqual([
+      { major: 22, floor: '22.20', tested: true },
+      { major: 24, floor: '24.12', tested: true },
+      { major: 26, floor: null, tested: false },
+    ])
+  })
+
+  it('an omitted major is silent — not a pill and not an excluded mention', () => {
+    const model = deriveNode('^22.20 || ^24.12 || >=25', [22, 24], 26, [25])
+    expect(model.excluded).toContain('23')
+    expect(model.excluded).not.toContain('25')
+  })
+
+  it('leaves the engines-derived headline untouched', () => {
+    const model = deriveNode('^22.20 || ^24.12 || >=25', [22, 24], 26, [25])
+    expect(model.headline).toBe('v22.20 → v26')
+  })
+
+  it('omitting nothing (arg absent) is the pre-existing behavior', () => {
+    const model = deriveNode('^22.20 || ^24.12 || >=25', [22, 24], 26)
+    expect(model.pills.map((p) => p.major)).toEqual([22, 24, 25, 26])
+  })
+
+  // Boundary cases — the headline and excluded prose must stay consistent with the
+  // pills after an omission, not dangle at a major that no longer has a pill.
+  it('omitting the ceiling major retracts the headline to the highest survivor', () => {
+    const model = deriveNode('>=22', [], 26, [26])
+    expect(model.pills.map((p) => p.major)).toEqual([22, 23, 24, 25])
+    expect(model.headline).toBe('v22 → v25')
+  })
+
+  it('omitting the floor major advances the headline to the lowest survivor', () => {
+    const model = deriveNode('^22.20 || ^24.12 || >=25', [22, 24], 26, [22])
+    expect(model.pills.map((p) => p.major)).toEqual([24, 25, 26])
+    expect(model.headline).toBe('v24.12 → v26')
+  })
+
+  it('omitting an already-excluded major silences its excluded mention', () => {
+    const model = deriveNode('^22.20 || ^24.12 || >=25', [], 26, [23])
+    expect(model.excluded).not.toContain('23')
+    expect(model.excluded).toContain('24.0')
+  })
+
+  it('omitting every covered major yields no pills and a floor-only headline', () => {
+    const model = deriveNode('^22.20', [], 26, [22])
+    expect(model.pills).toEqual([])
+    expect(model.headline).toBe('v22.20')
+  })
+})
+
 describe('deriveNode — never throws on garbage', () => {
   it('returns a well-formed (empty) model for unparseable input', () => {
     const model = deriveNode('not a range', [], 26)

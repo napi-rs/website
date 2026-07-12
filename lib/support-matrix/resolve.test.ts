@@ -147,6 +147,25 @@ describe('resolveMatrix — name + node passthrough', () => {
   })
 })
 
+describe('resolveMatrix — nodeOmit passthrough', () => {
+  it('drops an EOL major the engines range still permits', () => {
+    const model = resolveMatrix({
+      engines: '^22.20 || ^24.12 || >=25',
+      nodeTested: '22,24',
+      nodeOmit: '25',
+    })
+    expect(model.node?.pills.map((p) => p.major)).toEqual([22, 24, 26])
+  })
+
+  it('sanitizes nodeOmit like nodeTested — junk tokens omit nothing', () => {
+    const model = resolveMatrix({
+      engines: '^22.20 || ^24.12 || >=25',
+      nodeOmit: '25garbage,junk',
+    })
+    expect(model.node?.pills.map((p) => p.major)).toContain(25)
+  })
+})
+
 // The spec's worked example — must produce exactly this shape.
 describe('resolveMatrix — lzma fixture', () => {
   const model = resolveMatrix({

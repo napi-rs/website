@@ -64,6 +64,9 @@ export function parseSupportMatrixQuery(
     // Raw semver range — `resolveMatrix`/`deriveNode` parse it.
     engines: get('engines'),
     nodeTested: parseNodeTested(get('nodeTested')),
+    // Node majors to drop from the pills even though `engines` permits them
+    // (an EOL runtime) — same integer-only parsing as nodeTested.
+    nodeOmit: parseNodeTested(get('nodeOmit')),
   }
   return { query, theme: parseTheme(get('theme')) }
 }
@@ -94,6 +97,8 @@ export interface SupportMatrixQueryInput {
   engines?: string
   // Node majors marked tested (deduped/filtered to finite integers).
   nodeTested?: number[]
+  // Node majors to DROP from the pills — an EOL runtime the range still permits.
+  nodeOmit?: number[]
   theme?: Theme
 }
 
@@ -133,6 +138,11 @@ export function buildSupportMatrixQuery(
   if (input.nodeTested && input.nodeTested.length) {
     const majors = input.nodeTested.filter((n) => Number.isInteger(n))
     if (majors.length) params.append('nodeTested', majors.join(','))
+  }
+
+  if (input.nodeOmit && input.nodeOmit.length) {
+    const majors = input.nodeOmit.filter((n) => Number.isInteger(n))
+    if (majors.length) params.append('nodeOmit', majors.join(','))
   }
 
   const name = input.name?.trim()

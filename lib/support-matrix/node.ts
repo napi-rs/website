@@ -170,10 +170,15 @@ export function deriveNode(
   engines: string,
   nodeTested: number[],
   latest: number,
+  // Majors to drop from the pills entirely — an EOL runtime the range still
+  // permits (`>=25` admits 25 after its EOL). The engines string is rendered
+  // verbatim, so this hides only the pill, not the contract.
+  nodeOmit: number[] = [],
 ): NodeModel {
   const enginesRaw = (engines ?? '').trim()
   const parts = parseRange(enginesRaw, latest)
   const tested = new Set((nodeTested ?? []).filter((n) => Number.isInteger(n)))
+  const omit = new Set((nodeOmit ?? []).filter((n) => Number.isInteger(n)))
 
   if (parts.length === 0) {
     return { headline: `v${latest}`, enginesRaw, excluded: null, pills: [] }
@@ -183,11 +188,14 @@ export function deriveNode(
   const ceiling = rangeCeiling(parts, latest)
   const left =
     floor.minor > 0 ? `v${floor.major}.${floor.minor}` : `v${floor.major}`
-  const headline = floor.major < ceiling ? `${left} → v${ceiling}` : left
 
   const pills: NodePill[] = []
   const gaps: string[] = []
   for (let major = floor.major; major <= ceiling; major++) {
+    // An explicitly omitted (e.g. EOL) major is dropped whole — before any
+    // coverage/gap accounting — so it leaves no pill AND no `excluded` mention,
+    // whether or not the range covered it. It simply vanishes from the card.
+    if (omit.has(major)) continue
     const cov = coverage(parts, major)
     if (!cov.covered) {
       // Fully-excluded major — only listed above the floor major (nothing
@@ -206,6 +214,21 @@ export function deriveNode(
       tested: tested.has(major),
     })
   }
+
+  // Span the headline across the SURVIVING pills, so an omitted floor or ceiling
+  // never dangles (a `→ v26` with no v26 pill). With nothing omitted this is the
+  // plain floor→ceiling span; with every major omitted it falls back to the range
+  // floor. `enginesRaw` is rendered verbatim regardless, so the declared range is
+  // never concealed.
+  const lo = pills[0]
+  const hi = pills[pills.length - 1]
+  const headline = lo
+    ? lo.major < hi.major
+      ? `${lo.floor ? `v${lo.floor}` : `v${lo.major}`} → v${hi.major}`
+      : lo.floor
+        ? `v${lo.floor}`
+        : `v${lo.major}`
+    : left
 
   return {
     headline,
