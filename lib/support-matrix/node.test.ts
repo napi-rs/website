@@ -158,6 +158,23 @@ describe('deriveNode — omit majors (drop EOL runtimes the range still permits)
     expect(model.pills).toEqual([])
     expect(model.headline).toBe('v22.20')
   })
+
+  it('omitting an endpoint major shrinks the excluded span, not just the headline', () => {
+    // ^22 || ^26 with 26 omitted advertises only v22, so 23/24/25 sit BEYOND the
+    // surviving span — they must not be reported as excluded.
+    const model = deriveNode('^22 || ^26', [], 26, [26])
+    expect(model.pills.map((p) => p.major)).toEqual([22])
+    expect(model.headline).toBe('v22')
+    expect(model.excluded).toBeNull()
+  })
+
+  it('lists gaps only between surviving pills', () => {
+    // ^22 || ^24 || ^26, omit 26 → survivors 22 and 24; 23 is between them (kept),
+    // 25 is beyond the last survivor (dropped).
+    const model = deriveNode('^22 || ^24 || ^26', [], 26, [26])
+    expect(model.pills.map((p) => p.major)).toEqual([22, 24])
+    expect(model.excluded).toBe('23')
+  })
 })
 
 describe('deriveNode — never throws on garbage', () => {

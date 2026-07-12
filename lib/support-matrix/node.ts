@@ -191,6 +191,14 @@ export function deriveNode(
 
   const pills: NodePill[] = []
   const gaps: string[] = []
+  // Gaps are recorded only BETWEEN surviving pills. Uncovered majors are buffered
+  // and committed when a later pill confirms both ends of the gap; anything before
+  // the first surviving pill (below the surviving floor) or after the last (beyond
+  // the surviving ceiling) is out of scope and discarded. So omitting an endpoint
+  // major shrinks the excluded span together with the headline, instead of leaving
+  // `excluded` pointing past the last pill.
+  let sawPill = false
+  let pendingGaps: string[] = []
   for (let major = floor.major; major <= ceiling; major++) {
     // An explicitly omitted (e.g. EOL) major is dropped whole — before any
     // coverage/gap accounting — so it leaves no pill AND no `excluded` mention,
@@ -198,16 +206,24 @@ export function deriveNode(
     if (omit.has(major)) continue
     const cov = coverage(parts, major)
     if (!cov.covered) {
-      // Fully-excluded major — only listed above the floor major (nothing
-      // below the floor is ever "excluded", it is simply out of scope).
-      if (major > floor.major) gaps.push(String(major))
+      // A fully-excluded major only counts once it is bounded by a pill on both
+      // sides — buffer it and let a later pill commit it (or a trailing run be
+      // discarded).
+      if (sawPill) pendingGaps.push(String(major))
       continue
     }
-    // A major entered above `.0` leaves a `maj.0–maj.min-1` gap (again, only
-    // above the floor major — the floor major's below-floor minors are scope).
-    if (major > floor.major && cov.floorMinor > 0) {
-      gaps.push(`${major}.0–${major}.${cov.floorMinor - 1}`)
+    if (sawPill) {
+      // Buffered uncovered majors are now bounded on both sides by a pill.
+      gaps.push(...pendingGaps)
+      // This surviving major's own `maj.0–maj.min-1` gap when entered above `.0`
+      // — but never for the first surviving pill, whose below-floor minors are
+      // scope (the same reason the range floor's own below-`.0` is not listed).
+      if (cov.floorMinor > 0) {
+        gaps.push(`${major}.0–${major}.${cov.floorMinor - 1}`)
+      }
     }
+    pendingGaps = []
+    sawPill = true
     pills.push({
       major,
       floor: cov.floorMinor > 0 ? `${major}.${cov.floorMinor}` : null,
