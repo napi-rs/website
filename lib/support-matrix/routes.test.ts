@@ -104,9 +104,16 @@ describe('parseSupportMatrixQuery', () => {
     expect(query.untested).toBeUndefined()
     expect(query.omit).toBeUndefined()
     expect(query.nodeTested).toBeUndefined()
+    expect(query.nodeOmit).toBeUndefined()
     expect(query.engines).toBeUndefined()
     expect(query.name).toBeUndefined()
     expect(query.wasm).toBeUndefined()
+  })
+
+  it('parses nodeOmit → numbers with the same integer-only guard as nodeTested', () => {
+    const { query } = parseSupportMatrixQuery(get('nodeOmit=25,25garbage,26'))
+    // `25garbage` is not a whole-digit token → dropped; 25 and 26 survive.
+    expect(query.nodeOmit).toEqual([25, 26])
   })
 
   it('parses theme (dark opt-in; default light)', () => {

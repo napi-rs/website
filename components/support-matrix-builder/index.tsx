@@ -79,6 +79,7 @@ export default function SupportMatrixBuilder() {
   const [name, setName] = useState('')
   const [engines, setEngines] = useState('^22.20 || ^24.12 || >=25')
   const [nodeTested, setNodeTested] = useState('22, 24')
+  const [nodeOmit, setNodeOmit] = useState('')
   const [badgeTheme, setBadgeTheme] = useState<BadgeTheme>('light')
   const [copied, setCopied] = useState<string | null>(null)
 
@@ -115,10 +116,11 @@ export default function SupportMatrixBuilder() {
         name: name.trim() || undefined,
         engines: engines.trim() || undefined,
         nodeTested: parseMajors(nodeTested),
+        nodeOmit: parseMajors(nodeOmit),
         theme,
       }
     }
-  }, [targets, tiers, full, wasm, name, engines, nodeTested])
+  }, [targets, tiers, full, wasm, name, engines, nodeTested, nodeOmit])
 
   // light → no theme param (the parser's default); dark → theme=dark.
   const previewQuery = useMemo(
@@ -270,6 +272,20 @@ export default function SupportMatrixBuilder() {
             value={engines}
             onChange={(e) => setEngines(e.target.value)}
             placeholder="^22.20 || ^24.12 || >=25"
+          />
+        </div>
+
+        <div>
+          <label className={labelCls} htmlFor="sm-node-omit">
+            Omit node majors (drop a major the range permits, e.g. an EOL
+            runtime — the engines string still shows verbatim)
+          </label>
+          <input
+            id="sm-node-omit"
+            className={fieldCls}
+            value={nodeOmit}
+            onChange={(e) => setNodeOmit(e.target.value)}
+            placeholder="25"
           />
         </div>
 

@@ -134,6 +134,23 @@ describe('buildSupportMatrixQuery — omission + cleaning', () => {
   })
 })
 
+describe('buildSupportMatrixQuery — nodeOmit (drop EOL majors)', () => {
+  it('round-trips nodeOmit through build → parse', () => {
+    const built = buildSupportMatrixQuery({
+      engines: '^22.20 || ^24.12 || >=25',
+      nodeTested: [22, 24],
+      nodeOmit: [25],
+    })
+    expect(new URLSearchParams(built).get('nodeOmit')).toBe('25')
+    expect(reparse(built).query.nodeOmit).toEqual([25])
+  })
+
+  it('drops the param when nothing integer survives', () => {
+    const built = buildSupportMatrixQuery({ nodeOmit: [Number.NaN] })
+    expect(new URLSearchParams(built).has('nodeOmit')).toBe(false)
+  })
+})
+
 describe('buildSupportMatrixQuery — theme + dark round-trip', () => {
   it('a dark build parses back to the dark theme', () => {
     const built = buildSupportMatrixQuery({ tested: ['full'], theme: 'dark' })

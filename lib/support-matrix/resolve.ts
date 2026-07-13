@@ -50,6 +50,7 @@ export interface MatrixQuery {
   name?: QueryValue
   engines?: QueryValue
   nodeTested?: QueryValue
+  nodeOmit?: QueryValue
 }
 
 const TIERS: Tier[] = ['tested', 'nonblocking', 'untested']
@@ -204,7 +205,12 @@ export function resolveMatrix(query: MatrixQuery = {}): MatrixModel {
 
   const enginesRaw = parseEngines(query.engines)
   const node: NodeModel | null = enginesRaw
-    ? deriveNode(enginesRaw, parseNodeTested(query.nodeTested), NODE_LATEST)
+    ? deriveNode(
+        enginesRaw,
+        parseNodeTested(query.nodeTested),
+        NODE_LATEST,
+        parseNodeTested(query.nodeOmit),
+      )
     : null
 
   const model: MatrixModel = { node, platforms, browser }
