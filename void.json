@@ -65,6 +65,32 @@
       ],
       "/*.md": ["Content-Type: text/markdown; charset=utf-8"],
       "/rss.xml": ["Content-Type: application/rss+xml; charset=utf-8"]
+    },
+    "revalidateQueryAllowlist": {
+      "/support-matrix.png": [
+        "tested",
+        "nonblocking",
+        "untested",
+        "omit",
+        "wasm",
+        "name",
+        "engines",
+        "nodeTested",
+        "nodeOmit",
+        "theme"
+      ],
+      "/support-matrix.svg": [
+        "tested",
+        "nonblocking",
+        "untested",
+        "omit",
+        "wasm",
+        "name",
+        "engines",
+        "nodeTested",
+        "nodeOmit",
+        "theme"
+      ]
     }
   },
   "inference": {
