@@ -46,6 +46,7 @@
       height: 101%;
       left: calc(50% - 250px);
       position: absolute;
+      pointer-events: none;
       width: 500px;
       z-index: 0;
       opacity: 0.6;
