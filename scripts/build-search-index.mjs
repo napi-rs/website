@@ -39,7 +39,9 @@ export const DEFAULT_OUT_DIR = join(import.meta.dirname, '..', 'dist', 'client')
 export const BODY_LIMIT = 50000
 
 export function stripFrontmatter(markdown) {
-  return markdown.replace(/^---\n[\s\S]*?\n---\n?/, '')
+  // Leading blank lines tolerated: after stripping a byte-0 <script> island
+  // block the frontmatter no longer sits at byte 0.
+  return markdown.replace(/^\s*---\n[\s\S]*?\n---\n?/, '')
 }
 
 export function stripScriptBlock(markdown) {
@@ -65,15 +67,27 @@ export function slugify(text) {
  * plain text and code contents, drop everything else (images, inline HTML,
  * emphasis markers — but NOT intra-word underscores, which markdown does not
  * treat as emphasis). Also strips a trailing markdown-it-attrs `{…}` block.
+ *
+ * Code spans are extracted FIRST and kept verbatim: inside backticks,
+ * `PromiseRaw<'env, T>` is CODE CONTENT (kept by getTokensText), not inline
+ * HTML — stripping `<…>` before backticks would mangle it to `PromiseRaw`
+ * while the rendered anchor keeps the full generic.
  */
 export function headingText(raw) {
-  return raw
-    .replace(/\{[^{}]*\}\s*$/, '') // trailing {#id} / {.class} attrs
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // images dropped entirely
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // links keep their label
-    .replace(/<[^>]+>/g, '') // inline HTML dropped (Promise<T> -> Promise)
-    .replace(/`([^`]*)`/g, '$1') // code keeps its content
-    .replace(/(\*\*|~~|\*)/g, '') // emphasis markers (NOT `_` — intraword)
+  const noAttrs = raw.replace(/\{[^{}]*\}\s*$/, '') // trailing {#id} / {.class}
+  return noAttrs
+    .split(/(`[^`]*`)/g) // [text, code, text, …] — code spans kept whole
+    .map((part) => {
+      if (part.length >= 2 && part.startsWith('`') && part.endsWith('`')) {
+        return part.slice(1, -1) // code content, verbatim
+      }
+      return part
+        .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // images dropped entirely
+        .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // links keep their label
+        .replace(/<[^>]+>/g, '') // inline HTML dropped (Promise<T> -> Promise)
+        .replace(/(\*\*|~~|\*)/g, '') // emphasis markers (NOT `_` — intraword)
+    })
+    .join('')
     .trim()
 }
 
@@ -105,13 +119,23 @@ export function collectHeadings(markdown) {
  * CONTENTS are kept verbatim (minus fence markers + info string).
  */
 export function markdownToPlainText(markdown) {
-  return markdown
-    .replace(/^---\n[\s\S]*?\n---\n?/, '')
-    .replace(/^<script>[\s\S]*?<\/script>\n?/, '')
+  const noScript = stripScriptBlock(markdown) // FIRST: see pageTitle note
+  // Fence-marker lines go BEFORE the inline-code split: triple-backtick runs
+  // would otherwise parse as empty "code spans" and leak the info string.
+  const noFencesOrFrontmatter = stripFrontmatter(noScript)
     .replace(/^ {0,3}(`{3,}|~{3,})[^\n]*$/gm, '')
     .replace(/^ {0,3}#{1,6}[ \t]+/gm, '')
     .replace(/^ {0,3}:::.*$/gm, '')
-    .replace(/<[^>]+>/g, ' ')
+  // Split on backticks so the HTML strip below can't eat generics inside
+  // inline code (`PromiseRaw<'env, T>` is searchable code, not a tag).
+  return noFencesOrFrontmatter
+    .split(/(`[^`]*`)/g)
+    .map((part) =>
+      part.length >= 2 && part.startsWith('`') && part.endsWith('`')
+        ? part.slice(1, -1)
+        : part.replace(/<[^>]+>/g, ' ').replace(/(\*\*|~~|\*)/g, ' '),
+    )
+    .join(' ')
     .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/\|/g, ' ')
@@ -125,14 +149,16 @@ export function pageTitle(markdown) {
   if (m) return m[1].trim()
   // No H1 (some localized pages start at H2): fall back to the frontmatter
   // `title:` — the same title the metadata index and <title> use — rather
-  // than emitting a blank, unmatchable result row.
-  const fm = /^---\n([\s\S]*?)\n---/.exec(markdown)
+  // than emitting a blank, unmatchable result row. The byte-0 `<script>`
+  // island block must be stripped FIRST or the `^---` anchor never matches
+  // (webassembly + announce-v2/v3 pages are script-first).
+  const fm = /^\s*---\n([\s\S]*?)\n---/.exec(stripScriptBlock(markdown))
   const t = fm ? /^title:\s*(.+)$/m.exec(fm[1]) : null
   return t ? t[1].trim().replace(/^['"]|['"]$/g, '') : ''
 }
 
 export function pageDescription(markdown) {
-  const m = /^---\n([\s\S]*?)\n---/.exec(markdown)
+  const m = /^\s*---\n([\s\S]*?)\n---/.exec(stripScriptBlock(markdown))
   if (!m) return undefined
   const d = /^description:\s*(.+)$/m.exec(m[1])
   return d ? d[1].trim().replace(/^['"]|['"]$/g, '') : undefined

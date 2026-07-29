@@ -35,10 +35,11 @@ import { cn } from '@/lib/utils'
 import { nav, type Locale } from '@/lib/nav/index.ts'
 import {
   buildSearchIndexCore,
+  groupSearchResults,
+  pageLeaf,
   rankSearchEntries,
   type FullSearchEntry,
   type SearchEntry,
-  groupSearchResults,
   type SearchResult,
 } from '@/lib/docs/search-index.ts'
 import pages from '@void/md/pages'
@@ -56,7 +57,10 @@ function toFullEntry(entry: SearchEntry): FullSearchEntry {
     href: entry.href,
     title: entry.title,
     description: entry.description,
-    section: entry.href.split('/').filter(Boolean)[0] ?? 'docs',
+    // Derive the section from the LOCALE-STRIPPED leaf, not the href: a cn
+    // fallback entry's href is `/cn/docs/…`, and `cn` matches no tab key —
+    // every result would collapse under a literal locale-code group.
+    section: pageLeaf(entry.path).split('/')[0] || 'docs',
     group: '',
     headings: entry.headings.map((text) => ({ depth: 2, slug: '', text })),
     body: '',

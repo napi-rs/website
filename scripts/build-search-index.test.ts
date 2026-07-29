@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  pageDescription,
   pageTitle,
   BODY_LIMIT,
   buildSearchIndex,
@@ -259,5 +260,63 @@ describe('pageTitle', () => {
 
   it('returns an empty string only when neither exists', () => {
     expect(pageTitle('## No title here')).toBe('')
+  })
+})
+
+describe('headingText / generics in code spans (PR #507 review)', () => {
+  it('keeps generics INSIDE inline code (renderer keeps + encodes them)', () => {
+    // Real renderer: `PromiseRaw<'env, T>` -> promiseraw%3C'env%2C-t%3E
+    const md = "## `PromiseRaw<'env, T>`\n\n## `AsyncBlock<V>`"
+    expect(collectHeadings(md)).toEqual([
+      {
+        depth: 2,
+        slug: "promiseraw%3C'env%2C-t%3E",
+        text: "PromiseRaw<'env, T>",
+      },
+      { depth: 2, slug: 'asyncblock%3Cv%3E', text: 'AsyncBlock<V>' },
+    ])
+  })
+
+  it('still drops genuine inline HTML OUTSIDE code (Promise<T> -> promise)', () => {
+    expect(collectHeadings('## Promise<T>')).toEqual([
+      { depth: 2, slug: 'promise', text: 'Promise' },
+    ])
+  })
+})
+
+describe('script-first (byte-0 island) pages (PR #507 review)', () => {
+  const SCRIPT_FIRST = [
+    '<script>',
+    'import X from "../../../../components/x.tsx" with { island: "visible" }',
+    '</script>',
+    '',
+    '---',
+    "title: 'WebAssembly and WASI'",
+    'description: Build and run WASI.',
+    '---',
+    '',
+    '# WebAssembly',
+    '',
+    'Real prose here.',
+  ].join('\n')
+
+  it('markdownToPlainText strips the script AND the frontmatter (no YAML leak)', () => {
+    const body = markdownToPlainText(SCRIPT_FIRST)
+    expect(body).toContain('Real prose here.')
+    expect(body).not.toContain('title')
+    expect(body).not.toContain('---')
+    expect(body).not.toContain('import X')
+  })
+
+  it('pageTitle/pageDescription read frontmatter after the script block', () => {
+    expect(pageTitle(SCRIPT_FIRST)).toBe('WebAssembly')
+    expect(pageDescription(SCRIPT_FIRST)).toBe('Build and run WASI.')
+    const noH1 = SCRIPT_FIRST.replace('# WebAssembly', '## Only H2')
+    expect(pageTitle(noH1)).toBe('WebAssembly and WASI')
+  })
+
+  it('markdownToPlainText keeps generics inside inline code searchable', () => {
+    const body = markdownToPlainText("Call `PromiseRaw<'env, T>` here.")
+    expect(body).toContain("PromiseRaw<'env, T>")
   })
 })
