@@ -174,7 +174,11 @@ describe('buildSearchIndexCore — EN i18n fallback parity', () => {
 // Full-body search ranking (rankSearchEntries / bodySnippet)
 // ---------------------------------------------------------------------------
 
-import { rankSearchEntries, bodySnippet } from './search-index.ts'
+import {
+  rankSearchEntries,
+  bodySnippet,
+  groupSearchResults,
+} from './search-index.ts'
 import type { FullSearchEntry } from './search-index.ts'
 
 const full = (over: Partial<FullSearchEntry>): FullSearchEntry => ({
@@ -269,6 +273,38 @@ describe('rankSearchEntries', () => {
       '/en/docs/b',
       '/en/docs/c',
       '/en/docs/d',
+    ])
+  })
+})
+
+describe('groupSearchResults', () => {
+  it('consolidates NON-adjacent results with the same label into one group', () => {
+    const results = [
+      { entry: full({ path: '/en/docs/a', group: 'Concepts' }), score: 4 },
+      { entry: full({ path: '/en/docs/b', group: 'CLI' }), score: 3 },
+      { entry: full({ path: '/en/docs/c', group: 'Concepts' }), score: 2 },
+    ]
+    const groups = groupSearchResults(results, (e) => e.group)
+    // One group per label (no duplicate React keys), first-appearance order.
+    expect(groups.map((g) => g.label)).toEqual(['Concepts', 'CLI'])
+    expect(groups[0].items.map((r) => r.entry.path)).toEqual([
+      '/en/docs/a',
+      '/en/docs/c',
+    ])
+    expect(groups[1].items).toHaveLength(1)
+  })
+
+  it('preserves first-appearance order of groups and items', () => {
+    const results = [
+      { entry: full({ path: '/en/docs/z', group: 'B' }), score: 4 },
+      { entry: full({ path: '/en/docs/y', group: 'A' }), score: 3 },
+      { entry: full({ path: '/en/docs/x', group: 'B' }), score: 2 },
+    ]
+    const groups = groupSearchResults(results, (e) => e.group)
+    expect(groups.map((g) => g.label)).toEqual(['B', 'A'])
+    expect(groups[0].items.map((r) => r.entry.path)).toEqual([
+      '/en/docs/z',
+      '/en/docs/x',
     ])
   })
 })

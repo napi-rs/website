@@ -38,6 +38,7 @@ import {
   rankSearchEntries,
   type FullSearchEntry,
   type SearchEntry,
+  groupSearchResults,
   type SearchResult,
 } from '@/lib/docs/search-index.ts'
 import pages from '@void/md/pages'
@@ -190,18 +191,16 @@ export default function SearchDialog({ locale, className }: SearchDialogProps) {
   )
 
   // Group the ranked results by sidebar group (falling back to the localized
-  // section/tab label), preserving first-appearance order of the ranking.
+  // section/tab label). groupSearchResults CONSOLIDATES by label, so a query
+  // whose ranking interleaves groups still emits one CommandGroup per label —
+  // adjacency-only grouping would produce duplicate React keys.
   const groups = React.useMemo(() => {
     const sectionLabel = (section: string) =>
       nav[locale]?.tabs.find((t) => t.key === section)?.title ?? section
-    const out: Array<{ label: string; items: SearchResult[] }> = []
-    for (const r of results) {
-      const label = r.entry.group.trim() || sectionLabel(r.entry.section)
-      const last = out[out.length - 1]
-      if (last && last.label === label) last.items.push(r)
-      else out.push({ label, items: [r] })
-    }
-    return out
+    return groupSearchResults(
+      results,
+      (entry) => entry.group.trim() || sectionLabel(entry.section),
+    )
   }, [results, locale])
 
   const go = (r: SearchResult) => {

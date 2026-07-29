@@ -46,7 +46,7 @@
       ]
     },
     "docs/cli/create-npm-dirs": {
-      "lastmod": "2026-07-02T14:38:32+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -55,7 +55,7 @@
       ]
     },
     "docs/cli/napi-config": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -91,7 +91,7 @@
       ]
     },
     "docs/cli/rename": {
-      "lastmod": "2026-07-02T14:38:32+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -100,7 +100,7 @@
       ]
     },
     "docs/cli/universalize": {
-      "lastmod": "2026-07-02T14:38:32+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -109,7 +109,7 @@
       ]
     },
     "docs/cli/version": {
-      "lastmod": "2026-07-02T14:38:32+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -118,7 +118,16 @@
       ]
     },
     "docs/concepts/async-fn": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/async-runtime": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -163,7 +172,7 @@
       ]
     },
     "docs/concepts/env": {
-      "lastmod": "2026-07-02T14:38:32+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -181,7 +190,7 @@
       ]
     },
     "docs/concepts/exports": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -199,7 +208,7 @@
       ]
     },
     "docs/concepts/function": {
-      "lastmod": "2026-07-02T14:38:32+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -208,7 +217,7 @@
       ]
     },
     "docs/concepts/inject-env": {
-      "lastmod": "2026-07-02T14:38:32+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -253,7 +262,7 @@
       ]
     },
     "docs/concepts/napi-attributes": {
-      "lastmod": "2026-07-10T20:19:57+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -271,7 +280,7 @@
       ]
     },
     "docs/concepts/promise": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -288,8 +297,17 @@
         }
       ]
     },
+    "docs/concepts/streams": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
     "docs/concepts/threadsafe-function": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -298,7 +316,7 @@
       ]
     },
     "docs/concepts/type-conversions": {
-      "lastmod": "2026-07-10T20:19:57+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -316,7 +334,7 @@
       ]
     },
     "docs/concepts/types-overwrite": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -334,7 +352,7 @@
       ]
     },
     "docs/concepts/values": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -343,7 +361,7 @@
       ]
     },
     "docs/concepts/webassembly": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -370,7 +388,7 @@
       ]
     },
     "docs/deep-dive/native-module": {
-      "lastmod": "2026-07-02T14:38:32+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -388,7 +406,7 @@
       ]
     },
     "docs/introduction/getting-started": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -406,7 +424,7 @@
       ]
     },
     "docs/introduction/simple-package": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -416,6 +434,15 @@
     },
     "docs/more/async-concurrency": {
       "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/examples": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -469,7 +496,7 @@
       ]
     },
     "docs/more/v2-v3-migration-guide": {
-      "lastmod": "2026-07-02T14:38:32+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -579,7 +606,7 @@
       ]
     },
     "docs/concepts/async-fn": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -588,7 +615,7 @@
       ]
     },
     "docs/concepts/async-task": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -642,7 +669,7 @@
       ]
     },
     "docs/concepts/exports": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -660,7 +687,7 @@
       ]
     },
     "docs/concepts/function": {
-      "lastmod": "2026-07-06T09:05:43+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -714,7 +741,7 @@
       ]
     },
     "docs/concepts/napi-attributes": {
-      "lastmod": "2026-07-10T20:19:57+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -732,7 +759,7 @@
       ]
     },
     "docs/concepts/promise": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -804,7 +831,7 @@
       ]
     },
     "docs/concepts/webassembly": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -849,7 +876,7 @@
       ]
     },
     "docs/introduction/getting-started": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -867,7 +894,7 @@
       ]
     },
     "docs/introduction/simple-package": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -1031,7 +1058,7 @@
       ]
     },
     "docs/concepts/async-fn": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -1040,7 +1067,7 @@
       ]
     },
     "docs/concepts/async-task": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -1094,7 +1121,7 @@
       ]
     },
     "docs/concepts/exports": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -1112,7 +1139,7 @@
       ]
     },
     "docs/concepts/function": {
-      "lastmod": "2026-07-06T09:05:43+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -1166,7 +1193,7 @@
       ]
     },
     "docs/concepts/napi-attributes": {
-      "lastmod": "2026-07-10T20:19:57+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -1184,7 +1211,7 @@
       ]
     },
     "docs/concepts/promise": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -1256,7 +1283,7 @@
       ]
     },
     "docs/concepts/webassembly": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -1301,7 +1328,7 @@
       ]
     },
     "docs/introduction/getting-started": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",
@@ -1319,7 +1346,7 @@
       ]
     },
     "docs/introduction/simple-package": {
-      "lastmod": "2026-07-10T20:02:04+08:00",
+      "lastmod": "2026-07-29T17:51:01+08:00",
       "contributors": [
         {
           "name": "LongYinan",

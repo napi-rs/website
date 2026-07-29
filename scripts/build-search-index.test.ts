@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  pageTitle,
   BODY_LIMIT,
   buildSearchIndex,
   collectHeadings,
@@ -240,5 +241,23 @@ describe('buildSearchIndex', () => {
     ]
     const index = buildSearchIndex(huge, nav)
     expect(index.en[0].body.length).toBeLessThanOrEqual(BODY_LIMIT)
+  })
+})
+
+describe('pageTitle', () => {
+  it('falls back to the frontmatter title when the page has no H1', () => {
+    // The cn/pt-BR env + migration-guide pages start at H2 — without the
+    // fallback their search rows render blank and can't match title queries.
+    const md = "---\ntitle: 'V2 到 V3 迁移指南'\n---\n\n## 配置\n\nBody."
+    expect(pageTitle(md)).toBe('V2 到 V3 迁移指南')
+  })
+
+  it('prefers the H1 over frontmatter when both exist', () => {
+    const md = "---\ntitle: 'Meta'\n---\n\n# Heading Title\n\nBody."
+    expect(pageTitle(md)).toBe('Heading Title')
+  })
+
+  it('returns an empty string only when neither exists', () => {
+    expect(pageTitle('## No title here')).toBe('')
   })
 })

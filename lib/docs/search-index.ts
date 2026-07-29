@@ -238,3 +238,33 @@ export function rankSearchEntries(
   results.sort((a, b) => b.score - a.score)
   return results.slice(0, limit)
 }
+
+export interface SearchResultGroup {
+  label: string
+  items: SearchResult[]
+}
+
+/**
+ * Group ranked results by sidebar-group label for display. CONSOLIDATES every
+ * result sharing a label into ONE group (first-appearance order of both
+ * groups and items) — merging only adjacent rows would emit several groups
+ * with the same label, and keying those by label gives duplicate React keys.
+ * `labelFor(entry)` resolves the display label (the component supplies the
+ * locale-aware group/section lookup).
+ */
+export function groupSearchResults(
+  results: ReadonlyArray<SearchResult>,
+  labelFor: (entry: FullSearchEntry) => string,
+): SearchResultGroup[] {
+  const byLabel = new Map<string, SearchResultGroup>()
+  for (const r of results) {
+    const label = labelFor(r.entry)
+    let group = byLabel.get(label)
+    if (!group) {
+      group = { label, items: [] }
+      byLabel.set(label, group)
+    }
+    group.items.push(r)
+  }
+  return [...byLabel.values()]
+}

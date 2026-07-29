@@ -122,7 +122,13 @@ export function markdownToPlainText(markdown) {
 
 export function pageTitle(markdown) {
   const m = /^#\s+(.+)$/m.exec(markdown)
-  return m ? m[1].trim() : ''
+  if (m) return m[1].trim()
+  // No H1 (some localized pages start at H2): fall back to the frontmatter
+  // `title:` — the same title the metadata index and <title> use — rather
+  // than emitting a blank, unmatchable result row.
+  const fm = /^---\n([\s\S]*?)\n---/.exec(markdown)
+  const t = fm ? /^title:\s*(.+)$/m.exec(fm[1]) : null
+  return t ? t[1].trim().replace(/^['"]|['"]$/g, '') : ''
 }
 
 export function pageDescription(markdown) {
