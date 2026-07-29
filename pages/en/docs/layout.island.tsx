@@ -4,7 +4,7 @@
 // honoured in `*.island.tsx` entry files — never in the shared DocsLayout). The
 // chrome islands are imported here with their island attribute and passed into
 // the shared structural <DocsLayout> via its slot props. Static chrome
-// (Breadcrumb, Pager, EditOnGithub, Footer) is imported normally.
+// (Breadcrumb, Pager, PageMeta, Footer) is imported normally.
 //
 // PATH / SHARED DATA: islands hydrate WITHOUT a Router/Shared context (the Void
 // island client calls `hydrateRoot(el, createElement(Component, props))` with no
@@ -28,9 +28,12 @@ import NotTranslatedBanner from '../../../components/docs/NotTranslatedBanner' w
 import MermaidBlocks from '../../../components/docs/MermaidBlocks' with {
   island: 'load',
 }
+import PageActions from '../../../components/docs/PageActions' with {
+  island: 'load',
+}
 import Breadcrumb from '../../../components/docs/Breadcrumb'
 import Pager from '../../../components/docs/Pager'
-import EditOnGithub from '../../../components/docs/EditOnGithub'
+import PageMeta from '../../../components/docs/PageMeta'
 import Footer from '../../../components/docs/Footer'
 
 export default function EnDocsLayout({
@@ -53,7 +56,7 @@ export default function EnDocsLayout({
   //     the edit-on-GitHub source path — they must point at the rendered page.
   const routeLocale = getLocale(currentPath)
 
-  // CONTENT locale + path: the rendered .md is ALWAYS en here. Toc/EditOnGithub
+  // CONTENT locale + path: the rendered .md is ALWAYS en here. Toc/PageMeta
   // both compute their target as `mdPagePath(splitLocale(currentPath)[1], locale)`
   // / `pages/<locale>/<rest>`. splitLocale strips a cn/pt-BR prefix to the bare
   // leaf (e.g. `/cn/docs/cli/build` -> `docs/cli/build`), so passing the REAL
@@ -74,13 +77,25 @@ export default function EnDocsLayout({
         sidebar={<Sidebar locale={routeLocale} currentPath={currentPath} />}
         toc={<Toc locale="en" currentPath={currentPath} />}
         banner={
-          <NotTranslatedBanner locale={routeLocale} fallback={fallback} />
+          <NotTranslatedBanner
+            locale={routeLocale}
+            fallback={fallback}
+            currentPath={currentPath}
+          />
+        }
+        pageActions={
+          <PageActions
+            locale="en"
+            routeLocale={routeLocale}
+            currentPath={currentPath}
+            fallback={fallback}
+          />
         }
         breadcrumb={
           <Breadcrumb locale={routeLocale} currentPath={currentPath} />
         }
         pager={<Pager locale={routeLocale} currentPath={currentPath} />}
-        editOnGithub={<EditOnGithub locale="en" currentPath={currentPath} />}
+        editOnGithub={<PageMeta locale="en" currentPath={currentPath} />}
         footer={<Footer />}
       >
         {children}

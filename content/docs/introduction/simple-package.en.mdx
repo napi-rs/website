@@ -94,11 +94,16 @@ writes the corresponding TypeScript declaration during the build.
 
 Run the template's release build for your current platform:
 
-```sh
+::: pm
+```sh yarn
 yarn build
 ```
+```sh pnpm
+pnpm build
+```
+:::
 
-For pnpm, run `pnpm build`. The script invokes `napi build --platform
+The script invokes `napi build --platform
 --release` and produces files like:
 
 ```text
@@ -223,6 +228,10 @@ are documented under [`napi pre-publish`](/docs/cli/pre-publish).
 
 ## Where to go next
 
+- [Release native packages](/docs/deep-dive/release) to publish your package
+  to npm when you are ready.
+- [Testing and debugging](/docs/more/testing-debugging) to grow the test suite
+  and debug the native side.
 - [Values](/docs/concepts/values) for Rust-to-JavaScript conversions.
 - [Async functions](/docs/concepts/async-fn) for asynchronous exports.
 - [Support and compatibility](/docs/more/support-compatibility) before

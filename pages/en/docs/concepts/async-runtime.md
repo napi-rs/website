@@ -1,0 +1,189 @@
+---
+title: 'Custom async runtime'
+description: Plug a tokio-free async runtime into NAPI-RS with the AsyncRuntime SPI.
+---
+
+# Custom async runtime
+
+Exported Rust `async fn`s normally run on the Tokio runtime that NAPI-RS manages when the `async` / `tokio_rt` feature is enabled (see [async fn](/docs/concepts/async-fn)). The `async-runtime` Cargo feature exposes the layer underneath: a service-provider interface (SPI) that lets you back every generated `async fn`, `Env::spawn_future`, and `AsyncBlock` with **your own scheduler instead of Tokio**.
+
+You want this when:
+
+- your addon runs where Tokio does not fit — a **threadless `wasm32-wasip1`** build, **workerd** / edge isolates, or the browser;
+- you already own an executor (a game loop, an embedded runtime, a company-wide scheduler) and do not want a second runtime in the process;
+- you want a tokio-free binary: a pure `async-runtime` build links no Tokio at all.
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = { version = "3", default-features = false, features = ["napi4", "async-runtime"] }
+napi-derive = "3"
+```
+
+The feature only enables `napi4`; it deliberately does **not** pull in Tokio. The three build shapes:
+
+| Features                     | Behavior                                                                                                                                                                                                                                                                                                            |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `async-runtime` only         | No Tokio is linked. Synchronous exports work without any registration; a runtime-backed operation (for example a generated `#[napi] async fn`) rejects its promise with a missing-backend error until a backend is registered.                                                                                      |
+| `async-runtime` + `tokio_rt` | Generated `async fn`s follow the _selection_: the custom backend if one was registered in time, otherwise Tokio. Selecting a custom backend never constructs Tokio. The compatibility helpers `spawn`, `spawn_blocking`, `block_on`, and `within_runtime_if_available` stay Tokio-backed with unchanged signatures. |
+| `noop` + `async-runtime`     | The SPI types exist so code compiles, but no backend can be installed; registration retires the backend and reports `InvalidArg`.                                                                                                                                                                                   |
+
+## The `AsyncRuntime` SPI
+
+A backend is a single `unsafe impl AsyncRuntime`, registered once per addon image:
+
+```rust
+pub unsafe trait AsyncRuntime: Send + Sync + 'static {
+  fn spawn(
+    &self,
+    task: AsyncRuntimeTask,
+  ) -> std::result::Result<(), AsyncRuntimeRejection<AsyncRuntimeTask>>;
+
+  fn block_on(&self, future: Pin<&mut dyn Future<Output = ()>>) -> Result<()>;
+
+  fn enter(&self) -> Result<Box<dyn AsyncRuntimeGuard + '_>> { ... } // default: no-op guard
+
+  fn start(&self) -> Result<()> { ... } // default: no-op
+
+  fn shutdown(&self) -> Result<()>;
+
+  fn spawn_blocking(
+    &self,
+    work: Box<dyn FnOnce() + Send + 'static>,
+  ) -> std::result::Result<(), AsyncRuntimeRejection<Box<dyn FnOnce() + Send + 'static>>> { ... } // default: declines
+}
+```
+
+The pieces you interact with:
+
+- **`AsyncRuntimeTask`** — the opaque unit of work napi hands you (the future behind a generated `async fn` plus the promise-settling machinery). It is `Future<Output = ()> + Send + 'static`. A conforming backend has exactly three options: **poll it to completion**, **drop it** (dropping before completion cancels the task and rejects the associated JavaScript promise), or **hand it back untouched** in an `AsyncRuntimeRejection` when declining the submission. Never `mem::forget` an accepted task, and never bypass its `Drop`.
+- **`AsyncRuntimeRejection`** — carries declined work back to napi together with a diagnostic `Error`, which surfaces as the promise rejection.
+- **`start` / `shutdown`** — the lifecycle hooks. Keep a freshly constructed backend _dormant_: create threads and queues in `start`, release them in `shutdown`. napi calls `start` when the first live Node environment begins (worker isolates and Electron renderer reloads can take the environment count from zero to one repeatedly, so it must be idempotent), and `shutdown` when its accounting observes the last environment exit. Embedders can also call [`shutdown_async_runtime`](#shutdown_async_runtime) explicitly.
+- **`enter`** — establishes an ambient runtime context for the calling thread (the Tokio equivalent of `Runtime::enter`). The default no-op guard is correct for backends that do not need one.
+- **`spawn_blocking`** — an optional blocking-capable lane. The default implementation declines; on threadless targets there is no blocking lane, so declining is the right behavior there.
+
+A minimal backend — one OS thread per task, with every worker joined before
+`shutdown` returns so nothing can outlive the native image — looks like this.
+It depends on `futures` (for `futures::executor::block_on`) in addition to
+`napi`:
+
+**lib.rs**
+
+```rust
+use std::{
+  future::Future,
+  pin::Pin,
+  sync::Mutex,
+  thread::JoinHandle,
+};
+
+use napi::bindgen_prelude::{
+  register_async_runtime, AsyncRuntime, AsyncRuntimeRejection, AsyncRuntimeTask, Result,
+};
+
+#[derive(Default)]
+struct SimpleRuntime {
+  // Every spawned worker, so `shutdown` can join them all.
+  workers: Mutex<Vec<JoinHandle<()>>>,
+}
+
+// SAFETY: `shutdown` joins every worker thread before returning, so no
+// backend-owned thread or task can execute addon code after the native image
+// starts unloading.
+unsafe impl AsyncRuntime for SimpleRuntime {
+  fn spawn(
+    &self,
+    task: AsyncRuntimeTask,
+  ) -> std::result::Result<(), AsyncRuntimeRejection<AsyncRuntimeTask>> {
+    let handle = std::thread::spawn(move || futures::executor::block_on(task));
+    self.workers.lock().unwrap().push(handle);
+    Ok(())
+  }
+
+  fn block_on(&self, future: Pin<&mut dyn Future<Output = ()>>) -> Result<()> {
+    futures::executor::block_on(future);
+    Ok(())
+  }
+
+  fn shutdown(&self) -> Result<()> {
+    for handle in self.workers.lock().unwrap().drain(..) {
+      let _ = handle.join();
+    }
+    Ok(())
+  }
+}
+
+#[napi_derive::module_init]
+fn init() {
+  register_async_runtime(SimpleRuntime::default());
+}
+```
+
+A real backend also needs a `spawn_blocking` lane, bounded queues, and cancellation on drop. The runnable, fully-documented implementation is the [`examples/custom-async-runtime`](https://github.com/napi-rs/napi-rs/tree/main/examples/custom-async-runtime) crate — including the threadless-WASI, workerd, and browser wiring.
+
+### Registering from `#[module_init]`
+
+Registration is **once per linked addon image, first-writer-wins**, and must happen before the registration window closes — when napi begins activating the first Node-API environment, or earlier when a runtime-backed operation commits a backend choice. That is why the natural place is a [`#[module_init]`](/docs/concepts/module-init) hook, which runs as a library constructor before napi owns any environment.
+
+Two entry points:
+
+- `register_async_runtime(runtime)` — the infallible form for `#[module_init]`. It never panics (a panic in a library constructor would abort the process); a duplicate or late registration is recorded, and every later runtime-backed operation surfaces it by rejecting its promise.
+- `try_register_async_runtime(runtime) -> Result<()>` — the fallible form that returns the error directly. A rejected backend is safely retired through its own `shutdown` hook either way.
+
+### `shutdown_async_runtime`
+
+`shutdown_async_runtime()` invokes the registered backend's `shutdown` hook — its sole resource-release and quiescence point. A backend's `Drop` implementation is not guaranteed to run, so everything must be released in `shutdown`. On WebAssembly targets the runtime is **not** shut down automatically, so call `shutdown_async_runtime` explicitly there (for example between test runs).
+
+::: warning
+After `shutdown` returns, Node may unload the addon's native image immediately. No backend-owned thread, task, closure, destructor, cancellation callback, or retained `Waker` may execute code from that image afterwards. A backend that cannot prove those references inert must keep the image loaded itself rather than return from `shutdown`.
+:::
+
+::: warning
+The panic containment napi performs around backend hooks and task polls requires a `panic = "unwind"` build. On `panic = "abort"` targets — including Rust's shipped `wasm32-wasip1` and `wasm32-wasip1-threads` targets — a panicking async function traps or aborts **before** its JavaScript promise is settled.
+:::
+
+## The `napi-async-runtime` crate
+
+You usually do not need to write a backend by hand. [`napi-async-runtime`](https://github.com/napi-rs/napi-rs/tree/main/crates/async-runtime) (crates.io, v0.2.x) is the published, batteries-included implementation: a tokio-free async/CPU/blocking scheduler plus an optional adapter that registers it as the addon's `AsyncRuntime` backend.
+
+**Cargo.toml**
+
+```toml
+[dependencies]
+napi = { version = "3", default-features = false, features = ["napi4", "async-runtime"] }
+napi-derive = "3"
+napi-async-runtime = "0.2"
+```
+
+Install it from your own `#[module_init]` — the crate deliberately ships no `module_init` of its own, so the host stays in charge of configuration resolution order:
+
+**lib.rs**
+
+```rust
+#[napi_derive::module_init]
+fn init() {
+  // Resolve your own configuration (env vars, defaults) FIRST; the scheduler
+  // never reads the environment itself.
+  napi_async_runtime::install(napi_async_runtime::RuntimeOptions::default())
+    .expect("failed to install the shared async runtime");
+}
+
+#[napi]
+pub async fn sleep_then_add(a: u32, b: u32, sleep_ms: u32) -> u32 {
+  napi_async_runtime::sleep_until(
+    std::time::Instant::now() + std::time::Duration::from_millis(u64::from(sleep_ms)),
+  )
+  .await;
+  a + b
+}
+```
+
+What the crate provides:
+
+- **Scheduler API at the crate root** (always compiled, napi-free): `spawn` / `try_spawn` / `spawn_detached`, `spawn_blocking`, `block_on`, `sleep_until`, `configure` / `configure_partial` / `configured_options`, `start` / `shutdown`, and `metrics` / `reset_metrics` returning a `RuntimeMetricsSnapshot`.
+- **Two flavors.** `MultiThread` (native only) runs futures on a Rayon-backed worker pool; `CurrentThread` — the only flavor on WebAssembly — never creates threads and instead publishes _host turns_ through registered `CurrentThreadTaskDriver` / `TimerDriver` host drivers. The blocking-lane cap is `worker_threads - 1`, so one execution lane always stays available for runnable futures and timers.
+- **The `install()` adapter** (default `napi` feature), which configures the scheduler and calls `register_async_runtime` for you, plus the JavaScript-facing host protocol exports (`registerCurrentThreadTaskHost`, `registerTimerHost`, `getAsyncRuntimeMetrics`, …). The matching JavaScript host installers for CurrentThread builds live in the [`@napi-rs/async-runtime`](https://www.npmjs.com/package/@napi-rs/async-runtime) npm package.
+- **Threadless-wasm safety**: on `wasm32-wasip1` / `wasm32-unknown-unknown` (no threads, no `Atomics.wait`), a `block_on` park that provably can never be woken fails loudly with a typed `BlockOnDeadlock` panic instead of hanging the JS event loop.
+
+The end-to-end consumer to copy from is [`examples/shared-async-runtime`](https://github.com/napi-rs/napi-rs/tree/main/examples/shared-async-runtime); the hand-rolled reference backend is [`examples/custom-async-runtime`](https://github.com/napi-rs/napi-rs/tree/main/examples/custom-async-runtime). See the [Examples](/docs/more/examples) page for the full list.

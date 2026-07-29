@@ -138,3 +138,13 @@ console.log(name) // Brooklyn
 There is a implicit <NodeLink href="https://nodejs.org/api/n-api.html#napi_create_reference">`napi_create_reference`</NodeLink> call for the JavaScript `Object` value which holds the `NativeClass` before the `async fn` call; and a implicit <NodeLink href="https://nodejs.org/api/n-api.html#napi_delete_reference">`napi_delete_reference`</NodeLink> call after the `async fn` call.
 
 This strategy makes sure the `NativeClass` is alive during the `async fn` call.
+
+## Beyond `async fn`: `AsyncBlock`
+
+An exported `async fn` covers the common case, but it always resolves its promise with the function's return value, converted after the future completes. When you need more control — resolving with a value that can only be created on the JavaScript thread (for example a zero-copy `BufferSlice<'static>` or a Web `Response`), or running cleanup through a dispose hook when the future settles — return an `AsyncBlock<T>` from a synchronous `#[napi]` function instead. The future starts eagerly on the NAPI-RS runtime and converts into a JavaScript `Promise`, just like an `async fn`.
+
+See [Web Streams: `AsyncBlock`](/docs/concepts/streams#asyncblock-a-promise-with-a-dispose-hook) for the full `AsyncBlockBuilder` API and examples.
+
+## Custom runtimes
+
+By default the future runs on the NAPI-RS-managed Tokio runtime. With the `async-runtime` Cargo feature you can instead register your own executor — including tokio-free runtimes for threadless WASI or workerd — and every generated `async fn` will run on it. See [Custom async runtime](/docs/concepts/async-runtime).

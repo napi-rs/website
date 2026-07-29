@@ -3,7 +3,7 @@
 // Island imports (`with { island }`) MUST live in this *.island.tsx file — they
 // are ignored inside the shared DocsLayout. The chrome islands are imported here
 // and passed into <DocsLayout> via slot props, using locale="pt-BR". Static
-// chrome (Breadcrumb, Pager, EditOnGithub, Footer) is imported normally.
+// chrome (Breadcrumb, Pager, PageMeta, Footer) is imported normally.
 //
 // PATH / SHARED DATA: see pages/en/docs/layout.island.tsx — islands hydrate with
 // no Router/Shared context, so this layout reads `shared.path` (from
@@ -22,9 +22,12 @@ import NotTranslatedBanner from '../../../components/docs/NotTranslatedBanner' w
 import MermaidBlocks from '../../../components/docs/MermaidBlocks' with {
   island: 'load',
 }
+import PageActions from '../../../components/docs/PageActions' with {
+  island: 'load',
+}
 import Breadcrumb from '../../../components/docs/Breadcrumb'
 import Pager from '../../../components/docs/Pager'
-import EditOnGithub from '../../../components/docs/EditOnGithub'
+import PageMeta from '../../../components/docs/PageMeta'
 import Footer from '../../../components/docs/Footer'
 
 export default function PtBrDocsLayout({
@@ -47,10 +50,24 @@ export default function PtBrDocsLayout({
         navbar={<Navbar locale="pt-BR" currentPath={currentPath} />}
         sidebar={<Sidebar locale="pt-BR" currentPath={currentPath} />}
         toc={<Toc locale="pt-BR" currentPath={currentPath} />}
-        banner={<NotTranslatedBanner locale="pt-BR" fallback={fallback} />}
+        banner={
+          <NotTranslatedBanner
+            locale="pt-BR"
+            fallback={fallback}
+            currentPath={currentPath}
+          />
+        }
+        pageActions={
+          <PageActions
+            locale="pt-BR"
+            routeLocale="pt-BR"
+            currentPath={currentPath}
+            fallback={fallback}
+          />
+        }
         breadcrumb={<Breadcrumb locale="pt-BR" currentPath={currentPath} />}
         pager={<Pager locale="pt-BR" currentPath={currentPath} />}
-        editOnGithub={<EditOnGithub locale="pt-BR" currentPath={currentPath} />}
+        editOnGithub={<PageMeta locale="pt-BR" currentPath={currentPath} />}
         footer={<Footer />}
       >
         {children}

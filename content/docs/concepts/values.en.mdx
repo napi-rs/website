@@ -45,7 +45,7 @@ pub fn get_null() -> Null {
 pub fn get_env(env: String) -> Option<String> {
 	match std::env::var(env) {
 		Ok(val) => Some(val),
-		Err(e) => None,
+		Err(_) => None,
 	}
 }
 ```

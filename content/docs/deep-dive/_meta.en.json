@@ -1,5 +1,5 @@
 {
+  "release": "Release native packages",
   "native-module": "Native module",
-  "history": "History",
-  "release": "Release native packages"
+  "history": "History"
 }

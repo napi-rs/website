@@ -5,5 +5,6 @@
   "integrations": "Bundlers e frameworks",
   "troubleshooting": "Solução de problemas",
   "faq": "FAQ de compilação cruzada",
-  "v2-v3-migration-guide": "Guia de migração da V2 para a V3"
+  "v2-v3-migration-guide": "Guia de migração da V2 para a V3",
+  "examples": "Exemplos"
 }

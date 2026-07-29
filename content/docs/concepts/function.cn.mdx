@@ -8,73 +8,152 @@ description: 使用 NAPI-RS 在 Rust 中定义并调用 JavaScript 函数。
 
 ```rust filename="lib.rs"
 #[napi]
-fn sum(a: u32, b: u32) -> u32 {
+pub fn sum(a: u32, b: u32) -> u32 {
   a + b
 }
 ```
 
-最重要的是，你需要记住 **_NAPI-RS fn 并不支持所有的 Rust 类型_**，
-下面的表格说明了在 `fn` 参数和返回类型里，JavaScript 类型和 Rust 类型的映射关系：
+最重要的是，你需要记住 **_NAPI-RS fn 并不支持所有的 Rust 类型_**。每个参数类型都必须实现 `FromNapiValue`，每个返回类型都必须实现 `ToNapiValue`。
 
-## 参数
+权威的转换矩阵——参数与返回类型、方向、所有权以及所需的 Cargo 特性——见[类型转换](/cn/docs/concepts/type-conversions)。针对函数的简要版本：
 
-| Rust Type                                               | JavaScript Type                                                               |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `u32`                                                   | `number`                                                                      |
-| `i32`                                                   | `number`                                                                      |
-| `i64`                                                   | `number`                                                                      |
-| `f64`                                                   | `number`                                                                      |
-| `bool`                                                  | `boolean`                                                                     |
-| `String`                                                | `string`                                                                      |
-| `Latin1String`                                          | `string`                                                                      |
-| `UTF16String`                                           | `string`                                                                      |
-| `#[napi(object)] struct`                                | `Object`                                                                      |
-| `& struct` or `&mut struct`                             | [Class](./class) instance                                                     |
-| `serde_json::Map`                                       | `Object`                                                                      |
-| `serde_json::Value`                                     | `unknown`                                                                     |
-| `std::collections::HashMap`                             | `Object`                                                                      |
-| `Array`                                                 | `unknown[]`                                                                   |
-| `Vec<T>` T must be types in this table                  | T[]                                                                           |
-| `Buffer`                                                | `Buffer`                                                                      |
-| `External`                                              | [`External`](https://nodejs.org/api/n-api.html#napi_create_external)          |
-| `Null`                                                  | `null`                                                                        |
-| `Undefined` / `()`                                      | `undefined`                                                                   |
-| `Option<T>`                                             | `T or null`                                                                   |
-| `Fn(Arg) ->T` `Arg `and `T` must be types in this table | `(arg: Arg) => T`                                                             |
-| `Promise<T>`                                            | `Promise<T>`                                                                  |
-| `AbortSignal`                                           | [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) |
-| `JsSymbol`                                              | `Symbol`                                                                      |
-| `Int8Array` / `Uint8Array` / `Int16Array`...            | `TypedArray`                                                                  |
-| `BigInt`                                                | `BigInt`                                                                      |
+- 数字（`u32`、`i32`、`i64`、`f64`）、`bool` 和 `String` 在两个方向上都映射为对应的 JavaScript 类型。
+- `Option<T>` 作为参数时接受 `T`、`null` 或 `undefined`（`T | null | undefined`）；作为返回类型时，`None` 会变成 `null`（`T | null`）。
+- `Vec<T>`、元组、`HashMap` 和 `#[napi(object)]` 结构体映射为 JavaScript 数组和普通对象。
+- `Buffer` 和各 typed-array 包装类型映射为 `Buffer` 和 `TypedArray`。
+- `Function<Args, Return>` 和 `ThreadsafeFunction` 接受带完整类型签名的 JavaScript 回调（见下文）。
+- `async fn` 或返回 `AsyncTask` 会映射为 `Promise<T>`。
 
 ## 返回类型
 
-| Rust Type                                    | JavaScript Type  |
-| -------------------------------------------- | ---------------- |
-| `u32`                                        | `number`         |
-| `i32`                                        | `number`         |
-| `i64`                                        | `number`         |
-| `f64`                                        | `number`         |
-| `bool`                                       | `boolean`        |
-| `String`                                     | `string`         |
-| `Latin1String`                               | `string`         |
-| `UTF16String`                                | `string`         |
-| `#[napi(object)] struct`                     | `Object`         |
-| `#[napi] struct`                             | [Class](./class) |
-| `serde_json::Map`                            | `Object`         |
-| `serde_json::Value`                          | `unknown`        |
-| `std::collections::HashMap`                  | `Object`         |
-| `Array`                                      | `unknown[]`      |
-| `Vec<T>` T must be types in this table       | `T[]`            |
-| `Buffer`                                     | `Buffer`         |
-| `External`                                   | `External`       |
-| `Null`                                       | `null`           |
-| `Undefined` / `()`                           | `undefined`      |
-| `Option<T>`                                  | `T` or `null`    |
-| `AsyncTask<Task<JsValue = T>>`               | `Promise<T>`     |
-| `JsSymbol`                                   | `Symbol`         |
-| `Int8Array` / `Uint8Array` / `Int16Array`... | `TypedArray`     |
-| `BigInt`                                     | `BigInt`         |
-| `i64n`                                       | `BigInt`         |
-| `i128`                                       | `BigInt`         |
-| `u128`                                       | `BigInt`         |
+`#[napi] fn` 的返回类型通过 `ToNapiValue` 转换，并直接出现在生成的 `.d.ts` 中。返回 `Result<T>` 时，`Err` 会抛出异常，而不是产生一个值。完整的映射（包括 BigInt 输出类型 `i64n`、`i128`、`u128` 以及异步返回）参见[类型转换](/cn/docs/concepts/type-conversions)参考。
+
+## 将 `Function` 作为参数
+
+你可以把 `Function` 作为参数传给 `fn`：
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn call_function(callback: Function<u32, u32>) -> Result<u32> {
+  callback.call(1)
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+```ts filename="index.d.ts"
+export declare function callFunction(callback: (arg: number) => number): number
+```
+
+<Callout type="info">
+  你也可以在 Rust 侧创建 `Function`，参见 [`Env::create_function`](/cn/docs/concepts/env#create_function)
+</Callout>
+
+## `FnArgs`
+
+当参数个数超过 1 时，可以使用 `FnArgs` 来定义参数。
+
+<Callout type="info">
+  元组（`tuple`）类型可以通过调用 `.into()` 转换为 `FnArgs`。
+</Callout>
+
+```rust {6} filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn call_function_with_args(callback: Function<FnArgs<(u32, u32)>, u32>) -> Result<u32> {
+  callback.call((1, 2).into())
+}
+```
+
+⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️ ⬇️
+
+```ts filename="index.d.ts"
+export declare function callFunctionWithArgs(callback: (arg1: number, arg2: number) => number): number
+```
+
+## `apply`
+
+和 JavaScript 一样，你也可以使用 `apply`，以指定的 `this` 值来调用一个 `Function`。
+
+```rust filename="lib.rs"
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub struct RustClass {
+  pub name: String,
+}
+
+#[napi]
+impl RustClass {
+  #[napi(constructor)]
+  pub fn new(name: String) -> Self {
+    Self { name }
+  }
+}
+
+#[napi]
+pub fn call_function_with_apply(
+  this: ClassInstance<RustClass>,
+  callback: Function<(), ()>,
+) -> Result<()> {
+  callback.apply(this, ())
+}
+```
+
+```ts filename="index.ts"
+import { callFunctionWithApply, RustClass } from './index.js'
+
+const rustClass = new RustClass("foo")
+
+callFunctionWithApply(rustClass, function() {
+  console.log(this.name) // foo
+})
+```
+
+## `create_ref`
+
+更多细节参见 [**Function Reference**](/cn/docs/concepts/reference#functionref)。
+
+## `build_threadsafe_function`
+
+你可以对 `Function` 调用 `build_threadsafe_function`，从它构建一个 `ThreadsafeFunction`。
+
+`build_threadsafe_function` 的返回类型是 `ThreadsafeFunctionBuilder`。
+
+默认情况下，`ThreadsafeFunctionBuilder` 会使用默认选项创建 `ThreadsafeFunction`：
+
+<Callout type="info">
+  选项的详细说明参见 [**ThreadsafeFunction**](/cn/docs/concepts/threadsafe-function)
+</Callout>
+
+<Callout>
+  由于你可以直接把 `ThreadsafeFunction` 和 `Arc<ThreadsafeFunction>` 传给 `#[napi] fn`，所以只有在需要动态创建 `ThreadsafeFunction` 时才使用 `build_threadsafe_function`。
+</Callout>
+
+- `max_queue_size` 为 `0`
+- `weak` 为 `false`
+- `callee_handled` 为 `true`
+- `error_status` 为 `napi::Status`
+
+```rust filename="lib.rs"
+use napi::{bindgen_prelude::*, threadsafe_function::ThreadsafeFunctionCallMode};
+use napi_derive::napi;
+
+#[napi]
+pub fn build_threadsafe_function_from_function(
+  callback: Function<FnArgs<(u32, u32)>, u32>,
+) -> Result<()> {
+  let tsfn = callback.build_threadsafe_function().build()?;
+  let jh = std::thread::spawn(move || {
+    tsfn.call((1, 2).into(), ThreadsafeFunctionCallMode::NonBlocking);
+  });
+
+  Ok(())
+}
+```

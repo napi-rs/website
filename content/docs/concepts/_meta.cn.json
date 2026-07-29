@@ -19,10 +19,12 @@
   "external": "外部数据",
   "promise": "Promise",
   "iterators": "迭代器",
+  "streams": "Web Streams",
   "types-overwrite": "重写类型",
   "typed-array": "类型化数组",
   "understanding-lifetime": "理解生命周期",
   "env": "Env",
   "cargo-features": "Cargo 特性",
+  "async-runtime": "自定义异步运行时",
   "webassembly": "WebAssembly"
 }

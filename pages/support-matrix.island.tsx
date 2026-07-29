@@ -28,6 +28,7 @@ export default function SupportMatrixPage() {
       </header>
       <main
         id="main-content"
+        tabIndex={-1}
         className="dark min-h-screen bg-background text-foreground"
         data-theme="dark"
       >

@@ -37,16 +37,21 @@ antes de escolher um runtime ou definir a matriz de distribuição.
 Você não precisa de uma instalação global da CLI. Execute o pacote diretamente
 com o executor de pacotes de sua preferência:
 
-```sh
-# Template Yarn (o padrão)
+::: pm
+
+```sh npm
 npx @napi-rs/cli new cool
+```
 
-# O mesmo template via Yarn
+```sh yarn
 yarn dlx @napi-rs/cli new cool
+```
 
-# Template pnpm
+```sh pnpm
 pnpm dlx @napi-rs/cli new cool --package-manager pnpm
 ```
+
+:::
 
 O comando é interativo por padrão. Ele pergunta:
 
@@ -66,23 +71,25 @@ prompts, passe todos os valores que quiser alterar e adicione
 
 ## Instale, compile e teste
 
-Para o template padrão de Yarn:
+Dentro do novo projeto, instale as dependências, depois compile e teste:
 
-```sh
+::: pm
+
+```sh yarn
 cd cool
 yarn install
 yarn build
 yarn test
 ```
 
-Para o template pnpm:
-
-```sh
+```sh pnpm
 cd cool
 pnpm install
 pnpm build
 pnpm test
 ```
+
+:::
 
 A build local compila um único target nativo: o do seu host, a menos que você
 passe `--target`. Ela produz:

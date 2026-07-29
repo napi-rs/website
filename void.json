@@ -5,6 +5,21 @@
     "redirects": {
       "/en": { "to": "/", "status": 301 },
       "/en/*": { "to": "/:splat", "status": 301 },
+      "/docs": { "to": "/docs/introduction/getting-started", "status": 301 },
+      "/cn/docs": {
+        "to": "/cn/docs/introduction/getting-started",
+        "status": 301
+      },
+      "/pt-BR/docs": {
+        "to": "/pt-BR/docs/introduction/getting-started",
+        "status": 301
+      },
+      "/blog": { "to": "/blog/announce-v3", "status": 301 },
+      "/cn/blog": { "to": "/cn/blog/announce-v3", "status": 301 },
+      "/pt-BR/blog": { "to": "/pt-BR/blog/announce-v3", "status": 301 },
+      "/changelog": { "to": "/changelog/napi", "status": 301 },
+      "/cn/changelog": { "to": "/cn/changelog/napi", "status": 301 },
+      "/pt-BR/changelog": { "to": "/pt-BR/changelog/napi", "status": 301 },
       "/docs/": { "to": "/docs", "status": 301 },
       "/docs/*/": { "to": "/docs/:splat", "status": 301 },
       "/blog/": { "to": "/blog", "status": 301 },

@@ -288,9 +288,9 @@ describe('converted content tree', () => {
     }
   })
 
-  it('spot-check: H1-less pages get a title from the legacy _meta', () => {
-    // concepts/env and more/v2-v3-migration-guide start at H2 (no H1); their
-    // titles must come from the legacy _meta.<locale>.json.
+  it('spot-check: pages carry their declared titles', () => {
+    // concepts/env and more/v2-v3-migration-guide have proper H1s AND explicit
+    // titles (env's from _meta, the migration guide's from its frontmatter).
     const env = readFileSync(
       join(pagesDir, 'en', 'docs', 'concepts', 'env.md'),
       'utf8',

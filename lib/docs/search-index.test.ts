@@ -169,3 +169,106 @@ describe('buildSearchIndexCore — EN i18n fallback parity', () => {
     ])
   })
 })
+
+// ---------------------------------------------------------------------------
+// Full-body search ranking (rankSearchEntries / bodySnippet)
+// ---------------------------------------------------------------------------
+
+import { rankSearchEntries, bodySnippet } from './search-index.ts'
+import type { FullSearchEntry } from './search-index.ts'
+
+const full = (over: Partial<FullSearchEntry>): FullSearchEntry => ({
+  path: '/en/docs/x',
+  href: '/docs/x',
+  title: 'X',
+  section: 'docs',
+  group: 'G',
+  headings: [],
+  body: '',
+  ...over,
+})
+
+describe('bodySnippet', () => {
+  it('windows ~80 chars around the match with ellipses', () => {
+    const body = `${'a'.repeat(100)} needle ${'b'.repeat(100)}`
+    const s = bodySnippet(body, 'needle')
+    expect(s.startsWith('…')).toBe(true)
+    expect(s.endsWith('…')).toBe(true)
+    expect(s).toContain('needle')
+    expect(s.length).toBeLessThanOrEqual(90)
+  })
+  it('returns the body head when there is no match', () => {
+    expect(bodySnippet('short body', 'zzz')).toBe('short body')
+  })
+})
+
+describe('rankSearchEntries', () => {
+  const entries: FullSearchEntry[] = [
+    full({
+      path: '/en/docs/a',
+      title: 'String enum',
+      body: 'Enums with string values',
+    }),
+    full({
+      path: '/en/docs/b',
+      title: 'Enum',
+      headings: [{ depth: 2, slug: 'numeric-enum', text: 'Numeric enum' }],
+      body: 'body',
+    }),
+    full({
+      path: '/en/docs/c',
+      title: 'Class',
+      body: 'A class can hold enum-shaped constants.',
+    }),
+    full({
+      path: '/en/docs/d',
+      title: 'Other',
+      headings: [{ depth: 2, slug: 'enums-here', text: 'Enums here' }],
+      body: 'nothing',
+    }),
+  ]
+
+  it('tiers: title-prefix > title-includes > heading > body', () => {
+    const out = rankSearchEntries(entries, 'enum')
+    expect(out.map((r) => r.entry.path)).toEqual([
+      '/en/docs/b', // "Enum" startsWith
+      '/en/docs/a', // "String enum" includes
+      '/en/docs/d', // heading "Enums here"
+      '/en/docs/c', // body-only
+    ])
+    expect(out.map((r) => r.score)).toEqual([4, 3, 2, 1])
+  })
+
+  it('carries the matched heading (for the # sub-row + anchor href)', () => {
+    const out = rankSearchEntries(entries, 'numeric')
+    expect(out).toHaveLength(1)
+    expect(out[0].heading?.slug).toBe('numeric-enum')
+  })
+
+  it('carries a body snippet for body-only matches', () => {
+    const out = rankSearchEntries(entries, 'constants')
+    expect(out).toHaveLength(1)
+    expect(out[0].snippet).toContain('constants')
+  })
+
+  it('is case-insensitive', () => {
+    expect(rankSearchEntries(entries, 'ENUM')[0].entry.path).toBe('/en/docs/b')
+  })
+
+  it('caps results at the limit', () => {
+    const many = Array.from({ length: 50 }, (_, i) =>
+      full({ path: `/en/docs/p${i}`, title: `enum page ${i}` }),
+    )
+    expect(rankSearchEntries(many, 'enum')).toHaveLength(30)
+  })
+
+  it('an empty query returns the first entries in input order (browse view)', () => {
+    const out = rankSearchEntries(entries, '  ')
+    expect(out.map((r) => r.entry.path)).toEqual([
+      '/en/docs/a',
+      '/en/docs/b',
+      '/en/docs/c',
+      '/en/docs/d',
+    ])
+  })
+})

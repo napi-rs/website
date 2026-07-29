@@ -19,10 +19,16 @@
 // Island rules: navigate with plain <a> (no <Link>); the GitHub/Discord links
 // are external <a target="_blank">.
 import * as React from 'react'
-import { createPortal } from 'react-dom'
 import { Menu, X } from 'lucide-react'
 import { useRouter } from '@void/react'
 import { Button, buttonVariants } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { nav, type Locale } from '@/lib/nav/index.ts'
 import { localizeHref, splitLocale } from '@/lib/docs/locale.ts'
@@ -124,24 +130,12 @@ export default function Navbar({ locale, currentPath }: NavbarProps) {
   // Mobile drawer state. Below lg the navbar's tabs + the desktop sidebar are
   // both hidden, so this hamburger-triggered full-screen drawer is the SOLE
   // mobile nav — folding tabs + section nav + locale/theme into one menu, the
-  // way live napi.rs (Nextra) does.
+  // way live napi.rs (Nextra) does. The drawer is a Radix Dialog (the
+  // components/ui/dialog wrapper): it gives us a focus trap, initial focus,
+  // Escape-to-close, and body scroll-lock for free, so there is intentionally
+  // NO manual keydown/overflow effect here.
   const [mobileOpen, setMobileOpen] = React.useState(false)
   const closeMobile = React.useCallback(() => setMobileOpen(false), [])
-
-  // While the drawer is open: close on Escape and lock body scroll.
-  React.useEffect(() => {
-    if (!mobileOpen) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMobileOpen(false)
-    }
-    window.addEventListener('keydown', onKey)
-    const prevOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      window.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevOverflow
-    }
-  }, [mobileOpen])
 
   return (
     // `justify-end` + the brand's `mr-auto` reproduce the live napi.rs (Nextra)
@@ -207,87 +201,86 @@ export default function Navbar({ locale, currentPath }: NavbarProps) {
         <DiscordIcon className="size-6" />
       </a>
 
-      {/* Mobile hamburger — toggles the full-screen drawer. Hidden at lg+, where
-          the desktop tabs + sidebar take over. */}
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-        aria-expanded={mobileOpen}
-        aria-haspopup="dialog"
-        onClick={() => setMobileOpen((v) => !v)}
-        className="lg:hidden"
-      >
-        {mobileOpen ? (
-          <X aria-hidden="true" className="size-5" />
-        ) : (
-          <Menu aria-hidden="true" className="size-5" />
-        )}
-      </Button>
+      {/* Mobile hamburger + full-screen drawer (Radix Dialog). Hidden at lg+,
+          where the desktop tabs + sidebar take over. Radix portals the content
+          to <body> — escaping the sticky header's `backdrop-blur` containing
+          block, exactly like the old createPortal drawer did — and owns the
+          focus trap, initial focus, Escape, and scroll lock. The overlay is
+          transparent (the drawer is full-width below the navbar; a dimming
+          scrim would gray out the navbar itself). Sits below the navbar
+          (top-14) so the bar — and the hamburger that closes the drawer —
+          stay visible, matching napi.rs. */}
+      <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
+        <DialogTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            className="lg:hidden"
+          >
+            {mobileOpen ? (
+              <X aria-hidden="true" className="size-5" />
+            ) : (
+              <Menu aria-hidden="true" className="size-5" />
+            )}
+          </Button>
+        </DialogTrigger>
+        <DialogContent
+          showCloseButton={false}
+          // z-order is load-bearing: the shared Dialog overlay is z-50, so the
+          // drawer must sit ABOVE it (z-50 + later in DOM) — at z-40 the
+          // transparent overlay intercepts every tap meant for the menu.
+          className="fixed inset-x-0 top-14 bottom-0 z-50 flex w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0 shadow-none data-[state=closed]:zoom-out-100 data-[state=open]:zoom-in-100 sm:max-w-none lg:hidden"
+          overlayClassName="bg-transparent"
+        >
+          <DialogTitle className="sr-only">Menu</DialogTitle>
+          <DialogDescription className="sr-only">Menu</DialogDescription>
+          <div className="flex-1 overflow-y-auto px-4 py-5">
+            {/* Section tabs (Docs · Blog · Changelog) as pills. */}
+            {tabs.length > 0 && (
+              <ul className="mb-5 flex flex-wrap gap-2">
+                {tabs.map(({ tab, href }) => {
+                  const isActive = tab.key === activeSection
+                  return (
+                    <li key={tab.key}>
+                      <a
+                        href={href}
+                        aria-current={isActive ? 'page' : undefined}
+                        className={cn(
+                          'block rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                          isActive
+                            ? 'bg-[hsl(var(--theme-hsl)/0.1)] text-[var(--theme)]'
+                            : 'bg-muted text-muted-foreground hover:text-foreground',
+                        )}
+                      >
+                        {tab.title}
+                      </a>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
 
-      {/* The drawer is portaled to <body>: the sticky header carries
-          `backdrop-blur` (backdrop-filter), which makes it a containing block
-          for fixed descendants — a `fixed` drawer rendered inside would be
-          clipped to the 3.5rem header box. Portaling escapes that. It renders
-          only while open, which is a client-only state, so `document` is always
-          defined when this runs. Sits below the navbar (top-14) so the bar —
-          and the hamburger that closes it — stay visible, matching napi.rs. */}
-      {mobileOpen && typeof document !== 'undefined'
-        ? createPortal(
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-label="Menu"
-              className="fixed inset-x-0 top-14 bottom-0 z-40 flex flex-col bg-background lg:hidden"
-            >
-              <div className="flex-1 overflow-y-auto px-4 py-5">
-                {/* Section tabs (Docs · Blog · Changelog) as pills. */}
-                {tabs.length > 0 && (
-                  <ul className="mb-5 flex flex-wrap gap-2">
-                    {tabs.map(({ tab, href }) => {
-                      const isActive = tab.key === activeSection
-                      return (
-                        <li key={tab.key}>
-                          <a
-                            href={href}
-                            aria-current={isActive ? 'page' : undefined}
-                            className={cn(
-                              'block rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                              isActive
-                                ? 'bg-[hsl(var(--theme-hsl)/0.1)] text-[var(--theme)]'
-                                : 'bg-muted text-muted-foreground hover:text-foreground',
-                            )}
-                          >
-                            {tab.title}
-                          </a>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                )}
+            {/* Active-section nav — the same tree the desktop sidebar uses. */}
+            {sidebarGroups.length > 0 && (
+              <SidebarNav
+                groups={sidebarGroups}
+                locale={locale}
+                tabKey={activeSection}
+                currentPath={path}
+                onNavigate={closeMobile}
+              />
+            )}
+          </div>
 
-                {/* Active-section nav — the same tree the desktop sidebar uses. */}
-                {sidebarGroups.length > 0 && (
-                  <SidebarNav
-                    groups={sidebarGroups}
-                    locale={locale}
-                    tabKey={activeSection}
-                    currentPath={path}
-                    onNavigate={closeMobile}
-                  />
-                )}
-              </div>
-
-              {/* Footer — locale + theme, matching live napi.rs's drawer bottom. */}
-              <div className="flex items-center justify-between gap-1 border-t border-border px-4 py-3">
-                <LangSwitcher locale={locale} showLabel />
-                <ThemeToggle />
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
+          {/* Footer — locale + theme, matching live napi.rs's drawer bottom. */}
+          <div className="flex items-center justify-between gap-1 border-t border-border px-4 py-3">
+            <LangSwitcher locale={locale} showLabel />
+            <ThemeToggle locale={locale} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </nav>
   )
 }

@@ -15,7 +15,7 @@ API](/docs/concepts/env) to access the original `Node-API`.
 
 :::
 
-`Node-API` provides complex `Threadsafe Function` APIs to call JavaScript functions on other threads. It's very complex, so many developers don't understand how to use it correctly. **NAPI-RS** provides a limited version of `Threadsafe Function` APIs to make it easier to use:
+`Node-API` provides complex `Threadsafe Function` APIs to call JavaScript functions on other threads. It's very complex, so many developers don't understand how to use it correctly. **NAPI-RS** wraps these APIs in a safe, ownership-based `ThreadsafeFunction` type that is much easier to use:
 
 **lib.rs**
 

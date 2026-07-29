@@ -3,6 +3,8 @@ title: 'Promise'
 description: JavaScript Promise in Rust.
 ---
 
+# Promise
+
 ## `Promise<T>`
 
 Awaiting a JavaScript `Promise` in Rust sounds crazy, but it's feasible in **NAPI-RS**.
@@ -76,3 +78,24 @@ const value = await promiseCallback(Promise.resolve(100))
 
 console.log(value) // 200
 ```
+
+## `AsyncBlock<T>`
+
+`AsyncBlock<T>` is the other way to return a `Promise` from Rust. Where an exported [`async fn`](/docs/concepts/async-fn) starts when JavaScript calls it and resolves with the function's return value, an `AsyncBlock` wraps a manually built future via `AsyncBlockBuilder` — which additionally lets you attach a **dispose hook** (`.with_dispose`) or a **map closure** (`build_with_map`) that runs on the JavaScript thread at resolution time, so the promise can resolve with values that can only be created there (a zero-copy `BufferSlice<'static>`, an instance of a JavaScript class, …). The future starts eagerly when the Rust function is called, not when the promise is awaited.
+
+**lib.rs**
+
+```rust
+#[napi]
+pub fn process_buffer(env: &Env, buffer: Buffer) -> Result<AsyncBlock<Buffer>> {
+  AsyncBlockBuilder::new(async move { Ok(buffer) }).build(env)
+}
+```
+
+**index.d.ts**
+
+```ts
+export declare function processBuffer(buffer: Buffer): Promise<Buffer>
+```
+
+See [Web Streams](/docs/concepts/streams#asyncblock-a-promise-with-a-dispose-hook) for the full `AsyncBlockBuilder` API and worked examples, and [TypedArray](/docs/concepts/typed-array) for more `AsyncBlock` usage with buffers.

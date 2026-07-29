@@ -15,24 +15,38 @@ O trait `Task` fornece uma maneira de definir uma tarefa assíncrona que precisa
 
 **lib.rs**
 
-```rust {11-13}
-use napi::{Task, Env, Result, JsNumber};
+```rust {20-22}
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
 
-struct AsyncFib {
+fn fib(n: u32) -> u32 {
+  if n <= 1 {
+    return n;
+  }
+  fib(n - 1) + fib(n - 2)
+}
+
+pub struct AsyncFib {
   input: u32,
 }
 
+#[napi]
 impl Task for AsyncFib {
   type Output = u32;
-  type JsValue = JsNumber;
+  type JsValue = u32;
 
   fn compute(&mut self) -> Result<Self::Output> {
     Ok(fib(self.input))
   }
 
-  fn resolve(&mut self, env: Env, output: u32) -> Result<Self::JsValue> {
-    env.create_uint32(output)
+  fn resolve(&mut self, _: Env, output: u32) -> Result<Self::JsValue> {
+    Ok(output)
   }
+}
+
+#[napi]
+pub fn async_fib(input: u32) -> AsyncTask<AsyncFib> {
+  AsyncTask::new(AsyncFib { input })
 }
 ```
 
@@ -55,39 +69,52 @@ Além de `compute` e `resolve`, você também pode fornecer o método `reject` p
 
 **lib.rs**
 
-```rust {28}
-struct CountBufferLength {
-  data: Ref<JsBufferValue>,
+```rust {32}
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+pub struct CountBufferLength {
+  data: Buffer,
 }
 
 impl CountBufferLength {
-  pub fn new(data: Ref<JsBufferValue>) -> Self {
+  pub fn new(data: Buffer) -> Self {
     Self { data }
   }
 }
 
 impl Task for CountBufferLength {
   type Output = usize;
-  type JsValue = JsNumber;
+  type JsValue = u32;
 
   fn compute(&mut self) -> Result<Self::Output> {
     if self.data.len() == 10 {
-      return Err(Error::from_reason("len can't be 10".to_string()));
+      return Err(Error::new(
+        Status::GenericFailure,
+        "Random fatal error".to_string(),
+      ));
     }
     Ok((&self.data).len())
   }
 
-  fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-    self.data.unref(env)?;
-    let output = u32::try_from(output)
-      .map_err(|_| Error::new(Status::InvalidArg, "buffer length exceeds u32"))?;
-    env.create_uint32(output)
+  fn resolve(&mut self, _: Env, output: Self::Output) -> Result<Self::JsValue> {
+    u32::try_from(output)
+      .map_err(|_| Error::new(Status::InvalidArg, "buffer length exceeds u32"))
   }
 
-  fn reject(&mut self, env: Env, err: Error) -> Result<Self::JsValue> {
-    self.data.unref(env)?;
-    Err(err)
+  fn reject(&mut self, _: Env, err: Error) -> Result<Self::JsValue> {
+    // catch the error
+    if err.status == Status::GenericFailure {
+      Ok(0)
+    } else {
+      Ok(1)
+    }
   }
+}
+
+#[napi]
+pub fn async_count_buffer_length(data: Buffer) -> AsyncTask<CountBufferLength> {
+  AsyncTask::new(CountBufferLength { data })
 }
 ```
 
@@ -95,39 +122,58 @@ Você também pode fornecer um método `finally` para fazer algo depois que a `T
 
 **lib.rs**
 
-```rust {27}
-struct CountBufferLength {
-  data: Ref<JsBufferValue>,
+```rust {41}
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+pub struct CountBufferLength {
+  data: Buffer,
 }
 
 impl CountBufferLength {
-  pub fn new(data: Ref<JsBufferValue>) -> Self {
+  pub fn new(data: Buffer) -> Self {
     Self { data }
   }
 }
 
-#[napi]
 impl Task for CountBufferLength {
   type Output = usize;
-  type JsValue = JsNumber;
+  type JsValue = u32;
 
   fn compute(&mut self) -> Result<Self::Output> {
     if self.data.len() == 10 {
-      return Err(Error::from_reason("len can't be 5".to_string()));
+      return Err(Error::new(
+        Status::GenericFailure,
+        "Random fatal error".to_string(),
+      ));
     }
     Ok((&self.data).len())
   }
 
-  fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-    let output = u32::try_from(output)
-      .map_err(|_| Error::new(Status::InvalidArg, "buffer length exceeds u32"))?;
-    env.create_uint32(output)
+  fn resolve(&mut self, _: Env, output: Self::Output) -> Result<Self::JsValue> {
+    u32::try_from(output)
+      .map_err(|_| Error::new(Status::InvalidArg, "buffer length exceeds u32"))
   }
 
-  fn finally(&mut self, env: Env) -> Result<()> {
-    self.data.unref(env)?;
+  fn reject(&mut self, _: Env, err: Error) -> Result<Self::JsValue> {
+    // catch the error
+    if err.status == Status::GenericFailure {
+      Ok(0)
+    } else {
+      Ok(1)
+    }
+  }
+
+  fn finally(self, _: Env) -> Result<()> {
+    println!("finally");
+    drop(self.data);
     Ok(())
   }
+}
+
+#[napi]
+pub fn async_count_buffer_length(data: Buffer) -> AsyncTask<CountBufferLength> {
+  AsyncTask::new(CountBufferLength { data })
 }
 ```
 
@@ -159,7 +205,7 @@ export function asyncFib(input: number): Promise<number>
 
 ### Criar `AsyncTask` com `AbortSignal`
 
-Em alguns cenários, pode ser desejável interromper a `AsyncTask`, na fila, por exemplo, usando `debounce` em algumas tarefas de cálculo. Você pode fornecer um `AbortSignal` para a `AsyncTask`, para que possa interromper a `AsyncTask` se ainda não tiver sido iniciada.
+Em alguns cenários, pode ser desejável interromper a `AsyncTask`, na fila, por exemplo, usando `debounce` em algumas tarefas de cálculo. Você pode fornecer um `AbortSignal` para `AsyncTask`, para que possa interromper a `AsyncTask` se ainda não tiver sido iniciada.
 
 **lib.rs**
 
@@ -234,3 +280,64 @@ nessa propriedade; use `signal.addEventListener('abort', ...)` para listeners
 JavaScript independentes.
 
 :::
+
+## `ScopedTask`
+
+`ScopedTask` é praticamente igual a `Task`, mas passa `&'env Env` para os métodos `resolve` e `reject`, de modo que você pode criar um `JsValue` com lifetime a partir do `&'env Env`.
+
+Por exemplo:
+
+**lib.rs**
+
+```rust {14,16}
+use napi::{JsString, ScopedTask, bindgen_prelude::*};
+use napi_derive::napi;
+
+pub struct CountBufferLength {
+  data: Buffer,
+}
+
+impl CountBufferLength {
+  pub fn new(data: Buffer) -> Self {
+    Self { data }
+  }
+}
+
+impl<'env> ScopedTask<'env> for CountBufferLength {
+  type Output = usize;
+  type JsValue = JsString<'env>;
+
+  fn compute(&mut self) -> Result<Self::Output> {
+    if self.data.len() == 10 {
+      return Err(Error::new(
+        Status::GenericFailure,
+        "Random fatal error".to_string(),
+      ));
+    }
+    Ok((&self.data).len())
+  }
+
+  fn resolve(&mut self, env: &'env Env, output: Self::Output) -> Result<Self::JsValue> {
+    env.create_string(format!("{output}"))
+  }
+
+  fn reject(&mut self, env: &'env Env, err: Error) -> Result<Self::JsValue> {
+    // catch the error
+    if err.status == Status::GenericFailure {
+      env.create_string("Random fatal error".to_string())
+    } else {
+      env.create_string("Random error".to_string())
+    }
+  }
+
+  fn finally(self, _: Env) -> Result<()> {
+    drop(self.data);
+    Ok(())
+  }
+}
+
+#[napi]
+pub fn async_count_buffer_length(data: Buffer) -> AsyncTask<CountBufferLength> {
+  AsyncTask::new(CountBufferLength { data })
+}
+```

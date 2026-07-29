@@ -80,6 +80,33 @@ else{try{var a=document.createElement("textarea");a.value=text;a.style.position=
 },false);
 })();`
 
+// Package-manager tabs sync + persistence (see lib/md/pm-tabs.ts + the
+// `.pm-tabs` rules in pages/theme.css). Each tab bar is its OWN radio group
+// (`name="pm-<uid>"`, group-local CSS :has), so this script does the two
+// cross-bar jobs: a delegated `change` listener writes the checked value to
+// localStorage("pm") AND checks the same value in every bar on the page
+// (bars lacking that value simply keep their default tab), and on
+// DOMContentLoaded the saved value is re-checked in every bar — so one click
+// syncs the whole page and the choice survives navigation. All storage access
+// is try/catch'd like THEME_BOOTSTRAP (private mode can throw).
+const PM_TABS = `(function(){
+var KEY="pm",KNOWN=["npm","yarn","pnpm","bun"];
+function sync(v){
+if(KNOWN.indexOf(v)===-1)return;
+var els=document.querySelectorAll('.pm-input[value="'+v+'"]');
+for(var i=0;i<els.length;i++)els[i].checked=true;
+}
+document.addEventListener("change",function(e){
+var t=e.target;if(!t||!t.classList||!t.classList.contains("pm-input"))return;
+try{localStorage.setItem(KEY,t.value);}catch(_){}
+sync(t.value);
+},false);
+document.addEventListener("DOMContentLoaded",function(){
+var v=null;try{v=localStorage.getItem(KEY);}catch(_){}
+if(v)sync(v);
+});
+})();`
+
 // Per-page Open Graph injection (mirrors live napi.rs):
 //   • og:title       = the resolved <title> with the ` – NAPI-RS` template
 //                      suffix stripped (frontmatter/defineHead title, or the
@@ -161,7 +188,11 @@ export default defineMiddleware(async (c, next) => {
       : c.req.path
 
   c.set('headDefaults', {
-    script: [{ innerHTML: THEME_BOOTSTRAP }, { innerHTML: COPY_CODE }],
+    script: [
+      { innerHTML: THEME_BOOTSTRAP },
+      { innerHTML: COPY_CODE },
+      { innerHTML: PM_TABS },
+    ],
     htmlAttrs: { lang: htmlLang(getLocale(publicPath)) },
   })
   await next()

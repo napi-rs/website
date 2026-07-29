@@ -8,6 +8,19 @@ import { Green } from '../../../components/chalk'
 
 Create npm package dirs for different platforms
 
+## When you need this
+
+`napi create-npm-dirs` creates one `npm/<platform-arch-abi>` directory per
+entry of the `napi.targets` config, each containing a ready-to-publish
+`package.json` for that platform's package. Committing these directories is no
+longer recommended; create them in CI instead. You need this command before
+[`napi artifacts`](./artifacts) can copy built binaries into the platform
+packages, and before [`napi pre-publish`](./pre-publish) can publish them.
+
+In the release pipeline this command sits after the platform `napi build`
+jobs and before `napi artifacts`. See [Release native
+packages](/docs/deep-dive/release) for the complete pipeline.
+
 ## Usage
 
 ```sh
@@ -22,6 +35,21 @@ import { NapiCli } from '@napi-rs/cli'
 new NapiCli().createNpmDirs({
   // options
 })
+```
+
+## Examples
+
+Create the platform package directories in a CI release job:
+
+```sh
+napi create-npm-dirs
+```
+
+Preview which directories and files would be created, without touching the
+file system:
+
+```sh
+napi create-npm-dirs --dry-run
 ```
 
 ## Options

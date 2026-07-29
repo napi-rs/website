@@ -292,6 +292,64 @@ function llmsHrefFor(locale, leafPath) {
   return `/${locale}/${leafPath}`
 }
 
+// ----------------------------------------------------------------------------
+// llms-full.txt — the FULL markdown of every docs+blog page concatenated in nav
+// order, for LLM consumers that want the whole docs in one fetch. Emitted per
+// locale like llms.txt (en at `/llms-full.txt`, others at
+// `/<locale>/llms-full.txt`). Pages without a localized `.md` fall back to the
+// en source (the same fallback llmsHrefFor uses); island-only routes
+// (changelog) have no markdown source and are skipped. Each page is preceded
+// by a `# <page title>` heading and separated from the next by `\n\n---\n\n`.
+// ----------------------------------------------------------------------------
+
+/** docs+blog nav leaves in sidebar order: [{ title, leafPath }]. */
+function navLeafEntries(localeNav) {
+  const entries = []
+  for (const tab of ['docs', 'blog']) {
+    for (const group of localeNav.sidebar[tab] ?? []) {
+      for (const item of group.items) {
+        entries.push({ title: item.title, leafPath: item.path })
+      }
+    }
+  }
+  return entries
+}
+
+/**
+ * Prepare a page's raw markdown for concatenation: drop the byte-0 `<script>`
+ * island block (island import statements are noise to an LLM reader), the
+ * frontmatter (its `---` fences would collide with the page separator), and
+ * the leading `# …` H1 (buildLlmsFull re-adds the title itself).
+ */
+function stripPageHeader(markdown) {
+  return markdown
+    .replace(/^<script>[\s\S]*?<\/script>\s*/, '')
+    .replace(/^---\n[\s\S]*?\n---\s*/, '')
+    .replace(/^#\s+[^\n]*\n?/, '')
+    .replace(/^\n+/, '')
+    .trimEnd()
+}
+
+/**
+ * Pure core: entries = [{ title, leafPath }] in nav order, sourceFor(leafPath)
+ * returns the page's markdown or undefined (skipped). Returns the concatenated
+ * llms-full document.
+ */
+function buildLlmsFull(entries, sourceFor) {
+  const chunks = []
+  for (const { title, leafPath } of entries) {
+    const source = sourceFor(leafPath)
+    if (source === undefined) continue
+    chunks.push(`# ${title}\n\n${stripPageHeader(source)}`)
+  }
+  return chunks.join('\n\n---\n\n') + '\n'
+}
+
+/** The dist-relative output path of a locale's llms-full.txt. */
+function llmsFullPathFor(locale) {
+  return locale === DEFAULT_LOCALE ? 'llms-full.txt' : `${locale}/llms-full.txt`
+}
+
 /**
  * Emit `sitemap.xml`, the raw `.md` assets, and the `llms.txt` index files into
  * `outDir` (defaults to dist/client). Pure of any build-tool coupling so it
@@ -365,7 +423,36 @@ function generateSitemap(outDir = distClient) {
     llmsCount++
   }
 
-  return { routeCount: routes.length, rawCount, llmsCount, sitemapPath, outDir }
+  // --- llms-full.txt (per locale): full markdown of every docs+blog page ---
+  let llmsFullCount = 0
+  for (const locale of LOCALES) {
+    const localeNav = nav[locale]
+    if (!localeNav) continue
+    // Prefer the locale's own .md source; fall back to en (llmsHrefFor's rule).
+    const sourceFor = (leafPath) => {
+      for (const candidate of locale === DEFAULT_LOCALE
+        ? [DEFAULT_LOCALE]
+        : [locale, DEFAULT_LOCALE]) {
+        const p = join(pagesDir, candidate, `${leafPath}.md`)
+        if (existsSync(p)) return readFileSync(p, 'utf8')
+      }
+      return undefined
+    }
+    const full = buildLlmsFull(navLeafEntries(localeNav), sourceFor)
+    const outPath = join(outDir, llmsFullPathFor(locale))
+    mkdirSync(dirname(outPath), { recursive: true })
+    writeFileSync(outPath, full, 'utf8')
+    llmsFullCount++
+  }
+
+  return {
+    routeCount: routes.length,
+    rawCount,
+    llmsCount,
+    llmsFullCount,
+    sitemapPath,
+    outDir,
+  }
 }
 
 /**
@@ -385,22 +472,24 @@ function sitemapPlugin() {
     apply: 'build',
     writeBundle(options) {
       if (!options.dir || basename(options.dir) !== 'client') return
-      const { routeCount, rawCount, llmsCount } = generateSitemap(options.dir)
+      const { routeCount, rawCount, llmsCount, llmsFullCount } =
+        generateSitemap(options.dir)
       console.log(
-        `napi-rs-sitemap: ${routeCount} routes + ${rawCount} raw .md files + ${llmsCount} llms.txt -> ${options.dir}`,
+        `napi-rs-sitemap: ${routeCount} routes + ${rawCount} raw .md files + ${llmsCount} llms.txt + ${llmsFullCount} llms-full.txt -> ${options.dir}`,
       )
     },
   }
 }
 
 function main() {
-  const { routeCount, rawCount, llmsCount, sitemapPath } =
+  const { routeCount, rawCount, llmsCount, llmsFullCount, sitemapPath } =
     generateSitemap(distClient)
   console.log(
     `sitemap: wrote ${routeCount} routes to ${relative(root, sitemapPath)}`,
   )
   console.log(`sitemap: emitted ${rawCount} raw .md files under dist/client`)
   console.log(`sitemap: emitted ${llmsCount} llms.txt index files`)
+  console.log(`sitemap: emitted ${llmsFullCount} llms-full.txt files`)
 }
 
 // Run as a CLI when invoked directly, but stay side-effect-free when imported
@@ -417,6 +506,10 @@ export {
   walkPages,
   renderSitemap,
   rawTargets,
+  navLeafEntries,
+  stripPageHeader,
+  buildLlmsFull,
+  llmsFullPathFor,
   generateSitemap,
   sitemapPlugin,
   BASE_URL,

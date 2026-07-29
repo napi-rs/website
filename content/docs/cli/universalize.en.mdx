@@ -8,6 +8,19 @@ import { Green } from '../../../components/chalk'
 
 Combine built binaries into one universal binary
 
+## When you need this
+
+On macOS, `napi universalize` combines the separate `x86_64` (Intel) and
+`aarch64` (Apple Silicon) `.node` binaries into a single universal binary with
+`lipo`. You need it only when you ship a `darwin-universal` target: your
+`napi.targets` config must contain a universal-arch target for the current
+platform, and both per-arch binaries must already be built. It currently runs
+on macOS only.
+
+In the release pipeline this command sits between `napi build` (run once per
+macOS architecture) and [`napi artifacts`](./artifacts). See [Release native
+packages](/docs/deep-dive/release) for the complete pipeline.
+
 ## Usage
 
 ```sh
@@ -22,6 +35,23 @@ import { NapiCli } from '@napi-rs/cli'
 new NapiCli().universalize({
   // options
 })
+```
+
+## Examples
+
+A typical macOS CI job: build both architectures, then combine them:
+
+```sh
+napi build --release --target x86_64-apple-darwin
+napi build --release --target aarch64-apple-darwin
+napi universalize
+```
+
+Combine binaries that were written to a custom output directory (must match
+the `--output-dir` used by `napi build`):
+
+```sh
+napi universalize --output-dir ./binaries
 ```
 
 ## Options
