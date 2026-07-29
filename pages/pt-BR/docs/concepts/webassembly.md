@@ -4,10 +4,8 @@ import TransformImage from "../../../../components/transform-image/_Demo.tsx" wi
 </script>
 
 ---
-
 title: 'WebAssembly e WASI'
 description: Compile, empacote, teste e execute um fallback WASI do NAPI-RS no Node.js e em navegadores.
-
 ---
 
 # WebAssembly e WASI
@@ -26,10 +24,10 @@ você adapte threading e dependências por conta própria e não são gerados po
 este fluxo.
 
 ::: warning
-Uma build WASI não é automaticamente equivalente a um addon nativo. APIs do
-sistema operacional, dependências nativas em C/C++, comportamento do sistema
-de arquivos, threads, limites de memória e suporte do runtime hospedeiro
-podem ser diferentes. Teste o artefato WASI como um alvo de release separado.
+  Uma build WASI não é automaticamente equivalente a um addon nativo. APIs do
+  sistema operacional, dependências nativas em C/C++, comportamento do sistema
+  de arquivos, threads, limites de memória e suporte do runtime hospedeiro
+  podem ser diferentes. Teste o artefato WASI como um alvo de release separado.
 
 :::
 
@@ -93,16 +91,16 @@ código C/C++ na árvore de dependências exige uma toolchain C para WASI.
 
 Para `binaryName: "my-addon"`, a build cria:
 
-| Arquivo                           | Finalidade                                                               |
-| --------------------------------- | ------------------------------------------------------------------------ |
-| `my-addon.wasm32-wasi.wasm`       | Módulo WASM de release com stripping                                     |
+| Arquivo | Finalidade |
+| --- | --- |
+| `my-addon.wasm32-wasi.wasm` | Módulo WASM de release com stripping |
 | `my-addon.wasm32-wasi.debug.wasm` | Módulo que mantém informações de debug/nome quando a geração tem sucesso |
-| `my-addon.wasi.cjs`               | Loader WASI para Node.js                                                 |
-| `my-addon.wasi-browser.js`        | Loader ESM para navegador                                                |
-| `wasi-worker.mjs`                 | Worker Node usado por threads do emnapi                                  |
-| `wasi-worker-browser.mjs`         | Worker de navegador usado por threads do emnapi                          |
-| `browser.js`                      | Entrada `browser` do pacote que reexporta o pacote de plataforma WASI    |
-| `index.js` e `index.d.ts`         | Loader normal de seleção de plataforma e tipos compartilhados            |
+| `my-addon.wasi.cjs` | Loader WASI para Node.js |
+| `my-addon.wasi-browser.js` | Loader ESM para navegador |
+| `wasi-worker.mjs` | Worker Node usado por threads do emnapi |
+| `wasi-worker-browser.mjs` | Worker de navegador usado por threads do emnapi |
+| `browser.js` | Entrada `browser` do pacote que reexporta o pacote de plataforma WASI |
+| `index.js` e `index.d.ts` | Loader normal de seleção de plataforma e tipos compartilhados |
 
 Mantenha cada loader junto com seus arquivos de worker e WASM. Renomear ou
 mover um único arquivo sem regenerar o loader quebra suas URLs relativas.
@@ -118,11 +116,11 @@ Se o carregamento nativo falhar, ele tenta:
 Use `NAPI_RS_FORCE_WASI` para testar o fallback mesmo em um host nativo
 suportado. Para loaders gerados por `@napi-rs/cli` 3.7 ou mais recente:
 
-| Valor                                 | Comportamento                                                                                 |
-| ------------------------------------- | --------------------------------------------------------------------------------------------- |
-| não definido ou qualquer outra string | Prefere nativo; só tenta WASI depois que o nativo falha                                       |
-| `true`                                | Tenta e seleciona WASI mesmo se o nativo carregou; sem uma asserção estrita para WASI ausente |
-| `error`                               | Tenta WASI e lança erro se não existir um binding WASI local ou empacotado                    |
+| Valor | Comportamento |
+| --- | --- |
+| não definido ou qualquer outra string | Prefere nativo; só tenta WASI depois que o nativo falha |
+| `true` | Tenta e seleciona WASI mesmo se o nativo carregou; sem uma asserção estrita para WASI ausente |
+| `error` | Tenta WASI e lança erro se não existir um binding WASI local ou empacotado |
 
 Valores como `1`, `0` e `false` não forçam WASI. Use `error` nos testes para
 que um artefato ausente não use silenciosamente a implementação nativa:
@@ -142,9 +140,9 @@ No Node, o loader WASI gerado:
 - prefere o arquivo `.debug.wasm` quando ele está presente ao lado do loader.
 
 ::: warning
-O loader WASI do Node faz preopen da raiz do sistema de arquivos. Trate o
-addon WASI como código confiável de aplicação nativa, não como um sandbox de
-segurança para módulos ou entradas não confiáveis.
+  O loader WASI do Node faz preopen da raiz do sistema de arquivos. Trate o
+  addon WASI como código confiável de aplicação nativa, não como um sandbox de
+  segurança para módulos ou entradas não confiáveis.
 
 :::
 
@@ -235,14 +233,14 @@ console.log(typeof SharedArrayBuffer) // 'function'
 
 Os campos `napi.wasm` controlam o glue de navegador gerado:
 
-| Campo                | Padrão          | Efeito                                                                                   |
-| -------------------- | --------------- | ---------------------------------------------------------------------------------------- |
-| `initialMemory`      | `4000` páginas  | Memória compartilhada inicial (uma página WebAssembly tem 64 KiB)                        |
-| `maximumMemory`      | `65536` páginas | Memória compartilhada máxima, 4 GiB                                                      |
-| `browser.fs`         | `false`         | Cria um sistema de arquivos em memória, faz preopen de `/` e exporta `__fs` / `__volume` |
-| `browser.asyncInit`  | `false`         | Usa a API de instanciação assíncrona do emnapi                                           |
-| `browser.buffer`     | `false`         | Injeta o `Buffer` do pacote `buffer` no contexto do emnapi                               |
-| `browser.errorEvent` | `false`         | Encaminha falhas de worker como eventos `napi-rs-worker-error` na janela                 |
+| Campo | Padrão | Efeito |
+| --- | --- | --- |
+| `initialMemory` | `4000` páginas | Memória compartilhada inicial (uma página WebAssembly tem 64 KiB) |
+| `maximumMemory` | `65536` páginas | Memória compartilhada máxima, 4 GiB |
+| `browser.fs` | `false` | Cria um sistema de arquivos em memória, faz preopen de `/` e exporta `__fs` / `__volume` |
+| `browser.asyncInit` | `false` | Usa a API de instanciação assíncrona do emnapi |
+| `browser.buffer` | `false` | Injeta o `Buffer` do pacote `buffer` no contexto do emnapi |
+| `browser.errorEvent` | `false` | Encaminha falhas de worker como eventos `napi-rs-worker-error` na janela |
 
 A entrada de navegador faz fetch do arquivo WASM e, portanto, usa `await` de
 nível superior mesmo quando `asyncInit` é `false`. Garanta que o bundler/alvo
@@ -325,7 +323,7 @@ O WASI usa o mesmo fluxo de release com pacote separado que os alvos nativos:
 1. Inclua `wasm32-wasip1-threads` em `napi.targets`.
 2. Compile e teste esse alvo no próprio job de CI.
 3. Execute `napi create-npm-dirs`; o pacote WASI gerado recebe `cpu:
-["wasm32"]`, uma versão mínima de Node compatível com o loader e suas
+   ["wasm32"]`, uma versão mínima de Node compatível com o loader e suas
    dependências de emnapi/runtime.
 4. Baixe todos os artefatos dos alvos e execute `napi artifacts`. Isso copia o
    módulo WASM, os loaders de Node/navegador e ambos os workers para o pacote
@@ -361,13 +359,13 @@ nativa bem-sucedida não é evidência de que a mesma dependência suporte WASI.
 
 ## Matriz de suporte em runtime
 
-| Host                                   | Status e restrições                                                                                                                          |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Node.js                                | Caminho `.wasi.cjs` gerado; o pacote de plataforma requer Node 14 ou mais recente e usa APIs WASI/worker do Node                             |
-| Navegador com isolamento entre origens | Caminho gerado com ESM + module worker; requer memória compartilhada, top-level await e serving correto dos assets                           |
-| Navegador sem isolamento               | Não suportado para o alvo com threads porque memória compartilhada não está disponível                                                       |
-| Bun e Deno                             | Não declare suporte sem um teste de runtime; o carregamento WASI compatível com Node atualmente tem um relato de incompatibilidade em aberto |
-| Isolates edge/serverless               | Específico de cada host; muitos não expõem as APIs Node WASI, filesystem ou worker esperadas pelo loader gerado                              |
+| Host | Status e restrições |
+| --- | --- |
+| Node.js | Caminho `.wasi.cjs` gerado; o pacote de plataforma requer Node 14 ou mais recente e usa APIs WASI/worker do Node |
+| Navegador com isolamento entre origens | Caminho gerado com ESM + module worker; requer memória compartilhada, top-level await e serving correto dos assets |
+| Navegador sem isolamento | Não suportado para o alvo com threads porque memória compartilhada não está disponível |
+| Bun e Deno | Não declare suporte sem um teste de runtime; o carregamento WASI compatível com Node atualmente tem um relato de incompatibilidade em aberto |
+| Isolates edge/serverless | Específico de cada host; muitos não expõem as APIs Node WASI, filesystem ou worker esperadas pelo loader gerado |
 
 A limitação de Bun/Deno é acompanhada em
 [napi-rs#2965](https://github.com/napi-rs/napi-rs/issues/2965). Trata-se de uma

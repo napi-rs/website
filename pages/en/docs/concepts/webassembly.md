@@ -108,6 +108,71 @@ For `binaryName: "my-addon"`, the build creates:
 Keep each loader with its worker and WASM files. Renaming or moving one file
 without regenerating the loader breaks its relative URLs.
 
+## The runtime package: `@napi-rs/wasm-runtime`
+
+The generated loaders and workers are thin glue on top of the published
+[`@napi-rs/wasm-runtime`](https://www.npmjs.com/package/@napi-rs/wasm-runtime)
+package, which the generated WASI platform package depends on (alongside
+`@emnapi/core` and `@emnapi/runtime`). Its main entry provides the WASI
+implementation and the emnapi glue:
+
+- `WASI` — a WASI preview1 implementation with pluggable `fs` and preopens;
+- `instantiateNapiModuleSync` — instantiate the WASM module and bind its napi exports;
+- `MessageHandler`, `createOnMessage`, `createFsProxy` — the worker/fs-proxy machinery used by emnapi threads;
+- `emnapiAsyncWorkPlugin`, `emnapiTSFNPlugin` — the emnapi plugins that back `AsyncTask` and `ThreadsafeFunction` on WASM.
+
+The `@napi-rs/wasm-runtime/fs` subpath provides the browser filesystem: `memfs()`
+returns a [memfs](https://github.com/streamich/memfs)-backed `{ fs, vol }` pair,
+plus `memfsExported` and a browser `Buffer`. This is the "memfs" the browser
+configuration below refers to — with `browser.fs: true`, the generated loader
+wires it into WASI and exports it:
+
+**my-addon.wasi-browser.js**
+
+```ts
+import {
+  WASI,
+  instantiateNapiModuleSync,
+  emnapiAsyncWorkPlugin,
+  emnapiTSFNPlugin,
+} from '@napi-rs/wasm-runtime'
+import { memfs, Buffer } from '@napi-rs/wasm-runtime/fs'
+
+// the generated loader re-exports these when `browser.fs` is true
+const { fs: __fs, vol: __volume } = memfs()
+
+const __wasi = new WASI({
+  version: 'preview1',
+  fs: __fs,
+  preopens: {
+    '/': '/',
+  },
+})
+```
+
+The browser worker uses the same package from the other side — proxying fs
+calls back to the main thread:
+
+**wasi-worker-browser.mjs**
+
+```js
+import {
+  MessageHandler,
+  WASI,
+  createFsProxy,
+  emnapiAsyncWorkPlugin,
+  emnapiTSFNPlugin,
+} from '@napi-rs/wasm-runtime'
+import { memfsExported } from '@napi-rs/wasm-runtime/fs'
+
+const fs = createFsProxy(memfsExported)
+```
+
+Both snippets are condensed from the generated loaders in
+[`examples/napi`](https://github.com/napi-rs/napi-rs/tree/main/examples/napi)
+(`example.wasi-browser.js` and `wasi-worker-browser.mjs`); regenerate your own
+loaders with `napi build` rather than editing them by hand.
+
 ## How native-to-WASI fallback works
 
 The normal `index.js` loader first tries the native binary for the current

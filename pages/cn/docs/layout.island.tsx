@@ -3,7 +3,7 @@
 // Island imports (`with { island }`) MUST live in this *.island.tsx file — they
 // are ignored inside the shared DocsLayout. The chrome islands are imported here
 // and passed into <DocsLayout> via slot props, using locale="cn". Static chrome
-// (Breadcrumb, Pager, EditOnGithub, Footer) is imported normally.
+// (Breadcrumb, Pager, PageMeta, Footer) is imported normally.
 //
 // PATH / SHARED DATA: see pages/en/docs/layout.island.tsx — islands hydrate with
 // no Router/Shared context, so this layout reads `shared.path` (from
@@ -22,9 +22,12 @@ import NotTranslatedBanner from '../../../components/docs/NotTranslatedBanner' w
 import MermaidBlocks from '../../../components/docs/MermaidBlocks' with {
   island: 'load',
 }
+import PageActions from '../../../components/docs/PageActions' with {
+  island: 'load',
+}
 import Breadcrumb from '../../../components/docs/Breadcrumb'
 import Pager from '../../../components/docs/Pager'
-import EditOnGithub from '../../../components/docs/EditOnGithub'
+import PageMeta from '../../../components/docs/PageMeta'
 import Footer from '../../../components/docs/Footer'
 
 export default function CnDocsLayout({
@@ -47,10 +50,24 @@ export default function CnDocsLayout({
         navbar={<Navbar locale="cn" currentPath={currentPath} />}
         sidebar={<Sidebar locale="cn" currentPath={currentPath} />}
         toc={<Toc locale="cn" currentPath={currentPath} />}
-        banner={<NotTranslatedBanner locale="cn" fallback={fallback} />}
+        banner={
+          <NotTranslatedBanner
+            locale="cn"
+            fallback={fallback}
+            currentPath={currentPath}
+          />
+        }
+        pageActions={
+          <PageActions
+            locale="cn"
+            routeLocale="cn"
+            currentPath={currentPath}
+            fallback={fallback}
+          />
+        }
         breadcrumb={<Breadcrumb locale="cn" currentPath={currentPath} />}
         pager={<Pager locale="cn" currentPath={currentPath} />}
-        editOnGithub={<EditOnGithub locale="cn" currentPath={currentPath} />}
+        editOnGithub={<PageMeta locale="cn" currentPath={currentPath} />}
         footer={<Footer />}
       >
         {children}

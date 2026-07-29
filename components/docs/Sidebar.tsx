@@ -211,6 +211,25 @@ export default function Sidebar({
   const tabKey = tabKeyFromPath(currentPath)
   const groups = nav[locale]?.sidebar[tabKey] ?? []
 
+  // Scroll the ACTIVE leaf into view on initial mount — a deep page in a long
+  // sidebar (e.g. CLI commands) would otherwise mount with the scroll pane
+  // parked at the top, hiding the highlighted item. We set the container's
+  // scrollTop from getBoundingClientRect deltas instead of calling
+  // el.scrollIntoView(), which would ALSO scroll the window. The item lands
+  // ~1/3 from the top, leaving earlier siblings visible for context. Desktop
+  // only (this column is hidden lg:flex); runs once — later re-renders from
+  // collapse state must not yank the scroll position.
+  const scrollRef = React.useRef<HTMLDivElement>(null)
+  React.useEffect(() => {
+    const container = scrollRef.current
+    if (!container) return
+    const active = container.querySelector('[aria-current="page"]')
+    if (!active) return
+    const delta =
+      active.getBoundingClientRect().top - container.getBoundingClientRect().top
+    container.scrollTop += delta - container.clientHeight / 3
+  }, [])
+
   // Desktop sidebar only. The mobile nav now lives in the Navbar island as a
   // hamburger-triggered full-screen drawer (matching live napi.rs, which keeps
   // search + tabs + nav + locale/theme together in one menu) — so this column
@@ -231,7 +250,10 @@ export default function Sidebar({
         className,
       )}
     >
-      <div className="thin-scrollbar flex-1 overflow-y-auto px-4 py-6">
+      <div
+        ref={scrollRef}
+        className="thin-scrollbar flex-1 overflow-y-auto px-4 py-6"
+      >
         <SidebarNav
           groups={groups}
           locale={locale}
@@ -241,7 +263,7 @@ export default function Sidebar({
       </div>
       <div className="flex items-center justify-between gap-1 border-t border-sidebar-border px-4 py-3">
         <LangSwitcher locale={locale} showLabel />
-        <ThemeToggle />
+        <ThemeToggle locale={locale} />
       </div>
     </div>
   )

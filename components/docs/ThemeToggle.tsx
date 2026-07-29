@@ -31,13 +31,26 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
+import type { Locale } from '@/lib/nav/index.ts'
 
 type ThemeMode = 'light' | 'dark' | 'system'
 
-const MODES: { mode: ThemeMode; label: string; Icon: LucideIcon }[] = [
-  { mode: 'light', label: 'Light', Icon: Sun },
-  { mode: 'dark', label: 'Dark', Icon: Moon },
-  { mode: 'system', label: 'System', Icon: Monitor },
+const MODE_LABEL: Record<ThemeMode, Record<Locale, string>> = {
+  light: { en: 'Light', cn: '浅色', 'pt-BR': 'Claro' },
+  dark: { en: 'Dark', cn: '深色', 'pt-BR': 'Escuro' },
+  system: { en: 'System', cn: '跟随系统', 'pt-BR': 'Sistema' },
+}
+
+const TRIGGER_LABEL: Record<Locale, string> = {
+  en: 'Change theme',
+  cn: '切换主题',
+  'pt-BR': 'Mudar tema',
+}
+
+const MODES: { mode: ThemeMode; Icon: LucideIcon }[] = [
+  { mode: 'light', Icon: Sun },
+  { mode: 'dark', Icon: Moon },
+  { mode: 'system', Icon: Monitor },
 ]
 
 const prefersDark = () =>
@@ -69,10 +82,19 @@ function applyMode(mode: ThemeMode) {
 }
 
 export interface ThemeToggleProps {
+  /**
+   * Label locale. Optional with an 'en' default: the sidebar / mobile drawer /
+   * landing footer all know their locale and pass it; any other usage degrades
+   * to English labels rather than breaking.
+   */
+  locale?: Locale
   className?: string
 }
 
-export default function ThemeToggle({ className }: ThemeToggleProps) {
+export default function ThemeToggle({
+  locale = 'en',
+  className,
+}: ThemeToggleProps) {
   const [mounted, setMounted] = React.useState(false)
   const [open, setOpen] = React.useState(false)
   // Initial state matches the unset default ('system'); reconciled to the saved
@@ -103,8 +125,8 @@ export default function ThemeToggle({ className }: ThemeToggleProps) {
       type="button"
       variant="ghost"
       size="icon"
-      aria-label="Change theme"
-      title="Change theme"
+      aria-label={TRIGGER_LABEL[locale]}
+      title={TRIGGER_LABEL[locale]}
       // Match the 32px labeled LangSwitcher it always sits beside (landing
       // footer / docs sidebar footer / mobile drawer).
       className={cn('size-8', className)}
@@ -130,7 +152,8 @@ export default function ThemeToggle({ className }: ThemeToggleProps) {
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent align="start" className="w-40 p-1">
         <ul className="flex flex-col">
-          {MODES.map(({ mode: m, label, Icon }) => {
+          {MODES.map(({ mode: m, Icon }) => {
+            const label = MODE_LABEL[m][locale]
             const active = m === mode
             return (
               <li key={m}>

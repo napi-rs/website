@@ -42,15 +42,24 @@ export interface TocProps {
   className?: string
 }
 
-// Live napi.rs (Nextra) does NOT localize the TOC title or the feedback label —
-// both render in English on every locale (verified against napi.rs/{cn,pt-BR}).
-// Only the edit-on-GitHub label is localized. We match that exactly.
-const TOC_TITLE = 'On This Page'
-const FEEDBACK_LABEL = 'Question? Give us feedback →'
+// TOC title + feedback label, LOCALIZED. (Live napi.rs keeps both in English
+// on every locale; we intentionally diverge — a localized chrome is strictly
+// friendlier and costs nothing here.)
+const TOC_TITLE: Record<Locale, string> = {
+  en: 'On This Page',
+  cn: '本页目录',
+  'pt-BR': 'Nesta página',
+}
+const FEEDBACK_LABEL: Record<Locale, string> = {
+  en: 'Question? Give us feedback →',
+  cn: '有问题？给我们反馈 →',
+  'pt-BR': 'Dúvidas? Envie feedback →',
+}
 
 // TOC footer links (match live napi.rs / Nextra): a feedback link to the docs
 // repo issues + an "edit this page on GitHub" link to the markdown source.
-const EDIT_BASE = 'https://github.com/napi-rs/website/blob/main'
+// /edit/main (GitHub's editor) rather than /blob/main: opens ready to edit.
+const EDIT_BASE = 'https://github.com/napi-rs/website/edit/main'
 const FEEDBACK_URL =
   'https://github.com/napi-rs/website/issues/new?labels=feedback&title=Feedback'
 
@@ -141,7 +150,27 @@ export default function Toc({
     )
 
     for (const el of elements) observer.observe(el)
-    return () => observer.disconnect()
+
+    // Bottom-of-page fix: when the reader reaches the end of the document the
+    // LAST heading often never enters the observer's biased active region
+    // (rootMargin cuts off the bottom 70% of the viewport), leaving an earlier
+    // heading highlighted. Force-activate the last heading at the scroll
+    // bottom (4px slack for fractional scroll heights).
+    const onScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 4
+      ) {
+        setActiveSlug(headings[headings.length - 1].slug)
+      }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll() // a short page may already be at the bottom on load
+
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('scroll', onScroll)
+    }
   }, [headings])
 
   if (headings.length === 0) return null
@@ -158,7 +187,7 @@ export default function Toc({
       aria-label="Table of contents"
       className={cn('sticky top-20 py-8 pr-4 text-sm', className)}
     >
-      <p className="mb-3 font-medium text-foreground">{TOC_TITLE}</p>
+      <p className="mb-3 font-medium text-foreground">{TOC_TITLE[locale]}</p>
       <ul className="space-y-2">
         {headings.map((h) => {
           const isActive = h.slug === activeSlug
@@ -201,7 +230,7 @@ export default function Toc({
           rel="noreferrer noopener"
           className="transition-colors hover:text-foreground"
         >
-          {FEEDBACK_LABEL}
+          {FEEDBACK_LABEL[locale]}
         </a>
         {editHref ? (
           <a

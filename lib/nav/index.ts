@@ -77,16 +77,8 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/exports',
             },
             {
-              title: 'Module Initialization',
-              path: 'docs/concepts/module-init',
-            },
-            {
-              title: 'Naming conventions',
-              path: 'docs/concepts/naming-conventions',
-            },
-            {
-              title: '#[napi] attributes',
-              path: 'docs/concepts/napi-attributes',
+              title: 'Function',
+              path: 'docs/concepts/function',
             },
             {
               title: 'Values',
@@ -97,6 +89,10 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/type-conversions',
             },
             {
+              title: 'Object',
+              path: 'docs/concepts/object',
+            },
+            {
               title: 'Class',
               path: 'docs/concepts/class',
             },
@@ -105,60 +101,44 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/enum',
             },
             {
-              title: 'Object',
-              path: 'docs/concepts/object',
-            },
-            {
-              title: 'Function',
-              path: 'docs/concepts/function',
-            },
-            {
               title: 'Errors and panics',
               path: 'docs/concepts/error-handling',
-            },
-            {
-              title: 'ThreadsafeFunction',
-              path: 'docs/concepts/threadsafe-function',
-            },
-            {
-              title: 'AsyncTask',
-              path: 'docs/concepts/async-task',
-            },
-            {
-              title: 'Inject Env',
-              path: 'docs/concepts/inject-env',
-            },
-            {
-              title: 'Inject This',
-              path: 'docs/concepts/inject-this',
-            },
-            {
-              title: 'Reference',
-              path: 'docs/concepts/reference',
             },
             {
               title: 'async fn',
               path: 'docs/concepts/async-fn',
             },
             {
-              title: 'External',
-              path: 'docs/concepts/external',
-            },
-            {
               title: 'Promise',
               path: 'docs/concepts/promise',
+            },
+            {
+              title: 'AsyncTask',
+              path: 'docs/concepts/async-task',
+            },
+            {
+              title: 'ThreadsafeFunction',
+              path: 'docs/concepts/threadsafe-function',
             },
             {
               title: 'Iterators',
               path: 'docs/concepts/iterators',
             },
             {
-              title: 'Types Overwrite',
-              path: 'docs/concepts/types-overwrite',
+              title: 'Web Streams',
+              path: 'docs/concepts/streams',
             },
             {
               title: 'Typed Array',
               path: 'docs/concepts/typed-array',
+            },
+            {
+              title: 'External',
+              path: 'docs/concepts/external',
+            },
+            {
+              title: 'Reference',
+              path: 'docs/concepts/reference',
             },
             {
               title: 'Understanding Lifetime',
@@ -169,8 +149,36 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/env',
             },
             {
+              title: 'Inject Env',
+              path: 'docs/concepts/inject-env',
+            },
+            {
+              title: 'Inject This',
+              path: 'docs/concepts/inject-this',
+            },
+            {
+              title: 'Naming conventions',
+              path: 'docs/concepts/naming-conventions',
+            },
+            {
+              title: '#[napi] attributes',
+              path: 'docs/concepts/napi-attributes',
+            },
+            {
+              title: 'Types Overwrite',
+              path: 'docs/concepts/types-overwrite',
+            },
+            {
+              title: 'Module Initialization',
+              path: 'docs/concepts/module-init',
+            },
+            {
               title: 'Cargo features',
               path: 'docs/concepts/cargo-features',
+            },
+            {
+              title: 'Custom async runtime',
+              path: 'docs/concepts/async-runtime',
             },
             {
               title: 'WebAssembly',
@@ -229,16 +237,16 @@ export const nav: Record<Locale, LocaleNav> = {
           title: 'Deep dive',
           items: [
             {
+              title: 'Release native packages',
+              path: 'docs/deep-dive/release',
+            },
+            {
               title: 'Native module',
               path: 'docs/deep-dive/native-module',
             },
             {
               title: 'History',
               path: 'docs/deep-dive/history',
-            },
-            {
-              title: 'Release native packages',
-              path: 'docs/deep-dive/release',
             },
           ],
         },
@@ -283,6 +291,10 @@ export const nav: Record<Locale, LocaleNav> = {
             {
               title: 'V2 to V3 Migration Guide',
               path: 'docs/more/v2-v3-migration-guide',
+            },
+            {
+              title: 'Examples',
+              path: 'docs/more/examples',
             },
           ],
         },
@@ -381,16 +393,8 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/exports',
             },
             {
-              title: '模块初始化',
-              path: 'docs/concepts/module-init',
-            },
-            {
-              title: '命名约定',
-              path: 'docs/concepts/naming-conventions',
-            },
-            {
-              title: '#[napi] 属性',
-              path: 'docs/concepts/napi-attributes',
+              title: '函数',
+              path: 'docs/concepts/function',
             },
             {
               title: '值',
@@ -401,6 +405,10 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/type-conversions',
             },
             {
+              title: '对象',
+              path: 'docs/concepts/object',
+            },
+            {
               title: '类',
               path: 'docs/concepts/class',
             },
@@ -409,60 +417,44 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/enum',
             },
             {
-              title: '对象',
-              path: 'docs/concepts/object',
-            },
-            {
-              title: '函数',
-              path: 'docs/concepts/function',
-            },
-            {
               title: '错误与 panic',
               path: 'docs/concepts/error-handling',
-            },
-            {
-              title: '线程安全函数',
-              path: 'docs/concepts/threadsafe-function',
-            },
-            {
-              title: '异步任务',
-              path: 'docs/concepts/async-task',
-            },
-            {
-              title: '注入 Env',
-              path: 'docs/concepts/inject-env',
-            },
-            {
-              title: '注入 This',
-              path: 'docs/concepts/inject-this',
-            },
-            {
-              title: '引用',
-              path: 'docs/concepts/reference',
             },
             {
               title: '异步函数',
               path: 'docs/concepts/async-fn',
             },
             {
-              title: '外部数据',
-              path: 'docs/concepts/external',
-            },
-            {
               title: 'Promise',
               path: 'docs/concepts/promise',
+            },
+            {
+              title: '异步任务',
+              path: 'docs/concepts/async-task',
+            },
+            {
+              title: '线程安全函数',
+              path: 'docs/concepts/threadsafe-function',
             },
             {
               title: '迭代器',
               path: 'docs/concepts/iterators',
             },
             {
-              title: '重写类型',
-              path: 'docs/concepts/types-overwrite',
+              title: 'Web Streams',
+              path: 'docs/concepts/streams',
             },
             {
               title: '类型化数组',
               path: 'docs/concepts/typed-array',
+            },
+            {
+              title: '外部数据',
+              path: 'docs/concepts/external',
+            },
+            {
+              title: '引用',
+              path: 'docs/concepts/reference',
             },
             {
               title: '理解生命周期',
@@ -473,8 +465,36 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/env',
             },
             {
+              title: '注入 Env',
+              path: 'docs/concepts/inject-env',
+            },
+            {
+              title: '注入 This',
+              path: 'docs/concepts/inject-this',
+            },
+            {
+              title: '命名约定',
+              path: 'docs/concepts/naming-conventions',
+            },
+            {
+              title: '#[napi] 属性',
+              path: 'docs/concepts/napi-attributes',
+            },
+            {
+              title: '重写类型',
+              path: 'docs/concepts/types-overwrite',
+            },
+            {
+              title: '模块初始化',
+              path: 'docs/concepts/module-init',
+            },
+            {
               title: 'Cargo 特性',
               path: 'docs/concepts/cargo-features',
+            },
+            {
+              title: '自定义异步运行时',
+              path: 'docs/concepts/async-runtime',
             },
             {
               title: 'WebAssembly',
@@ -533,16 +553,16 @@ export const nav: Record<Locale, LocaleNav> = {
           title: '深入理解',
           items: [
             {
+              title: '发布原生包',
+              path: 'docs/deep-dive/release',
+            },
+            {
               title: '原生模块',
               path: 'docs/deep-dive/native-module',
             },
             {
               title: '历史',
               path: 'docs/deep-dive/history',
-            },
-            {
-              title: '发布原生包',
-              path: 'docs/deep-dive/release',
             },
           ],
         },
@@ -587,6 +607,10 @@ export const nav: Record<Locale, LocaleNav> = {
             {
               title: 'V2 到 V3 迁移指南',
               path: 'docs/more/v2-v3-migration-guide',
+            },
+            {
+              title: '示例',
+              path: 'docs/more/examples',
             },
           ],
         },
@@ -685,16 +709,8 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/exports',
             },
             {
-              title: 'Inicialização do módulo',
-              path: 'docs/concepts/module-init',
-            },
-            {
-              title: 'Convenções de nomenclatura',
-              path: 'docs/concepts/naming-conventions',
-            },
-            {
-              title: 'Atributos #[napi]',
-              path: 'docs/concepts/napi-attributes',
+              title: 'Funções',
+              path: 'docs/concepts/function',
             },
             {
               title: 'Valores',
@@ -705,6 +721,10 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/type-conversions',
             },
             {
+              title: 'Objetos',
+              path: 'docs/concepts/object',
+            },
+            {
               title: 'Classes',
               path: 'docs/concepts/class',
             },
@@ -713,60 +733,44 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/enum',
             },
             {
-              title: 'Objetos',
-              path: 'docs/concepts/object',
-            },
-            {
-              title: 'Funções',
-              path: 'docs/concepts/function',
-            },
-            {
               title: 'Erros e panics',
               path: 'docs/concepts/error-handling',
-            },
-            {
-              title: 'ThreadsafeFunction',
-              path: 'docs/concepts/threadsafe-function',
-            },
-            {
-              title: 'AsyncTask',
-              path: 'docs/concepts/async-task',
-            },
-            {
-              title: 'Injetar Env',
-              path: 'docs/concepts/inject-env',
-            },
-            {
-              title: 'Injetar This',
-              path: 'docs/concepts/inject-this',
-            },
-            {
-              title: 'Referências',
-              path: 'docs/concepts/reference',
             },
             {
               title: 'async fn',
               path: 'docs/concepts/async-fn',
             },
             {
-              title: 'External',
-              path: 'docs/concepts/external',
-            },
-            {
               title: 'Promise',
               path: 'docs/concepts/promise',
+            },
+            {
+              title: 'AsyncTask',
+              path: 'docs/concepts/async-task',
+            },
+            {
+              title: 'ThreadsafeFunction',
+              path: 'docs/concepts/threadsafe-function',
             },
             {
               title: 'Iteradores',
               path: 'docs/concepts/iterators',
             },
             {
-              title: 'Sobrescrita de Tipos',
-              path: 'docs/concepts/types-overwrite',
+              title: 'Web Streams',
+              path: 'docs/concepts/streams',
             },
             {
               title: 'Typed Array',
               path: 'docs/concepts/typed-array',
+            },
+            {
+              title: 'External',
+              path: 'docs/concepts/external',
+            },
+            {
+              title: 'Referências',
+              path: 'docs/concepts/reference',
             },
             {
               title: 'Entendendo lifetimes',
@@ -777,8 +781,36 @@ export const nav: Record<Locale, LocaleNav> = {
               path: 'docs/concepts/env',
             },
             {
+              title: 'Injetar Env',
+              path: 'docs/concepts/inject-env',
+            },
+            {
+              title: 'Injetar This',
+              path: 'docs/concepts/inject-this',
+            },
+            {
+              title: 'Convenções de nomenclatura',
+              path: 'docs/concepts/naming-conventions',
+            },
+            {
+              title: 'Atributos #[napi]',
+              path: 'docs/concepts/napi-attributes',
+            },
+            {
+              title: 'Sobrescrita de Tipos',
+              path: 'docs/concepts/types-overwrite',
+            },
+            {
+              title: 'Inicialização do módulo',
+              path: 'docs/concepts/module-init',
+            },
+            {
               title: 'Features do Cargo',
               path: 'docs/concepts/cargo-features',
+            },
+            {
+              title: 'Runtime assíncrono customizado',
+              path: 'docs/concepts/async-runtime',
             },
             {
               title: 'WebAssembly',
@@ -837,16 +869,16 @@ export const nav: Record<Locale, LocaleNav> = {
           title: 'Aprofundamento',
           items: [
             {
+              title: 'Publicação de pacotes nativos',
+              path: 'docs/deep-dive/release',
+            },
+            {
               title: 'Módulo nativo',
               path: 'docs/deep-dive/native-module',
             },
             {
               title: 'História',
               path: 'docs/deep-dive/history',
-            },
-            {
-              title: 'Publicação de pacotes nativos',
-              path: 'docs/deep-dive/release',
             },
           ],
         },
@@ -891,6 +923,10 @@ export const nav: Record<Locale, LocaleNav> = {
             {
               title: 'Guia de migração da V2 para a V3',
               path: 'docs/more/v2-v3-migration-guide',
+            },
+            {
+              title: 'Exemplos',
+              path: 'docs/more/examples',
             },
           ],
         },

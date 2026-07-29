@@ -82,11 +82,16 @@ pub fn plus_100(input: u32) -> u32 {
 
 为当前平台运行模板的 release 构建：
 
-```sh
+::: pm
+```sh yarn
 yarn build
 ```
+```sh pnpm
+pnpm build
+```
+:::
 
-pnpm 请运行 `pnpm build`。该脚本调用 `napi build --platform --release`，生成类似以下文件：
+该脚本调用 `napi build --platform --release`，生成类似以下文件：
 
 ```text
 cool.darwin-arm64.node

@@ -8,6 +8,20 @@ import { Green } from '../../../components/chalk'
 
 Update version in created npm packages
 
+## When you need this
+
+`napi version` copies the `version` field of your root `package.json` into the
+`package.json` of every per-platform package created by
+[`napi create-npm-dirs`](./create-npm-dirs). You need it when your release
+flow versions the platform packages as a separate step, for example when the
+`npm/` directories are committed or inspected before publishing. If you run
+[`napi pre-publish`](./pre-publish) directly, it already performs this version
+sync for you.
+
+In the release pipeline this command sits after `napi create-npm-dirs` and
+before `napi pre-publish`. See [Release native packages](/docs/deep-dive/release)
+for the complete pipeline.
+
 ## Usage
 
 ```sh
@@ -22,6 +36,22 @@ import { NapiCli } from '@napi-rs/cli'
 new NapiCli().version({
   // options
 })
+```
+
+## Examples
+
+Sync the root version into all platform packages in the default `npm/` directory:
+
+```sh
+napi version
+```
+
+A typical CI release job, after the platform binaries have been built:
+
+```sh
+napi create-npm-dirs
+napi artifacts
+napi version
 ```
 
 ## Options

@@ -4,10 +4,8 @@ import TransformImage from "../../../../components/transform-image/_Demo.tsx" wi
 </script>
 
 ---
-
 title: 'WebAssembly 与 WASI'
 description: 在 Node.js 和浏览器中构建、打包、测试并运行 NAPI-RS WASI 回退。
-
 ---
 
 # WebAssembly 与 WASI
@@ -21,7 +19,7 @@ NAPI-RS 可以将插件编译到 [`wasm32-wasip1-threads`](https://doc.rust-lang
 当前支持的默认目标是 `wasm32-wasip1-threads`。更底层的 `wasm32-unknown-unknown` 和无线程 WASI 目标需要自行调整线程与依赖，本工作流不会生成它们。
 
 ::: warning
-WASI 构建并不自动等同于原生插件。操作系统 API、原生 C/C++ 依赖、文件系统行为、线程、内存限制和宿主运行时支持都可能不同。请把 WASI 产物作为独立发布目标测试。
+  WASI 构建并不自动等同于原生插件。操作系统 API、原生 C/C++ 依赖、文件系统行为、线程、内存限制和宿主运行时支持都可能不同。请把 WASI 产物作为独立发布目标测试。
 
 :::
 
@@ -77,16 +75,16 @@ napi build --platform --release --target wasm32-wasip1-threads
 
 对于 `binaryName: "my-addon"`，构建会创建：
 
-| 文件                              | 用途                                  |
-| --------------------------------- | ------------------------------------- |
-| `my-addon.wasm32-wasi.wasm`       | strip 后的 release WASM 模块          |
-| `my-addon.wasm32-wasi.debug.wasm` | 生成成功时，保留调试/名称信息的模块   |
-| `my-addon.wasi.cjs`               | Node.js WASI 加载器                   |
-| `my-addon.wasi-browser.js`        | 浏览器 ESM 加载器                     |
-| `wasi-worker.mjs`                 | emnapi 线程使用的 Node worker         |
-| `wasi-worker-browser.mjs`         | emnapi 线程使用的浏览器 worker        |
-| `browser.js`                      | 重新导出 WASI 平台包的 browser 包入口 |
-| `index.js` 和 `index.d.ts`        | 普通平台选择加载器和共享类型          |
+| 文件 | 用途 |
+| --- | --- |
+| `my-addon.wasm32-wasi.wasm` | strip 后的 release WASM 模块 |
+| `my-addon.wasm32-wasi.debug.wasm` | 生成成功时，保留调试/名称信息的模块 |
+| `my-addon.wasi.cjs` | Node.js WASI 加载器 |
+| `my-addon.wasi-browser.js` | 浏览器 ESM 加载器 |
+| `wasi-worker.mjs` | emnapi 线程使用的 Node worker |
+| `wasi-worker-browser.mjs` | emnapi 线程使用的浏览器 worker |
+| `browser.js` | 重新导出 WASI 平台包的 browser 包入口 |
+| `index.js` 和 `index.d.ts` | 普通平台选择加载器和共享类型 |
 
 每个加载器都要与其 worker 和 WASM 文件放在一起。不重新生成加载器就重命名或移动其中某个文件，会破坏相对 URL。
 
@@ -99,11 +97,11 @@ napi build --platform --release --target wasm32-wasip1-threads
 
 即使宿主机支持原生插件，也可以用 `NAPI_RS_FORCE_WASI` 测试回退。对于 `@napi-rs/cli` 3.7 或更新版本生成的加载器：
 
-| 值                     | 行为                                                    |
-| ---------------------- | ------------------------------------------------------- |
-| 未设置或其他任意字符串 | 优先原生；仅在原生失败后尝试 WASI                       |
-| `true`                 | 即使原生已加载也尝试并选择 WASI；不会严格断言 WASI 缺失 |
-| `error`                | 尝试 WASI；没有本地或已打包 WASI 绑定时抛出错误         |
+| 值 | 行为 |
+| --- | --- |
+| 未设置或其他任意字符串 | 优先原生；仅在原生失败后尝试 WASI |
+| `true` | 即使原生已加载也尝试并选择 WASI；不会严格断言 WASI 缺失 |
+| `error` | 尝试 WASI；没有本地或已打包 WASI 绑定时抛出错误 |
 
 `1`、`0` 和 `false` 等值不会强制使用 WASI。测试中请使用 `error`，以免缺失产物时静默使用原生实现：
 
@@ -119,7 +117,7 @@ NAPI_RS_FORCE_WASI=error node ./test.cjs
 - 同目录中存在 `.debug.wasm` 文件时优先使用它。
 
 ::: warning
-Node WASI 加载器会预打开文件系统根目录。请把 WASI 插件视为受信任的原生应用代码，而不是隔离不受信任模块或输入的安全沙箱。
+  Node WASI 加载器会预打开文件系统根目录。请把 WASI 插件视为受信任的原生应用代码，而不是隔离不受信任模块或输入的安全沙箱。
 
 :::
 
@@ -200,14 +198,14 @@ console.log(typeof SharedArrayBuffer) // 'function'
 
 `napi.wasm` 字段控制生成的浏览器胶水代码：
 
-| 字段                 | 默认值        | 作用                                                     |
-| -------------------- | ------------- | -------------------------------------------------------- |
-| `initialMemory`      | `4000` pages  | 初始共享内存（一个 WebAssembly page 为 64 KiB）          |
-| `maximumMemory`      | `65536` pages | 最大共享内存，4 GiB                                      |
-| `browser.fs`         | `false`       | 创建内存文件系统、预打开 `/`，并导出 `__fs` / `__volume` |
-| `browser.asyncInit`  | `false`       | 使用 emnapi 的异步实例化 API                             |
-| `browser.buffer`     | `false`       | 将 `buffer` 包的 `Buffer` 注入 emnapi 上下文             |
-| `browser.errorEvent` | `false`       | 将 worker 故障转发为 `napi-rs-worker-error` window event |
+| 字段 | 默认值 | 作用 |
+| --- | --- | --- |
+| `initialMemory` | `4000` pages | 初始共享内存（一个 WebAssembly page 为 64 KiB） |
+| `maximumMemory` | `65536` pages | 最大共享内存，4 GiB |
+| `browser.fs` | `false` | 创建内存文件系统、预打开 `/`，并导出 `__fs` / `__volume` |
+| `browser.asyncInit` | `false` | 使用 emnapi 的异步实例化 API |
+| `browser.buffer` | `false` | 将 `buffer` 包的 `Buffer` 注入 emnapi 上下文 |
+| `browser.errorEvent` | `false` | 将 worker 故障转发为 `napi-rs-worker-error` window event |
 
 浏览器入口会 fetch WASM 文件，因此即使 `asyncInit` 为 `false`，也使用顶层 `await`。请确保 bundler/输出目标支持 ESM worker、`import.meta.url` 和顶层 await。
 
@@ -302,13 +300,13 @@ CLI 总会把 Cargo 的 WASI 链接器变量指向 `$WASI_SDK_PATH/bin/wasm-ld`�
 
 ## 运行时支持矩阵
 
-| 宿主                    | 状态与约束                                                                          |
-| ----------------------- | ----------------------------------------------------------------------------------- |
-| Node.js                 | 生成的 `.wasi.cjs` 路径；平台包要求 Node 14 或更高版本，并使用 Node WASI/worker API |
-| 跨源隔离浏览器          | 生成的 ESM + module worker 路径；需要共享内存、顶层 await 和正确的静态资源服务      |
-| 未隔离浏览器            | 不支持 threads 目标，因为共享内存不可用                                             |
-| Bun 和 Deno             | 未经运行时测试不要声称支持；Node 兼容的 WASI 加载目前有一个未解决的不兼容报告       |
-| Edge/serverless isolate | 取决于宿主；许多环境不提供生成加载器所需的 Node WASI、文件系统或 worker API         |
+| 宿主 | 状态与约束 |
+| --- | --- |
+| Node.js | 生成的 `.wasi.cjs` 路径；平台包要求 Node 14 或更高版本，并使用 Node WASI/worker API |
+| 跨源隔离浏览器 | 生成的 ESM + module worker 路径；需要共享内存、顶层 await 和正确的静态资源服务 |
+| 未隔离浏览器 | 不支持 threads 目标，因为共享内存不可用 |
+| Bun 和 Deno | 未经运行时测试不要声称支持；Node 兼容的 WASI 加载目前有一个未解决的不兼容报告 |
+| Edge/serverless isolate | 取决于宿主；许多环境不提供生成加载器所需的 Node WASI、文件系统或 worker API |
 
 Bun/Deno 限制记录在 [napi-rs#2965](https://github.com/napi-rs/napi-rs/issues/2965)。这是运行时兼容性缺口，无法通过包安装说明解决。
 

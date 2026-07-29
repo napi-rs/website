@@ -64,6 +64,46 @@ export default function Footer({ locale, className }: FooterProps) {
         </div>
 
         <div className="flex flex-col gap-2 sm:items-end">
+          {/* Quick links — small + muted with the same hover treatment as the
+              attribution below. Docs points at the first docs leaf (/docs
+              itself has no index page and 404s); RSS + llms.txt are the
+              machine-readable twins served from the site root. */}
+          <nav
+            aria-label="Footer"
+            className="flex flex-wrap gap-x-4 gap-y-1 sm:justify-end"
+          >
+            <a
+              href="/docs/introduction/getting-started"
+              className="transition-colors hover:text-primary"
+            >
+              Docs
+            </a>
+            <a
+              href="https://github.com/napi-rs/napi-rs"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="transition-colors hover:text-primary"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://discord.gg/SpWzYHsKHs"
+              target="_blank"
+              rel="noreferrer noopener"
+              className="transition-colors hover:text-primary"
+            >
+              Discord
+            </a>
+            <a href="/rss.xml" className="transition-colors hover:text-primary">
+              RSS
+            </a>
+            <a
+              href="/llms.txt"
+              className="transition-colors hover:text-primary"
+            >
+              llms.txt
+            </a>
+          </nav>
           <a
             href="https://void.cloud"
             target="_blank"

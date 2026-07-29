@@ -95,3 +95,87 @@ pub fn exports(mut export: Object) -> Result<()> {
   Ok(())
 }
 ```
+
+## Namespaces
+
+For larger addons you can group related exports into nested JavaScript module objects instead of flattening everything onto the root `exports`. There are two ways:
+
+- `#[napi] mod name { ... }` — export an inline Rust module as a namespace. Every child item that also carries `#[napi]` is exported inside it (nested napi modules are not supported). Add `#[napi(js_name = "...")]` on the `mod` to rename the namespace object.
+- `#[napi(namespace = "...")]` on individual functions, classes, impl blocks, enums, consts, and type aliases — registers that item under `exports.<namespace>`; apply the same namespace to a class and its `impl` blocks. See [`namespace` in the attributes reference](/docs/concepts/napi-attributes#naming-and-exports).
+
+The canonical example is [`examples/napi/src/js_mod.rs`](https://github.com/napi-rs/napi-rs/blob/main/examples/napi/src/js_mod.rs):
+
+**lib.rs**
+
+```rust
+#[napi]
+mod xxh3 {
+  use napi::bindgen_prelude::{BigInt, Buffer};
+
+  #[napi]
+  pub const ALIGNMENT: u32 = 16;
+
+  #[napi(js_name = "xxh3_64")]
+  pub fn xxh64(input: Buffer) -> u64 {
+    let mut h: u64 = 0;
+    for i in input.as_ref() {
+      h = h.wrapping_add(*i as u64);
+    }
+    h
+  }
+
+  #[napi]
+  pub struct Xxh3 {
+    inner: BigInt,
+  }
+
+  #[napi]
+  impl Xxh3 {
+    #[napi(constructor)]
+    pub fn new() -> Xxh3 {
+      // ...
+    }
+  }
+}
+
+#[napi]
+mod xxh2 {
+  use napi::bindgen_prelude::*;
+
+  #[napi]
+  pub fn xxh2_plus(a: u32, b: u32) -> u32 {
+    a + b
+  }
+}
+```
+
+The members are reached through the namespace objects on the package exports:
+
+**index.ts**
+
+```ts
+import { xxh2, xxh3 } from './index.js'
+
+xxh3.xxh3_64(Buffer.from('hello')) // function renamed with js_name
+console.log(xxh3.ALIGNMENT) // 16
+const hasher = new xxh3.Xxh3() // classes live inside the namespace too
+xxh2.xxh2Plus(1, 2) // 3
+```
+
+And the generated `.d.ts` mirrors the nesting with `export declare namespace`:
+
+**index.d.ts**
+
+```ts
+export declare namespace xxh2 {
+  export function xxh2Plus(a: number, b: number): number
+}
+
+export declare namespace xxh3 {
+  export class Xxh3 {
+    constructor()
+  }
+  export const ALIGNMENT: number
+  export function xxh3_64(input: Buffer): bigint
+}
+```

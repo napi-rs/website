@@ -15,11 +15,17 @@ import { Languages } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import type { Locale } from '@/lib/nav/index.ts'
+import { splitLocale } from '@/lib/docs/locale.ts'
 
 export interface NotTranslatedBannerProps {
   locale: Locale
   /** Whether the current page is served via the i18n fallback (en content). */
   fallback?: boolean
+  /**
+   * Current ROUTE path — used to prefill the "help translate" issue title with
+   * the page's content leaf. Passed by the layout (from `useShared().path`).
+   */
+  currentPath?: string
   className?: string
 }
 
@@ -30,12 +36,33 @@ const MESSAGE: Record<Locale, string> = {
   'pt-BR': 'Esta página ainda não foi traduzida. Exibindo a versão em inglês.',
 }
 
+const CTA: Record<Locale, string> = {
+  en: 'Help translate this page →',
+  cn: '帮助翻译本页 →',
+  'pt-BR': 'Ajude a traduzir esta página →',
+}
+
+// The CTA opens a prefilled "translation" GitHub issue. GitHub's /new-file and
+// /edit URLs can't prefill path+content reliably (and /edit 404s when the
+// localized file doesn't exist — which is exactly the case here), so an issue
+// is the only robust contribution entry point.
+function translateUrl(rest: string, locale: Locale): string {
+  const params = new URLSearchParams({
+    labels: 'translation',
+    title: `Translation: ${rest} (${locale})`,
+  })
+  return `https://github.com/napi-rs/website/issues/new?${params.toString()}`
+}
+
 export default function NotTranslatedBanner({
   locale,
   fallback,
+  currentPath,
   className,
 }: NotTranslatedBannerProps) {
   if (!fallback) return null
+
+  const [, rest] = splitLocale(currentPath ?? '')
 
   return (
     <div
@@ -49,7 +76,19 @@ export default function NotTranslatedBanner({
         className="mt-0.5 size-4 shrink-0 text-primary"
         aria-hidden="true"
       />
-      <span>{MESSAGE[locale]}</span>
+      <span>
+        {MESSAGE[locale]}{' '}
+        {rest ? (
+          <a
+            href={translateUrl(rest, locale)}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="font-medium text-foreground underline underline-offset-4 transition-colors hover:text-primary"
+          >
+            {CTA[locale]}
+          </a>
+        ) : null}
+      </span>
     </div>
   )
 }

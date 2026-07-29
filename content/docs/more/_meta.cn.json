@@ -5,5 +5,6 @@
   "integrations": "打包工具与框架",
   "troubleshooting": "故障排查",
   "faq": "交叉编译常见问题",
-  "v2-v3-migration-guide": "V2 到 V3 迁移指南"
+  "v2-v3-migration-guide": "V2 到 V3 迁移指南",
+  "examples": "示例"
 }

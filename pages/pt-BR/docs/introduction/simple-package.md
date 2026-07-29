@@ -98,11 +98,19 @@ declaração TypeScript correspondente durante a build.
 
 Execute a build de release do template para sua plataforma atual:
 
-```sh
+::: pm
+
+```sh yarn
 yarn build
 ```
 
-Para pnpm, execute `pnpm build`. O script invoca `napi build --platform
+```sh pnpm
+pnpm build
+```
+
+:::
+
+O script invoca `napi build --platform
 --release` e produz arquivos como:
 
 ```text

@@ -110,6 +110,23 @@ pub fn normalize_id(value: Either<u32, String>) -> String {
 export function normalizeId(value: number | string): string
 ```
 
+Wider unions work the same way: `Either3` and `Either4` are generated alongside `Either` (and so on up to `Either26`), with variants named `A`, `B`, `C`, `D`, …:
+
+```rust filename="lib.rs"
+#[napi]
+pub fn either3(input: Either3<String, u32, bool>) -> u32 {
+  match input {
+    Either3::A(s) => s.len() as u32,
+    Either3::B(n) => n,
+    Either3::C(b) => u32::from(b),
+  }
+}
+```
+
+```ts filename="index.d.ts"
+export function either3(input: string | number | boolean): number
+```
+
 Order overlapping alternatives from most specific to least specific. Validation for a plain `Object`, for example, cannot prove a complete object schema. `Either` is a runtime union, not a serde-style untagged enum with backtracking after arbitrary user code.
 
 ## Arrays, tuples, maps, and sets

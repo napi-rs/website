@@ -17,24 +17,38 @@ description: 在 libuv 线程池中运行任务并使用 AbortSignal 中止它
 
 **lib.rs**
 
-```rust {11-13}
-use napi::{Task, Env, Result, JsNumber};
+```rust {20-22}
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
 
-struct AsyncFib {
+fn fib(n: u32) -> u32 {
+  if n <= 1 {
+    return n;
+  }
+  fib(n - 1) + fib(n - 2)
+}
+
+pub struct AsyncFib {
   input: u32,
 }
 
+#[napi]
 impl Task for AsyncFib {
   type Output = u32;
-  type JsValue = JsNumber;
+  type JsValue = u32;
 
   fn compute(&mut self) -> Result<Self::Output> {
     Ok(fib(self.input))
   }
 
-  fn resolve(&mut self, env: Env, output: u32) -> Result<Self::JsValue> {
-    env.create_uint32(output)
+  fn resolve(&mut self, _: Env, output: u32) -> Result<Self::JsValue> {
+    Ok(output)
   }
+}
+
+#[napi]
+pub fn async_fib(input: u32) -> AsyncTask<AsyncFib> {
+  AsyncTask::new(AsyncFib { input })
 }
 ```
 
@@ -56,39 +70,52 @@ impl Task for AsyncFib {
 
 **lib.rs**
 
-```rust {28}
-struct CountBufferLength {
-  data: Ref<JsBufferValue>,
+```rust {32}
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+pub struct CountBufferLength {
+  data: Buffer,
 }
 
 impl CountBufferLength {
-  pub fn new(data: Ref<JsBufferValue>) -> Self {
+  pub fn new(data: Buffer) -> Self {
     Self { data }
   }
 }
 
 impl Task for CountBufferLength {
   type Output = usize;
-  type JsValue = JsNumber;
+  type JsValue = u32;
 
   fn compute(&mut self) -> Result<Self::Output> {
     if self.data.len() == 10 {
-      return Err(Error::from_reason("len can't be 10".to_string()));
+      return Err(Error::new(
+        Status::GenericFailure,
+        "Random fatal error".to_string(),
+      ));
     }
     Ok((&self.data).len())
   }
 
-  fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-    self.data.unref(env)?;
-    let output = u32::try_from(output)
-      .map_err(|_| Error::new(Status::InvalidArg, "buffer length exceeds u32"))?;
-    env.create_uint32(output)
+  fn resolve(&mut self, _: Env, output: Self::Output) -> Result<Self::JsValue> {
+    u32::try_from(output)
+      .map_err(|_| Error::new(Status::InvalidArg, "buffer length exceeds u32"))
   }
 
-  fn reject(&mut self, env: Env, err: Error) -> Result<Self::JsValue> {
-    self.data.unref(env)?;
-    Err(err)
+  fn reject(&mut self, _: Env, err: Error) -> Result<Self::JsValue> {
+    // catch the error
+    if err.status == Status::GenericFailure {
+      Ok(0)
+    } else {
+      Ok(1)
+    }
   }
+}
+
+#[napi]
+pub fn async_count_buffer_length(data: Buffer) -> AsyncTask<CountBufferLength> {
+  AsyncTask::new(CountBufferLength { data })
 }
 ```
 
@@ -96,39 +123,58 @@ impl Task for CountBufferLength {
 
 **lib.rs**
 
-```rust {27}
-struct CountBufferLength {
-  data: Ref<JsBufferValue>,
+```rust {41}
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+pub struct CountBufferLength {
+  data: Buffer,
 }
 
 impl CountBufferLength {
-  pub fn new(data: Ref<JsBufferValue>) -> Self {
+  pub fn new(data: Buffer) -> Self {
     Self { data }
   }
 }
 
-#[napi]
 impl Task for CountBufferLength {
   type Output = usize;
-  type JsValue = JsNumber;
+  type JsValue = u32;
 
   fn compute(&mut self) -> Result<Self::Output> {
     if self.data.len() == 10 {
-      return Err(Error::from_reason("len can't be 5".to_string()));
+      return Err(Error::new(
+        Status::GenericFailure,
+        "Random fatal error".to_string(),
+      ));
     }
     Ok((&self.data).len())
   }
 
-  fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
-    let output = u32::try_from(output)
-      .map_err(|_| Error::new(Status::InvalidArg, "buffer length exceeds u32"))?;
-    env.create_uint32(output)
+  fn resolve(&mut self, _: Env, output: Self::Output) -> Result<Self::JsValue> {
+    u32::try_from(output)
+      .map_err(|_| Error::new(Status::InvalidArg, "buffer length exceeds u32"))
   }
 
-  fn finally(&mut self, env: Env) -> Result<()> {
-    self.data.unref(env)?;
+  fn reject(&mut self, _: Env, err: Error) -> Result<Self::JsValue> {
+    // catch the error
+    if err.status == Status::GenericFailure {
+      Ok(0)
+    } else {
+      Ok(1)
+    }
+  }
+
+  fn finally(self, _: Env) -> Result<()> {
+    println!("finally");
+    drop(self.data);
     Ok(())
   }
+}
+
+#[napi]
+pub fn async_count_buffer_length(data: Buffer) -> AsyncTask<CountBufferLength> {
+  AsyncTask::new(CountBufferLength { data })
 }
 ```
 
@@ -163,6 +209,7 @@ export function asyncFib(input: number): Promise<number>
 
 ### 结合 `AbortSignal` 创建 `AsyncTask`
 
+在某些场景下，你可能想要中止队列中的 `AsyncTask`，例如对某些计算任务使用 `debounce`。
 您可以给 `AsyncTask` 传入 `AbortSignal` ，这样如果 `AsyncTask` 还没有启动，您就可以中止它。
 
 **lib.rs**
@@ -236,3 +283,64 @@ Rust 中注册的 `AbortSignal::on_abort` 回调仍会在 JavaScript signal 触�
 `signal.addEventListener('abort', ...)`。
 
 :::
+
+## `ScopedTask`
+
+`ScopedTask` 与 `Task` 基本相等，但它会把 `&'env Env` 传给 `resolve` 和 `reject` 方法，这样你就可以通过 `&'env Env` 创建带有生命周期的 `JsValue`。
+
+例如：
+
+**lib.rs**
+
+```rust {14,16}
+use napi::{JsString, ScopedTask, bindgen_prelude::*};
+use napi_derive::napi;
+
+pub struct CountBufferLength {
+  data: Buffer,
+}
+
+impl CountBufferLength {
+  pub fn new(data: Buffer) -> Self {
+    Self { data }
+  }
+}
+
+impl<'env> ScopedTask<'env> for CountBufferLength {
+  type Output = usize;
+  type JsValue = JsString<'env>;
+
+  fn compute(&mut self) -> Result<Self::Output> {
+    if self.data.len() == 10 {
+      return Err(Error::new(
+        Status::GenericFailure,
+        "Random fatal error".to_string(),
+      ));
+    }
+    Ok((&self.data).len())
+  }
+
+  fn resolve(&mut self, env: &'env Env, output: Self::Output) -> Result<Self::JsValue> {
+    env.create_string(format!("{output}"))
+  }
+
+  fn reject(&mut self, env: &'env Env, err: Error) -> Result<Self::JsValue> {
+    // catch the error
+    if err.status == Status::GenericFailure {
+      env.create_string("Random fatal error".to_string())
+    } else {
+      env.create_string("Random error".to_string())
+    }
+  }
+
+  fn finally(self, _: Env) -> Result<()> {
+    drop(self.data);
+    Ok(())
+  }
+}
+
+#[napi]
+pub fn async_count_buffer_length(data: Buffer) -> AsyncTask<CountBufferLength> {
+  AsyncTask::new(CountBufferLength { data })
+}
+```

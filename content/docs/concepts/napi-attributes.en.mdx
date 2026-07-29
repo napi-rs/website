@@ -117,6 +117,7 @@ generated async return type, so document that exceptional path explicitly.
 | `object_to_js = false` | Object, array, transparent struct; enum | Omits `ToNapiValue`; the type cannot be returned to JavaScript through generated conversion. | None. | Supported |
 | `use_nullable` or `use_nullable = true` | Class, object, array, structured enum | For object and structured-enum fields, emits `None` as `null` instead of omitting it and requires the input property. For arrays, writes/requires the tuple index instead of leaving/accepting a hole. Class accessor and constructor conversion is unchanged. | Emits a required `T \| null` property or tuple element. For a class, this is the option's only effect. | Supported; default is `false` |
 | `custom_finalize` | Class struct | Stops napi-derive from generating the default empty `ObjectFinalize` implementation, so the class must implement it itself. | None. | Supported |
+| `type_tag = "salt"` | Class struct | Replaces the `crate@version` component of the class's content-derived type tag with the given crate-unique salt. | None — runtime only, never emitted. | Stamping/checking requires `napi/napi8`; no-op on wasm. Supported |
 | `iterator` | Class struct | Makes each instance implement the synchronous iterator protocol. | Extends `Iterator<Yield, Return, Next>`. | **Experimental** |
 | `async_iterator` | Class struct | Makes each instance implement the async iterator protocol. | Adds `[Symbol.asyncIterator](): AsyncGenerator<...>`. | `napi/tokio_rt`; **experimental** |
 
@@ -137,6 +138,21 @@ pub struct Point(pub f64, pub f64);
 ```
 
 For an object or structured-enum field, the default mode accepts a missing property as `None` and omits `None` on output. A present value is converted as the inner `T`, so `null` and `undefined` are not universally accepted. With `use_nullable = true`, the property is required, `Option<T>` conversion accepts `null` as `None`, and output uses `null`; a missing or `undefined` property is still rejected. Arrays apply the same distinction to a missing tuple index versus a required index containing `null`. On a class, accessors and shorthand-constructor arguments already use normal `Option<T>` conversion and getters return `null` for `None`; `use_nullable` only changes the generated TypeScript shape.
+
+### `type_tag`
+
+Every `#[napi]` class gets a 128-bit type tag derived from its content identity string `crate@version::module_path::ClassName`. On `napi8` native builds the tag is stamped onto each instance's JavaScript object right after `napi_wrap` and verified before every blind pointer cast — a method receiver, a `&T` / `&mut T` parameter, or a `ClassInstance<T>`. A wrong-class, prototype-spoofed, or `method.call(wrongThis)` object is rejected with a catchable `Value is not an instance of class` error instead of causing a type-confused cast (see the [type-tag tests](https://github.com/napi-rs/napi-rs/blob/main/examples/napi/__tests__/type-tag.spec.ts)). Because Rust forbids duplicate `module_path::ident`, two distinct classes always get distinct tags even when they share a `js_name` and namespace. Stamping and checking are no-ops without `napi8` and on all wasm targets.
+
+The default identity keys on `crate@version`, so two *unrelated* addons that happen to share the same crate name, version, module path, and class name would derive the same tag. `#[napi(type_tag = "...")]` opts into a crate-unique salt that **replaces** the `crate@version` component — the tag becomes `salt::module_path::ClassName`, so the salt only needs to be unique per crate, and a UUID is recommended:
+
+```rust filename="lib.rs"
+#[napi(type_tag = "6f9619ff-8b86-d011-b42d-00cf4fc964ff")]
+pub struct MyClass {
+  pub value: i32,
+}
+```
+
+The salt is a compile-time constant like the default derivation, so the tag stays stable across process reloads and across two separately loaded copies of the same addon. The attribute is runtime-only and never appears in the generated TypeScript. Reach for it when your crate name is widely vendored (or otherwise likely to collide with an unrelated addon loaded into the same process); the default derivation is sufficient otherwise.
 
 ### Fields
 
@@ -216,6 +232,8 @@ pub fn calculate(operation: String, a: i32, b: i32) -> i32 {
 
 These strings are inserted into the generated declaration; napi-rs does not parse them as TypeScript or verify that they describe the runtime behavior. Keep runtime conversions authoritative and test the generated `.d.ts` file.
 
+To add your own types or imports at the top of the generated `.d.ts` file, configure the declaration file header (`dtsHeader` / `dtsHeaderFile`) in the [NAPI config](/docs/cli/napi-config#declaration-file-header). That is a file-level setting, independent of the per-export overrides above.
+
 ## Iterators
 
 `iterator` and `async_iterator` are mutually exclusive. A generator class cannot expose public fields named `next`, `return`, or `throw`, because napi-rs installs those protocol methods. See [Iterators and async iterators](/docs/concepts/iterators) for the required traits and lifecycle constraints.
@@ -224,6 +242,6 @@ These strings are inserted into the generated declaration; napi-rs does not pars
 
 The general parser accepts these options:
 
-`catch_unwind`, `async_runtime`, `module_exports`, `js_name`, `constructor`, `factory`, `getter`, `setter`, `readonly`, `enumerable`, `writable`, `configurable`, `skip`, `strict`, `return_if_invalid`, `object`, `object_from_js`, `object_to_js`, `custom_finalize`, `namespace`, `iterator`, `async_iterator`, `ts_args_type`, `ts_return_type`, `ts_type`, `ts_generic_types`, `string_enum`, `use_nullable`, `discriminant`, `discriminant_case`, `transparent`, `array`, `no_export`, and `skip_typescript`.
+`catch_unwind`, `async_runtime`, `module_exports`, `js_name`, `constructor`, `factory`, `getter`, `setter`, `readonly`, `enumerable`, `writable`, `configurable`, `skip`, `strict`, `return_if_invalid`, `object`, `object_from_js`, `object_to_js`, `custom_finalize`, `namespace`, `type_tag`, `iterator`, `async_iterator`, `ts_args_type`, `ts_return_type`, `ts_type`, `ts_generic_types`, `string_enum`, `use_nullable`, `discriminant`, `discriminant_case`, `transparent`, `array`, `no_export`, and `skip_typescript`.
 
 The context-specific parsers additionally accept `ts_arg_type` on a function parameter and `value` on a string-enum variant.

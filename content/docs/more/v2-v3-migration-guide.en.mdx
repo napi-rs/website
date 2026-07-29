@@ -1,12 +1,72 @@
 ---
+title: 'V2 to V3 Migration Guide'
 description: Migration guide for NAPI-RS V2 to V3.
 ---
 
-## Configuration
+# Migrating from NAPI-RS v2 to v3
 
-napi configuration has been changed, the `name` field is now `binaryName`.
+This guide is for maintainers of an existing **NAPI-RS v2** project who want to
+upgrade to **v3**. It covers the `package.json` config changes, the rewritten
+CLI, and the Rust API changes, in the order you should apply them.
 
-### `napi.name` -> `napi.binaryName`
+For the background and the design goals behind these changes, see the
+[**Announcing NAPI-RS v3**](/blog/announce-v3) blog post.
+
+## Prerequisites
+
+Before you start:
+
+- **Node.js** `^20.17.0 || ^22.13.0 || >=23.5.0` for the new
+  `@napi-rs/cli`. Node.js 22.13+ or 24+ is recommended. This is a build-time
+  requirement only; it does not change the runtime support of the addon you
+  ship. See [Support and compatibility](/docs/more/support-compatibility).
+- **Rust 1.88 or newer**.
+- A clean Git working tree, so you can review every change the migration
+  makes.
+
+## TL;DR: breaking changes
+
+| Area | v2 | v3 |
+| --- | --- | --- |
+| Config | `napi.name` | `napi.binaryName` |
+| Config | `napi.triples.defaults` + `napi.triples.additional` | Flat `napi.targets` array |
+| Config | `napi.package.name` | `napi.packageName` (the old nested field is **not** read by v3) |
+| CLI | `napi build --cargo-cwd ./crates/napi` | `napi build --manifest-path ./crates/napi/Cargo.toml` |
+| CLI | `napi build --cargo-flags="--locked"` | `napi build -- --locked` |
+| CLI | `napi create-npm-dir` | [`napi create-npm-dirs`](/docs/cli/create-npm-dirs) |
+| CLI | `napi universal` | [`napi universalize`](/docs/cli/universalize) |
+| Rust | `JsObject`, `JsFunction`, `JsBuffer`, `Ref`, … | New owned/scoped types; old types moved behind the `compat-mode` feature |
+| Rust | `napi::module_init` | `napi_derive::module_init` |
+| Rust | `#[module_exports]` (`compat-mode` in `napi-derive`) | `#[napi(module_exports)]` |
+| Rust | `ThreadsafeFunction` with ref-count lifecycle | Rewritten ownership-based [`ThreadsafeFunction`](/docs/concepts/threadsafe-function) |
+
+## Step 1: Update the dependencies
+
+Update the Rust crates and the CLI:
+
+```toml filename="Cargo.toml"
+[dependencies]
+napi = "3"
+napi-derive = "3"
+
+[build-dependencies]
+napi-build = "3"
+```
+
+```sh
+npm install --save-dev @napi-rs/cli@latest
+```
+
+Then run a first build and let the compiler list every API that changed:
+
+```sh
+napi build
+```
+
+## Step 2: Update the `napi` config
+
+The `napi` configuration in `package.json` has changed. The `name` field is
+now `binaryName`:
 
 ```diff filename="package.json"
 {
@@ -19,19 +79,16 @@ napi configuration has been changed, the `name` field is now `binaryName`.
 }
 ```
 
-### `napi.triples -> napi.targets`
+The `triples` config has been removed. Set a flat `targets` array instead.
+What used to be `triples.defaults` was:
 
-`triples` config has been removed, and you need to set `targets` instead.
-
-The `triples.default` before are:
-
-```
+```text
 "x86_64-unknown-linux-gnu",
 "x86_64-pc-windows-msvc",
 "x86_64-apple-darwin"
 ```
 
-Now you need to add them into the `targets` config.
+In v3 you list every target explicitly, including the former defaults:
 
 ```diff filename="package.json"
 {
@@ -39,7 +96,7 @@ Now you need to add them into the `targets` config.
   "version": "1.0.0",
   "napi": {
 -   "triples": {
--     "default": true,
+-     "defaults": true,
 -     "additional": [
 -      "aarch64-apple-darwin",
 -      "x86_64-unknown-linux-musl",
@@ -58,45 +115,59 @@ Now you need to add them into the `targets` config.
 }
 ```
 
-## Cli breaking changes
+The v3 CLI still reads `napi.name` and `napi.triples` for compatibility, but
+new projects should not use them. The old nested `napi.package.name` field is
+**not** read at all: move that value to `napi.packageName` yourself. See
+[NAPI Config](/docs/cli/napi-config) for the full field reference.
 
-Cli has been rewritten.
+## Step 3: Update CLI usage
 
-`--cargo-cwd` is removed, you need to use `--manifest-path` combined with the `--manifest-path` to point the `Cargo.toml` path:
+The CLI has been rewritten. The breaking changes that affect existing scripts
+and CI jobs are:
+
+### `--cargo-cwd` removed
+
+Use `--manifest-path` to point at the `Cargo.toml` of the crate:
 
 ```diff
 - napi build --cargo-cwd ./crates/napi
 + napi build --manifest-path ./crates/napi/Cargo.toml
 ```
 
-Previous, the flags in `napi build` are relative to the `--cargo-cwd || process.cwd()`, now, they are relative to the `--cwd || process.cwd()` path.
+In v2, path flags of `napi build` were resolved relative to
+`--cargo-cwd || process.cwd()`. In v3, they are resolved relative to
+`--cwd || process.cwd()`.
 
 ### `--cargo-flags` removed
 
-The `--cargo-flags` option has been removed. Now flags after `--` will be passed through to the cargo build command:
+Flags after `--` are now passed through to the `cargo build` command:
 
 ```diff
 - napi build --cargo-flags="--locked"
 + napi build -- --locked
 ```
 
-The `--locked` flag will be passed to `cargo build`, resulting in `cargo build --locked`.
+The `--locked` flag is passed to `cargo build`, resulting in
+`cargo build --locked`.
 
-### `create-npm-dir` is renamed to `create-npm-dirs`
+### `create-npm-dir` renamed to `create-npm-dirs`
 
-See the [**create-npm-dirs**](/docs/cli/create-npm-dirs) for more details.
+See [**create-npm-dirs**](/docs/cli/create-npm-dirs) for more details.
 
-Besides the command name and flags changes, it's not recommended to commit all `npm/*` files anymore, you can use the `napi create-npm-dirs` to create the `npm/` files in the CI, like this: https://github.com/napi-rs/package-template/blob/main/.github/workflows/CI.yml#L358
+Besides the renamed command and flags, it is no longer recommended to commit
+the `npm/*` directories. Create them in CI with `napi create-npm-dirs`
+instead, like this:
+https://github.com/napi-rs/package-template/blob/main/.github/workflows/CI.yml
 
-### `napi universal` is renamed to `napi universalize`
+### `napi universal` renamed to `napi universalize`
 
-See the [**universalize**](/docs/cli/universalize) for more details.
+See [**universalize**](/docs/cli/universalize) for more details.
 
-## `napi` crate
+## Step 4: Update the Rust code
 
-### Some JsValues are now behind the `compat-mode` feature flag
+### Some `JsValues` are now behind the `compat-mode` feature flag
 
-There is the full list of these values:
+The full list of these values is:
 
 - `JsObject`
 - `JsFunction`
@@ -111,24 +182,80 @@ There is the full list of these values:
 - `JsBigint`
 - `Ref`
 
-These APIs are not safe; see [**Lifetime in V3**](/blog/announce-v3#lifetime) for more details.
+These APIs are not safe; see [**Lifetime in V3**](/blog/announce-v3#lifetime)
+for more details.
 
-If you are using these APIs, you need to enable the `compat-mode` feature flag, but it's not recommended.
-
-You can migrate these APIs to the new APIs, See [Values](/docs/concepts/values), [Function](/docs/concepts/function), [Reference](/docs/concepts/reference) and [TypedArray](/docs/concepts/typed-array) for more details.
+Migrate these APIs to the new APIs. See [Values](/docs/concepts/values),
+[Function](/docs/concepts/function), [Reference](/docs/concepts/reference),
+and [TypedArray](/docs/concepts/typed-array) for more details. If you cannot
+migrate yet, enable the `compat-mode` feature flag as an escape hatch (see
+below).
 
 ### `ThreadsafeFunction`
 
-[`ThreadsafeFunction`](/docs/concepts/threadsafe-function) has been totally rewritten. See [**ThreadsafeFunction in V3**](/blog/announce-v3#threadsafefunction) for the background.
+[`ThreadsafeFunction`](/docs/concepts/threadsafe-function) has been totally
+rewritten. See [**ThreadsafeFunction in V3**](/blog/announce-v3#threadsafefunction)
+for the background, and the new
+[`ThreadsafeFunction`](/docs/concepts/threadsafe-function) API doc for
+day-to-day usage.
 
-The new API doc is here: [`ThreadsafeFunction`](/docs/concepts/threadsafe-function)
+### `napi::module_init` moved to `napi_derive::module_init`
 
-### `napi::module_init` was moved into `napi_derive::module_init`
+This is due to breaking changes in the upstream
+[`ctor`](https://github.com/mmastrac/rust-ctor) crate:
 
-This is due to the upstream [`ctor`](https://github.com/mmastrac/rust-ctor) crate breaking changes.
+```diff
+- #[napi::module_init]
++ #[napi_derive::module_init]
+  fn init() {
+    // ...
+  }
+```
 
-## `napi_derive` crate
+### New `#[napi(module_exports)]`
 
-### new `#[napi(module_exports)]`
+This replaces the `#[module_exports]` macro from `compat-mode`. You can now
+drop the `compat-mode` feature from `napi-derive` and use only the modern
+`#[napi]` macros. See [`module_exports`](/docs/concepts/napi-attributes#module_exports)
+for the accepted signature.
 
-This is aim for replace the `#[module_exports]` macro in the `compat-mode`, now you can remove the `compat-mode` feature in `napi-derive` and only use modern `#[napi]` macros.
+## Step 5: The `compat-mode` escape hatch
+
+If a full migration is not possible right now, enable the `compat-mode`
+feature to keep using the deprecated types while you migrate incrementally:
+
+```toml filename="Cargo.toml"
+[dependencies]
+napi = { version = "3", features = ["compat-mode"] }
+```
+
+This is not recommended as a permanent state: the types behind `compat-mode`
+have known safety issues, and the feature exists only to make the upgrade
+path incremental.
+
+## FAQ
+
+### Do I have to migrate everything at once?
+
+No. Enable `compat-mode`, upgrade the config and the CLI first, then migrate
+one API at a time until you can remove the feature flag.
+
+### Where did `napi build --cargo-flags` go?
+
+Everything after `--` is forwarded to `cargo build`. Run `napi build --
+--locked` instead of `napi build --cargo-flags="--locked"`.
+
+### Does v3 change which Node.js versions my addon supports?
+
+The new CLI requires Node.js `^20.17.0 || ^22.13.0 || >=23.5.0` at build
+time. The runtime support of the addon you produce is a separate question; it
+depends on the Node-API level you compile against. See [Support and
+compatibility](/docs/more/support-compatibility).
+
+### My build fails after removing `compat-mode`. What now?
+
+Read the compiler errors from the top: each one points at a deprecated type
+and its modern replacement. The concept pages [Values](/docs/concepts/values),
+[Function](/docs/concepts/function), [Reference](/docs/concepts/reference),
+and [TypedArray](/docs/concepts/typed-array) show the v3 equivalent of every
+removed API.

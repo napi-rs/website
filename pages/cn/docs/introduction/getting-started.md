@@ -22,16 +22,21 @@ Node-API 让原生二进制文件与之后提供相同或更高 Node-API 级别�
 
 无需全局安装 CLI。直接使用你偏好的包运行器执行：
 
-```sh
-# Yarn template (the default)
+::: pm
+
+```sh npm
 npx @napi-rs/cli new cool
+```
 
-# The same template through Yarn
+```sh yarn
 yarn dlx @napi-rs/cli new cool
+```
 
-# pnpm template
+```sh pnpm
 pnpm dlx @napi-rs/cli new cool --package-manager pnpm
 ```
+
+:::
 
 该命令默认以交互方式运行，会询问：
 
@@ -46,23 +51,25 @@ pnpm dlx @napi-rs/cli new cool --package-manager pnpm
 
 ## 安装、构建与测试
 
-对于默认的 Yarn 模板：
+在新项目中安装依赖，然后构建并测试：
 
-```sh
+::: pm
+
+```sh yarn
 cd cool
 yarn install
 yarn build
 yarn test
 ```
 
-对于 pnpm 模板：
-
-```sh
+```sh pnpm
 cd cool
 pnpm install
 pnpm build
 pnpm test
 ```
+
+:::
 
 本地构建只编译一个原生目标：默认是当前主机，除非传入 `--target`。构建会生成：
 

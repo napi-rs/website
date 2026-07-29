@@ -1,4 +1,5 @@
-import { basename } from 'node:path'
+import { writeFileSync } from 'node:fs'
+import { basename, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createCssVariablesTheme } from 'shiki'
 import { defineConfig } from 'vite-plus'
@@ -9,9 +10,12 @@ import { changelogData } from './lib/changelog/plugin.ts'
 import { shikiLightCssVars } from './lib/shiki-themes.ts'
 import { convertFenceHighlightMeta } from './lib/md/fence-highlight.ts'
 import { markCodeFilenames } from './lib/md/code-filename.ts'
+import { transformPmTabs } from './lib/md/pm-tabs.ts'
 import { sitemapPlugin } from './scripts/generate-sitemap.mjs'
 import { ogImagePlugin } from './scripts/generate-og-images.mjs'
 import { generateRss } from './scripts/generate-rss.mjs'
+import { searchIndexPlugin } from './scripts/build-search-index.mjs'
+import { lastmodPlugin } from './scripts/build-lastmod.mjs'
 import { svgoInline } from './lib/svg/svgo-plugin.ts'
 
 // Docs dark code theme. napi.rs / Nextra highlight code with Shiki's
@@ -35,6 +39,91 @@ const shikiDarkCssVars = createCssVariablesTheme({
 // compilerOptions.paths) so runtime imports like `@/lib/utils` /
 // `@/components/ui/*` resolve under Vite the same way TypeScript resolves them.
 const projectRoot = fileURLToPath(new URL('.', import.meta.url))
+
+// Self-contained branded 404 page (inline styles, the only external asset is
+// the favicon) emitted to dist/client/404.html by the napi-rs-404 plugin below.
+// The worker's notFound handler serves it for unknown routes in EVERY locale,
+// so it is English-only and `noindex`.
+const NOT_FOUND_HTML = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>404 — Page not found · NAPI-RS</title>
+<link rel="icon" href="/img/favicon.png">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #111;
+    color: #e5e5e5;
+    font-family: Manrope, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 2rem;
+  }
+  main { max-width: 34rem; text-align: center; }
+  .wordmark {
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    font-size: 0.9rem;
+    color: #4bb74a;
+    margin-bottom: 2.5rem;
+  }
+  .code {
+    font-size: 5rem;
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(135deg, #4bb74a, #2f80ed);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  h1 { font-size: 1.5rem; font-weight: 700; margin: 1rem 0 0.75rem; }
+  p { color: #a3a3a3; line-height: 1.6; margin-bottom: 2rem; }
+  .actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+  a.btn {
+    display: inline-block;
+    padding: 0.6rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+  }
+  a.primary { background: #4bb74a; color: #0c0c0c; }
+  a.primary:hover { background: #5cc75b; }
+  a.ghost { border: 1px solid #333; color: #e5e5e5; }
+  a.ghost:hover { border-color: #4bb74a; color: #4bb74a; }
+  .hint { margin-top: 2.5rem; font-size: 0.85rem; color: #737373; }
+  .hint kbd {
+    border: 1px solid #333;
+    border-radius: 0.3rem;
+    padding: 0.1rem 0.4rem;
+    font-family: inherit;
+    background: #1a1a1a;
+  }
+  .hint a { color: #737373; }
+</style>
+</head>
+<body>
+<main>
+  <div class="wordmark">NAPI-RS</div>
+  <div class="code">404</div>
+  <h1>Page not found</h1>
+  <p>The page you are looking for does not exist or may have moved.
+     The documentation is the best place to start looking.</p>
+  <div class="actions">
+    <a class="btn primary" href="/docs/introduction/getting-started">Go to Docs</a>
+    <a class="btn ghost" href="/">Home</a>
+    <a class="btn ghost" href="https://github.com/napi-rs/napi-rs">GitHub</a>
+  </div>
+  <p class="hint">Tip: press <kbd>⌘K</kbd> anywhere on the site to search the docs.</p>
+</main>
+</body>
+</html>
+`
 
 // Dev/preview cross-origin isolation. Three pages run the @napi-rs/image WASM
 // transcoder, which needs SharedArrayBuffer + threads: the landing (`/`), the
@@ -207,12 +296,18 @@ export default defineConfig({
         //      it, so the meta is inert otherwise (lib/md/fence-highlight.ts).
         //   2. `**filename**` captions → a `<div class="code-filename">` header
         //      bar element (lib/md/code-filename.ts).
+        //   3. package-manager install fences → tabbed markup (lib/md/pm-tabs.ts).
+        //      transformPmTabs runs FIRST: it must see the ORIGINAL fences, and
+        //      it preserves the inner fences verbatim, so the fence-line
+        //      transforms after it still apply inside the tabs.
         {
           name: 'napi-rs-md-code-blocks',
           enforce: 'pre',
           transform(code: string, id: string) {
             if (!id.endsWith('.md')) return
-            const out = markCodeFilenames(convertFenceHighlightMeta(code))
+            const out = markCodeFilenames(
+              convertFenceHighlightMeta(transformPmTabs(code)),
+            )
             return out === code ? undefined : out
           },
         },
@@ -267,6 +362,28 @@ export default defineConfig({
               `napi-rs-rss: ${itemCount} blog posts -> ${options.dir}/rss.xml` +
                 (skipped.length ? ` (skipped: ${skipped.join(', ')})` : ''),
             )
+          },
+        },
+        // Keep lib/docs/lastmod.gen.json (per-page lastmod + top contributors
+        // from git history) fresh at build (buildStart) and dev (server start)
+        // time. The write is idempotent, so dev watchers never loop on our own
+        // output. Factory in scripts/build-lastmod.mjs.
+        lastmodPlugin(),
+        // Emit /search-index.<locale>.json (the data behind the client-side
+        // Cmd+K search dialog) into the client build output. Factory in
+        // scripts/build-search-index.mjs, same rationale as the sitemap.
+        searchIndexPlugin(),
+        // Emit a branded, self-contained 404.html into the client output. The
+        // worker's notFound handler serves static /404.html from ASSETS when it
+        // exists (serveCustomErrorPage), turning bare 404s into branded ones.
+        // English-only on purpose: one file serves every locale.
+        {
+          name: 'napi-rs-404',
+          apply: 'build',
+          writeBundle(options) {
+            if (!options.dir || basename(options.dir) !== 'client') return
+            writeFileSync(join(options.dir, '404.html'), NOT_FOUND_HTML)
+            console.log(`napi-rs-404: wrote 404.html -> ${options.dir}`)
           },
         },
       ],

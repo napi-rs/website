@@ -6,32 +6,35 @@ description: 使用 tokio 运行时运行一个 Rust 异步函数。
 # 异步函数
 
 ::: tip
-为了使用 `async fn` ，你必须开启 `napi` 的 **_async_** 或 **_tokio_rt_** 特性：
+为了使用 `async fn`，你必须开启 `napi` 的 **_async_** 或 **_tokio_rt_** 特性：
 
 **Cargo.toml**
 
 ```toml {2}
 [dependencies]
-napi = { version = "3", features = ["async", "tokio_fs"] }
+napi = { version = "3", features = ["async", "tokio_fs", "tokio_time"] }
 napi-derive = "3"
 ```
 
-下面的例子使用 `tokio_fs` 子特性。只启用 addon 实际使用的 Tokio API。
+下面的例子使用了 `tokio_fs` 和 `tokio_time` 子特性。只启用 addon 实际使用的
+Tokio API。
 
 :::
 
-你可以通过 `AsyncTask` 和 `ThreadsafeFunction` 做很多 异步/多线程 的工作，但有时你可能想直接使用 Rust 异步生态系统中的包。
+## Tokio 集成
 
-启用 `async` 或 `tokio_rt` 后，**NAPI-RS** 会提供 Tokio 运行时。如果你在导出的
-`async fn` 中 `await` 一个 Tokio future，**NAPI-RS** 会在该运行时中执行它，
+你可以通过 `AsyncTask` 和 `ThreadsafeFunction` 完成很多异步/多线程工作，但有时你可能想直接使用 Rust 异步生态系统中的 crate。
+
+启用 `async` 或 `tokio_rt` 后，**NAPI-RS** 会提供一个 Tokio 运行时。如果你在导出的
+`async fn` 中 `await` 一个 Tokio future，**NAPI-RS** 会在该运行时上执行它，
 并把结果转换为 JavaScript `Promise`。
 
 **lib.rs**
 
 ```rust {6}
 use napi::bindgen_prelude::*;
-use napi::tokio::fs;
 use napi_derive::napi;
+use napi::tokio::fs;
 
 #[napi]
 pub async fn read_file_async(path: String) -> Result<Buffer> {
@@ -47,3 +50,114 @@ pub async fn read_file_async(path: String) -> Result<Buffer> {
 ```ts
 export function readFileAsync(path: string): Promise<Buffer>
 ```
+
+## 不安全的 `&mut self`
+
+在某些情况下，你可能需要在 `async fn` 中使用 `&mut self`。然而在 **NAPI-RS** 中这是 `unsafe` 的，因为 `self` 同时也被 Node.js 运行时*持有*。你无法确保 `self` 只被 Rust 持有。
+
+**lib.rs**
+
+```rust {9}
+use napi_derive::napi;
+
+#[napi]
+pub struct Engine {}
+
+#[napi]
+impl Engine {
+  #[napi]
+  pub async fn run(&mut self) {}
+}
+```
+
+```rust
+error: &mut self in async napi methods should be marked as unsafe
+ --> src/lib.rs:9:18
+  |
+9 |     pub async fn run(&mut self) {}
+  |                  ^^^
+```
+
+要在 `async fn` 中使用 `&mut self`，你需要把该 `fn` 标记为 `unsafe`。
+
+**lib.rs**
+
+```rust {9}
+use napi_derive::napi;
+
+#[napi]
+pub struct Engine {}
+
+#[napi]
+impl Engine {
+  #[napi]
+  pub async unsafe fn run(&mut self) {}
+}
+```
+
+## 自动引用
+
+通常，JavaScript 值只在一次函数调用内有效。`async fn` 则不同——JavaScript 值可能在任何一个 `await` 点被垃圾回收。
+
+::: info
+更多细节参见[理解生命周期](/cn/docs/concepts/understanding-lifetime)。
+
+:::
+
+有 3 种参数会被自动转换为 `Reference` 类型：
+
+- `&self`
+- `&mut self`
+- `This<T>`
+
+考虑下面的例子：
+
+**lib.rs**
+
+```rust
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub struct NativeClass {
+  name: String,
+}
+
+#[napi]
+impl NativeClass {
+  #[napi(constructor)]
+  pub fn new(name: String) -> Self {
+    Self { name }
+  }
+
+  #[napi]
+  pub async fn sleep(&self, delay: u32) -> Result<&str> {
+    napi::tokio::time::sleep(std::time::Duration::new(delay as u64, 0)).await;
+    Ok(&self.name)
+  }
+}
+```
+
+**index.ts**
+
+```ts
+const nativeClass = new NativeClass('Brooklyn')
+
+const name = await nativeClass.sleep(1)
+
+console.log(name) // Brooklyn
+```
+
+在 `async fn` 调用之前，NAPI-RS 会对持有 `NativeClass` 的 JavaScript `Object` 值隐式调用一次 [`napi_create_reference`](https://nodejs.org/api/n-api.html#napi_create_reference)；在 `async fn` 调用结束之后，再隐式调用一次 [`napi_delete_reference`](https://nodejs.org/api/n-api.html#napi_delete_reference)。
+
+这一策略确保 `NativeClass` 在 `async fn` 调用期间保持存活。
+
+## `async fn` 之外：`AsyncBlock`
+
+导出的 `async fn` 覆盖了常见场景，但它总是用函数的返回值来 resolve 它的 promise——即在 future 完成之后进行转换。当你需要更多控制时——例如用一个只能在 JavaScript 线程上创建的值来 resolve（比如零拷贝的 `BufferSlice<'static>` 或 Web `Response`），或者在 future 完成（settle）时通过 dispose 钩子执行清理——可以改为在一个同步的 `#[napi]` 函数中返回 `AsyncBlock<T>`。future 会在 NAPI-RS 运行时上立即（eagerly）启动，并像 `async fn` 一样转换为 JavaScript `Promise`。
+
+完整的 `AsyncBlockBuilder` API 和示例参见 [Web Streams：`AsyncBlock`](/docs/concepts/streams#asyncblock-a-promise-with-a-dispose-hook)。
+
+## 自定义运行时
+
+默认情况下，future 运行在 NAPI-RS 管理的 Tokio 运行时上。启用 `async-runtime` Cargo 特性后，你可以改为注册自己的执行器——包括面向无线程 WASI 或 workerd 的、不依赖 tokio 的运行时——之后每个生成的 `async fn` 都会运行在它上面。参见[自定义异步运行时](/docs/concepts/async-runtime)。

@@ -1,27 +1,30 @@
 ---
-title: 'Await Promise'
-description: 在 Rust 中 await 一个 JavaScript Promise。
+title: 'Promise'
+description: Rust 中的 JavaScript Promise。
 ---
 
-# Await Promise
+# Promise
+
+## `Promise<T>`
 
 在 Rust 中 await 一个 JavaScript `Promise` 听起来很疯狂，但在 **NAPI-RS** 中是可行的。
+**NAPI-RS** 中的 `Promise<T>` 实现了 `std::future::Future` trait，因此你可以使用 `await` 关键字来等待它。
 
 ::: tip
 Await JavaScript `Promise` 需要启用 `async` 或 `tokio_rt` 特性；
-`tokio_rt` 会自动启用 `napi4`。
+`tokio_rt` 会为你启用 `napi4`。
 
 :::
 
 ::: info
-当 `T: Send` 时 `Promise<T>` 才是 `Send`，因此编译器会阻止非 `Send` 的
-resolve 值跨 Tokio worker thread 移动。
+当 `T` 是 `Send` 时 `Promise<T>` 才是 `Send`，因此编译器会阻止非 `Send` 的
+resolve 值跨越 Tokio worker 线程移动。
 
 :::
 
 **lib.rs**
 
-```rust
+```rust {5}
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
@@ -47,3 +50,52 @@ const result = await asyncPlus100(
 
 console.log(result) // 120
 ```
+
+## `PromiseRaw<'env, T>`
+
+`PromiseRaw<'env, T>` 表示 `JavaScript` 中原始的 `Promise` 值，它带有生命周期，因此只能在同步上下文中使用。
+
+但很方便的是，它可以调用 JavaScript Promise 上的方法，例如 `then`、`catch` 和 `finally`。
+
+**lib.rs**
+
+```rust {6}
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+#[napi]
+pub fn promise_callback(promise: PromiseRaw<u32>) -> Result<PromiseRaw<u32>> {
+  promise.then(|ctx| Ok(ctx.value + 100))
+}
+```
+
+**index.ts**
+
+```js
+import { promiseCallback } from './index.js'
+
+const value = await promiseCallback(Promise.resolve(100))
+
+console.log(value) // 200
+```
+
+## `AsyncBlock<T>`
+
+`AsyncBlock<T>` 是从 Rust 返回 `Promise` 的另一种方式。导出的 [`async fn`](/cn/docs/concepts/async-fn) 在 JavaScript 调用它时启动，并用函数的返回值来 resolve；而 `AsyncBlock` 包装的是通过 `AsyncBlockBuilder` 手动构建的 future——它还允许你附加一个 **dispose 钩子**（`.with_dispose`）或一个 **map 闭包**（`build_with_map`），它们会在 resolve 时运行在 JavaScript 线程上，因此 promise 可以用只能在该线程上创建的值来 resolve（零拷贝的 `BufferSlice<'static>`、JavaScript 类的实例……）。future 在 Rust 函数被调用时就立即（eagerly）启动，而不是在 promise 被 await 时才启动。
+
+**lib.rs**
+
+```rust
+#[napi]
+pub fn process_buffer(env: &Env, buffer: Buffer) -> Result<AsyncBlock<Buffer>> {
+  AsyncBlockBuilder::new(async move { Ok(buffer) }).build(env)
+}
+```
+
+**index.d.ts**
+
+```ts
+export declare function processBuffer(buffer: Buffer): Promise<Buffer>
+```
+
+完整的 `AsyncBlockBuilder` API 和完整示例参见 [Web Streams](/docs/concepts/streams#asyncblock-a-promise-with-a-dispose-hook)；更多 `AsyncBlock` 与 buffer 配合的用法参见 [TypedArray](/cn/docs/concepts/typed-array)。

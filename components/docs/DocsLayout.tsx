@@ -44,6 +44,8 @@ export interface DocsLayoutSlots {
   toc?: React.ReactNode
   /** SLOT: banner — static. NotTranslatedBanner (island 'load') is passed here when shown; empty otherwise. Designed to accept future banners. */
   banner?: React.ReactNode
+  /** SLOT: pageActions — island ('load'). "Copy page" dropdown + the mobile (below-xl) "On this page" collapsible. Rendered right-aligned ABOVE the breadcrumb. */
+  pageActions?: React.ReactNode
   /** SLOT: breadcrumb — static. tab > group > leaf (no "Home"). */
   breadcrumb?: React.ReactNode
   /** SLOT: pager — static. Prev/next links. */
@@ -64,6 +66,7 @@ export default function DocsLayout({
   sidebar,
   toc,
   banner,
+  pageActions,
   breadcrumb,
   pager,
   editOnGithub,
@@ -98,6 +101,19 @@ export default function DocsLayout({
           {/* SLOT: banner (static; NotTranslatedBanner passed here when shown) */}
           {banner ?? <div data-slot-placeholder="banner" hidden />}
 
+          {/* SLOT: pageActions (island 'load') — right-aligned row above the
+              breadcrumb: the "Copy page" dropdown (all breakpoints) + the
+              mobile "On this page" collapsible (below xl, where the rail TOC
+              is hidden). `justify-end` right-aligns; `empty:hidden` collapses
+              the row entirely when the island renders nothing (changelog /
+              routes without a markdown source). `[&>div]:w-full` stretches
+              the island wrapper to the column width — the mobile <details>
+              is w-full, and a shrink-to-fit flex item would leave it as a
+              narrow right-aligned control. */}
+          <div className="mb-2 flex justify-end empty:hidden [&>div]:w-full">
+            {pageActions ?? <div data-slot-placeholder="page-actions" hidden />}
+          </div>
+
           {/* SLOT: breadcrumb (static) */}
           {breadcrumb ?? <div data-slot-placeholder="breadcrumb" />}
 
@@ -106,19 +122,18 @@ export default function DocsLayout({
             already contains its own `# title`. The .void-md wrapper scopes the
             @void/md content theme + pages/theme.css extras.
           */}
-          <main id="main-content" className="void-md">
+          <main id="main-content" className="void-md" tabIndex={-1}>
             {children}
           </main>
 
           {/* SLOT: pager (static) */}
           {pager ?? <div data-slot-placeholder="pager" />}
 
-          {/* SLOT: editOnGithub (static). On xl+ the right-rail TOC carries the
-              edit + feedback links (matching live), so this center copy only
-              shows when that rail is hidden (below xl) — no duplication. */}
-          <div className="xl:hidden">
-            {editOnGithub ?? <div data-slot-placeholder="edit-on-github" />}
-          </div>
+          {/* SLOT: editOnGithub (static) — the PageMeta row (last-updated,
+              contributors, 👍/👎 feedback, edit link). Visible at ALL sizes;
+              PageMeta itself hides only its edit link at xl+, where the
+              right-rail TOC already carries one — no duplication. */}
+          {editOnGithub ?? <div data-slot-placeholder="edit-on-github" />}
         </div>
 
         {/* SLOT: toc (island 'visible'). `[&>div]:h-full` for the same reason as

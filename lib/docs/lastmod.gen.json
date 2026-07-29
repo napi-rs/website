@@ -1,0 +1,1421 @@
+{
+  "en": {
+    "blog/announce-v2": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "blog/announce-v3": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "blog/function-and-callbacks": {
+      "lastmod": "2026-07-06T09:05:43+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/artifacts": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/build": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/create-npm-dirs": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/napi-config": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/new": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/pre-publish": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/programmatic-api": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/rename": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/universalize": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/version": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/async-fn": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/async-runtime": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/async-task": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/cargo-features": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/class": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/enum": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/env": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/error-handling": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/exports": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/external": {
+      "lastmod": "2026-07-02T14:38:32+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/function": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/inject-env": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/inject-this": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/iterators": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/module-init": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/naming-conventions": {
+      "lastmod": "2026-07-06T09:05:43+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/napi-attributes": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/object": {
+      "lastmod": "2026-07-06T09:05:43+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/promise": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/reference": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/streams": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/threadsafe-function": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/type-conversions": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/typed-array": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/types-overwrite": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/understanding-lifetime": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/values": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/webassembly": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cross-build": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/deep-dive/history": {
+      "lastmod": "2026-07-02T14:38:32+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/deep-dive/native-module": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/deep-dive/release": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/introduction/getting-started": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/introduction/manual-setup": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/introduction/simple-package": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/async-concurrency": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/examples": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/faq": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/integrations": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/support-compatibility": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/testing-debugging": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/troubleshooting": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/v2-v3-migration-guide": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    }
+  },
+  "cn": {
+    "blog/announce-v2": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/artifacts": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/build": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/create-npm-dirs": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/napi-config": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/new": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/pre-publish": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/programmatic-api": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/rename": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/universalize": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/version": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/async-fn": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/async-task": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/cargo-features": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/class": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/enum": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/env": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/error-handling": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/exports": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/external": {
+      "lastmod": "2026-07-02T14:38:32+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/function": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/inject-env": {
+      "lastmod": "2026-07-02T14:38:32+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/inject-this": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/iterators": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/module-init": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/naming-conventions": {
+      "lastmod": "2026-07-06T09:05:43+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/napi-attributes": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/object": {
+      "lastmod": "2026-07-06T09:05:43+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/promise": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/reference": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/threadsafe-function": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/type-conversions": {
+      "lastmod": "2026-07-10T20:19:57+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/typed-array": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/types-overwrite": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/understanding-lifetime": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/values": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/webassembly": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cross-build": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/deep-dive/history": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/deep-dive/native-module": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/deep-dive/release": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/introduction/getting-started": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/introduction/manual-setup": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/introduction/simple-package": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/async-concurrency": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/faq": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/integrations": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/support-compatibility": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/testing-debugging": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/troubleshooting": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/v2-v3-migration-guide": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    }
+  },
+  "pt-BR": {
+    "docs/cli/artifacts": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/build": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/create-npm-dirs": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/napi-config": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/new": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/pre-publish": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/programmatic-api": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/rename": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/universalize": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cli/version": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/async-fn": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/async-task": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/cargo-features": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/class": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/enum": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/env": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/error-handling": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/exports": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/external": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/function": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/inject-env": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/inject-this": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/iterators": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/module-init": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/naming-conventions": {
+      "lastmod": "2026-07-06T09:05:43+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/napi-attributes": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/object": {
+      "lastmod": "2026-07-06T09:05:43+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/promise": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/reference": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/threadsafe-function": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/type-conversions": {
+      "lastmod": "2026-07-10T20:19:57+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/typed-array": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/types-overwrite": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/understanding-lifetime": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/values": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/concepts/webassembly": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/cross-build": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/deep-dive/history": {
+      "lastmod": "2026-07-02T14:38:32+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/deep-dive/native-module": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/deep-dive/release": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/introduction/getting-started": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/introduction/manual-setup": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/introduction/simple-package": {
+      "lastmod": "2026-07-29T17:51:01+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/async-concurrency": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/faq": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/integrations": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/support-compatibility": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/testing-debugging": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/troubleshooting": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    },
+    "docs/more/v2-v3-migration-guide": {
+      "lastmod": "2026-07-10T20:02:04+08:00",
+      "contributors": [
+        {
+          "name": "LongYinan",
+          "avatar": "https://www.gravatar.com/avatar/b42cd0b382123d0dacf30aaa817ac3f3?d=identicon&s=64"
+        }
+      ]
+    }
+  }
+}

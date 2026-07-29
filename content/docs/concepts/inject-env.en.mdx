@@ -34,7 +34,19 @@ You can also inject `Env` in `impl` block:
 use napi::bindgen_prelude::*;
 
 // A complex struct which can not be exposed into JavaScript directly.
-struct QueryEngine {}
+struct QueryEngine {
+  initial_count: u32,
+}
+
+impl QueryEngine {
+  fn with_initial_count(initial_count: u32) -> Self {
+    Self { initial_count }
+  }
+
+  fn query(&self, query: String) -> Result<String, String> {
+    Ok(format!("{} results for `{query}`", self.initial_count))
+  }
+}
 
 #[napi(js_name = "QueryEngine")]
 pub struct JsQueryEngine {

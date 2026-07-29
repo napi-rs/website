@@ -136,3 +136,135 @@ export function buildSearchIndexCore(
 }
 
 export { LOCALES }
+
+// ---------------------------------------------------------------------------
+// Full-body search (lazy /search-index.<locale>.json) — pure ranking helpers
+// ---------------------------------------------------------------------------
+//
+// The build emits `/search-index.<locale>.json` (see the search-index build
+// script), a richer per-locale index than the in-module metadata index above:
+// it adds the sidebar GROUP (for result grouping), the SECTION (docs/blog),
+// headings with slugs (for `#anchor` navigation), and the plain-text BODY (for
+// snippets). The SearchDialog island fetches it lazily on first open and ranks
+// entries itself (cmdk's `shouldFilter={false}`), so the ranking below is the
+// single source of truth for result order. Kept pure for node tests.
+
+/** One entry of the served `/search-index.<locale>.json`. */
+export interface FullSearchEntry {
+  /** Locale-prefixed md-style path, e.g. /en/docs/concepts/enum. */
+  path: string
+  /** PUBLIC navigable route href (en at root, cn/pt-BR prefixed). */
+  href: string
+  title: string
+  description?: string
+  /** Section key: 'docs' | 'blog' | … */
+  section: string
+  /** Sidebar group title, '' for flat sections (blog). */
+  group: string
+  headings: ReadonlyArray<{ depth: number; slug: string; text: string }>
+  /** Plain-text body (for matching + snippets). */
+  body: string
+}
+
+/** A ranked result: the entry plus HOW it matched (drives the sub-row). */
+export interface SearchResult {
+  entry: FullSearchEntry
+  /** Score tier: 4 title-prefix, 3 title-includes, 2 heading, 1 desc/body. */
+  score: number
+  /** The matched heading (score ≥ 2 only when the query hits a heading). */
+  heading?: { depth: number; slug: string; text: string }
+  /** A ~80-char body snippet around the match (body hits only). */
+  snippet?: string
+}
+
+/** ~80-char window of `body` centred on the first `query` occurrence. */
+export function bodySnippet(body: string, query: string, radius = 40): string {
+  const idx = body.toLowerCase().indexOf(query.toLowerCase())
+  if (idx === -1) return body.slice(0, radius * 2).trim()
+  const start = Math.max(0, idx - radius)
+  const end = Math.min(body.length, idx + query.length + radius)
+  const prefix = start > 0 ? '…' : ''
+  const suffix = end < body.length ? '…' : ''
+  // Collapse the whitespace newlines inside the window so the snippet renders
+  // on one line.
+  return prefix + body.slice(start, end).replace(/\s+/g, ' ').trim() + suffix
+}
+
+/**
+ * Rank `entries` against `query`, best first, capped at `limit` (default ~30).
+ * Tiers (case-insensitive): title startsWith > title includes > heading
+ * includes > description/body includes. Ties keep the original index order
+ * (a stable sort over the input), so nav/sidebar order wins within a tier.
+ * An empty query returns the first `limit` entries in input order (the
+ * dialog's initial "browse" view).
+ */
+export function rankSearchEntries(
+  entries: ReadonlyArray<FullSearchEntry>,
+  query: string,
+  limit = 30,
+): SearchResult[] {
+  const q = query.trim().toLowerCase()
+  if (!q) return entries.slice(0, limit).map((entry) => ({ entry, score: 0 }))
+
+  const results: SearchResult[] = []
+  for (const entry of entries) {
+    const title = entry.title.toLowerCase()
+    if (title.startsWith(q)) {
+      results.push({ entry, score: 4 })
+      continue
+    }
+    if (title.includes(q)) {
+      results.push({ entry, score: 3 })
+      continue
+    }
+    const heading = entry.headings.find((h) => h.text.toLowerCase().includes(q))
+    if (heading) {
+      results.push({ entry, score: 2, heading })
+      continue
+    }
+    if (
+      (entry.description ?? '').toLowerCase().includes(q) ||
+      entry.body.toLowerCase().includes(q)
+    ) {
+      results.push({
+        entry,
+        score: 1,
+        snippet: entry.body ? bodySnippet(entry.body, q) : undefined,
+      })
+    }
+  }
+  // Array.prototype.sort is stable in modern JS, so equal scores keep input
+  // (sidebar/source) order.
+  results.sort((a, b) => b.score - a.score)
+  return results.slice(0, limit)
+}
+
+export interface SearchResultGroup {
+  label: string
+  items: SearchResult[]
+}
+
+/**
+ * Group ranked results by sidebar-group label for display. CONSOLIDATES every
+ * result sharing a label into ONE group (first-appearance order of both
+ * groups and items) — merging only adjacent rows would emit several groups
+ * with the same label, and keying those by label gives duplicate React keys.
+ * `labelFor(entry)` resolves the display label (the component supplies the
+ * locale-aware group/section lookup).
+ */
+export function groupSearchResults(
+  results: ReadonlyArray<SearchResult>,
+  labelFor: (entry: FullSearchEntry) => string,
+): SearchResultGroup[] {
+  const byLabel = new Map<string, SearchResultGroup>()
+  for (const r of results) {
+    const label = labelFor(r.entry)
+    let group = byLabel.get(label)
+    if (!group) {
+      group = { label, items: [] }
+      byLabel.set(label, group)
+    }
+    group.items.push(r)
+  }
+  return [...byLabel.values()]
+}

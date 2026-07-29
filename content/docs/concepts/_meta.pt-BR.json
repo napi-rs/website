@@ -19,10 +19,12 @@
   "external": "External",
   "promise": "Promise",
   "iterators": "Iteradores",
+  "streams": "Web Streams",
   "types-overwrite": "Sobrescrita de Tipos",
   "typed-array": "Typed Array",
   "understanding-lifetime": "Entendendo lifetimes",
   "env": "Env",
   "cargo-features": "Features do Cargo",
+  "async-runtime": "Runtime assíncrono customizado",
   "webassembly": "WebAssembly"
 }

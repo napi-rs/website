@@ -7,8 +7,8 @@
 // e.g. pages/en/docs/concepts/enum.md, pages/cn/docs/concepts/enum.md.
 // `leafPath` (the section-qualified, unprefixed remainder, e.g.
 // `docs/concepts/enum`) comes from splitLocale(useRouter().path)[1] — the same
-// value the breadcrumb/pager use. We point the link at the repo's blob/main
-// tree: https://github.com/napi-rs/website/blob/main/pages/<locale>/<leaf>.md
+// value the breadcrumb/pager use. We point the link at the repo's edit/main
+// tree: https://github.com/napi-rs/website/edit/main/pages/<locale>/<leaf>.md
 import { ExternalLink } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -27,7 +27,9 @@ export interface EditOnGithubProps {
   className?: string
 }
 
-const EDIT_BASE = 'https://github.com/napi-rs/website/blob/main'
+// /edit/main (GitHub's editor) rather than /blob/main: opens ready to edit —
+// matching PageMeta and the Toc footer link.
+const EDIT_BASE = 'https://github.com/napi-rs/website/edit/main'
 
 const LABEL: Record<Locale, string> = {
   en: 'Edit this page on GitHub →',

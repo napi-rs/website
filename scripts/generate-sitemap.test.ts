@@ -5,7 +5,14 @@
 // `fileToRoute(relPathFromPagesDir)` helper, which encodes the en-at-root vs
 // cn/pt-BR-prefixed routing asymmetry (lib/docs/locale.ts + void.json).
 import { describe, it, expect } from 'vitest'
-import { fileToRoute, renderSitemap } from './generate-sitemap.mjs'
+import {
+  buildLlmsFull,
+  fileToRoute,
+  llmsFullPathFor,
+  navLeafEntries,
+  renderSitemap,
+  stripPageHeader,
+} from './generate-sitemap.mjs'
 
 describe('fileToRoute', () => {
   it('derives public routes from page file paths', () => {
@@ -67,5 +74,122 @@ describe('renderSitemap', () => {
     ])
     expect(xml).not.toContain('<lastmod>')
     expect(xml).not.toContain('xhtml:link')
+  })
+})
+
+describe('llmsFullPathFor', () => {
+  it('puts en at the root and other locales under their prefix', () => {
+    expect(llmsFullPathFor('en')).toBe('llms-full.txt')
+    expect(llmsFullPathFor('cn')).toBe('cn/llms-full.txt')
+    expect(llmsFullPathFor('pt-BR')).toBe('pt-BR/llms-full.txt')
+  })
+})
+
+describe('navLeafEntries', () => {
+  it('flattens docs+blog sidebar leaves in nav order (changelog excluded)', () => {
+    const localeNav = {
+      tabs: [],
+      sidebar: {
+        docs: [
+          {
+            group: 'intro',
+            title: 'Introduction',
+            items: [
+              {
+                title: 'Getting started',
+                path: 'docs/introduction/getting-started',
+              },
+            ],
+          },
+          {
+            group: 'concepts',
+            title: 'Concepts',
+            items: [{ title: 'Enum', path: 'docs/concepts/enum' }],
+          },
+        ],
+        blog: [
+          {
+            group: 'blog',
+            title: '',
+            items: [{ title: 'Announcing v3', path: 'blog/announce-v3' }],
+          },
+        ],
+        changelog: [
+          {
+            group: 'changelog',
+            title: '',
+            items: [{ title: 'napi', path: 'changelog/napi' }],
+          },
+        ],
+      },
+    }
+    expect(navLeafEntries(localeNav)).toEqual([
+      {
+        title: 'Getting started',
+        leafPath: 'docs/introduction/getting-started',
+      },
+      { title: 'Enum', leafPath: 'docs/concepts/enum' },
+      { title: 'Announcing v3', leafPath: 'blog/announce-v3' },
+    ])
+  })
+})
+
+describe('stripPageHeader', () => {
+  it('drops script island, frontmatter and the leading H1', () => {
+    const md = [
+      '<script>',
+      'import X from "./x.tsx"',
+      '</script>',
+      '',
+      '---',
+      "title: 'Announcing NAPI-RS v3'",
+      '---',
+      '',
+      '# Announcing NAPI-RS v3',
+      '',
+      'Body **kept**.',
+    ].join('\n')
+    expect(stripPageHeader(md)).toBe('Body **kept**.')
+  })
+
+  it('keeps non-leading headings and body intact', () => {
+    const md = '---\ntitle: x\n---\n\n# Title\n\nIntro.\n\n## Section\n\nMore.'
+    expect(stripPageHeader(md)).toBe('Intro.\n\n## Section\n\nMore.')
+  })
+})
+
+describe('buildLlmsFull', () => {
+  const entries = [
+    { title: 'Getting started', leafPath: 'docs/introduction/getting-started' },
+    { title: 'Enum', leafPath: 'docs/concepts/enum' },
+    { title: 'Island only', leafPath: 'changelog/napi' },
+  ]
+
+  it('concatenates pages in order with # title headings and --- separators', () => {
+    const sources: Record<string, string | undefined> = {
+      'docs/introduction/getting-started': '# Getting started\n\nFirst body.',
+      'docs/concepts/enum': '# Enum\n\nSecond body.',
+      'changelog/napi': undefined,
+    }
+    const full = buildLlmsFull(entries, (leaf: string) => sources[leaf])
+    expect(full).toBe(
+      [
+        '# Getting started',
+        '',
+        'First body.',
+        '',
+        '---',
+        '',
+        '# Enum',
+        '',
+        'Second body.',
+        '',
+      ].join('\n'),
+    )
+  })
+
+  it('skips entries without a markdown source (island-only routes)', () => {
+    const full = buildLlmsFull(entries, () => undefined)
+    expect(full).toBe('\n')
   })
 })

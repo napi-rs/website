@@ -13,11 +13,11 @@ and optionally creates a GitHub Actions workflow.
 
 ## Prerequisites
 
-- **Node.js 22.13 or newer on the Node 22 line, or Node.js 24+, is
-  recommended** for the current `@napi-rs/cli` toolchain. The CLI declares
-  `>=23.5.0 || ^22.13.0 || ^20.17.0`, matching its interactive-prompt
-  dependency. This build-time requirement is separate from the runtime
-  requirement of the addon you produce. See [Support and
+- **Node.js for the `@napi-rs/cli` toolchain.** The minimum supported versions
+  are `^20.17.0 || ^22.13.0 || >=23.5.0` (the `engines` field of the CLI).
+  Node.js 22.13+ on the Node 22 LTS line, or Node.js 24+, is recommended. This
+  build-time requirement is separate from the runtime requirement of the addon
+  you produce. See [Support and
   compatibility](/docs/more/support-compatibility#cli-and-rust-requirements).
 - **Rust 1.88 or newer**, including Cargo. Installing Rust through
   [rustup](https://rustup.rs/) is recommended.
@@ -36,16 +36,21 @@ shipping matrix.
 You do not need a global CLI installation. Run the package directly with your
 preferred package runner:
 
-```sh
-# Yarn template (the default)
+::: pm
+
+```sh npm
 npx @napi-rs/cli new cool
+```
 
-# The same template through Yarn
+```sh yarn
 yarn dlx @napi-rs/cli new cool
+```
 
-# pnpm template
+```sh pnpm
 pnpm dlx @napi-rs/cli new cool --package-manager pnpm
 ```
+
+:::
 
 The command is interactive by default. It asks for:
 
@@ -64,23 +69,25 @@ want to change and add `--no-interactive`; see [`napi new`](/docs/cli/new).
 
 ## Install, build, and test
 
-For the default Yarn template:
+Inside the new project, install dependencies, then build and test:
 
-```sh
+::: pm
+
+```sh yarn
 cd cool
 yarn install
 yarn build
 yarn test
 ```
 
-For the pnpm template:
-
-```sh
+```sh pnpm
 cd cool
 pnpm install
 pnpm build
 pnpm test
 ```
+
+:::
 
 The local build compiles one native target: your host unless you pass
 `--target`. It produces:

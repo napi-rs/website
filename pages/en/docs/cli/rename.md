@@ -7,6 +7,17 @@ description: napi rename command in @napi-rs/cli.
 
 Rename the **NAPI-RS** project
 
+## When you need this
+
+`napi rename` renames a project created by [`napi new`](./new) or cloned from
+a package template. It updates the package name, binary name, repository URL,
+and related fields across `package.json`, <span class="chalk-rust">Cargo.toml</span>, the GitHub
+Actions workflow, and the generated binding names, so they stay consistent.
+Run it once after scaffolding, before your first release; after that, the
+release pipeline (`napi build` → `napi artifacts` → `napi pre-publish`,
+described in [Release native packages](/docs/deep-dive/release)) uses the new
+names everywhere.
+
 ## Usage
 
 ```sh
@@ -21,6 +32,30 @@ import { NapiCli } from '@napi-rs/cli'
 new NapiCli().rename({
   // options
 })
+```
+
+## Examples
+
+Rename a freshly created project before publishing it under your own scope:
+
+```sh
+napi rename \
+  --name @your-scope/cool \
+  --binary-name cool \
+  --repository https://github.com/your-name/cool.git
+```
+
+Change only the binary name (the `*.node` file names), leaving the package
+name untouched:
+
+```sh
+napi rename --binary-name cool-core
+```
+
+Rename a project whose crate is not at the repository root:
+
+```sh
+napi rename --name @your-scope/cool --manifest-path ./crates/cool/Cargo.toml
 ```
 
 ## Options
