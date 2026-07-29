@@ -11,36 +11,44 @@ NAPI-RS 提供两个模块初始化 API：`#[napi_derive::module_init]` 和 `#[n
 
 要正确使用这两个 API，关键是理解各自何时执行：
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Node.js loads .node file                     │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  1. #[napi_derive::module_init] runs                            │
-│     (via ctor - runs at dynamic library load time)              │
-│     Runs once for this native library load                     │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  2. napi_register_module_v1 called by Node.js                   │
-│     - Registers all #[napi] exports (functions, classes, etc.)  │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  3. #[napi(module_exports)] runs                                │
-│     Receives the exports object, can customize it               │
-│     Runs ONCE per Node.js thread/context                        │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  4. Module is ready for use in JavaScript                       │
-└─────────────────────────────────────────────────────────────────┘
-```
+<figure class="mi-flow" aria-label="模块初始化时间线">
+  <ol class="mi-flow-list">
+    <li class="mi-step mi-step--state">
+      <span class="mi-node mi-node--file" aria-hidden="true">⬇</span>
+      <div class="mi-card">
+        <p class="mi-card-title">Node.js 加载 <code>.node</code> 文件</p>
+      </div>
+    </li>
+    <li class="mi-step">
+      <span class="mi-node" aria-hidden="true">1</span>
+      <div class="mi-card">
+        <p class="mi-card-title"><code>#[napi_derive::module_init]</code> 运行</p>
+        <p class="mi-card-sub">通过 <code>ctor</code> —— 在动态库加载时执行 · 每次原生库加载仅一次</p>
+      </div>
+    </li>
+    <li class="mi-step">
+      <span class="mi-node" aria-hidden="true">2</span>
+      <div class="mi-card">
+        <p class="mi-card-title">Node.js 调用 <code>napi_register_module_v1</code></p>
+        <p class="mi-card-sub">注册所有 <code>#[napi]</code> 导出 —— 函数、类等</p>
+      </div>
+    </li>
+    <li class="mi-step">
+      <span class="mi-node" aria-hidden="true">3</span>
+      <div class="mi-card">
+        <p class="mi-card-title"><code>#[napi(module_exports)]</code> 运行</p>
+        <p class="mi-card-sub">接收 <code>exports</code> 对象并可自定义 · 每个 Node.js 线程/上下文仅一次</p>
+      </div>
+    </li>
+    <li class="mi-step mi-step--final">
+      <span class="mi-node mi-node--done" aria-hidden="true">✓</span>
+      <div class="mi-card">
+        <p class="mi-card-title">模块就绪，可在 JavaScript 中使用</p>
+      </div>
+    </li>
+  </ol>
+  <span class="mi-pulse" aria-hidden="true"></span>
+</figure>
 
 ## `#[napi_derive::module_init]`
 

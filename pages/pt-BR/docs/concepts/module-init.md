@@ -14,36 +14,44 @@ diferentes.
 
 Entender quando cada API executa é fundamental para usá-las corretamente:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                 Node.js carrega o arquivo .node                │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  1. #[napi_derive::module_init] executa                        │
-│     (via ctor - executa no carregamento da biblioteca)         │
-│     Executa uma vez para este carregamento da biblioteca       │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  2. napi_register_module_v1 é chamado pelo Node.js             │
-│     - Registra todos os exports #[napi] (funções, classes etc.)│
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  3. #[napi(module_exports)] executa                            │
-│     Recebe o objeto exports e pode personalizá-lo              │
-│     Executa UMA VEZ por thread/contexto do Node.js             │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  4. O módulo está pronto para uso em JavaScript                │
-└─────────────────────────────────────────────────────────────────┘
-```
+<figure class="mi-flow" aria-label="Linha do tempo de inicialização do módulo">
+  <ol class="mi-flow-list">
+    <li class="mi-step mi-step--state">
+      <span class="mi-node mi-node--file" aria-hidden="true">⬇</span>
+      <div class="mi-card">
+        <p class="mi-card-title">Node.js carrega o arquivo <code>.node</code></p>
+      </div>
+    </li>
+    <li class="mi-step">
+      <span class="mi-node" aria-hidden="true">1</span>
+      <div class="mi-card">
+        <p class="mi-card-title"><code>#[napi_derive::module_init]</code> executa</p>
+        <p class="mi-card-sub">via <code>ctor</code> — no carregamento da biblioteca dinâmica · uma vez por carregamento da biblioteca nativa</p>
+      </div>
+    </li>
+    <li class="mi-step">
+      <span class="mi-node" aria-hidden="true">2</span>
+      <div class="mi-card">
+        <p class="mi-card-title"><code>napi_register_module_v1</code> é chamado pelo Node.js</p>
+        <p class="mi-card-sub">Registra todos os exports <code>#[napi]</code> — funções, classes e mais</p>
+      </div>
+    </li>
+    <li class="mi-step">
+      <span class="mi-node" aria-hidden="true">3</span>
+      <div class="mi-card">
+        <p class="mi-card-title"><code>#[napi(module_exports)]</code> executa</p>
+        <p class="mi-card-sub">Recebe o objeto <code>exports</code> e pode personalizá-lo · uma vez por thread/contexto do Node.js</p>
+      </div>
+    </li>
+    <li class="mi-step mi-step--final">
+      <span class="mi-node mi-node--done" aria-hidden="true">✓</span>
+      <div class="mi-card">
+        <p class="mi-card-title">O módulo está pronto para uso em JavaScript</p>
+      </div>
+    </li>
+  </ol>
+  <span class="mi-pulse" aria-hidden="true"></span>
+</figure>
 
 ## `#[napi_derive::module_init]`
 

@@ -592,3 +592,200 @@
 .pm-tabs:not(:has(.pm-input:checked)) .pm-panel[data-pm-default] {
   display: block;
 }
+
+/* ── Module-init execution timeline (concepts/module-init) ──────────────────
+ *
+ * Replaces the old ASCII flow diagram with an animated vertical timeline:
+ * a gradient spine with numbered nodes, cards per step, a glow dot that
+ * travels down the spine, and a scroll-driven rise-in per step (progressive
+ * enhancement — content is fully visible without it, zero JS). Theme-aware
+ * via the site's tokens; honors prefers-reduced-motion.
+ */
+
+.mi-flow {
+  position: relative;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Scoped under .void-md so it beats the prose stylesheet's ol rules — the
+ * custom node markers replace list numbering entirely. */
+.void-md .mi-flow-list,
+.mi-flow-list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin: 0;
+  padding: 0 0 0 2.75rem;
+  list-style: none;
+}
+
+.void-md .mi-flow-list .mi-step::marker {
+  content: none;
+}
+
+/* The spine: a soft gradient line that "charges" from neutral to brand
+ * orange to success green, mirroring the flow toward the ready state. */
+.mi-flow-list::before {
+  content: '';
+  position: absolute;
+  left: 0.875rem;
+  top: 0.875rem;
+  bottom: 0.875rem;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--border) 0%,
+    var(--theme) 55%,
+    #22c55e 100%
+  );
+  opacity: 0.55;
+}
+
+.mi-step {
+  position: relative;
+}
+
+/* Numbered node on the spine. */
+.mi-node {
+  position: absolute;
+  left: -2.75rem;
+  top: 50%;
+  translate: 0 -50%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  border: 2px solid var(--border);
+  background: var(--background);
+  color: var(--muted-foreground);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Step nodes glow brand orange; the terminal "ready" node goes green. */
+.mi-step:not(.mi-step--state):not(.mi-step--final) .mi-node {
+  border-color: var(--theme);
+  color: var(--theme);
+  box-shadow: 0 0 0 4px hsl(var(--theme-hsl) / 0.12);
+}
+
+.mi-node--done {
+  border-color: #22c55e;
+  color: #22c55e;
+  box-shadow: 0 0 0 4px rgb(34 197 94 / 0.14);
+}
+
+.mi-card {
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--muted);
+  padding: 0.7rem 1rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.mi-card:hover {
+  transform: translateX(2px);
+  border-color: hsl(var(--theme-hsl) / 0.5);
+  box-shadow: 0 4px 16px -6px hsl(var(--theme-hsl) / 0.25);
+}
+
+.mi-step--final .mi-card {
+  border-color: rgb(34 197 94 / 0.45);
+  background: rgb(34 197 94 / 0.07);
+}
+
+.mi-step--final .mi-card:hover {
+  border-color: rgb(34 197 94 / 0.7);
+  box-shadow: 0 4px 16px -6px rgb(34 197 94 / 0.3);
+}
+
+.mi-card-title {
+  margin: 0;
+  font-size: 0.925rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.mi-card-sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+/* The glow dot traveling down the spine — the "execution" moving through
+ * the timeline. Reflow-based top animation is fine for one 8px element. */
+.mi-pulse {
+  position: absolute;
+  left: calc(0.875rem - 3px);
+  top: 0.875rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--theme);
+  box-shadow:
+    0 0 10px 2px hsl(var(--theme-hsl) / 0.8),
+    0 0 22px 6px hsl(var(--theme-hsl) / 0.35);
+  animation: mi-pulse-travel 4.5s ease-in-out infinite;
+}
+
+@keyframes mi-pulse-travel {
+  0% {
+    top: 0.875rem;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: calc(100% - 1.75rem);
+    opacity: 0;
+  }
+}
+
+/* Scroll-driven reveal: each step rises in as it enters the viewport.
+ * Progressive enhancement only — without view() support or JS the steps are
+ * simply visible, identical to a static diagram. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .mi-step {
+      animation: mi-rise ease-out both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+
+    @keyframes mi-rise {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mi-pulse {
+    display: none;
+  }
+  .mi-card,
+  .mi-card:hover {
+    transition: none;
+    transform: none;
+  }
+}

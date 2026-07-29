@@ -11,36 +11,44 @@ NAPI-RS provides two APIs for module initialization: `#[napi_derive::module_init
 
 Understanding when each API executes is crucial for using them correctly:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Node.js loads .node file                     │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  1. #[napi_derive::module_init] runs                            │
-│     (via ctor - runs at dynamic library load time)              │
-│     Runs once for this native library load                     │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  2. napi_register_module_v1 called by Node.js                   │
-│     - Registers all #[napi] exports (functions, classes, etc.)  │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  3. #[napi(module_exports)] runs                                │
-│     Receives the exports object, can customize it               │
-│     Runs ONCE per Node.js thread/context                        │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  4. Module is ready for use in JavaScript                       │
-└─────────────────────────────────────────────────────────────────┘
-```
+<figure class="mi-flow" aria-label="Module initialization timeline">
+  <ol class="mi-flow-list">
+    <li class="mi-step mi-step--state">
+      <span class="mi-node mi-node--file" aria-hidden="true">⬇</span>
+      <div class="mi-card">
+        <p class="mi-card-title">Node.js loads the <code>.node</code> file</p>
+      </div>
+    </li>
+    <li class="mi-step">
+      <span class="mi-node" aria-hidden="true">1</span>
+      <div class="mi-card">
+        <p class="mi-card-title"><code>#[napi_derive::module_init]</code> runs</p>
+        <p class="mi-card-sub">via <code>ctor</code> — at dynamic library load time · once per native library load</p>
+      </div>
+    </li>
+    <li class="mi-step">
+      <span class="mi-node" aria-hidden="true">2</span>
+      <div class="mi-card">
+        <p class="mi-card-title"><code>napi_register_module_v1</code> called by Node.js</p>
+        <p class="mi-card-sub">Registers all <code>#[napi]</code> exports — functions, classes, and more</p>
+      </div>
+    </li>
+    <li class="mi-step">
+      <span class="mi-node" aria-hidden="true">3</span>
+      <div class="mi-card">
+        <p class="mi-card-title"><code>#[napi(module_exports)]</code> runs</p>
+        <p class="mi-card-sub">Receives the <code>exports</code> object and can customize it · once per Node.js thread/context</p>
+      </div>
+    </li>
+    <li class="mi-step mi-step--final">
+      <span class="mi-node mi-node--done" aria-hidden="true">✓</span>
+      <div class="mi-card">
+        <p class="mi-card-title">Module is ready for use in JavaScript</p>
+      </div>
+    </li>
+  </ol>
+  <span class="mi-pulse" aria-hidden="true"></span>
+</figure>
 
 ## `#[napi_derive::module_init]`
 
