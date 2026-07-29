@@ -27,6 +27,7 @@ A `ReadableStream<T>` argument is validated with `instanceof` against the global
 
 ```rust
 use napi::bindgen_prelude::*;
+use napi_derive::napi;
 use napi::tokio_stream::StreamExt;
 
 /// Counts the chunks read from a stream, swallowing (dropping) any read error.
@@ -62,6 +63,7 @@ export declare function drainStreamCount(
 **index.mjs**
 
 ```js
+import { createReadStream } from 'node:fs'
 import { Readable } from 'node:stream'
 import { drainStreamCount } from './index.js'
 
@@ -83,6 +85,7 @@ To hand a stream **to** JavaScript, build one from a Rust `Stream<Item = Result<
 
 ```rust
 use napi::bindgen_prelude::*;
+use napi_derive::napi;
 use napi::tokio_stream::wrappers::ReceiverStream;
 
 #[napi]
@@ -161,6 +164,7 @@ Build one with `AsyncBlockBuilder`:
 
 ```rust
 use napi::bindgen_prelude::*;
+use napi_derive::napi;
 use napi::tokio_stream::StreamExt;
 
 #[napi]

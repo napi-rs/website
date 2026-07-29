@@ -258,6 +258,15 @@ describe('pageTitle', () => {
     expect(pageTitle(md)).toBe('Heading Title')
   })
 
+  it('strips inline markup from H1 titles (backticks, code)', () => {
+    // reference.md's H1 is `# \`Reference\` / \`WeakReference\`` — the raw
+    // text would display backticks in the dialog and miss clean queries.
+    expect(pageTitle('# `Reference` / `WeakReference`')).toBe(
+      'Reference / WeakReference',
+    )
+    expect(pageTitle('# `#[napi]` attributes')).toBe('#[napi] attributes')
+  })
+
   it('returns an empty string only when neither exists', () => {
     expect(pageTitle('## No title here')).toBe('')
   })

@@ -260,7 +260,12 @@ export default function SearchDialog({ locale, className }: SearchDialogProps) {
                 {LOADING[locale]}…
               </div>
             ) : null}
-            <CommandEmpty>{EMPTY[locale]}</CommandEmpty>
+            {/* Render the empty state only once the index has RESOLVED —
+                while loading there are no items yet, so cmdk would otherwise
+                show "No results found" next to the loading row. */}
+            {fullIndex !== undefined ? (
+              <CommandEmpty>{EMPTY[locale]}</CommandEmpty>
+            ) : null}
             {groups.map((group) => (
               <CommandGroup heading={group.label} key={group.label}>
                 {group.items.map((r) => {

@@ -146,7 +146,10 @@ export function markdownToPlainText(markdown) {
 
 export function pageTitle(markdown) {
   const m = /^#\s+(.+)$/m.exec(markdown)
-  if (m) return m[1].trim()
+  // Run the raw H1 through the same inline-markup extraction as headings, so
+  // titles like `# \`Reference\` / \`WeakReference\`` display without
+  // backticks (and match clean title queries).
+  if (m) return headingText(m[1])
   // No H1 (some localized pages start at H2): fall back to the frontmatter
   // `title:` — the same title the metadata index and <title> use — rather
   // than emitting a blank, unmatchable result row. The byte-0 `<script>`

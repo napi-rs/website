@@ -170,7 +170,9 @@ export default function PageActions({
   )
 
   return (
-    <div className={cn('flex flex-col items-end gap-2 text-sm', className)}>
+    <div
+      className={cn('flex w-full flex-col items-end gap-2 text-sm', className)}
+    >
       {/* Copy-page dropdown. Pre-mount: the plain trigger only (Radix useId
           SSR/island mismatch — see the header comment). */}
       {mounted ? (

@@ -106,8 +106,11 @@ export default function DocsLayout({
               mobile "On this page" collapsible (below xl, where the rail TOC
               is hidden). `justify-end` right-aligns; `empty:hidden` collapses
               the row entirely when the island renders nothing (changelog /
-              routes without a markdown source). */}
-          <div className="mb-2 flex justify-end empty:hidden">
+              routes without a markdown source). `[&>div]:w-full` stretches
+              the island wrapper to the column width — the mobile <details>
+              is w-full, and a shrink-to-fit flex item would leave it as a
+              narrow right-aligned control. */}
+          <div className="mb-2 flex justify-end empty:hidden [&>div]:w-full">
             {pageActions ?? <div data-slot-placeholder="page-actions" hidden />}
           </div>
 
