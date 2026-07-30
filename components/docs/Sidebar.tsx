@@ -215,19 +215,34 @@ export default function Sidebar({
   // sidebar (e.g. CLI commands) would otherwise mount with the scroll pane
   // parked at the top, hiding the highlighted item. We set the container's
   // scrollTop from getBoundingClientRect deltas instead of calling
-  // el.scrollIntoView(), which would ALSO scroll the window. The item lands
-  // ~1/3 from the top, leaving earlier siblings visible for context. Desktop
-  // only (this column is hidden lg:flex); runs once — later re-renders from
-  // collapse state must not yank the scroll position.
+  // el.scrollIntoView(), which would ALSO scroll the window. Nearest-edge
+  // semantics: the scroll position is only adjusted when the active item is
+  // actually out of view — an already-visible item stays put, so clicking
+  // between visible pages never shifts the sidebar. Desktop only (this column
+  // is hidden lg:flex); runs once — later re-renders from collapse state must
+  // not yank the scroll position.
   const scrollRef = React.useRef<HTMLDivElement>(null)
   React.useEffect(() => {
     const container = scrollRef.current
     if (!container) return
     const active = container.querySelector('[aria-current="page"]')
     if (!active) return
-    const delta =
-      active.getBoundingClientRect().top - container.getBoundingClientRect().top
-    container.scrollTop += delta - container.clientHeight / 3
+    // Nearest-edge reveal: adjust scrollTop ONLY when the active item is
+    // outside the visible area (deep link into a long sidebar). Scrolling an
+    // already-visible item to a fixed position — the previous behavior —
+    // made the whole sidebar jump on every nav click.
+    const MARGIN = 48 // px of breathing room around the visible area
+    const activeRect = active.getBoundingClientRect()
+    if (activeRect.height === 0) return // collapsed group: no box to reveal
+    const containerRect = container.getBoundingClientRect()
+    const aboveBy = containerRect.top + MARGIN - activeRect.top
+    const belowBy = activeRect.bottom - (containerRect.bottom - MARGIN)
+    if (aboveBy > 0) {
+      container.scrollTop -= aboveBy
+    } else if (belowBy > 0) {
+      container.scrollTop += belowBy
+    }
+    // Fully visible: leave the scroll position exactly where it was.
   }, [])
 
   // Desktop sidebar only. The mobile nav now lives in the Navbar island as a
