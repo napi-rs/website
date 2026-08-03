@@ -73,13 +73,13 @@ type Output = {
 }
 ```
 
-| Kind                                  | 描述                                                             |
-| ------------------------------------- | ---------------------------------------------------------------- |
-| <span class="chalk-green">node</span> | 原生 Node.js 插件（<span class="chalk-green">.node</span> 文件） |
-| <span class="chalk-green">js</span>   | JavaScript 绑定文件                                              |
-| <span class="chalk-green">dts</span>  | TypeScript 定义文件                                              |
-| <span class="chalk-green">exe</span>  | 可执行二进制文件                                                 |
-| <span class="chalk-green">wasm</span> | WebAssembly 模块                                                 |
+| Kind                                   | 描述                                                             |
+| -------------------------------------- | ---------------------------------------------------------------- |
+| <span class="chalk-green">node</span>  | 原生 Node.js 插件（<span class="chalk-green">.node</span> 文件） |
+| <span class="chalk-yellow">js</span>   | JavaScript 绑定文件                                              |
+| <span class="chalk-blue">dts</span>    | TypeScript 定义文件                                              |
+| <span class="chalk-rust">exe</span>    | 可执行二进制文件                                                 |
+| <span class="chalk-purple">wasm</span> | WebAssembly 模块                                                 |
 
 ## 独立生成类型/JS
 

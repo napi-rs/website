@@ -4,7 +4,7 @@ description: Use @napi-rs/cli programmatic APIs to customize your build workflow
 
 # Programmatic API
 
-import { Green, Rust, Warning } from '../../../components/chalk'
+import { Blue, Green, Purple, Rust, Warning, Yellow } from '../../../components/chalk'
 The `@napi-rs/cli` package exports programmatic APIs that allow you to customize your build workflow beyond what the CLI commands offer. This is useful when you need to:
 
 - Post-process build outputs (format, transform, or validate generated files)
@@ -72,10 +72,10 @@ type Output = {
 | Kind | Description |
 |------|-------------|
 | <Green>node</Green> | Native Node.js addon (<Green>.node</Green> file) |
-| <Green>js</Green> | JavaScript binding file |
-| <Green>dts</Green> | TypeScript definition file |
-| <Green>exe</Green> | Executable binary |
-| <Green>wasm</Green> | WebAssembly module |
+| <Yellow>js</Yellow> | JavaScript binding file |
+| <Blue>dts</Blue> | TypeScript definition file |
+| <Rust>exe</Rust> | Executable binary |
+| <Purple>wasm</Purple> | WebAssembly module |
 
 ## Standalone Types/JS Generation
 

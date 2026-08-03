@@ -25,6 +25,15 @@
 .void-md .chalk-warning {
   color: #ff7043;
 }
+.void-md .chalk-blue {
+  color: #0550ae;
+}
+.void-md .chalk-yellow {
+  color: #9a6700;
+}
+.void-md .chalk-purple {
+  color: #8250df;
+}
 
 /* Dark mode: triggered by an explicit toggle (`[data-theme="dark"]`) OR by the
  * Tailwind `.dark` class on any ancestor. */
@@ -35,6 +44,18 @@
 [data-theme='dark'] .void-md .chalk-warning,
 .dark .void-md .chalk-warning {
   color: #fbc02d;
+}
+[data-theme='dark'] .void-md .chalk-blue,
+.dark .void-md .chalk-blue {
+  color: #79c0ff;
+}
+[data-theme='dark'] .void-md .chalk-yellow,
+.dark .void-md .chalk-yellow {
+  color: #e3b341;
+}
+[data-theme='dark'] .void-md .chalk-purple,
+.dark .void-md .chalk-purple {
+  color: #d2a8ff;
 }
 
 /* Caption shown under figures / framed media blocks in docs content. */

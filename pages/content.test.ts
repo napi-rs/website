@@ -118,7 +118,7 @@ describe('converted content tree', () => {
 
   it('no emitted page contains a leftover island tag or top-level import', () => {
     const FORBIDDEN =
-      /<Callout\b|<\/Callout>|<NodeLink\b|<\/NodeLink>|<Green>|<\/Green>|<Rust>|<\/Rust>|<Warning>|<\/Warning>/
+      /<Callout\b|<\/Callout>|<NodeLink\b|<\/NodeLink>|<Green>|<\/Green>|<Rust>|<\/Rust>|<Warning>|<\/Warning>|<Blue>|<\/Blue>|<Yellow>|<\/Yellow>|<Purple>|<\/Purple>/
     for (const file of emittedPages()) {
       // Strip the leading <script> island block (its `import ... with { island }`
       // line is intentional, not a leak) before scanning the markdown body.

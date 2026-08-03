@@ -4,7 +4,7 @@ description: 使用 @napi-rs/cli 程序化 API 自定义构建工作流。
 
 # 程序化 API
 
-import { Green, Rust, Warning } from '../../../components/chalk'
+import { Blue, Green, Purple, Rust, Warning, Yellow } from '../../../components/chalk'
 `@napi-rs/cli` 包导出了一组程序化 API，可以在 CLI 命令所提供的能力之外自定义构建工作流。它适用于：
 
 - 对构建输出进行后处理（格式化、转换或验证生成的文件）
@@ -70,10 +70,10 @@ type Output = {
 | Kind | 描述 |
 |------|-------------|
 | <Green>node</Green> | 原生 Node.js 插件（<Green>.node</Green> 文件） |
-| <Green>js</Green> | JavaScript 绑定文件 |
-| <Green>dts</Green> | TypeScript 定义文件 |
-| <Green>exe</Green> | 可执行二进制文件 |
-| <Green>wasm</Green> | WebAssembly 模块 |
+| <Yellow>js</Yellow> | JavaScript 绑定文件 |
+| <Blue>dts</Blue> | TypeScript 定义文件 |
+| <Rust>exe</Rust> | 可执行二进制文件 |
+| <Purple>wasm</Purple> | WebAssembly 模块 |
 
 ## 独立生成类型/JS
 

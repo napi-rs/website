@@ -75,13 +75,13 @@ type Output = {
 }
 ```
 
-| Kind                                  | Description                                                        |
-| ------------------------------------- | ------------------------------------------------------------------ |
-| <span class="chalk-green">node</span> | Native Node.js addon (<span class="chalk-green">.node</span> file) |
-| <span class="chalk-green">js</span>   | JavaScript binding file                                            |
-| <span class="chalk-green">dts</span>  | TypeScript definition file                                         |
-| <span class="chalk-green">exe</span>  | Executable binary                                                  |
-| <span class="chalk-green">wasm</span> | WebAssembly module                                                 |
+| Kind                                   | Description                                                        |
+| -------------------------------------- | ------------------------------------------------------------------ |
+| <span class="chalk-green">node</span>  | Native Node.js addon (<span class="chalk-green">.node</span> file) |
+| <span class="chalk-yellow">js</span>   | JavaScript binding file                                            |
+| <span class="chalk-blue">dts</span>    | TypeScript definition file                                         |
+| <span class="chalk-rust">exe</span>    | Executable binary                                                  |
+| <span class="chalk-purple">wasm</span> | WebAssembly module                                                 |
 
 ## Standalone Types/JS Generation
 

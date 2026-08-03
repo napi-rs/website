@@ -886,6 +886,18 @@ function phaseBInline(text) {
     /<Warning>([\s\S]*?)<\/Warning>/g,
     (_m, inner) => `<span class="chalk-warning">${inner}</span>`,
   )
+  t = t.replace(
+    /<Blue>([\s\S]*?)<\/Blue>/g,
+    (_m, inner) => `<span class="chalk-blue">${inner}</span>`,
+  )
+  t = t.replace(
+    /<Yellow>([\s\S]*?)<\/Yellow>/g,
+    (_m, inner) => `<span class="chalk-yellow">${inner}</span>`,
+  )
+  t = t.replace(
+    /<Purple>([\s\S]*?)<\/Purple>/g,
+    (_m, inner) => `<span class="chalk-purple">${inner}</span>`,
+  )
 
   // JSX whitespace trick: {' '} or {" "} -> a single space.
   t = t.replace(/\{'\s*'\}|\{"\s*"\}/g, ' ')

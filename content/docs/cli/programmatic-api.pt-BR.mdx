@@ -4,7 +4,7 @@ description: Use as APIs programáticas do @napi-rs/cli para personalizar seu wo
 
 # API programática
 
-import { Green, Rust, Warning } from '../../../components/chalk'
+import { Blue, Green, Purple, Rust, Warning, Yellow } from '../../../components/chalk'
 O pacote `@napi-rs/cli` exporta APIs programáticas que permitem personalizar
 seu workflow de build além do que os comandos da CLI oferecem. Isso é útil
 quando você precisa:
@@ -76,10 +76,10 @@ type Output = {
 | Kind | Descrição |
 |------|-------------|
 | <Green>node</Green> | Addon nativo do Node.js (arquivo <Green>.node</Green>) |
-| <Green>js</Green> | Arquivo de binding JavaScript |
-| <Green>dts</Green> | Arquivo de definição TypeScript |
-| <Green>exe</Green> | Binário executável |
-| <Green>wasm</Green> | Módulo WebAssembly |
+| <Yellow>js</Yellow> | Arquivo de binding JavaScript |
+| <Blue>dts</Blue> | Arquivo de definição TypeScript |
+| <Rust>exe</Rust> | Binário executável |
+| <Purple>wasm</Purple> | Módulo WebAssembly |
 
 ## Geração independente de tipos/JS
 
