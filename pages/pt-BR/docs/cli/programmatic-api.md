@@ -193,55 +193,104 @@ durante `napi build`.
 
 ### Fluxo de controle
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         FASE DE PREPARAÇÃO                             │
-├─────────────────────────────────────────────────────────────────────────┤
-│  1. Ler package.json para obter a configuração do napi                │
-│  2. Obter o target triple (da flag da cli) (ex.: 'x86_64-unknown-linux-gnu') │
-│  3. parseTriple() → obter platformArchABI para o nome do binding      │
-│  4. mkdir(typeDefDir) → criar diretório para as definições de tipos   │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           FASE DE BUILD                                 │
-├─────────────────────────────────────────────────────────────────────────┤
-│  5. spawn('cargo', ['build', '--release', '--target', currentTarget])   │
-│     └─ env: { NAPI_TYPE_DEF_TMP_FOLDER: typeDefDir }                    │
-│        ▲                                                                │
-│        └─ Esta variável informa ao napi-derive onde gravar type defs    │
-│                                                                         │
-│  6. Fazer streaming de stdout/stderr do cargo                           │
-│  7. await da conclusão do cargo                                         │
-│  8. rm(binding antigo) → remover o arquivo .node antigo antes da troca  │
-│  9. copyFile(libfoo.so → <binaryName>.{platform}.node)                  │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                    FASE DE GERAÇÃO DE TIPOS                             │
-├─────────────────────────────────────────────────────────────────────────┤
-│ 10. generateTypeDef({ typeDefDir, cwd })                                │
-│     └─ Lê arquivos JSON delimitados por linha de typeDefDir              │
-│     └─ Retorna { dts: string, exports: string[] }                       │
-│                                                                         │
-│ 11. writeFile('customized.d.ts', dts)                                   │
-│                                                                         │
-│ 12. writeJsBinding({ platform, binaryName, idents: exports, ... })      │
-│     └─ Gera um loader JS que importa o arquivo .node                    │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-                              ┌───────────┐
-                              │  CONCLUÍDO │
-                              │           │
-                              │ Saída:    │
-                              │ • .node   │
-                              │ • .d.ts   │
-                              │ • .js     │
-                              └───────────┘
-```
+<figure class="cf-flow" aria-label="Fluxo de controle de um build programático do napi">
+  <ol class="cf-list">
+    <li class="cf-phase">Fase 1 · Preparação</li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">1</span>
+      <div class="cf-card">
+        <p class="cf-title">Ler <code>package.json</code> para a configuração do <code>napi</code></p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">2</span>
+      <div class="cf-card">
+        <p class="cf-title">Definir o target triple</p>
+        <p class="cf-sub">Fixo como <code>x86_64-unknown-linux-gnu</code> no exemplo acima — um build real o obtém de uma flag da CLI.</p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">3</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>parseTriple()</code> → <code>platformArchABI</code></p>
+        <p class="cf-sub">Fornece o sufixo de plataforma para o nome do binding.</p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">4</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>mkdir(typeDefDir)</code></p>
+        <p class="cf-sub">Cria o diretório onde ficam as definições de tipos intermediárias.</p>
+      </div>
+    </li>
+    <li class="cf-phase">Fase 2 · Build</li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">5</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>spawn('cargo', ['build', '--release', '--target', currentTarget])</code></p>
+        <p class="cf-sub">Com <code>NAPI_TYPE_DEF_TMP_FOLDER: typeDefDir</code> em <code>env</code> — é isso que diz ao <code>napi-derive</code> onde gravar os type defs.</p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">6</span>
+      <div class="cf-card">
+        <p class="cf-title">Streaming de <code>stdout</code> / <code>stderr</code> do cargo</p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">7</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>await</code> da conclusão do cargo</p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">8</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>rm(bindingName)</code></p>
+        <p class="cf-sub">Remove o <code>.node</code> antigo antes da substituição.</p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">9</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>copyFile(libfoo.so → binaryName.platformArchABI.node)</code></p>
+      </div>
+    </li>
+    <li class="cf-phase">Fase 3 · Geração de tipos</li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">10</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>generateTypeDef({ typeDefDir, cwd })</code></p>
+        <p class="cf-sub">Lê de volta os arquivos JSON delimitados por linha em <code>typeDefDir</code> e retorna <code>{ dts, exports }</code>.</p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">11</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>writeFile('customized.d.ts', dts)</code></p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">12</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>writeJsBinding({ platform, binaryName, idents: exports, … })</code></p>
+        <p class="cf-sub">Gera o loader JS que importa o arquivo <code>.node</code>.</p>
+      </div>
+    </li>
+    <li class="cf-step cf-step--final">
+      <span class="cf-node cf-node--done" aria-hidden="true">✓</span>
+      <div class="cf-card">
+        <p class="cf-title">Saída: <code>.node</code> · <code>.d.ts</code> · <code>.js</code></p>
+      </div>
+    </li>
+    <li class="cf-rail" role="presentation" aria-hidden="true">
+      <span class="cf-rail-label">grava os type defs</span>
+      <span class="cf-rail-line"></span>
+      <span class="cf-rail-label">lê de volta</span>
+    </li>
+  </ol>
+  <span class="cf-pulse" aria-hidden="true"></span>
+</figure>
 
 ### Conceitos principais
 

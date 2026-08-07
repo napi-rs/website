@@ -172,55 +172,104 @@ await writeJsBinding({
 
 ### 控制流
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           SETUP PHASE                                   │
-├─────────────────────────────────────────────────────────────────────────┤
-│  1. Read package.json for napi config                                   │
-│  2. Get target triple (from cli flag) (e.g.,'x86_64-unknown-linux-gnu') │
-│  3. parseTriple() → get platformArchABI for binding filename            │
-│  4. mkdir(typeDefDir) → create directory for type definitions           │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           BUILD PHASE                                   │
-├─────────────────────────────────────────────────────────────────────────┤
-│  5. spawn('cargo', ['build', '--release', '--target', currentTarget])   │
-│     └─ env: { NAPI_TYPE_DEF_TMP_FOLDER: typeDefDir }                    │
-│        ▲                                                                │
-│        └─ This env var tells napi-derive where to write type defs       │
-│                                                                         │
-│  6. Stream stdout/stderr from cargo                                     │
-│  7. await cargo completion                                              │
-│  8. rm(old binding) → Remove old .node file before replacement          │
-│  9. copyFile(libfoo.so → <binaryName>.{platform}.node)                  │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                            类型生成阶段                                   │
-├─────────────────────────────────────────────────────────────────────────┤
-│ 10. generateTypeDef({ typeDefDir, cwd })                                │
-│     └─ 读取 typeDefDir 中以换行分隔的 JSON 文件                   │
-│     └─ 返回 { dts: string, exports: string[] }                         │
-│                                                                         │
-│ 11. writeFile('customized.d.ts', dts)                                   │
-│                                                                         │
-│ 12. writeJsBinding({ platform, binaryName, idents: exports, ... })      │
-│     └─ Generates JS loader that imports the .node file                  │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-                              ┌───────────┐
-                              │   DONE    │
-                              │           │
-                              │ Output:   │
-                              │ • .node   │
-                              │ • .d.ts   │
-                              │ • .js     │
-                              └───────────┘
-```
+<figure class="cf-flow" aria-label="编程式 napi 构建的控制流">
+  <ol class="cf-list">
+    <li class="cf-phase">阶段 1 · 设置</li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">1</span>
+      <div class="cf-card">
+        <p class="cf-title">读取 <code>package.json</code> 中的 <code>napi</code> 配置</p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">2</span>
+      <div class="cf-card">
+        <p class="cf-title">确定 target triple</p>
+        <p class="cf-sub">上面的示例中硬编码为 <code>x86_64-unknown-linux-gnu</code>；真实构建会从 CLI flag 取值。</p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">3</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>parseTriple()</code> → <code>platformArchABI</code></p>
+        <p class="cf-sub">为 binding 文件名提供平台后缀。</p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">4</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>mkdir(typeDefDir)</code></p>
+        <p class="cf-sub">创建存放中间类型定义的目录。</p>
+      </div>
+    </li>
+    <li class="cf-phase">阶段 2 · 构建</li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">5</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>spawn('cargo', ['build', '--release', '--target', currentTarget])</code></p>
+        <p class="cf-sub">在 <code>env</code> 中带上 <code>NAPI_TYPE_DEF_TMP_FOLDER: typeDefDir</code> —— 正是它告诉 <code>napi-derive</code> 把类型定义写到哪里。</p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">6</span>
+      <div class="cf-card">
+        <p class="cf-title">流式输出 cargo 的 <code>stdout</code> / <code>stderr</code></p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">7</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>await</code> cargo 完成</p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">8</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>rm(bindingName)</code></p>
+        <p class="cf-sub">在替换之前删除旧的 <code>.node</code> 文件。</p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">9</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>copyFile(libfoo.so → binaryName.platformArchABI.node)</code></p>
+      </div>
+    </li>
+    <li class="cf-phase">阶段 3 · 类型生成</li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">10</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>generateTypeDef({ typeDefDir, cwd })</code></p>
+        <p class="cf-sub">从 <code>typeDefDir</code> 读回以换行分隔的 JSON 文件，返回 <code>{ dts, exports }</code>。</p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">11</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>writeFile('customized.d.ts', dts)</code></p>
+      </div>
+    </li>
+    <li class="cf-step">
+      <span class="cf-node" aria-hidden="true">12</span>
+      <div class="cf-card">
+        <p class="cf-title"><code>writeJsBinding({ platform, binaryName, idents: exports, … })</code></p>
+        <p class="cf-sub">生成加载 <code>.node</code> 文件的 JS loader。</p>
+      </div>
+    </li>
+    <li class="cf-step cf-step--final">
+      <span class="cf-node cf-node--done" aria-hidden="true">✓</span>
+      <div class="cf-card">
+        <p class="cf-title">产物：<code>.node</code> · <code>.d.ts</code> · <code>.js</code></p>
+      </div>
+    </li>
+    <li class="cf-rail" role="presentation" aria-hidden="true">
+      <span class="cf-rail-label">写入类型定义</span>
+      <span class="cf-rail-line"></span>
+      <span class="cf-rail-label">再读回来</span>
+    </li>
+  </ol>
+  <span class="cf-pulse" aria-hidden="true"></span>
+</figure>
 
 ### 核心概念
 
