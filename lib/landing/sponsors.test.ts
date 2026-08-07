@@ -62,7 +62,8 @@ describe('wash', () => {
     expect(washed.sliver[0].url).toBe('https://github.com/nrwl')
     expect(washed.backers[0].url).toBe('https://github.com/octocat')
     // Even when the upstream item carries a websiteUrl, the locked decision is
-    // to always point at the github profile.
+    // to ignore it. A sponsor link only ever moves off the github profile via
+    // the curated LINK_OVERRIDES map, never from payload data.
     const withWebsite = wash({
       gold: [
         {
@@ -76,6 +77,45 @@ describe('wash', () => {
       ],
     })
     expect(withWebsite.gold[0].url).toBe('https://github.com/workleap')
+  })
+
+  // Sponsors can ask for their card to link to their own site instead of their
+  // GitHub profile. The override is keyed by exact login casing.
+  it('applies LINK_OVERRIDES for sponsors who requested a custom link', () => {
+    const washed = wash({
+      sliver: [
+        {
+          login: 'LambdaTest-Inc',
+          name: 'TestMu AI Open Source Office (Formerly LambdaTest)',
+          avatarUrl: 'https://avatars.githubusercontent.com/u/171592363?v=4',
+        },
+      ],
+    })
+    expect(washed.sliver[0].url).toBe(
+      'https://www.testmuai.com/?utm_medium=sponsor&utm_source=napi-rs',
+    )
+    // The rest of the shape is untouched by the override.
+    expect(washed.sliver[0].name).toBe(
+      'TestMu AI Open Source Office (Formerly LambdaTest)',
+    )
+    expect(washed.sliver[0].img).toBe(
+      'https://avatars.githubusercontent.com/u/171592363?v=4',
+    )
+  })
+
+  it('leaves non-overridden logins on their github profile', () => {
+    // Guards against an override map that accidentally matches everything.
+    const washed = wash({
+      sliver: [{ login: 'nrwl', name: 'Nx', avatarUrl: 'x' }],
+    })
+    expect(washed.sliver[0].url).toBe('https://github.com/nrwl')
+  })
+
+  it('matches the override on exact login casing only', () => {
+    const washed = wash({
+      sliver: [{ login: 'lambdatest-inc', name: 'lowercased', avatarUrl: 'x' }],
+    })
+    expect(washed.sliver[0].url).toBe('https://github.com/lambdatest-inc')
   })
 
   it('returns all-empty tiers for an empty object', () => {

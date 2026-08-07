@@ -8,7 +8,12 @@
 // backers (the `sliver` misspelling is intentional and MUST be preserved —
 // `mapSponsors` reads `sponsors['sliver']`). Each raw item is
 // `{ login, name, avatarUrl }`; the sponsor link points at the GitHub profile
-// (`https://github.com/<login>`).
+// (`https://github.com/<login>`) unless the login appears in LINK_OVERRIDES.
+//
+// This is the ONLY place a sponsor URL is constructed — the landing wall
+// (`components/landing/sponsors.tsx`) and the `/sponsors.{svg,png}` cards
+// (`lib/sponsors-image/card.ts`) both consume the washed `url`, and `login` is
+// dropped here, so an override has to live at this stage.
 
 export interface RawSponsor {
   login: string
@@ -40,6 +45,20 @@ const TIERS = [
   'backers',
 ] as const
 
+// Sponsors who asked for their card to point somewhere other than their GitHub
+// profile. Keyed by the exact GitHub login casing, matching the convention of
+// `EXCLUDED_LOGINS` in load-sponsors.ts.
+//
+// Note the snapshot in KV stores WASHED data and the SVG/PNG cards bake the href
+// into their bytes, so editing this map does nothing until a sponsors refresh
+// runs — redeliver the GitHub sponsors webhook, or wait for the daily cron.
+const LINK_OVERRIDES: Record<string, string> = {
+  // Requested by the sponsor 2026-08-06; "TestMu AI Open Source Office
+  // (Formerly LambdaTest)".
+  'LambdaTest-Inc':
+    'https://www.testmuai.com/?utm_medium=sponsor&utm_source=napi-rs',
+}
+
 function washTier(items: RawSponsor[] | undefined): WashedSponsor[] {
   if (!Array.isArray(items)) {
     return []
@@ -47,7 +66,7 @@ function washTier(items: RawSponsor[] | undefined): WashedSponsor[] {
   return items.map((item) => ({
     name: item.name,
     img: item.avatarUrl,
-    url: `https://github.com/${item.login}`,
+    url: LINK_OVERRIDES[item.login] ?? `https://github.com/${item.login}`,
   }))
 }
 
