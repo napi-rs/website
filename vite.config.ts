@@ -392,6 +392,13 @@ export default defineConfig({
   test: {
     pool: 'forks',
     environment: 'node',
+    server: {
+      deps: {
+        // Inline mermaid so the dompurify mock in pages/mermaid-syntax.test.ts
+        // reaches its internal imports (node_modules are external by default).
+        inline: ['mermaid'],
+      },
+    },
   },
 
   // --- Vite+ toolchain blocks (consumed by vp fmt / vp lint / vp check / vp staged) ---

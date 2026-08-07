@@ -810,3 +810,298 @@
     transform: none;
   }
 }
+
+/* ── Programmatic-build control flow (cli/programmatic-api) ─────────────────
+ *
+ * Hand-authored replacement for the old ASCII phase boxes. One continuous
+ * spine runs through 12 numbered steps grouped under 3 phase headings, and a
+ * dashed rail in the right gutter carries the typeDefDir side channel: step 5
+ * spawns cargo with NAPI_TYPE_DEF_TMP_FOLDER set, step 10 reads the type defs
+ * back out. The rail is decorative — both ends of that relationship are also
+ * stated in the card text, so nothing is lost when it is hidden.
+ *
+ * Built the same way as the .mi-* timeline above: zero JS, SSR-safe, site
+ * tokens only, real <ol> semantics, honors prefers-reduced-motion.
+ */
+
+.cf-flow {
+  position: relative;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Scoped under .void-md so it beats the prose stylesheet's ol rules — the
+ * numbered spine nodes replace list numbering entirely. */
+.void-md .cf-list,
+.cf-list {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem 0.875rem;
+  margin: 0;
+  padding: 0 0 0 2.75rem;
+  list-style: none;
+}
+
+.void-md .cf-list > li::marker {
+  content: none;
+}
+
+/* Everything stacks in column 1; only the side-channel rail takes column 2. */
+.cf-list > li {
+  position: relative;
+  grid-column: 1;
+}
+
+/* The spine: neutral at the top, charging to brand orange, then to success
+ * green as the outputs land. */
+.cf-list::before {
+  content: '';
+  position: absolute;
+  left: 0.875rem;
+  top: 1rem;
+  bottom: 1rem;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--border) 0%,
+    var(--theme) 55%,
+    #22c55e 100%
+  );
+  opacity: 0.55;
+}
+
+/* Phase heading — sits on the spine as a labelled band, not a step. */
+.cf-phase {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.cf-list > .cf-phase:first-child {
+  margin-top: 0;
+}
+
+.cf-phase::before {
+  content: '';
+  position: absolute;
+  left: calc(-2.75rem + 0.875rem - 3px);
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--border);
+  outline: 3px solid var(--background);
+}
+
+/* Numbered node on the spine. */
+.cf-node {
+  position: absolute;
+  left: -2.75rem;
+  top: 50%;
+  translate: 0 -50%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  border: 2px solid var(--theme);
+  background: var(--background);
+  color: var(--theme);
+  box-shadow: 0 0 0 4px hsl(var(--theme-hsl) / 0.12);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Terminal node — the outputs are on disk. */
+.cf-node--done {
+  border-color: #22c55e;
+  color: #22c55e;
+  box-shadow: 0 0 0 4px rgb(34 197 94 / 0.14);
+}
+
+.cf-card {
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  background: var(--muted);
+  padding: 0.7rem 1rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.cf-card:hover {
+  transform: translateX(2px);
+  border-color: hsl(var(--theme-hsl) / 0.5);
+  box-shadow: 0 4px 16px -6px hsl(var(--theme-hsl) / 0.25);
+}
+
+.cf-step--final .cf-card {
+  border-color: rgb(34 197 94 / 0.45);
+  background: rgb(34 197 94 / 0.07);
+}
+
+.cf-step--final .cf-card:hover {
+  border-color: rgb(34 197 94 / 0.7);
+  box-shadow: 0 4px 16px -6px rgb(34 197 94 / 0.3);
+}
+
+.cf-title {
+  margin: 0;
+  font-size: 0.925rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.cf-sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+/* ── Side-channel rail ─────────────────────────────────────────────────────
+ *
+ * Spans the rows between "spawn cargo" and "generateTypeDef". The line
+ * numbers below are tied to DOM order in the <ol>: 3 phase headings + 12
+ * steps + 1 outputs row, with the rail starting on step 5's row (7) and
+ * ending after step 10's row (14). Keep the three locales structurally
+ * identical — only the label text should differ between them.
+ */
+.cf-list > .cf-rail {
+  grid-column: 2;
+  grid-row: 7 / 14;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  justify-items: center;
+  gap: 0.4rem;
+  width: 6.5rem;
+  padding: 0.35rem 0;
+}
+
+.cf-rail-label {
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  text-align: center;
+  color: var(--muted-foreground);
+}
+
+.cf-rail-label code {
+  font-size: 0.9em;
+}
+
+/* Dashed channel with a slow downward drift, matching the direction the type
+ * defs actually travel. */
+.cf-rail-line {
+  width: 2px;
+  min-height: 2.5rem;
+  align-self: stretch;
+  border-radius: 2px;
+  background-image: linear-gradient(
+    to bottom,
+    hsl(var(--theme-hsl) / 0.85) 55%,
+    transparent 55%
+  );
+  background-size: 2px 11px;
+  background-repeat: repeat-y;
+  animation: cf-rail-drift 1.1s linear infinite;
+}
+
+@keyframes cf-rail-drift {
+  to {
+    background-position-y: 11px;
+  }
+}
+
+/* The glow dot traveling down the spine — execution moving through the flow.
+ * Reflow-based top animation is fine for one 8px element. */
+.cf-pulse {
+  position: absolute;
+  left: calc(0.875rem - 3px);
+  top: 1rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--theme);
+  box-shadow:
+    0 0 10px 2px hsl(var(--theme-hsl) / 0.8),
+    0 0 22px 6px hsl(var(--theme-hsl) / 0.35);
+  animation: cf-pulse-travel 6s ease-in-out infinite;
+}
+
+@keyframes cf-pulse-travel {
+  0% {
+    top: 1rem;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    top: calc(100% - 1.75rem);
+    opacity: 0;
+  }
+}
+
+/* Below the sidebar breakpoint the gutter is too tight for the rail. Drop it
+ * — the card text already carries the same relationship in words. */
+@media (max-width: 40rem) {
+  .void-md .cf-list,
+  .cf-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cf-list > .cf-rail {
+    display: none;
+  }
+}
+
+/* Scroll-driven reveal: each step rises in as it enters the viewport.
+ * Progressive enhancement only — without view() support or JS the steps are
+ * simply visible, identical to a static diagram. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .cf-step {
+      animation: cf-rise ease-out both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+
+    @keyframes cf-rise {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cf-pulse {
+    display: none;
+  }
+  .cf-rail-line {
+    animation: none;
+  }
+  .cf-card,
+  .cf-card:hover {
+    transition: none;
+    transform: none;
+  }
+}
