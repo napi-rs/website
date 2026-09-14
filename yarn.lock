@@ -7055,6 +7055,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fflate@npm:0.7.3":
+  version: 0.7.3
+  resolution: "fflate@npm:0.7.3"
+  checksum: 10c0/d116debcc828ca8860f78753e9472c3e0f14bc52cd2aab8bbcb01fd86577147993127317b8271d5f6eaaa821680e21adfa1e163211863300abfed6e006fc1d95
+  languageName: node
+  linkType: hard
+
 "fflate@npm:^0.7.3":
   version: 0.7.5
   resolution: "fflate@npm:0.7.5"
@@ -7327,6 +7334,13 @@ __metadata:
   version: 0.5.2
   resolution: "hachure-fill@npm:0.5.2"
   checksum: 10c0/307e3b6f9f2d3c11a82099c3f71eecbb9c440c00c1f896ac1732c23e6dbff16a92bb893d222b8b721b89cf11e58649ca60b4c24e5663f705f877cefd40153429
+  languageName: node
+  linkType: hard
+
+"harfbuzzjs@npm:0.10.0":
+  version: 0.10.0
+  resolution: "harfbuzzjs@npm:0.10.0"
+  checksum: 10c0/acc0cdcadb76de6ebe127468a30e7b9926edd9582fc1f0e966b0bbf955d9c5bb756de0d801344105da9d78357a86789ea3467d0ae2c37a075aef41c445a847a3
   languageName: node
   linkType: hard
 
@@ -8669,7 +8683,7 @@ __metadata:
     react: "npm:^19"
     react-dom: "npm:^19"
     react-use: "npm:^17.6.1"
-    satori: "npm:^0.32.0"
+    satori: "npm:^0.33.0"
     shadcn: "npm:^4.12.0"
     svgo: "npm:4.1.0"
     tailwind-merge: "npm:^3.6.0"
@@ -10012,9 +10026,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"satori@npm:^0.32.0":
-  version: 0.32.0
-  resolution: "satori@npm:0.32.0"
+"satori@npm:^0.33.0":
+  version: 0.33.4
+  resolution: "satori@npm:0.33.4"
   dependencies:
     "@shuding/opentype.js": "npm:1.4.0-beta.0"
     css-background-parser: "npm:^0.1.0"
@@ -10023,11 +10037,13 @@ __metadata:
     css-to-react-native: "npm:^3.0.0"
     emoji-regex-xs: "npm:^2.0.1"
     escape-html: "npm:^1.0.3"
+    fflate: "npm:0.7.3"
+    harfbuzzjs: "npm:0.10.0"
     linebreak: "npm:^1.1.0"
     parse-css-color: "npm:^0.2.1"
     postcss-value-parser: "npm:^4.2.0"
     yoga-layout: "npm:^3.2.1"
-  checksum: 10c0/a459e08c22b079006e4d8ae8ffbbb2cb51300eccfe115ca8aa274cf34de32abc10d4255eed2837d96393a6d390f2e9d6eff761d9feeb174d9b6a4006c58def18
+  checksum: 10c0/7d6038cbe88f973efc43dabd7ac1abe284cd20552382b60c6a8b11b4b1a128f55b8dd340368de425ed3f6f1c090ec6778aece975aeb5d0276c0e9795224a9fc4
   languageName: node
   linkType: hard
 
