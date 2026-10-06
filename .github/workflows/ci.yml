@@ -142,9 +142,16 @@ jobs:
       - name: Generate sitemap (post-build, writes into dist/client)
         run: yarn sitemap
 
-      # Single step: `void deploy` self-authenticates via GitHub OIDC (see
+      # `void deploy` self-authenticates via GitHub OIDC (see
       # header). --skip-build ships the dist/ built above instead of triggering
       # its own `vite build`, which would clobber dist/client and drop the
       # sitemap.xml + raw .md emitted by the sitemap step.
+      #
+      # Void >= 0.26 requires the platform connection to be saved in each fresh
+      # CI environment before deploying; `--no-login` records the verified
+      # connection without authenticating (OIDC supplies the credentials).
+      - name: Connect to Void platform
+        run: npx void connect "$VOID_API_URL" --no-login
+
       - name: Deploy
-        run: npx void deploy --project "$VOID_PROJECT" --skip-build
+        run: npx void deploy --platform void --project "$VOID_PROJECT" --skip-build
