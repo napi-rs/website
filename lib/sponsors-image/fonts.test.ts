@@ -1,6 +1,6 @@
 // @vitest-environment node
 // lib/sponsors-image/fonts.test.ts
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from 'vite-plus/test'
 import { readFileSync } from 'node:fs'
 import { loadFonts, readAsset, type AssetReader } from './fonts.ts'
 
@@ -13,10 +13,9 @@ function bufferFor(path: string): ArrayBuffer {
 }
 
 describe('loadFonts', () => {
-  // One shared mock across both tests: loadFonts is module-cached, so test 1
-  // populates the cache (2 reads) and test 2 asserts the later loads are served
-  // from that same cache (still 2 reads total, not 4). A per-test mock would see
-  // 0 calls in test 2 because the cache is already warm from test 1.
+  // loadFonts is module-cached, so test 1 populates the cache and test 2
+  // asserts later loads are served from it. Mock call history may be cleared
+  // between tests, so test 2 asserts on the delta rather than absolute counts.
   const read: AssetReader = vi.fn(async (p) => bufferFor(p))
 
   it('returns Manrope 700 + 500 descriptors', async () => {
@@ -29,10 +28,11 @@ describe('loadFonts', () => {
   })
 
   it('caches after the first successful load', async () => {
+    const before = vi.mocked(read).mock.calls.length
     await loadFonts(read)
     await loadFonts(read)
-    // 2 reads total from test 1's populate; both loads here hit the cache.
-    expect(read).toHaveBeenCalledTimes(2)
+    // Both loads hit the cache populated by test 1: no further reads.
+    expect(read).toHaveBeenCalledTimes(before)
   })
 })
 

@@ -66,7 +66,7 @@ jobs:
       - name: Run tests
         env:
           VITEST: '1'
-        run: npx vitest run
+        run: npx vp test run
 
       # Formatting is BLOCKING: `vp fmt --check` fails the job if anything is
       # unformatted.
