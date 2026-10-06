@@ -52,6 +52,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.5.2",
+    "markdown-it": "^15.0.2",
     "postcss": "^8.5.16",
     "postcss-functions": "^4.0.2",
     "postcss-import": "^17.0.0",
