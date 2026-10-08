@@ -8809,7 +8809,7 @@ __metadata:
     react: "npm:^19"
     react-dom: "npm:^19"
     react-use: "npm:^17.6.1"
-    satori: "npm:^0.36.0"
+    satori: "npm:^0.37.0"
     shadcn: "npm:^4.12.0"
     svgo: "npm:4.1.0"
     tailwind-merge: "npm:^3.6.0"
@@ -10063,9 +10063,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"satori@npm:^0.36.0":
-  version: 0.36.0
-  resolution: "satori@npm:0.36.0"
+"satori@npm:^0.37.0":
+  version: 0.37.0
+  resolution: "satori@npm:0.37.0"
   dependencies:
     "@shuding/opentype.js": "npm:1.4.0-beta.0"
     css-background-parser: "npm:^0.1.0"
@@ -10079,8 +10079,7 @@ __metadata:
     linebreak: "npm:^1.1.0"
     parse-css-color: "npm:^0.2.1"
     postcss-value-parser: "npm:^4.2.0"
-    yoga-layout: "npm:^3.2.1"
-  checksum: 10c0/535f878845b1aa7f777fc0a5e320d46bee5670670e8674dcf643ae2ac9fa0f7264661719dc23404048e0441c5092d3972c95240393a64b48b8865da509a93d4f
+  checksum: 10c0/e84bd6a395f7f06b9956e6794b6208a6edd1dbb954a90b0c49576c468cc0c6aa0cc70414b1a0a48297d07935f94448614e2a92a9202c5e1d679b5db726097be5
   languageName: node
   linkType: hard
 
@@ -11860,13 +11859,6 @@ __metadata:
   version: 2.2.0
   resolution: "yoctocolors@npm:2.2.0"
   checksum: 10c0/ca179aa83401aa0711f268fda38145a44c828e612a5f5265439efb5796cd63c46ca6b786bae3b74c75440a48518c36b5b23cba7fbb76ea8af5a9f85f830a5754
-  languageName: node
-  linkType: hard
-
-"yoga-layout@npm:^3.2.1":
-  version: 3.2.1
-  resolution: "yoga-layout@npm:3.2.1"
-  checksum: 10c0/9001e51be993c85e03757e5a04a2b61b8b30c9e5a7865d0156ca87a6431a3b717d51eb4990bfe588189fcfeac688dd9c3de707bbd50d1c344a84e63974cc54a8
   languageName: node
   linkType: hard
 
