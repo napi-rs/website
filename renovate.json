@@ -10,6 +10,11 @@
       "groupName": "void",
       "matchPackageNames": ["void"],
       "matchPackagePrefixes": ["@void/"]
+    },
+    {
+      "description": "Keep satori below 0.33. satori 0.33+ loads HarfBuzz wasm, which cannot start in Cloudflare Workers, so the /sponsors and /support-matrix images return 500. Remove this rule once satori renders in workerd again.",
+      "matchPackageNames": ["satori"],
+      "allowedVersions": "<0.33.0"
     }
   ],
   "lockFileMaintenance": {
