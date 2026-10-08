@@ -21,11 +21,15 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { join, dirname, resolve, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import satori from 'satori'
 import { Resvg } from '@resvg/resvg-js'
 import React from 'react'
 import { walkPages, fileToRoute } from './generate-sitemap.mjs'
 import { splitLocale } from '../lib/docs/locale.ts'
+
+// satori >= 0.36 reads the CommonJS `__dirname` global at module load (emscripten glue),
+// which does not exist in ESM — define it before a dynamic import (static imports hoist).
+globalThis.__dirname ??= '/'
+const { default: satori } = await import('satori')
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')

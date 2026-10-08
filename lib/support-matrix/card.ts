@@ -6,6 +6,7 @@
 // explicitly (required on the Cloudflare edge). Mirrors the structure of
 // `lib/sponsors-image/card.ts` (ensureYoga memo + node-tree helpers).
 
+import '../satori-env.ts'
 import satori, { init } from 'satori/standalone'
 import type { SatoriFont } from '../sponsors-image/fonts.ts'
 import type { MatrixModel, OsSection, Chip, Tier } from './resolve.ts'

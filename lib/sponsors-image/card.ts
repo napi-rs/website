@@ -5,6 +5,7 @@
 // resvg needs no fonts to rasterize it. Uses the `satori/standalone` entry so we
 // control yoga init explicitly (required on the Cloudflare edge).
 
+import '../satori-env.ts'
 import satori, { init } from 'satori/standalone'
 import type { WashedSponsors, WashedSponsor } from '../landing/sponsors.ts'
 import type { SatoriFont } from './fonts.ts'
