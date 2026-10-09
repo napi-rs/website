@@ -4281,7 +4281,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitejs/plugin-react@npm:^6.1.1":
+"@vitejs/plugin-react@npm:^6.1.2":
   version: 6.1.2
   resolution: "@vitejs/plugin-react@npm:6.1.2"
   dependencies:
@@ -4445,14 +4445,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@void/md@npm:0.26.0":
-  version: 0.26.0
-  resolution: "@void/md@npm:0.26.0"
+"@void/md@npm:0.26.1":
+  version: 0.26.1
+  resolution: "@void/md@npm:0.26.1"
   dependencies:
     "@shikijs/engine-javascript": "npm:^4.5.0"
     "@shikijs/transformers": "npm:^4.5.0"
     gray-matter: "npm:^4.0.3"
-    markdown-exit: "npm:1.3.0"
+    markdown-exit: "npm:^1.3.0"
     markdown-it-anchor: "npm:^10.0.0"
     markdown-it-attrs: "npm:^5.0.1"
     markdown-it-container: "npm:^4.0.0"
@@ -4463,8 +4463,8 @@ __metadata:
     tinyglobby: "npm:^0.2.17"
   peerDependencies:
     vite: ^8.0.0
-    void: 0.26.0
-  checksum: 10c0/b708ee99dd3e4f3bc04533f7823abb4c6f023f069e89db37914eb0bee79fe159bfa5f782a4cb73bbfac0acb8b54e214b6682a8cb2931899f42920cda16ca553d
+    void: 0.26.1
+  checksum: 10c0/7dcce546f18e8d7ec0e8b70dc47173c50b833c0feace7f6259477a84c0b0816f4e3bfd517c11c2b02c6275d1fa9bc440546ee17734e39991291b38ee77160dd6
   languageName: node
   linkType: hard
 
@@ -4477,17 +4477,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@void/react@npm:0.26.0":
-  version: 0.26.0
-  resolution: "@void/react@npm:0.26.0"
+"@void/react@npm:0.26.1":
+  version: 0.26.1
+  resolution: "@void/react@npm:0.26.1"
   dependencies:
-    "@vitejs/plugin-react": "npm:^6.1.1"
+    "@vitejs/plugin-react": "npm:^6.1.2"
   peerDependencies:
     react: ^19.0.0
     react-dom: ^19.0.0
     vite: ^8.0.0
-    void: 0.26.0
-  checksum: 10c0/63bef3612f85559f259fcdf42be14e3cd1c45d1e6997b366e9ef8c397b1c5c6a7f7fd2353333e2e9d5be31cd44e547556742fee81664334bfd5917e88e462489
+    void: 0.26.1
+  checksum: 10c0/af58e84c361bc15af48af9757a8e3f0cd41ac26f83b4318427c924c8922530494d32751f97a9f0baf421f8ac335ecff19c351a38f535dde374e2064846c83d34
   languageName: node
   linkType: hard
 
@@ -8322,7 +8322,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"markdown-exit@npm:1.3.0":
+"markdown-exit@npm:1.3.0, markdown-exit@npm:^1.3.0":
   version: 1.3.0
   resolution: "markdown-exit@npm:1.3.0"
   dependencies:
@@ -8773,8 +8773,8 @@ __metadata:
     "@types/postcss-functions": "npm:^4"
     "@types/react": "npm:^19.0.0"
     "@types/react-dom": "npm:^19.0.0"
-    "@void/md": "npm:0.26.0"
-    "@void/react": "npm:0.26.0"
+    "@void/md": "npm:0.26.1"
+    "@void/react": "npm:0.26.1"
     "@waaark/luge": "npm:^0.6.20-beta"
     autoprefixer: "npm:^10.5.2"
     buffer: "npm:^6.0.3"
