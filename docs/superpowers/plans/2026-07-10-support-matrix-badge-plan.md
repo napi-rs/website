@@ -120,7 +120,7 @@ the sponsors satori/resvg/font plumbing.
   stacked cards; OS-grouped chip rows; inline `<svg>` path for the check/warn icons (no icon font).
   Fixed width (~900); height derived by satori.
 - `lib/support-matrix/render.ts` — `renderMatrix({format, theme, model, fonts, yogaWasm, resvgWasm?}):
-Promise<{body, contentType}>`. SVG → `image/svg+xml; charset=utf-8`. PNG → call `ensureResvg` +
+  Promise<{body, contentType}>`. SVG → `image/svg+xml; charset=utf-8`. PNG → call `ensureResvg` +
   `svgToPng` (reused from `lib/sponsors-image/resvg.ts`) at 2× width → `image/png`.
 
 **Tests:**
@@ -147,7 +147,7 @@ self-contained SVG (fonts as paths). Tests green.
   `resvgWasm from '@resvg/resvg-wasm/index_bg.wasm'` (png only). Parse params with `c.req.query(...)`;
   build the resolver input; `deriveNode` when `engines` present; `loadFonts((p)=>readAsset(c.env.ASSETS, c.req.url, p))`;
   `renderMatrix(...)`; return `new Response(body, { headers: { 'Content-Type', 'Cache-Control':
-'public, s-maxage=86400, max-age=86400, stale-while-revalidate=604800' } })`. No CORP/COEP.
+  'public, s-maxage=86400, max-age=86400, stale-while-revalidate=604800' } })`. No CORP/COEP.
 - Run `void prepare` so the routes register in `.void/routes.d.ts`; commit the regenerated file.
 
 **Tests:**
