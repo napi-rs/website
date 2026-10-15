@@ -223,6 +223,7 @@ export default defineConfig({
   // ES modules — the wasm browser build is a top-level-await ESM and the default 'iife'
   // worker format cannot handle top-level await, which fails the build.
   worker: { format: 'es' },
+  environments: { void_worker: { build: { sourcemap: false } } },
 
   // Force the demo worker's deps into the optimizer's STARTUP pass. The worker
   // (`components/transform-image/worker.ts`) statically imports `buffer` and
