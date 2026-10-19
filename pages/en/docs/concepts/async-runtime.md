@@ -17,7 +17,10 @@ You want this when:
 
 ```toml
 [dependencies]
-napi = { version = "3", default-features = false, features = ["napi4", "async-runtime"] }
+napi = { version = "3", default-features = false, features = [
+  "napi4",
+  "async-runtime",
+] }
 napi-derive = "3"
 ```
 
@@ -151,7 +154,10 @@ You usually do not need to write a backend by hand. [`napi-async-runtime`](https
 
 ```toml
 [dependencies]
-napi = { version = "3", default-features = false, features = ["napi4", "async-runtime"] }
+napi = { version = "3", default-features = false, features = [
+  "napi4",
+  "async-runtime",
+] }
 napi-derive = "3"
 napi-async-runtime = "0.2"
 ```

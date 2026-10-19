@@ -29,11 +29,10 @@ Isso significa que adicionar `features = ["napi2"]` sem desabilitar os padrões 
 
 ```toml
 [dependencies]
-napi = {
-  version = "3",
-  default-features = false,
-  features = ["napi3", "dyn-symbols"]
-}
+napi = { version = "3", default-features = false, features = [
+  "napi3",
+  "dyn-symbols",
+] }
 ```
 
 ::: warning
@@ -226,11 +225,10 @@ Não confunda `napi-derive/strict` com o atributo por função `#[napi(strict)]`
 
 ```toml
 [dependencies]
-napi = {
-  version = "3",
-  default-features = false,
-  features = ["napi4", "dyn-symbols"]
-}
+napi = { version = "3", default-features = false, features = [
+  "napi4",
+  "dyn-symbols",
+] }
 napi-derive = "3"
 
 [build-dependencies]

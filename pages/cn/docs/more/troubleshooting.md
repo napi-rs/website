@@ -197,7 +197,10 @@ dumpbin /DEPENDENTS addon.win32-x64-msvc.node
 **Cargo.toml**
 
 ```toml
-napi-derive = { version = "3", default-features = false, features = ["strict", "type-def"] }
+napi-derive = { version = "3", default-features = false, features = [
+  "strict",
+  "type-def",
+] }
 ```
 
 如果声明缺失或陈旧：
