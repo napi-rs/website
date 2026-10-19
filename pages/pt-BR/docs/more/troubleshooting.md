@@ -244,7 +244,10 @@ explicitamente:
 **Cargo.toml**
 
 ```toml
-napi-derive = { version = "3", default-features = false, features = ["strict", "type-def"] }
+napi-derive = { version = "3", default-features = false, features = [
+  "strict",
+  "type-def",
+] }
 ```
 
 Se uma declaração estiver ausente ou desatualizada:

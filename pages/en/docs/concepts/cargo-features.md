@@ -29,11 +29,10 @@ This means adding `features = ["napi2"]` without disabling defaults still builds
 
 ```toml
 [dependencies]
-napi = {
-  version = "3",
-  default-features = false,
-  features = ["napi3", "dyn-symbols"]
-}
+napi = { version = "3", default-features = false, features = [
+  "napi3",
+  "dyn-symbols",
+] }
 ```
 
 ::: warning
@@ -226,11 +225,10 @@ Do not confuse `napi-derive/strict` with the per-function `#[napi(strict)]` attr
 
 ```toml
 [dependencies]
-napi = {
-  version = "3",
-  default-features = false,
-  features = ["napi4", "dyn-symbols"]
-}
+napi = { version = "3", default-features = false, features = [
+  "napi4",
+  "dyn-symbols",
+] }
 napi-derive = "3"
 
 [build-dependencies]

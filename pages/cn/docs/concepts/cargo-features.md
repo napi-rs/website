@@ -29,11 +29,10 @@ default = ["napi4", "dyn-symbols"]
 
 ```toml
 [dependencies]
-napi = {
-  version = "3",
-  default-features = false,
-  features = ["napi3", "dyn-symbols"]
-}
+napi = { version = "3", default-features = false, features = [
+  "napi3",
+  "dyn-symbols",
+] }
 ```
 
 ::: warning
@@ -225,11 +224,10 @@ full = [
 
 ```toml
 [dependencies]
-napi = {
-  version = "3",
-  default-features = false,
-  features = ["napi4", "dyn-symbols"]
-}
+napi = { version = "3", default-features = false, features = [
+  "napi4",
+  "dyn-symbols",
+] }
 napi-derive = "3"
 
 [build-dependencies]
