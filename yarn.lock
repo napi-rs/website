@@ -4179,39 +4179,39 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@void/deploy-cloudflare@npm:1.1.11":
-  version: 1.1.11
-  resolution: "@void/deploy-cloudflare@npm:1.1.11"
+"@void/deploy-cloudflare@npm:1.1.12":
+  version: 1.1.12
+  resolution: "@void/deploy-cloudflare@npm:1.1.12"
   dependencies:
-    "@void/deploy-core": "npm:1.1.11"
+    "@void/deploy-core": "npm:1.1.12"
     jsonc-parser: "npm:^3.3.1"
-  checksum: 10c0/ca38e7c273f8ba3e295a54505aa03ae8c3b1a52d1ceb563eef3dd70bb56eb924868001a9f10d8aa2879a5a2bb7d4645faa8ff429cbae87cb6d4c183f2e5985c3
+  checksum: 10c0/31fee017c9677341f1c70a51344de8e70666dee4a78a9afe308b51729954a95f419f95ab0fe99222f5a1e9fb2e71112e2fcca0742e5f48c7886c5973ea502c2d
   languageName: node
   linkType: hard
 
-"@void/deploy-core@npm:1.1.11":
-  version: 1.1.11
-  resolution: "@void/deploy-core@npm:1.1.11"
-  checksum: 10c0/8493df7dab920e6177a4bc0a68296923194ec73438bb92f8fa8f57a02eeb71270200facfdda1acd4aff346e22d1f9b6962fa03fbc7b0d22c4c89c0088c4194a9
+"@void/deploy-core@npm:1.1.12":
+  version: 1.1.12
+  resolution: "@void/deploy-core@npm:1.1.12"
+  checksum: 10c0/36392b577cbfd370c4f5c46c3bb65064aaabeb6fd173f6401c28eae12282c0efd385346fbab2a44a63ee39f97cda7433182c2b13aee558903f393a53b0e121e4
   languageName: node
   linkType: hard
 
-"@void/edge@npm:1.1.11":
-  version: 1.1.11
-  resolution: "@void/edge@npm:1.1.11"
+"@void/edge@npm:1.1.12":
+  version: 1.1.12
+  resolution: "@void/edge@npm:1.1.12"
   dependencies:
-    "@void/deploy-core": "npm:1.1.11"
-  checksum: 10c0/f96302b07436fa7139c4ad070839aa9a2fc8583eac5d84b508b10c6e274941d481d912ad3d7d32866248e1e97a3e4e5b73424d839c6bb70d02655165da6f1ada
+    "@void/deploy-core": "npm:1.1.12"
+  checksum: 10c0/822cd72dfd470455da8a32c577c83c40bc437860099e900ac0da2228b11dc0edfce10310c990ff5c3bfc70f8b55d88a82f28034bc393927e64ca8e4ab7ab67c7
   languageName: node
   linkType: hard
 
-"@void/isr@npm:1.1.11":
-  version: 1.1.11
-  resolution: "@void/isr@npm:1.1.11"
+"@void/isr@npm:1.1.12":
+  version: 1.1.12
+  resolution: "@void/isr@npm:1.1.12"
   dependencies:
     "@cloudflare/workers-types": "npm:^5.20261014.1"
-    "@void/edge": "npm:1.1.11"
-  checksum: 10c0/4bf2ba8b853455a6300871a31c1493b40d6a60e87d1fe81838570509d78111bef1d72861540302ee2b71d1058e3b76ca0a63eda2c42e5db48147544432b8b8a6
+    "@void/edge": "npm:1.1.12"
+  checksum: 10c0/6ea7fdd079bb921753d2ed8346129494a67f7c6f3569f1b1a298ff89cec54c98c1a37a7c8dcab9a3369c0397590819c7ffa226f930a64cde6e3b409e21632b34
   languageName: node
   linkType: hard
 
@@ -4238,12 +4238,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@void/platform@npm:1.1.11":
-  version: 1.1.11
-  resolution: "@void/platform@npm:1.1.11"
+"@void/platform@npm:1.1.12":
+  version: 1.1.12
+  resolution: "@void/platform@npm:1.1.12"
   dependencies:
     pathslash: "npm:^0.1.0"
-  checksum: 10c0/748646d034140d1a9eb9faac519c0c751b5c9c399eae0438aa7f63cfc48109209db6b96e79f6447302b5de4eddcd3e7887f2cb818761667f9fa19ee41c11a9b7
+  checksum: 10c0/79967eda1f067d0e8d6c319019f8c7c31cebc0f804a41611a46bfde92c7d05b0f3d4533c0690f891367a85964ccf3eb855d94467c74dd225a43dd0d3446c8cec
   languageName: node
   linkType: hard
 
@@ -8399,7 +8399,7 @@ __metadata:
     typescript: "npm:^7.0.0"
     vite: "npm:^8"
     vite-plus: "npm:^1.0.0"
-    void: "npm:^1.0.0"
+    void: "npm:1.1.12"
   languageName: unknown
   linkType: soft
 
@@ -11178,9 +11178,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"void@npm:^1.0.0":
-  version: 1.1.11
-  resolution: "void@npm:1.1.11"
+"void@npm:1.1.12":
+  version: 1.1.12
+  resolution: "void@npm:1.1.12"
   dependencies:
     "@cloudflare/build-output-utils": "npm:^0.9.2"
     "@cloudflare/codemods": "npm:^0.5.0"
@@ -11190,11 +11190,11 @@ __metadata:
     "@cloudflare/workers-auth": "npm:^0.14.0"
     "@cloudflare/workers-types": "npm:^5.20261014.1"
     "@napi-rs/keyring": "npm:^2.1.1"
-    "@void/deploy-cloudflare": "npm:1.1.11"
-    "@void/deploy-core": "npm:1.1.11"
-    "@void/edge": "npm:1.1.11"
-    "@void/isr": "npm:1.1.11"
-    "@void/platform": "npm:1.1.11"
+    "@void/deploy-cloudflare": "npm:1.1.12"
+    "@void/deploy-core": "npm:1.1.12"
+    "@void/edge": "npm:1.1.12"
+    "@void/isr": "npm:1.1.12"
+    "@void/platform": "npm:1.1.12"
     better-auth: "npm:^1.7.7"
     better-sqlite3: "npm:^13.0.3"
     blake3-jit: "npm:^1.1.0"
@@ -11219,7 +11219,7 @@ __metadata:
     terminal-link: "npm:^5.0.0"
     yaml: "npm:^2.9.1"
   peerDependencies:
-    "@void/md": 1.1.11
+    "@void/md": 1.1.12
     arktype: ">=2.0.0"
     valibot: ">=1.0.0-beta.7"
     vite: ^8.0.0
@@ -11235,7 +11235,7 @@ __metadata:
       optional: true
   bin:
     void: dist/cli/cli.mjs
-  checksum: 10c0/f59366dbe8e4c8acf4bec8a365c778bb29974ae6748233e1c9e199b153b9b647818e35ddf1615ddf472aa0265b780abf7bf2cf59b2bc22e61f6700e560a10455
+  checksum: 10c0/45bf6e9fc145a32fc6e80965a5c629c008087bea271122ca752e28128a48154954b34d4d95bc636419733ec14a773d0c28633ab6dd8efe7ad5bc8c7860f038af
   languageName: node
   linkType: hard
 
