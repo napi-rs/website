@@ -51,7 +51,7 @@ jobs:
       - name: Setup Vite+ toolchain (Node 24 + Yarn install)
         uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: '24'
+          node-version: '26'
           cache: true
 
       # `void prepare` generates .void/*.d.ts (routes, db, queues, env) WITHOUT
@@ -115,7 +115,7 @@ jobs:
       - name: Setup Vite+ toolchain (Node 24 + Yarn install)
         uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: '24'
+          node-version: '26'
           cache: true
 
       # Generate .void types before build so the production build resolves

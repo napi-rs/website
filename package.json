@@ -47,7 +47,7 @@
     "@expo-google-fonts/noto-sans-sc": "^0.4.3",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/postcss": "^4.3.2",
-    "@types/node": "^24.0.0",
+    "@types/node": "^26.0.0",
     "@types/postcss-functions": "^4",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
