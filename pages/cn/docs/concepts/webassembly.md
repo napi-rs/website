@@ -202,6 +202,7 @@ console.log(typeof SharedArrayBuffer) // 'function'
 | --- | --- | --- |
 | `initialMemory` | `4000` pages | 初始共享内存（一个 WebAssembly page 为 64 KiB） |
 | `maximumMemory` | `65536` pages | 最大共享内存，4 GiB |
+| `stackSizeBytes` | `64000000` 字节 | 主线程线性内存栈大小（`-zstack-size`），单位为字节（约 61.04 MiB）；需要 `napi-build >= 2.7.0` |
 | `browser.fs` | `false` | 创建内存文件系统、预打开 `/`，并导出 `__fs` / `__volume` |
 | `browser.asyncInit` | `false` | 使用 emnapi 的异步实例化 API |
 | `browser.buffer` | `false` | 将 `buffer` 包的 `Buffer` 注入 emnapi 上下文 |
@@ -225,6 +226,62 @@ window.addEventListener('napi-rs-worker-error', (event) => {
   console.error('NAPI-RS WASI worker failed', detail)
 })
 ```
+
+## 栈大小与内存下限 {#stack-size-and-memory-floor}
+
+为了向后兼容，`napi-build` 默认使用 `-zstack-size=64000000`（约 61.04 MiB）链接 WASI 模块。由于 `rustc` 使用 `--stack-first` 链接且 `napi-build` 使用 `--import-memory`，栈大小决定了模块 `env.memory` 最小下限的大部分（在默认 `64,000,000` 字节下约为 977 页）。
+
+降低栈大小可以让你同时降低 `initialMemory` 或 `threadlessInitialMemory`——例如减少 Windows 上 `shared: true` 启动时的内存提交量，或适配像 Cloudflare Workers（`workerd`）这样内存上限紧张的隔离环境。
+
+核心规则（需要 `napi-build >= 2.7.0`）：
+
+- **单位**：以**字节**为单位，而 `initialMemory`、`threadlessInitialMemory` 和 `maximumMemory` 均以 64 KiB 页为单位。
+- **范围与对齐**：必须是严格小于 4 GiB（`4_294_967_296` 字节）的 16 字节对齐正整数。
+- **仅主线程**：仅控制主线程的线性内存栈（`__stack_pointer`）。在 `wasm32-wasip1-threads` 上，worker 线程的栈通过 `malloc` 从堆中分配。
+
+你可以通过三种方式配置栈大小，优先级从高到低依次为：
+
+1. **`NAPI_WASI_STACK_SIZE` 环境变量** —— 非空十进制整数字节数（空字符串 `""` 视为未设置）：
+
+```sh
+NAPI_WASI_STACK_SIZE=8388608 napi build --platform --release --target wasm32-wasip1-threads
+```
+
+2. **`package.json` 中的 `napi.wasm.stackSizeBytes`** —— 当环境变量未设置或为空时，由 `@napi-rs/cli` 作为 `NAPI_WASI_STACK_SIZE` 转发：
+
+**package.json**
+
+```json
+{
+  "napi": {
+    "wasm": {
+      "stackSizeBytes": 8388608,
+      "initialMemory": 256
+    }
+  }
+}
+```
+
+3. **`build.rs` 中的 `napi_build::setup_with`** —— 适用于直接使用 Cargo 构建或为 crate 设置默认栈大小：
+
+**build.rs**
+
+```rust
+fn main() {
+  napi_build::setup_with(
+    napi_build::SetupOptions::new().wasi_stack_size(8 * 1024 * 1024),
+  );
+}
+```
+
+4. **默认值** —— `64_000_000` 字节（约 61.04 MiB）。
+
+### 构建时校验
+
+`@napi-rs/cli` 会在链接前后分别校验栈和内存配置：
+
+- 在调用 Cargo 之前，校验 `napi.wasm.stackSizeBytes` 和 `NAPI_WASI_STACK_SIZE`（包括与 `maximumMemory` 和已配置的初始内存的一致性）。
+- 在链接完成后，检查生成的 `.wasm` 产物，确认 `__stack_pointer` 与请求的栈大小一致（从而捕获旧版 `napi-build < 2.7.0` 或手动 `-zstack-size` 覆盖），并确认显式配置的 `initialMemory` 或 `threadlessInitialMemory` 满足模块的 `env.memory` 最小下限。
 
 ## 安装 WebAssembly 包
 
