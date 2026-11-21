@@ -39,6 +39,7 @@ user-supplied fields are optional.
     wasm?: {
       initialMemory?: number
       maximumMemory?: number
+      stackSizeBytes?: number
       browser?: {
         fs?: boolean
         asyncInit?: boolean
@@ -52,31 +53,64 @@ user-supplied fields are optional.
 
 ## Fields and effective defaults
 
-| Field                     |                    Default                     | Description                                                                                                                                                                                                                   |
-| ------------------------- | :--------------------------------------------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `binaryName`              |    <span class="chalk-green">`index`</span>    | Base name of generated native and WASI files. A platform build produces a name such as <span class="chalk-green">`index.win32-x64-msvc.node`</span>.                                                                          |
-| `targets`                 |     <span class="chalk-green">`[]`</span>      | Target triples the project packages and publishes. This is not a multi-target build command.                                                                                                                                  |
-| `packageName`             |           root `package.json` `name`           | Package name used by generated loaders and per-platform package names. Override it when the JavaScript package name differs from the root package metadata; see [Build: JS package name](./build#note-for---js-package-name). |
-| `npmClient`               |     <span class="chalk-green">`npm`</span>     | Command used for npm operations such as publishing each platform package.                                                                                                                                                     |
-| `constEnum`               |    <span class="chalk-green">`true`</span>     | Generate TypeScript `const enum` declarations. The effective type-generation default is `true` when neither config nor CLI overrides it.                                                                                      |
-| `runtimeStringEnum`       |    <span class="chalk-green">`false`</span>    | With `constEnum: false`, emit `#[napi(string_enum)]` as a runtime `enum` instead of a type-only string union. It has no effect while `constEnum` is `true`.                                                                   |
-| `dtsHeader`               |  <span class="chalk-green">`undefined`</span>  | String used as the header of the generated declaration file. It replaces the default header entirely; see [Declaration file header](#declaration-file-header).                                                                |
-| `dtsHeaderFile`           |  <span class="chalk-green">`undefined`</span>  | Path, relative to the command's working directory, to a file whose content is used as the declaration file header. It takes precedence over `dtsHeader`.                                                                      |
-| `wasm.initialMemory`      | <span class="chalk-green">`4000` pages</span>  | Initial shared WebAssembly memory, approximately 250 MiB.                                                                                                                                                                     |
-| `wasm.maximumMemory`      | <span class="chalk-green">`65536` pages</span> | Maximum shared WebAssembly memory, 4 GiB.                                                                                                                                                                                     |
-| `wasm.browser.fs`         |    <span class="chalk-green">`false`</span>    | Include the in-memory filesystem and filesystem proxy in browser WASI bindings.                                                                                                                                               |
-| `wasm.browser.asyncInit`  |    <span class="chalk-green">`false`</span>    | Use emnapi's asynchronous module-instantiation path for the browser binding.                                                                                                                                                  |
-| `wasm.browser.buffer`     |    <span class="chalk-green">`false`</span>    | Import `Buffer` and inject it into the emnapi context used by the browser binding.                                                                                                                                            |
-| `wasm.browser.errorEvent` |    <span class="chalk-green">`false`</span>    | Forward worker failures to a browser `napi-rs-worker-error` `CustomEvent`, including captured worker error output.                                                                                                            |
+| Field                     |                      Default                      | Description                                                                                                                                                                                                                   |
+| ------------------------- | :-----------------------------------------------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `binaryName`              |     <span class="chalk-green">`index`</span>      | Base name of generated native and WASI files. A platform build produces a name such as <span class="chalk-green">`index.win32-x64-msvc.node`</span>.                                                                          |
+| `targets`                 |       <span class="chalk-green">`[]`</span>       | Target triples the project packages and publishes. This is not a multi-target build command.                                                                                                                                  |
+| `packageName`             |            root `package.json` `name`             | Package name used by generated loaders and per-platform package names. Override it when the JavaScript package name differs from the root package metadata; see [Build: JS package name](./build#note-for---js-package-name). |
+| `npmClient`               |      <span class="chalk-green">`npm`</span>       | Command used for npm operations such as publishing each platform package.                                                                                                                                                     |
+| `constEnum`               |      <span class="chalk-green">`true`</span>      | Generate TypeScript `const enum` declarations. The effective type-generation default is `true` when neither config nor CLI overrides it.                                                                                      |
+| `runtimeStringEnum`       |     <span class="chalk-green">`false`</span>      | With `constEnum: false`, emit `#[napi(string_enum)]` as a runtime `enum` instead of a type-only string union. It has no effect while `constEnum` is `true`.                                                                   |
+| `dtsHeader`               |   <span class="chalk-green">`undefined`</span>    | String used as the header of the generated declaration file. It replaces the default header entirely; see [Declaration file header](#declaration-file-header).                                                                |
+| `dtsHeaderFile`           |   <span class="chalk-green">`undefined`</span>    | Path, relative to the command's working directory, to a file whose content is used as the declaration file header. It takes precedence over `dtsHeader`.                                                                      |
+| `wasm.initialMemory`      |   <span class="chalk-green">`4000` pages</span>   | Initial shared WebAssembly memory, approximately 250 MiB.                                                                                                                                                                     |
+| `wasm.maximumMemory`      |  <span class="chalk-green">`65536` pages</span>   | Maximum shared WebAssembly memory, 4 GiB.                                                                                                                                                                                     |
+| `wasm.stackSizeBytes`     | <span class="chalk-green">`64000000` bytes</span> | Main-thread WASI linear-memory stack size (`-zstack-size`), approximately 61.04 MiB. Positive 16-byte multiple strictly below 4 GiB (`4294967296`). Requires `napi-build >= 2.7.0`; see [WASI stack size](#wasi-stack-size).  |
+| `wasm.browser.fs`         |     <span class="chalk-green">`false`</span>      | Include the in-memory filesystem and filesystem proxy in browser WASI bindings.                                                                                                                                               |
+| `wasm.browser.asyncInit`  |     <span class="chalk-green">`false`</span>      | Use emnapi's asynchronous module-instantiation path for the browser binding.                                                                                                                                                  |
+| `wasm.browser.buffer`     |     <span class="chalk-green">`false`</span>      | Import `Buffer` and inject it into the emnapi context used by the browser binding.                                                                                                                                            |
+| `wasm.browser.errorEvent` |     <span class="chalk-green">`false`</span>      | Forward worker failures to a browser `napi-rs-worker-error` `CustomEvent`, including captured worker error output.                                                                                                            |
 
-One WebAssembly memory page is 64 KiB. The memory settings are written into
-the generated Node and browser WASI loaders; they are not Cargo memory limits.
+One WebAssembly memory page is 64 KiB. `wasm.initialMemory`,
+`wasm.threadlessInitialMemory`, and `wasm.maximumMemory` are measured in pages
+and written into the generated Node and browser WASI loaders; they are not Cargo
+memory limits. `wasm.stackSizeBytes` is measured in **bytes** and forwarded to
+`napi-build` at link time.
 
 ::: info
 `runtimeStringEnum: true` requires `constEnum: false`. The equivalent build
 flags are `--runtime-string-enum --no-const-enum`.
 
 :::
+
+## WASI stack size
+
+`wasm.stackSizeBytes` sets the WASI linker `-zstack-size` value for the **main
+thread's** linear-memory stack (`__stack_pointer`). On `wasm32-wasip1-threads`,
+worker threads allocate their stacks from the heap via `malloc`. Changing the
+stack size requires `napi-build >= 2.7.0`.
+
+The value must be a positive, 16-byte-aligned integer strictly below 4 GiB
+(`4294967296` bytes). When multiple sources are configured, NAPI-RS resolves the
+stack size in this order:
+
+| Priority | Source                                | Description                                                                               |
+| :------: | ------------------------------------- | ----------------------------------------------------------------------------------------- |
+|    1     | `NAPI_WASI_STACK_SIZE` env var        | Non-empty decimal integer in bytes. An empty string (`""`) is treated as unset.           |
+|    2     | `napi.wasm.stackSizeBytes`            | Forwarded by `@napi-rs/cli` as `NAPI_WASI_STACK_SIZE` when the env var is unset or empty. |
+|    3     | `build.rs` (`napi_build::setup_with`) | `napi_build::setup_with(napi_build::SetupOptions::new().wasi_stack_size(bytes))`.         |
+|    4     | Default                               | `64000000` bytes (~61.04 MiB).                                                            |
+
+`@napi-rs/cli` validates `napi.wasm.stackSizeBytes` and `NAPI_WASI_STACK_SIZE`
+before running Cargo (including against `maximumMemory` and configured initial
+memory). After linking, it inspects the built `.wasm` module to verify that
+`__stack_pointer` matches the requested stack size (catching stale
+`napi-build < 2.7.0` or manual `-zstack-size` overrides) and that explicitly
+configured `initialMemory` or `threadlessInitialMemory` meets the module's
+`env.memory` minimum floor.
+
+See [WebAssembly and WASI: Stack size and memory floor](/docs/concepts/webassembly#stack-size-and-memory-floor)
+for how the stack size interacts with `env.memory` and examples.
 
 ## Declaration file header
 

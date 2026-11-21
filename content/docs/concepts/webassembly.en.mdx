@@ -352,6 +352,7 @@ The `napi.wasm` fields control generated browser glue:
 | --- | --- | --- |
 | `initialMemory` | `4000` pages | Initial shared memory (a WebAssembly page is 64 KiB) |
 | `maximumMemory` | `65536` pages | Maximum shared memory, 4 GiB |
+| `stackSizeBytes` | `64000000` bytes | Main-thread linear-memory stack size (`-zstack-size`), in bytes (~61.04 MiB); requires `napi-build >= 2.7.0` |
 | `browser.fs` | `false` | Create an in-memory filesystem, preopen `/`, and export `__fs` / `__volume` |
 | `browser.asyncInit` | `false` | Use emnapi's asynchronous instantiation API |
 | `browser.buffer` | `false` | Inject the `buffer` package's `Buffer` into the emnapi context |
@@ -377,6 +378,78 @@ window.addEventListener('napi-rs-worker-error', (event) => {
   console.error('NAPI-RS WASI worker failed', detail)
 })
 ```
+
+## Stack size and memory floor
+
+By default, `napi-build` links WASI modules with `-zstack-size=64000000`
+(~61.04 MiB) for backwards compatibility. Because `rustc` links with
+`--stack-first` and `napi-build` uses `--import-memory`, that stack sets most of
+the module's `env.memory` minimum floor (~977 pages at 64,000,000 bytes).
+
+Lowering the stack size lets you lower `initialMemory` or
+`threadlessInitialMemory` too — for example, to reduce upfront committed memory
+for `shared: true` on Windows, or to fit tight isolate caps such as Cloudflare
+Workers (`workerd`).
+
+Key rules (requires `napi-build >= 2.7.0`):
+
+- **Units**: Measured in **bytes**, unlike `initialMemory`,
+  `threadlessInitialMemory`, and `maximumMemory`, which are in 64 KiB pages.
+- **Range & alignment**: Must be a positive, 16-byte-aligned integer strictly
+  below 4 GiB (`4_294_967_296` bytes).
+- **Main thread only**: Controls only the main thread's linear-memory stack
+  (`__stack_pointer`). On `wasm32-wasip1-threads`, worker threads allocate their
+  stacks from the heap via `malloc`.
+
+You can configure the stack size in three ways, resolved from highest to lowest
+priority:
+
+1. **`NAPI_WASI_STACK_SIZE` environment variable** — non-empty decimal integer
+   in bytes (an empty string `""` is treated as unset):
+
+```sh
+NAPI_WASI_STACK_SIZE=8388608 napi build --platform --release --target wasm32-wasip1-threads
+```
+
+2. **`napi.wasm.stackSizeBytes` in `package.json`** — forwarded by
+   `@napi-rs/cli` as `NAPI_WASI_STACK_SIZE` when the env var is unset or empty:
+
+```json filename="package.json"
+{
+  "napi": {
+    "wasm": {
+      "stackSizeBytes": 8388608,
+      "initialMemory": 256
+    }
+  }
+}
+```
+
+3. **`napi_build::setup_with` in `build.rs`** — useful when building directly
+   with Cargo or setting a crate-level default:
+
+```rust filename="build.rs"
+fn main() {
+  napi_build::setup_with(
+    napi_build::SetupOptions::new().wasi_stack_size(8 * 1024 * 1024),
+  );
+}
+```
+
+4. **Default** — `64_000_000` bytes (~61.04 MiB).
+
+### Build-time validation
+
+`@napi-rs/cli` checks stack and memory settings both before and after linking:
+
+- Before invoking Cargo, it validates `napi.wasm.stackSizeBytes` and
+  `NAPI_WASI_STACK_SIZE`, including consistency with `maximumMemory` and
+  configured initial memory.
+- After linking, it inspects the built `.wasm` artifact to verify that
+  `__stack_pointer` matches the requested stack size (catching stale
+  `napi-build < 2.7.0` or manual `-zstack-size` overrides) and that explicitly
+  configured `initialMemory` or `threadlessInitialMemory` meets the module's
+  `env.memory` minimum floor.
 
 ## Install the WebAssembly package
 
